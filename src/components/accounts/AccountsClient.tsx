@@ -3,7 +3,6 @@
 import { useState, useTransition } from "react";
 import { Link } from "react-router-dom";
 import {
-  ChevronRight,
   MoreVertical,
   Pencil,
   Plus,

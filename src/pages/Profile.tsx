@@ -1,4 +1,4 @@
-import { Calendar, CreditCard, Mail, Receipt, ShieldCheck, User, Key, Lock, CheckCircle2, ChevronRight, Activity, Wallet } from "lucide-react";
+import { Calendar, Mail, Receipt, ShieldCheck, User, Lock, CheckCircle2, ChevronRight, Activity, Wallet } from "lucide-react";
 import { useApp } from "@/components/layout/AppLayout";
 import { formatDate, formatIDR } from "@/lib/utils/formatters";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
