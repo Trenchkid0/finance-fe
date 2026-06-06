@@ -1,4 +1,19 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+const getApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_URL) {
+    console.log('Using VITE_API_URL:', import.meta.env.VITE_API_URL);
+    return import.meta.env.VITE_API_URL;
+  }
+  // Dynamic fallback: matches the accessing device's IP (e.g. 192.168.18.5) on port 8081
+  const host = typeof window !== "undefined" ? window.location.hostname : "localhost";
+  const protocol = typeof window !== "undefined" ? window.location.protocol : "http:";
+  const fallbackUrl = `${protocol}//${host}:8081`;
+  console.log('Using fallback API URL:', fallbackUrl);
+  return fallbackUrl;
+};
+
+const API_BASE_URL = getApiBaseUrl();
+console.log('Final API_BASE_URL:', API_BASE_URL);
+
 
 async function request<T>(
   method: string,
