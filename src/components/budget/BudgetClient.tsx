@@ -19,7 +19,7 @@ import {
 import { toast } from "sonner";
 import { setBudgetLimit } from "@/app/actions/budgets";
 import { cn } from "@/lib/utils/cn";
-import { cleanMoneyString, formatIDR } from "@/lib/utils/formatters";
+import { cleanMoneyString, formatIDR, formatInputRupiah } from "@/lib/utils/formatters";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
