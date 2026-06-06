@@ -1,7 +1,12 @@
 const getApiBaseUrl = () => {
-  if (import.meta.env.VITE_API_URL) {
-    console.log('Using VITE_API_URL:', import.meta.env.VITE_API_URL);
-    return import.meta.env.VITE_API_URL;
+  let url = import.meta.env.VITE_API_URL;
+  if (url) {
+    // Auto-prepend protocol if missing (e.g. "localhost:8081" -> "http://localhost:8081")
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      url = `http://${url}`;
+    }
+    console.log('Using VITE_API_URL:', url);
+    return url;
   }
   // Dynamic fallback: matches the accessing device's IP (e.g. 192.168.18.5) on port 8081
   const host = typeof window !== "undefined" ? window.location.hostname : "localhost";
