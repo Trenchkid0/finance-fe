@@ -148,7 +148,7 @@ export default function Profile() {
                 Portofolio Aktif
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               <div className="space-y-1">
                 <p className="text-2xl font-bold font-mono tabular-nums text-text-primary">
                   {formatIDR(totalBalance)}
@@ -158,7 +158,9 @@ export default function Profile() {
                 </p>
               </div>
 
-              <div className="space-y-2 pt-2">
+              <Separator className="bg-border" />
+
+              <div className="space-y-2">
                 <div className="flex justify-between text-xs">
                   <span className="text-text-muted">Tingkat Aktivitas</span>
                   <span className="font-medium text-text-primary">

@@ -19,7 +19,7 @@ import {
 import { toast } from "sonner";
 import { setBudgetLimit } from "@/app/actions/budgets";
 import { cn } from "@/lib/utils/cn";
-import { formatIDR } from "@/lib/utils/formatters";
+import { cleanMoneyString, formatIDR } from "@/lib/utils/formatters";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -132,10 +132,10 @@ export function BudgetClient({
   return (
     <div className="space-y-6">
       {/* Month picker section */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-xl border border-border bg-surface">
-        <div className="flex items-center gap-2">
-          <Calendar size={18} className="text-accent shrink-0" />
-          <span className="text-sm font-medium text-text-muted">Periode Anggaran</span>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 rounded-2xl border border-white/[0.06] bg-white/[0.02]">
+        <div className="flex items-center gap-2.5">
+          <Calendar size={16} className="text-accent shrink-0" />
+          <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">Periode Anggaran</span>
         </div>
         <MonthPicker
           monthLabel={monthLabel}
@@ -174,18 +174,18 @@ export function BudgetClient({
         </div>
 
         {/* Right Column: Categories List */}
-        <div className="lg:col-span-2 rounded-xl border border-border bg-surface p-6 space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-border">
+        <div className="lg:col-span-2 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 space-y-4">
+          <div className="flex items-center justify-between pb-4 border-b border-white/[0.04]">
             <div>
-              <h2 className="text-base font-semibold text-text-primary">
+              <h2 className="text-base font-bold text-foreground">
                 Batas Pengeluaran Kategori
               </h2>
-              <p className="text-xs text-text-muted">
+              <p className="text-xs text-muted-foreground/60 mt-1">
                 Atur batas maksimal pengeluaran bulanan Anda per kategori
               </p>
             </div>
-            <Badge className="bg-accent/10 text-accent border border-accent/20 text-xs font-mono">
-              {categoriesWithColor.length} Kategori
+            <Badge className="bg-accent/10 text-accent border border-accent/20 text-[10px] font-bold font-mono">
+              {categoriesWithColor.length} KATEGORI
             </Badge>
           </div>
 
@@ -233,11 +233,11 @@ function MonthPicker({
   const canGoNext = !(year === currentY && month >= currentM);
 
   return (
-    <div className="flex items-center gap-2 bg-elevated/40 border border-border/80 rounded-lg p-1.5 shrink-0 self-start sm:self-center">
+    <div className="flex items-center gap-2 bg-white/[0.02] border border-white/[0.06] rounded-xl p-1.5 shrink-0 self-start sm:self-center">
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8 hover:bg-elevated transition-colors"
+        className="h-8 w-8 hover:bg-white/[0.04] transition-colors rounded-lg text-muted-foreground/60 hover:text-foreground"
         onClick={onPrev}
         aria-label="Bulan sebelumnya"
         disabled={pending}
@@ -249,15 +249,15 @@ function MonthPicker({
         <button
           type="button"
           onClick={() => setPickerOpen((v) => !v)}
-          className="flex items-center gap-1.5 px-3 py-1 rounded-md hover:bg-elevated/80 transition-colors text-sm font-semibold text-text-primary"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-white/[0.04] transition-colors text-xs font-bold text-foreground"
           aria-haspopup="dialog"
           aria-expanded={pickerOpen}
         >
           <span>{monthLabel}</span>
           <ChevronDown
-            size={14}
+            size={12}
             className={cn(
-              "text-text-muted transition-transform duration-200",
+              "text-muted-foreground/60 transition-transform duration-200",
               pickerOpen && "rotate-180",
             )}
           />
@@ -283,7 +283,7 @@ function MonthPicker({
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8 hover:bg-elevated transition-colors"
+        className="h-8 w-8 hover:bg-white/[0.04] transition-colors rounded-lg text-muted-foreground/60 hover:text-foreground"
         onClick={onNext}
         aria-label="Bulan berikutnya"
         disabled={pending || !canGoNext}
@@ -344,7 +344,7 @@ function YearMonthPanel({
   const maxYear = Math.max(currentYear, ...yearOptions);
 
   return (
-    <div className="absolute z-50 right-0 mt-2 w-[260px] rounded-xl border border-border bg-elevated shadow-xl p-3.5 space-y-3 animate-in fade-in-50 slide-in-from-top-2 duration-150">
+    <div className="absolute z-50 right-0 mt-2 w-[260px] rounded-2xl border border-white/[0.08] bg-popover/95 backdrop-blur-xl shadow-2xl shadow-black/40 p-4 space-y-3 animate-in fade-in-50 slide-in-from-top-2 duration-150">
       <div className="flex items-center justify-between">
         <Button
           type="button"
@@ -461,9 +461,9 @@ function BudgetDonut({
   }
 
   return (
-    <div className="rounded-xl border border-border bg-surface p-6 space-y-4 hover:border-[#444C56] transition-colors duration-200">
+    <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 space-y-4 transition-colors duration-200">
       <div className="flex justify-between items-center">
-        <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider">Ringkasan Alokasi</h3>
+        <h3 className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-[0.12em]">Ringkasan Alokasi</h3>
         {hasBudget && (
           <span className="text-[10px] text-text-muted font-mono font-medium">
             {Math.round((spent / budget) * 100)}% terpakai
@@ -610,13 +610,13 @@ function BudgetSummaryTabs({
 
   return (
     <Tabs defaultValue="budgeted" className="w-full">
-      <TabsList className="grid w-full grid-cols-2 bg-elevated/50 p-1 border border-border rounded-lg">
-        <TabsTrigger value="budgeted" className="text-xs py-1.5">Anggaran</TabsTrigger>
-        <TabsTrigger value="actuals" className="text-xs py-1.5">Realisasi</TabsTrigger>
+      <TabsList className="grid w-full grid-cols-2 bg-white/[0.02] p-1 border border-white/[0.06] rounded-xl">
+        <TabsTrigger value="budgeted" className="text-xs py-1.5 rounded-lg data-[state=active]:bg-white/[0.06] data-[state=active]:text-foreground">Anggaran</TabsTrigger>
+        <TabsTrigger value="actuals" className="text-xs py-1.5 rounded-lg data-[state=active]:bg-white/[0.06] data-[state=active]:text-foreground">Realisasi</TabsTrigger>
       </TabsList>
 
       <TabsContent value="budgeted" className="mt-3">
-        <div className="rounded-xl border border-border bg-surface overflow-hidden">
+        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden">
           {/* Expected income */}
           <div className="p-4 border-b border-border space-y-2">
             <div className="flex justify-between items-center">
@@ -679,7 +679,7 @@ function BudgetSummaryTabs({
       </TabsContent>
 
       <TabsContent value="actuals" className="mt-3">
-        <div className="rounded-xl border border-border bg-surface overflow-hidden">
+        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden">
           {/* Income */}
           <div className="p-4 border-b border-border space-y-2">
             <h3 className="text-xs text-text-muted flex items-center gap-1.5">
@@ -724,7 +724,7 @@ function BudgetSummaryTabs({
                   {expenseBreakdown.map((b) => (
                     <div
                       key={b.name}
-                      className="flex items-center gap-1.5 text-xs bg-elevated/30 border border-border/40 rounded-lg p-1.5"
+                      className="flex items-center gap-1.5 text-xs bg-white/[0.02] border border-white/[0.04] rounded-lg p-1.5"
                     >
                       <span
                         className="w-2 h-2 rounded-full shrink-0"
@@ -811,7 +811,7 @@ function BudgetCategoryRow({
 }) {
   const [editing, setEditing] = useState(false);
   const [draftLimit, setDraftLimit] = useState<string>(
-    category.limit !== null ? String(category.limit) : "",
+    category.limit !== null ? formatInputRupiah(String(category.limit)) : "",
   );
   const [pending, startTransition] = useTransition();
 
@@ -823,7 +823,7 @@ function BudgetCategoryRow({
   const percentUsed = hasLimit ? Math.round((category.spent / (category.limit ?? 1)) * 100) : 0;
 
   function handleSave() {
-    const num = Number(draftLimit);
+    const num = Number(cleanMoneyString(draftLimit));
     if (!Number.isFinite(num) || num < 0) {
       toast.error("Masukkan angka yang valid (≥ 0).");
       return;
@@ -844,11 +844,11 @@ function BudgetCategoryRow({
   }
 
   return (
-    <div className="py-3 px-2 flex items-center justify-between border-b border-border/40 hover:bg-elevated/20 transition-colors rounded-lg group">
+    <div className="py-3 px-2 flex items-center justify-between border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors rounded-xl group">
       <div className="flex items-center gap-3 min-w-0 flex-1">
         {/* Circle color-matched icon */}
         <div
-          className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border border-border/60"
+          className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border border-white/[0.06]"
           style={{
             backgroundColor: `color-mix(in oklab, ${category.color} 10%, transparent)`,
             color: category.color,
@@ -899,11 +899,10 @@ function BudgetCategoryRow({
         {editing ? (
           <div className="flex items-center gap-1.5 bg-elevated border border-border rounded-lg p-1">
             <Input
-              type="number"
+              type="text"
               inputMode="numeric"
-              min="0"
               value={draftLimit}
-              onChange={(e) => setDraftLimit(e.target.value)}
+              onChange={(e) => setDraftLimit(formatInputRupiah(e.target.value))}
               placeholder="Limit"
               className="h-7 w-20 text-xs font-mono border-0 focus-visible:ring-0 bg-transparent p-1 text-text-primary"
               aria-label={`Batas anggaran ${category.name}`}
@@ -927,7 +926,7 @@ function BudgetCategoryRow({
               onClick={() => {
                 setEditing(false);
                 setDraftLimit(
-                  category.limit !== null ? String(category.limit) : "",
+                  category.limit !== null ? formatInputRupiah(String(category.limit)) : "",
                 );
               }}
               disabled={pending}

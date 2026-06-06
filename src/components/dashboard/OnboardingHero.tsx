@@ -15,12 +15,12 @@ interface Props {
 
 export function OnboardingHero({ userName }: Props) {
   return (
-    <div className="space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-2xl lg:text-3xl font-semibold text-foreground">
+    <div className="space-y-8 animate-fade-in-up">
+      <header className="space-y-2">
+        <h1 className="text-2xl lg:text-[1.75rem] font-extrabold tracking-tight text-foreground">
           Halo, {userName}
         </h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground/80">
           Ayo siapkan akun keuangan Anda — cuma butuh tiga langkah cepat.
         </p>
       </header>
@@ -91,7 +91,7 @@ function Step({
   secondary?: boolean;
 }) {
   return (
-    <li className="flex items-start gap-4 p-4 rounded-lg bg-elevated border border-border">
+    <li className="flex items-start gap-4 p-5 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:-translate-y-0.5 transition-all duration-300">
       <div className="flex items-center gap-3 shrink-0">
         <span className="size-7 rounded-full bg-card border border-border text-muted-foreground flex items-center justify-center text-xs font-mono tabular-nums">
           {number}

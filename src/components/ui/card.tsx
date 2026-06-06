@@ -14,7 +14,7 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
       ref={ref}
       data-slot="card"
       className={cn(
-        "rounded-lg border border-border bg-card text-card-foreground transition-all duration-200 hover:border-[#444C56] flex flex-col gap-4",
+        "rounded-2xl border border-border/50 bg-card/75 backdrop-blur-md text-card-foreground transition-all duration-300 hover:border-accent/30 hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)] hover:shadow-accent/[0.02] hover:-translate-y-0.5 flex flex-col gap-4",
         className,
       )}
       {...props}

@@ -1,6 +1,7 @@
 import { api } from "@/lib/api";
 import { createAccountSchema, updateAccountSchema } from "@/lib/utils/validators";
 import type { ActionResult } from "@/types";
+import { cleanMoneyString } from "@/lib/utils/formatters";
 
 export async function createAccount(
   _prev: ActionResult<null> | undefined,
@@ -10,7 +11,8 @@ export async function createAccount(
   const type = formData.get("type")?.toString() || "";
   const color = formData.get("color")?.toString() || "";
   const icon = formData.get("icon")?.toString() || "";
-  const startingBalance = formData.get("startingBalance")?.toString() || "0";
+  const rawStartingBalance = formData.get("startingBalance")?.toString() || "0";
+  const startingBalance = cleanMoneyString(rawStartingBalance);
 
   const parsed = createAccountSchema.safeParse({
     name: name || undefined,

@@ -9,13 +9,11 @@ import {
   Power,
   PowerOff,
   Trash2,
-  TrendingDown,
   Wallet,
 } from "lucide-react";
 import { deleteAccount, toggleAccountActive } from "@/app/actions/accounts";
 import { formatIDR } from "@/lib/utils/formatters";
 import { cn } from "@/lib/utils/cn";
-import { StatCard } from "@/components/dashboard/StatCard";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -72,44 +70,44 @@ export function AccountsClient({ accounts }: Props) {
   const totalBalance = activeAccounts.reduce((sum, a) => sum + a.balance, 0);
 
   return (
-    <>
+    <div className="space-y-8 animate-fade-in-up">
       {/* Header */}
-      <div className="flex items-end justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-semibold text-foreground">Akun</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Kelola sumber dana — bank, e-wallet, tunai, dan investasi.
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1.5">
+          <h1 className="text-2xl lg:text-[1.75rem] font-extrabold tracking-tight text-foreground">
+            Akun Keuangan
+          </h1>
+          <p className="text-sm text-muted-foreground/80">
+            Kelola sumber dana Anda — bank, e-wallet, tunai, dan investasi.
           </p>
         </div>
-        <Button onClick={() => setCreating(true)}>
-          <Plus size={16} className="mr-1.5" />
-          Tambah akun
+        <Button onClick={() => setCreating(true)} className="h-10 rounded-xl gap-2 text-xs font-semibold px-4 self-start sm:self-auto">
+          <Plus size={14} strokeWidth={2.5} />
+          Tambah Akun Baru
         </Button>
       </div>
 
       {/* Summary cards strip */}
       {activeAccounts.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          <StatCard
-            label="Total Saldo"
-            amount={totalBalance}
-            tone={totalBalance >= 0 ? "income" : "expense"}
-            icon={<Wallet size={16} />}
-          />
-          <StatCard
-            label="Akun Aktif"
-            amount={activeAccounts.length}
-            tone="neutral"
-            icon={<Power size={16} />}
-            isCurrency={false}
-          />
-          <StatCard
-            label="Saldo Negatif"
-            amount={accounts.filter((a) => a.isActive && a.balance < 0).length}
-            tone={accounts.filter((a) => a.isActive && a.balance < 0).length > 0 ? "expense" : "neutral"}
-            icon={<TrendingDown size={16} />}
-            isCurrency={false}
-          />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="rounded-xl border border-accent/20 bg-accent/[0.04] p-4">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">Total Saldo</p>
+            <p className={cn("text-lg font-black font-mono tabular-nums", totalBalance >= 0 ? "text-income" : "text-expense")}>
+              {formatIDR(totalBalance)}
+            </p>
+          </div>
+          <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">Akun Aktif</p>
+            <p className="text-lg font-black font-mono tabular-nums text-foreground">
+              {activeAccounts.length} <span className="text-xs text-muted-foreground/60 font-sans font-semibold ml-1">akun</span>
+            </p>
+          </div>
+          <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">Saldo Negatif</p>
+            <p className="text-lg font-black font-mono tabular-nums text-foreground">
+              {accounts.filter((a) => a.isActive && a.balance < 0).length} <span className="text-xs text-muted-foreground/60 font-sans font-semibold ml-1">akun</span>
+            </p>
+          </div>
         </div>
       )}
 
@@ -119,19 +117,19 @@ export function AccountsClient({ accounts }: Props) {
           title="Belum ada akun"
           description="Tambahkan akun pertama Anda untuk mulai mencatat transaksi."
           action={
-            <Button onClick={() => setCreating(true)}>
-              <Plus size={16} />
+            <Button onClick={() => setCreating(true)} className="rounded-xl">
+              <Plus size={16} className="mr-1.5" />
               Tambah akun
             </Button>
           }
         />
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-10">
           {/* Active Accounts */}
           {activeAccounts.length > 0 && (
-            <section>
-              <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-income" />
+            <section className="space-y-4">
+              <h2 className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-[0.12em] flex items-center gap-2">
+                <span className="size-1.5 rounded-full bg-income" />
                 Akun Aktif
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -149,9 +147,9 @@ export function AccountsClient({ accounts }: Props) {
 
           {/* Inactive Accounts */}
           {inactiveAccounts.length > 0 && (
-            <section>
-              <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40" />
+            <section className="space-y-4">
+              <h2 className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-[0.12em] flex items-center gap-2">
+                <span className="size-1.5 rounded-full bg-white/[0.2]" />
                 Nonaktif
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -171,7 +169,7 @@ export function AccountsClient({ accounts }: Props) {
 
       {/* Dialogs */}
       <Dialog open={creating} onOpenChange={setCreating}>
-        <DialogContent>
+        <DialogContent className="rounded-2xl border-white/[0.08] bg-popover/95 backdrop-blur-xl">
           <DialogHeader>
             <DialogTitle>Tambah akun</DialogTitle>
             <DialogDescription>
@@ -196,7 +194,7 @@ export function AccountsClient({ accounts }: Props) {
       </Dialog>
 
       <Dialog open={editing !== null} onOpenChange={(open) => !open && setEditing(null)}>
-        <DialogContent>
+        <DialogContent className="rounded-2xl border-white/[0.08] bg-popover/95 backdrop-blur-xl">
           <DialogHeader>
             <DialogTitle>Ubah akun</DialogTitle>
           </DialogHeader>
@@ -217,7 +215,7 @@ export function AccountsClient({ accounts }: Props) {
         target={confirmDelete}
         onClose={() => setConfirmDelete(null)}
       />
-    </>
+    </div>
   );
 }
 
@@ -250,120 +248,158 @@ function AccountCard({
       <Link
         to={`/accounts/${account.id}`}
         className={cn(
-          "relative block rounded-xl border border-border bg-gradient-to-br from-[#1C2128] via-[#161B22] to-[#161B22] p-5 min-h-[195px] transition-all duration-200 hover:border-[#444C56] overflow-hidden select-none cursor-pointer",
-          !account.isActive && "opacity-60"
+          "relative block rounded-2xl border border-white/[0.06] bg-gradient-to-br from-white/[0.03] via-white/[0.01] to-transparent p-6 pb-16 min-h-[210px] transition-all duration-300 hover:border-white/[0.15] hover:shadow-[0_8px_30px_rgba(0,0,0,0.3)] hover:-translate-y-1 overflow-hidden select-none cursor-pointer",
+          !account.isActive && "opacity-40 grayscale"
         )}
       >
-        {/* Dynamic swatch glow */}
-        <div 
-          className="absolute -right-8 -top-8 w-28 h-28 rounded-full blur-2xl opacity-15 pointer-events-none transition-all duration-300 group-hover:opacity-25" 
+        {/* Dynamic swatch glow - Enhanced */}
+        <div
+          className="absolute -right-10 -top-10 w-32 h-32 rounded-full blur-3xl opacity-[0.15] pointer-events-none transition-all duration-500 group-hover:opacity-30 group-hover:scale-125"
+          style={{ backgroundColor: swatch }}
+        />
+        
+        {/* Secondary glow for depth */}
+        <div
+          className="absolute -left-10 -bottom-10 w-24 h-24 rounded-full blur-2xl opacity-[0.08] pointer-events-none transition-all duration-500 group-hover:opacity-20"
           style={{ backgroundColor: swatch }}
         />
 
-        {/* Card Header: EMV Chip & Contactless */}
-        <div className="flex items-center gap-2 mb-6">
-          {/* EMV Chip */}
-          <div className="w-8 h-6 rounded bg-gradient-to-br from-amber-500/20 to-amber-600/30 border border-amber-500/30 relative overflow-hidden flex flex-wrap p-0.5 opacity-90 shadow-inner">
-            <div className="w-1/2 h-1/2 border-r border-b border-amber-500/30" />
-            <div className="w-1/2 h-1/2 border-b border-amber-500/30" />
-            <div className="w-1/2 h-1/2 border-r border-amber-500/30" />
-            <div className="w-1/2 h-1/2" />
-            <div className="absolute inset-1 border border-amber-500/10 pointer-events-none" />
-          </div>
+        {/* Card Header: Icon/Chip & Status */}
+        <div className="flex items-start justify-between mb-6 relative z-10">
+          {/* Institution Icon or EMV Chip */}
+          {account.icon ? (
+            <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] backdrop-blur-sm transition-all duration-300 group-hover:bg-white/[0.08] group-hover:border-white/[0.12] group-hover:scale-105">
+              <span className="text-2xl">{account.icon}</span>
+            </div>
+          ) : (
+            <div className="w-9 h-7 rounded-lg bg-gradient-to-br from-amber-500/20 to-amber-600/30 border border-amber-500/30 relative overflow-hidden flex flex-wrap p-0.5 opacity-80 shadow-inner">
+              <div className="w-1/2 h-1/2 border-r border-b border-amber-500/30" />
+              <div className="w-1/2 h-1/2 border-b border-amber-500/30" />
+              <div className="w-1/2 h-1/2 border-r border-amber-500/30" />
+              <div className="w-1/2 h-1/2" />
+              <div className="absolute inset-1 border border-amber-500/10 pointer-events-none" />
+            </div>
+          )}
           
-          {/* Contactless Signal */}
-          <svg className="w-3.5 h-3.5 text-muted-foreground/50 rotate-90" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path d="M5 12a7 7 0 0 1 7-7" />
-            <path d="M5 12a10 10 0 0 1 10-10" />
-            <path d="M5 12a4 4 0 0 1 4-4" />
-            <circle cx="5" cy="12" r="1" fill="currentColor" />
-          </svg>
-        </div>
-
-        {/* Card Body: Balance & Card Number */}
-        <div className="space-y-1">
-          <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/60">
-            Saldo Utama
-          </p>
-          <p className={cn(
-            "text-2xl font-bold font-mono tabular-nums tracking-tight",
-            isNegative ? "text-expense" : "text-foreground"
-          )}>
-            {formatIDR(account.balance)}
-          </p>
-          <p className="text-xs font-mono text-muted-foreground/40 tracking-widest pt-1">
-            {maskedNumber}
-          </p>
-        </div>
-
-        {/* Card Footer: Holder Name & Account Type Network */}
-        <div className="flex items-end justify-between border-t border-border/40 pt-3 mt-4">
-          <div className="min-w-0 flex-1 pr-2">
-            <p className="text-[9px] uppercase tracking-wider text-muted-foreground/60 font-semibold mb-0.5">
-              Cardholder
-            </p>
-            <p className="text-xs font-semibold text-foreground truncate uppercase tracking-wide font-mono">
-              {account.name}
-            </p>
-          </div>
-          
-          <div className="flex flex-col items-end gap-1 shrink-0">
-            <span 
-              className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider border"
-              style={{ 
-                backgroundColor: `${swatch}12`, 
-                color: swatch, 
-                borderColor: `${swatch}25`
+          {/* Account Type Badge */}
+          <div className="flex flex-col items-end gap-1.5">
+            <span
+              className="inline-flex items-center px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border backdrop-blur-sm transition-all duration-300 group-hover:scale-105"
+              style={{
+                backgroundColor: `${swatch}15`,
+                color: swatch,
+                borderColor: `${swatch}30`
               }}
             >
               {TYPE_LABEL[account.type]}
             </span>
-            <span className="text-[10px] font-mono text-muted-foreground font-medium">
-              {account.transactionCount} transaksi
+            {!account.isActive && (
+              <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/40 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40" />
+                Nonaktif
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Card Body: Balance & Card Number */}
+        <div className="space-y-2 relative z-10 mb-6">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/50">
+            Saldo Tersedia
+          </p>
+          <p className={cn(
+            "text-3xl font-black font-mono tracking-tight tabular-nums transition-colors duration-300",
+            isNegative ? "text-expense" : "text-foreground group-hover:text-white"
+          )}>
+            {formatIDR(account.balance)}
+          </p>
+          <p className="text-[11px] font-mono text-muted-foreground/30 tracking-[0.2em] pt-1">
+            {maskedNumber}
+          </p>
+        </div>
+
+        {/* Card Footer: Holder Name & Transaction Count */}
+        <div className="flex items-end justify-between border-t border-white/[0.06] pt-4 relative z-10">
+          <div className="min-w-0 flex-1 pr-3">
+            <p className="text-[9px] uppercase tracking-wider text-muted-foreground/50 font-bold mb-1">
+              Pemegang Akun
+            </p>
+            <p className="text-sm font-bold text-foreground truncate tracking-wide transition-colors duration-300 group-hover:text-white">
+              {account.name}
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-1.5 shrink-0 px-2.5 py-1 rounded-lg bg-white/[0.02] border border-white/[0.04]">
+            <svg className="w-3 h-3 text-muted-foreground/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span className="text-[10px] font-mono text-muted-foreground/60 font-bold tabular-nums">
+              {account.transactionCount}
             </span>
           </div>
         </div>
+        
+        {/* Hover shine effect */}
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.02] to-transparent" />
+        </div>
       </Link>
 
-      {/* Floating Action Dropdown Menu */}
-      <div className="absolute top-4 right-4 z-20">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label="Aksi akun"
-              className="h-7 w-7 rounded-md hover:bg-elevated text-muted-foreground hover:text-foreground shrink-0"
-              disabled={pending}
-            >
-              <MoreVertical size={14} />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onSelect={onEdit}>
-              <Pencil size={14} />
-              Ubah
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={handleToggle}>
-              {account.isActive ? (
-                <>
-                  <PowerOff size={14} />
-                  Nonaktifkan
-                </>
-              ) : (
-                <>
-                  <Power size={14} />
-                  Aktifkan
-                </>
-              )}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive" onSelect={onDelete}>
-              <Trash2 size={14} />
-              Hapus
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+      {/* Floating Action Dropdown Menu - Outside Link */}
+      <div className="absolute bottom-6 left-6 right-6 z-30 pointer-events-none">
+        <div className="flex items-center justify-between pointer-events-auto">
+          <div className="text-[10px] text-muted-foreground/40 font-mono">
+            ID: {account.id.slice(-8)}
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Aksi akun"
+                className="h-8 w-8 rounded-lg hover:bg-white/[0.12] bg-white/[0.04] border border-white/[0.08] text-muted-foreground/60 hover:text-foreground hover:border-white/[0.15] shrink-0 transition-all duration-200 backdrop-blur-md shadow-lg"
+                disabled={pending}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <MoreVertical size={15} />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl shadow-2xl p-1">
+              <DropdownMenuItem
+                onSelect={onEdit}
+                className="rounded-lg text-xs px-3 py-2 gap-2.5 cursor-pointer transition-all duration-200 hover:bg-accent/10 hover:text-accent focus:bg-accent/10 focus:text-accent active:scale-95"
+              >
+                <Pencil size={13} className="transition-transform duration-200 group-hover:scale-110" />
+                <span className="font-medium">Ubah</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={handleToggle}
+                className="rounded-lg text-xs px-3 py-2 gap-2.5 cursor-pointer transition-all duration-200 hover:bg-accent/10 hover:text-accent focus:bg-accent/10 focus:text-accent active:scale-95"
+              >
+                {account.isActive ? (
+                  <>
+                    <PowerOff size={13} className="transition-transform duration-200 group-hover:scale-110" />
+                    <span className="font-medium">Nonaktifkan</span>
+                  </>
+                ) : (
+                  <>
+                    <Power size={13} className="transition-transform duration-200 group-hover:scale-110" />
+                    <span className="font-medium">Aktifkan</span>
+                  </>
+                )}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator className="bg-white/[0.08] my-1" />
+              <DropdownMenuItem
+                variant="destructive"
+                onSelect={onDelete}
+                className="rounded-lg text-xs px-3 py-2 gap-2.5 cursor-pointer transition-all duration-200 hover:bg-expense/10 hover:text-expense focus:bg-expense/10 focus:text-expense active:scale-95"
+              >
+                <Trash2 size={13} className="transition-transform duration-200 group-hover:scale-110" />
+                <span className="font-medium">Hapus</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
     </div>
   );
@@ -396,28 +432,28 @@ function ConfirmDelete({
 
   return (
     <Dialog open={target !== null} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent>
+      <DialogContent className="rounded-2xl border-white/[0.08] bg-popover/95 backdrop-blur-xl">
         <DialogHeader>
-          <DialogTitle>Delete Account</DialogTitle>
+          <DialogTitle>Hapus Akun</DialogTitle>
           <DialogDescription>
-            This action cannot be undone.
+            Tindakan ini tidak dapat dibatalkan.
           </DialogDescription>
         </DialogHeader>
         <DialogBody className="space-y-4">
           {target && (
             <>
-              <div className="p-3 rounded-lg bg-elevated border border-border">
-                <p className="text-sm font-medium text-foreground">
+              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                <p className="text-sm font-semibold text-foreground">
                   {target.name}
                 </p>
-                <p className="text-xs text-muted-foreground mt-1 font-mono tabular-nums">
-                  {formatIDR(target.balance)} · {target.transactionCount} transactions
+                <p className="text-xs text-muted-foreground/60 mt-1 font-mono tabular-nums">
+                  {formatIDR(target.balance)} · {target.transactionCount} transaksi
                 </p>
               </div>
 
               {target.transactionCount > 0 && (
-                <p className="text-xs text-warning">
-                  This account has {target.transactionCount} transactions. Consider deactivating instead.
+                <p className="text-xs text-warning/80">
+                  Akun ini memiliki {target.transactionCount} transaksi. Anda mungkin lebih baik menonaktifkannya saja.
                 </p>
               )}
 
@@ -426,19 +462,17 @@ function ConfirmDelete({
           )}
         </DialogBody>
         <DialogFooter>
-          <Button variant="secondary" onClick={onClose} disabled={pending}>
-            Cancel
+          <Button variant="secondary" onClick={onClose} disabled={pending} className="rounded-xl">
+            Batal
           </Button>
-          <Button variant="destructive" onClick={handleConfirm} disabled={pending}>
-            {pending ? "Deleting..." : "Delete"}
+          <Button variant="destructive" onClick={handleConfirm} disabled={pending} className="rounded-xl">
+            {pending ? "Menghapus..." : "Hapus"}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
-
-// --- Helpers --------------------------------------------------------------
 
 function toFormInitial(row: AccountRowData): AccountFormInitial {
   return {
@@ -450,5 +484,3 @@ function toFormInitial(row: AccountRowData): AccountFormInitial {
     isActive: row.isActive,
   };
 }
-
-// Made with Bob

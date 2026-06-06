@@ -55,71 +55,72 @@ export function NavUser({ user }: NavUserProps) {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              className="rounded-xl hover:bg-white/[0.04] transition-all duration-300 data-[state=open]:bg-white/[0.06] data-[state=open]:text-foreground"
             >
-              <Avatar className="h-8 w-8 rounded-md">
+              <Avatar className="h-8 w-8 rounded-xl border border-white/[0.08]">
                 {user.image ? (
                   <AvatarImage src={user.image} alt={user.name ?? "User"} />
                 ) : null}
-                <AvatarFallback className="rounded-md text-xs font-medium">
+                <AvatarFallback className="rounded-xl text-[10px] font-bold bg-gradient-to-br from-accent/20 to-indigo-500/20 text-accent">
                   {initials}
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left leading-tight">
-                <span className="truncate text-sm font-medium">
+                <span className="truncate text-[13px] font-semibold text-foreground">
                   {user.name ?? "User"}
                 </span>
-                <span className="truncate text-xs text-muted-foreground">
+                <span className="truncate text-[11px] text-muted-foreground/50">
                   {user.email}
                 </span>
               </div>
-              <ChevronsUpDown size={14} className="ml-auto text-muted-foreground" />
+              <ChevronsUpDown size={14} className="ml-auto text-muted-foreground/30" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="min-w-56 rounded-md"
+            className="min-w-56 rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl shadow-2xl shadow-black/40"
             side={isMobile ? "bottom" : "right"}
             align="end"
             sideOffset={8}
           >
             <DropdownMenuLabel className="p-0 font-normal">
-              <div className="flex items-center gap-2 px-1.5 py-1.5">
-                <Avatar className="h-8 w-8 rounded-md">
+              <div className="flex items-center gap-3 px-3 py-3">
+                <Avatar className="h-9 w-9 rounded-xl border border-white/[0.08]">
                   {user.image ? (
                     <AvatarImage src={user.image} alt={user.name ?? "User"} />
                   ) : null}
-                  <AvatarFallback className="rounded-md text-xs">
+                  <AvatarFallback className="rounded-xl text-[10px] font-bold bg-gradient-to-br from-accent/20 to-indigo-500/20 text-accent">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left leading-tight">
-                  <span className="truncate text-sm font-medium text-foreground">
+                  <span className="truncate text-sm font-semibold text-foreground">
                     {user.name ?? "User"}
                   </span>
-                  <span className="truncate text-xs text-muted-foreground">
+                  <span className="truncate text-[11px] text-muted-foreground/60">
                     {user.email}
                   </span>
                 </div>
               </div>
             </DropdownMenuLabel>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="bg-white/[0.06]" />
             <DropdownMenuGroup>
-              <DropdownMenuItem asChild>
+              <DropdownMenuItem asChild className="rounded-lg mx-1 px-3 py-2 text-[13px]">
                 <Link to="/profile" className="cursor-pointer">
-                  <UserCircle size={14} />
+                  <UserCircle size={14} className="text-muted-foreground/60" />
                   Profil
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
+              <DropdownMenuItem asChild className="rounded-lg mx-1 px-3 py-2 text-[13px]">
                 <Link to="/settings" className="cursor-pointer">
-                  <Settings size={14} />
+                  <Settings size={14} className="text-muted-foreground/60" />
                   Pengaturan
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="bg-white/[0.06]" />
             <DropdownMenuItem
               variant="destructive"
+              className="rounded-lg mx-1 px-3 py-2 text-[13px]"
               onSelect={async (e) => {
                 e.preventDefault();
                 try {

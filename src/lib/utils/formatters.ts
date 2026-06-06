@@ -63,3 +63,32 @@ export function formatMonthLabel(date: Date | string): string {
     new Date(date),
   );
 }
+
+/**
+ * Clean money input string by removing currency prefix, thousands separators, and decimal cents.
+ * Handles both Indonesian (dots for thousands, commas for cents) and standard formats.
+ */
+export function cleanMoneyString(val: string): string {
+  // Strip "Rp", "rp", spaces, and dashes
+  let clean = val.replace(/Rp/gi, "").replace(/\s+/g, "").trim();
+
+  // If there's a comma/dot followed by exactly two digits at the end (cents), strip it
+  clean = clean.replace(/[,.]\d{2}$/, "");
+
+  // Now strip all remaining dots and commas
+  clean = clean.replace(/[.,]/g, "");
+
+  return clean || "0";
+}
+
+/**
+ * Format raw string input with dots as thousands separators.
+ * Used for real-time formatting in input fields.
+ */
+export function formatInputRupiah(val: string): string {
+  // Strip all non-digits
+  const digits = val.replace(/\D/g, "");
+  if (!digits) return "";
+
+  return new Intl.NumberFormat("id-ID").format(Number(digits));
+}

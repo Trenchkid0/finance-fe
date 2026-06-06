@@ -10,89 +10,140 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "#0D1117",
-        foreground: "#F0F6FC",
+        // ═══════════════════════════════════════════════════════════
+        // ENHANCED COLOR PALETTE - More Vibrant & Modern
+        // ═══════════════════════════════════════════════════════════
+        background: "#0A0E1A",      // Deeper, richer dark blue
+        foreground: "#F8FAFC",      // Brighter white for better contrast
 
         card: {
-          DEFAULT: "#161B22",
-          foreground: "#F0F6FC",
+          DEFAULT: "#111827",       // Warmer dark with subtle blue tint
+          foreground: "#F8FAFC",
         },
         popover: {
-          DEFAULT: "#1C2128",
-          foreground: "#F0F6FC",
+          DEFAULT: "#1E293B",
+          foreground: "#F8FAFC",
         },
 
         primary: {
-          DEFAULT: "#388BFD",
+          DEFAULT: "#3B82F6",       // Brighter, more vibrant blue
           foreground: "#FFFFFF",
         },
         secondary: {
-          DEFAULT: "#1C2128",
-          foreground: "#F0F6FC",
+          DEFAULT: "#1E293B",
+          foreground: "#F8FAFC",
         },
         muted: {
-          DEFAULT: "#1C2128",
-          foreground: "#9CA3AF", // Improved from #8B949E for WCAG AA compliance (4.6:1 contrast)
+          DEFAULT: "#1E293B",
+          foreground: "#94A3B8",    // Softer gray-blue
         },
         destructive: {
-          DEFAULT: "#F85149",
+          DEFAULT: "#EF4444",       // More vibrant red
           foreground: "#FFFFFF",
         },
 
-        border: "#30363D",
-        input: "#30363D",
-        ring: "#388BFD",
+        border: "#334155",          // Lighter, more visible borders
+        input: "#1E293B",
+        ring: "#3B82F6",
 
-        canvas: "#0D1117",
-        surface: "#161B22",
-        elevated: "#1C2128",
-        income: "#2EA043",
-        expense: "#F85149",
-        warning: "#D29922",
-        accent: "#388BFD",
+        canvas: "#0A0E1A",
+        surface: "#111827",
+        elevated: "#1E293B",
+        
+        // Financial colors - More vibrant
+        income: "#10B981",          // Brighter emerald green
+        expense: "#EF4444",         // Vibrant red
+        warning: "#F59E0B",         // Warm amber
+        accent: "#3B82F6",          // Vibrant blue
+        
+        // Additional accent colors for variety
+        purple: "#8B5CF6",
+        pink: "#EC4899",
+        teal: "#14B8A6",
 
         sidebar: {
-          DEFAULT: "#161B22",
-          foreground: "#F0F6FC",
-          primary: "#388BFD",
+          DEFAULT: "#0F172A",
+          foreground: "#F8FAFC",
+          primary: "#3B82F6",
           "primary-foreground": "#FFFFFF",
-          accent: "#1C2128",
-          "accent-foreground": "#F0F6FC",
-          border: "#30363D",
-          ring: "#388BFD",
+          accent: "#1E293B",
+          "accent-foreground": "#F8FAFC",
+          border: "#334155",
+          ring: "#3B82F6",
         },
       },
       borderRadius: {
-        lg: "0.5rem",
-        md: "0.375rem",
-        sm: "0.25rem",
+        lg: "0.75rem",              // Slightly more rounded
+        md: "0.5rem",
+        sm: "0.375rem",
       },
       fontFamily: {
         sans: [
           "Geist",
           "Inter",
-          "ui-sans-serif",
-          "system-ui",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "Segoe UI",
           "sans-serif",
         ],
         mono: [
           "Geist Mono",
           "JetBrains Mono",
-          "ui-monospace",
+          "Fira Code",
           "monospace",
         ],
       },
+      // ═══════════════════════════════════════════════════════════
+      // ENHANCED TYPOGRAPHY SCALE
+      // ═══════════════════════════════════════════════════════════
       fontSize: {
-        display: ["1.875rem", { lineHeight: "2.25rem", fontWeight: "600" }],
-        heading: ["1.25rem", { lineHeight: "1.75rem", fontWeight: "500" }],
+        // Display sizes - for hero sections
+        "display-2xl": ["4.5rem", { lineHeight: "1", fontWeight: "800", letterSpacing: "-0.02em" }],
+        "display-xl": ["3.75rem", { lineHeight: "1", fontWeight: "800", letterSpacing: "-0.02em" }],
+        "display-lg": ["3rem", { lineHeight: "1.1", fontWeight: "700", letterSpacing: "-0.02em" }],
+        "display-md": ["2.25rem", { lineHeight: "1.2", fontWeight: "700", letterSpacing: "-0.01em" }],
+        "display-sm": ["1.875rem", { lineHeight: "1.3", fontWeight: "600", letterSpacing: "-0.01em" }],
+        
+        // Heading sizes
+        "heading-xl": ["1.5rem", { lineHeight: "1.4", fontWeight: "600" }],
+        "heading-lg": ["1.25rem", { lineHeight: "1.5", fontWeight: "600" }],
+        "heading-md": ["1.125rem", { lineHeight: "1.5", fontWeight: "600" }],
+        "heading-sm": ["1rem", { lineHeight: "1.5", fontWeight: "600" }],
+        
+        // Body sizes
+        "body-lg": ["1.125rem", { lineHeight: "1.75", fontWeight: "400" }],
+        "body-md": ["1rem", { lineHeight: "1.625", fontWeight: "400" }],
+        "body-sm": ["0.875rem", { lineHeight: "1.5", fontWeight: "400" }],
+        "body-xs": ["0.75rem", { lineHeight: "1.5", fontWeight: "400" }],
+        
+        // Numeric - tabular nums by default
+        "numeric-2xl": ["2.5rem", { lineHeight: "1.2", fontWeight: "700" }],
+        "numeric-xl": ["2rem", { lineHeight: "1.2", fontWeight: "700" }],
+        "numeric-lg": ["1.5rem", { lineHeight: "1.3", fontWeight: "600" }],
+        "numeric-md": ["1.125rem", { lineHeight: "1.4", fontWeight: "600" }],
+        "numeric-sm": ["0.875rem", { lineHeight: "1.5", fontWeight: "500" }],
+      },
+      letterSpacing: {
+        tighter: "-0.02em",
+        tight: "-0.01em",
+        wide: "0.02em",
+        wider: "0.05em",
       },
       borderColor: {
-        DEFAULT: "#30363D",
+        DEFAULT: "#334155",
       },
       keyframes: {
         "fade-in": {
           from: { opacity: "0" },
           to: { opacity: "1" },
+        },
+        "fade-in-up": {
+          from: { opacity: "0", transform: "translateY(10px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "slide-in-right": {
+          from: { opacity: "0", transform: "translateX(20px)" },
+          to: { opacity: "1", transform: "translateX(0)" },
         },
         "accordion-down": {
           from: { height: "0" },
@@ -102,11 +153,22 @@ const config: Config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "shimmer": {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
+        },
       },
       animation: {
-        "fade-in": "fade-in 200ms ease-out",
+        "fade-in": "fade-in 300ms ease-out",
+        "fade-in-up": "fade-in-up 400ms ease-out",
+        "slide-in-right": "slide-in-right 300ms ease-out",
         "accordion-down": "accordion-down 200ms ease-out",
         "accordion-up": "accordion-up 200ms ease-out",
+        "shimmer": "shimmer 2s linear infinite",
+      },
+      backgroundImage: {
+        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
+        "gradient-conic": "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
       },
     },
   },

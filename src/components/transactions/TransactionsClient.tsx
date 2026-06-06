@@ -15,13 +15,10 @@ import {
   Plus,
   Search,
   Trash2,
-  TrendingDown,
-  TrendingUp,
   Wallet,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils/cn";
-import { StatCard } from "@/components/dashboard/StatCard";
 
 import { deleteTransaction } from "@/app/actions/transactions";
 import { formatDateShort, formatIDR } from "@/lib/utils/formatters";
@@ -155,18 +152,18 @@ export function TransactionsClient({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6 animate-fade-in-up">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-semibold text-foreground mb-1">
+          <h1 className="text-2xl lg:text-[1.75rem] font-extrabold tracking-tight text-foreground">
             Transaksi
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground/80 mt-1.5">
             Kelola dan telusuri pemasukan, pengeluaran, dan transfer.
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button asChild variant="secondary" size="sm" title="Unduh CSV">
+          <Button asChild variant="outline" className="h-9 rounded-xl gap-2 text-xs font-semibold px-4" title="Unduh CSV">
             <a href={exportHref()} download>
               <Download size={14} />
               Export
@@ -175,36 +172,34 @@ export function TransactionsClient({
           <Button
             onClick={startCreate}
             disabled={!canCreate}
-            size="sm"
+            className="h-9 rounded-xl gap-2 text-xs font-semibold px-4"
             title={canCreate ? undefined : "Tambahkan akun terlebih dahulu"}
           >
-            <Plus size={14} />
-            Tambah transaksi
+            <Plus size={14} strokeWidth={2.5} />
+            Tambah Transaksi
           </Button>
         </div>
       </div>
 
-      {/* 3-stat summary card — refleksif terhadap filter aktif */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard
-          label="Total Transaksi"
-          amount={summary.total}
-          tone="neutral"
-          icon={<ArrowLeftRight size={16} />}
-          isCurrency={false}
-        />
-        <StatCard
-          label="Pemasukan"
-          amount={summary.income}
-          tone="income"
-          icon={<TrendingUp size={16} />}
-        />
-        <StatCard
-          label="Pengeluaran"
-          amount={summary.expense}
-          tone="expense"
-          icon={<TrendingDown size={16} />}
-        />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">Total Transaksi</p>
+          <p className="text-lg font-black font-mono tabular-nums text-foreground">
+            {summary.total} <span className="text-xs text-muted-foreground/60 font-sans font-semibold ml-1">transaksi</span>
+          </p>
+        </div>
+        <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">Pemasukan</p>
+          <p className="text-lg font-black font-mono tabular-nums text-income">
+            {formatIDR(summary.income)}
+          </p>
+        </div>
+        <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">Pengeluaran</p>
+          <p className="text-lg font-black font-mono tabular-nums text-expense">
+            {formatIDR(summary.expense)}
+          </p>
+        </div>
       </div>
 
       <FilterBar
@@ -257,7 +252,7 @@ export function TransactionsClient({
         open={creating !== null}
         onOpenChange={(open) => !open && setCreating(null)}
       >
-        <DialogContent>
+        <DialogContent className="rounded-2xl border-white/[0.08] bg-popover/95 backdrop-blur-xl">
           <DialogHeader>
             <DialogTitle>Tambah transaksi</DialogTitle>
           </DialogHeader>
@@ -282,7 +277,7 @@ export function TransactionsClient({
         open={editing !== null}
         onOpenChange={(open) => !open && setEditing(null)}
       >
-        <DialogContent>
+        <DialogContent className="rounded-2xl border-white/[0.08] bg-popover/95 backdrop-blur-xl">
           <DialogHeader>
             <DialogTitle>Ubah transaksi</DialogTitle>
           </DialogHeader>
@@ -373,9 +368,9 @@ function FilterBar({
           endDate: (fd.get("endDate") as string) || null,
         });
       }}
-      className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4"
+      className="flex flex-col gap-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5"
     >
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
         {/* Search */}
         <div className="relative flex-1">
           <Search
@@ -431,7 +426,7 @@ function FilterBar({
       </div>
 
       {/* Date range + actions row */}
-      <div className="flex flex-col gap-3 pt-3 border-t border-border/60 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 pt-4 border-t border-white/[0.04] sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <span className="text-xs font-semibold text-text-muted shrink-0">Rentang Tanggal</span>
           <div className="flex items-center gap-1.5 shrink-0">
@@ -616,7 +611,7 @@ function TransactionsList({
 }) {
   if (transactions.length === 0) {
     return (
-      <div className="rounded-xl border border-border bg-card">
+      <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02]">
         {emptyState}
       </div>
     );
@@ -733,7 +728,7 @@ function DateGroup({
         </p>
       </header>
 
-      <div className="rounded-xl bg-card border border-border divide-y divide-border/60 overflow-hidden">
+      <div className="rounded-2xl bg-white/[0.02] border border-white/[0.06] divide-y divide-white/[0.04] overflow-hidden">
         {group.items.map((tx) => (
           <TransactionRow
             key={tx.id}
@@ -1016,7 +1011,7 @@ function ConfirmDelete({
 
   return (
     <Dialog open={target !== null} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent>
+      <DialogContent className="rounded-2xl border-white/[0.08] bg-popover/95 backdrop-blur-xl">
         <DialogHeader>
           <DialogTitle>Hapus transaksi</DialogTitle>
           <DialogDescription>
@@ -1027,7 +1022,7 @@ function ConfirmDelete({
         </DialogHeader>
         <DialogBody>
           {target ? (
-            <div className="px-3 py-2 bg-elevated border border-border rounded-md">
+            <div className="px-4 py-3 bg-white/[0.02] border border-white/[0.06] rounded-xl">
               <p className="text-sm text-foreground">
                 {target.description ?? target.categoryName ?? "Transaksi"}
               </p>
@@ -1038,13 +1033,14 @@ function ConfirmDelete({
           ) : null}
         </DialogBody>
         <DialogFooter>
-          <Button variant="secondary" onClick={onClose} disabled={pending}>
+          <Button variant="secondary" onClick={onClose} disabled={pending} className="rounded-xl">
             Batal
           </Button>
           <Button
             variant="destructive"
             onClick={handleConfirm}
             disabled={pending}
+            className="rounded-xl"
           >
             {pending ? "Menghapus..." : "Hapus"}
           </Button>

@@ -3,7 +3,6 @@ import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Inbox, ArrowLeftRight } from "lucide-react";
 import { api } from "@/lib/api";
 import { formatDateShort, formatIDR } from "@/lib/utils/formatters";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
@@ -72,43 +71,88 @@ export default function AccountDetail() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-4xl mx-auto animate-fade-in-up">
+      {/* Breadcrumbs / Header */}
       <header className="space-y-3">
-        <Button asChild variant="ghost" size="sm" className="-ml-2">
+        <Button asChild variant="ghost" size="sm" className="h-8 rounded-lg gap-1.5 px-3 -ml-2 text-muted-foreground/80 hover:text-foreground hover:bg-white/[0.04]">
           <Link to="/accounts">
             <ArrowLeft size={14} />
             Kembali ke daftar akun
           </Link>
         </Button>
         <div>
-          <h1 className="text-3xl font-semibold text-foreground mb-1">
-            {account.name}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {ACCOUNT_TYPE_LABEL[account.type] ?? account.type}
-            {account.isActive ? "" : " · Nonaktif"}
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-2xl lg:text-[1.75rem] font-extrabold tracking-tight text-foreground">
+              Detail Akun
+            </h1>
+            {!account.isActive && (
+              <Badge variant="outline" className="bg-white/[0.02] border-white/[0.08] text-muted-foreground/60 text-[10px] font-bold font-mono">
+                NONAKTIF
+              </Badge>
+            )}
+          </div>
+          <p className="text-sm text-muted-foreground/85 mt-1">
+            Lihat riwayat transaksi dan rincian alokasi saldo dari akun Anda.
           </p>
         </div>
       </header>
 
-      <Card className="p-6">
-        <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
-          Saldo saat ini
-        </p>
-        <p className="text-3xl font-semibold font-mono tabular-nums text-foreground mt-1">
-          {formatIDR(Number(account.balance))}
-        </p>
-      </Card>
+      {/* Account Info Card */}
+      <div className="relative rounded-2xl border border-white/[0.06] bg-gradient-to-br from-white/[0.03] via-white/[0.01] to-transparent p-6 overflow-hidden">
+        {/* Decorative background glow using account color */}
+        <div 
+          className="absolute -right-12 -top-12 w-36 h-36 rounded-full blur-[60px] opacity-15 pointer-events-none" 
+          style={{ backgroundColor: account.color || "#388BFD" }}
+        />
+        
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
+          <div className="flex items-center gap-4">
+            <div 
+              className="size-14 rounded-2xl flex items-center justify-center text-2xl border"
+              style={{ 
+                backgroundColor: `${account.color || "#388BFD"}15`, 
+                color: account.color || "#388BFD",
+                borderColor: `${account.color || "#388BFD"}25`
+              }}
+            >
+              {account.icon || "🏦"}
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-foreground tracking-tight">
+                {account.name}
+              </h2>
+              <p className="text-xs text-muted-foreground/70 mt-0.5">
+                Kategori: {ACCOUNT_TYPE_LABEL[account.type] ?? account.type}
+              </p>
+            </div>
+          </div>
+          
+          <div className="sm:text-right">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/65">
+              Saldo saat ini
+            </p>
+            <p className="text-3xl font-black font-mono tracking-tight text-foreground mt-1 tabular-nums">
+              {formatIDR(Number(account.balance))}
+            </p>
+          </div>
+        </div>
+      </div>
 
-      <Card className="p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-medium text-foreground">
-            Transaksi terkait (50 terbaru)
-          </h2>
+      {/* Transaction List Card */}
+      <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-white/[0.04]">
+          <div>
+            <h3 className="text-base font-bold text-foreground">
+              Transaksi Terkait
+            </h3>
+            <p className="text-xs text-muted-foreground/60 mt-0.5">
+              Menampilkan hingga 50 aktivitas keuangan terbaru
+            </p>
+          </div>
           {transactions.length > 0 ? (
             <Link
               to={`/transactions?accountId=${id}`}
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              className="text-xs font-semibold text-accent hover:underline"
             >
               Lihat semua
             </Link>
@@ -123,81 +167,81 @@ export default function AccountDetail() {
             size="sm"
           />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="text-xs font-medium text-muted-foreground uppercase tracking-wider border-b border-border bg-elevated">
-                  <th className="px-4 py-2.5">Tanggal</th>
-                  <th className="px-4 py-2.5">Deskripsi</th>
-                  <th className="px-4 py-2.5 text-right">Jumlah</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {transactions.map((tx) => {
-                  const amount = Number(tx.amount);
-                  const isIncoming =
-                    tx.type === "income" ||
-                    (tx.type === "transfer" && tx.transferToId === id);
-                  const isOutgoing =
-                    tx.type === "expense" ||
-                    (tx.type === "transfer" && tx.accountId === id);
-                  const tone = isIncoming
-                    ? "text-income"
-                    : isOutgoing
-                      ? "text-expense"
-                      : "text-foreground";
-                  const sign = isIncoming ? "+" : isOutgoing ? "-" : "";
+          <div className="space-y-1">
+            {/* Header kolom (desktop saja) */}
+            <div className="hidden md:grid grid-cols-12 px-4 py-2 text-[10px] font-bold text-muted-foreground/45 uppercase tracking-wider">
+              <span className="col-span-2">Tanggal</span>
+              <span className="col-span-8">Deskripsi & Kategori</span>
+              <span className="col-span-2 text-right">Jumlah</span>
+            </div>
 
-                  const subtitle =
-                    tx.type === "transfer"
-                      ? tx.accountId === id
-                        ? `Transfer → ${tx.transferTo?.name ?? "?"}`
-                        : `Transfer ← ${tx.account?.name ?? "?"}`
-                      : tx.category?.name ?? "Tanpa kategori";
+            {/* List item */}
+            {transactions.map((tx) => {
+              const amount = Number(tx.amount);
+              const isIncoming =
+                tx.type === "income" ||
+                (tx.type === "transfer" && tx.transferToId === id);
+              const isOutgoing =
+                tx.type === "expense" ||
+                (tx.type === "transfer" && tx.accountId === id);
+              const tone = isIncoming
+                ? "text-income"
+                : isOutgoing
+                  ? "text-expense"
+                  : "text-foreground";
+              const sign = isIncoming ? "+" : isOutgoing ? "-" : "";
 
-                  return (
-                    <tr
-                      key={tx.id}
-                      className="text-sm text-foreground hover:bg-elevated/40 transition-colors"
-                    >
-                      <td className="px-4 py-3 font-mono text-xs text-muted-foreground whitespace-nowrap">
-                        {formatDateShort(tx.date)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <span className="block font-medium">
-                            {tx.description ?? subtitle}
-                          </span>
-                          {tx.type === "transfer" ? (
-                            <Badge variant="outline" className="font-normal text-[10px] py-0 h-4">
-                              <ArrowLeftRight size={8} className="mr-0.5" />
-                              {tx.accountId === id ? "Keluar" : "Masuk"}
-                            </Badge>
-                          ) : null}
-                        </div>
-                        {tx.description ? (
-                          <span className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                            {tx.category?.icon ? (
-                              <span aria-hidden>{tx.category.icon}</span>
-                            ) : null}
-                            {subtitle}
-                          </span>
-                        ) : null}
-                      </td>
-                      <td
-                        className={`px-4 py-3 text-right font-mono tabular-nums font-semibold whitespace-nowrap ${tone}`}
-                      >
-                        {sign}
-                        {formatIDR(amount)}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+              const subtitle =
+                tx.type === "transfer"
+                  ? tx.accountId === id
+                    ? `Transfer → ${tx.transferTo?.name ?? "?"}`
+                    : `Transfer ← ${tx.account?.name ?? "?"}`
+                  : tx.category?.name ?? "Tanpa kategori";
+
+              return (
+                <div
+                  key={tx.id}
+                  className="grid grid-cols-12 items-center px-4 py-3 rounded-xl border border-transparent hover:bg-white/[0.03] hover:border-white/[0.06] transition-all duration-200 gap-2 md:gap-0"
+                >
+                  {/* Tanggal */}
+                  <div className="col-span-12 md:col-span-2 text-xs font-mono text-muted-foreground/60">
+                    {formatDateShort(tx.date)}
+                  </div>
+
+                  {/* Deskripsi & Kategori */}
+                  <div className="col-span-8 md:col-span-8 flex flex-col justify-center">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-foreground truncate max-w-[200px] sm:max-w-md">
+                        {tx.description || subtitle}
+                      </span>
+                      {tx.type === "transfer" ? (
+                        <Badge variant="outline" className="bg-white/[0.02] border-white/[0.08] text-[9px] font-bold py-0.5 px-1.5 rounded-md text-muted-foreground/75 flex items-center gap-1 font-mono">
+                          <ArrowLeftRight size={9} />
+                          {tx.accountId === id ? "KELUAR" : "MASUK"}
+                        </Badge>
+                      ) : null}
+                    </div>
+                    {tx.description ? (
+                      <span className="text-xs text-muted-foreground/60 flex items-center gap-1.5 mt-0.5">
+                        {tx.category?.icon && (
+                          <span className="text-xs" aria-hidden>{tx.category.icon}</span>
+                        )}
+                        <span>{subtitle}</span>
+                      </span>
+                    ) : null}
+                  </div>
+
+                  {/* Jumlah */}
+                  <div className={`col-span-4 md:col-span-2 text-right font-mono text-sm font-bold tabular-nums ${tone}`}>
+                    {sign}
+                    {formatIDR(amount)}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
-      </Card>
+      </div>
     </div>
   );
 }

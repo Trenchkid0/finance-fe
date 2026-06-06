@@ -146,7 +146,7 @@ function ApiKeyRow({ item }: { item: ApiKeyListItem }) {
   }
 
   return (
-    <li className="flex items-center justify-between gap-3 rounded-md border border-border bg-elevated px-3 py-2.5">
+    <li className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3.5 hover:border-white/[0.12] hover:bg-white/[0.04] transition-all duration-200">
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap">
           <p className="text-sm font-medium text-foreground truncate">

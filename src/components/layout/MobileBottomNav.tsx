@@ -41,10 +41,10 @@ export function MobileBottomNav() {
 
   return (
     <nav
-      className="md:hidden fixed bottom-0 inset-x-0 z-50 border-t border-border bg-card/95 backdrop-blur-md supports-[backdrop-filter]:bg-card/80"
+      className="md:hidden fixed bottom-4 left-4 right-4 z-50 rounded-2xl border border-border/40 bg-card/65 backdrop-blur-lg supports-[backdrop-filter]:bg-card/60 shadow-[0_8px_32px_rgba(0,0,0,0.5)]"
       aria-label="Mobile navigation"
     >
-      <div className="grid grid-cols-5 gap-1 px-2 py-2 safe-area-inset-bottom">
+      <div className="grid grid-cols-5 gap-0.5 p-1.5">
         {NAV_ITEMS.map((item) => {
           const isActive =
             item.href === "/"
@@ -57,20 +57,28 @@ export function MobileBottomNav() {
               key={item.href}
               to={item.href}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 rounded-lg py-2 px-1 transition-colors duration-150 min-h-[44px]",
+                "relative flex flex-col items-center justify-center gap-1.5 rounded-xl py-2 px-1 transition-colors duration-200 min-h-[44px]",
                 isActive
-                  ? "text-accent bg-accent/10"
-                  : "text-muted-foreground hover:text-foreground hover:bg-elevated active:bg-elevated/80"
+                  ? "text-accent bg-accent/10 font-semibold"
+                  : "text-muted-foreground hover:text-foreground hover:bg-elevated/40 active:scale-95"
               )}
               aria-current={isActive ? "page" : undefined}
             >
+              {/* Simple active indicator dot at top */}
+              {isActive && (
+                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-b-full bg-accent" />
+              )}
+              
               <Icon
-                size={20}
+                size={18}
                 strokeWidth={isActive ? 2.5 : 2}
-                className="shrink-0"
+                className={cn(
+                  "shrink-0 transition-transform duration-200",
+                  isActive && "scale-110"
+                )}
                 aria-hidden="true"
               />
-              <span className="text-[10px] font-medium leading-none">
+              <span className="text-[9px] font-semibold tracking-wide uppercase leading-none scale-95">
                 {item.label}
               </span>
             </Link>

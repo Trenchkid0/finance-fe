@@ -2,7 +2,9 @@
 
 import { useActionState, useState } from "react";
 import { Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils/cn";
 import { createAccount, updateAccount } from "@/app/actions/accounts";
+import { formatInputRupiah } from "@/lib/utils/formatters";
 import type { ActionResult } from "@/types";
 import type { AccountTypeInput } from "@/lib/utils/validators";
 import { Button } from "@/components/ui/button";
@@ -15,6 +17,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+// Financial institution icons for Indonesia
+const FINANCIAL_ICONS = [
+  { value: "none", label: "Tanpa ikon", emoji: "" },
+  { value: "🏦", label: "Bank Umum", emoji: "🏦" },
+  { value: "💳", label: "Kartu Kredit/Debit", emoji: "💳" },
+  { value: "💰", label: "Tabungan", emoji: "💰" },
+  { value: "💵", label: "Tunai", emoji: "💵" },
+  { value: "📱", label: "E-Wallet/Digital", emoji: "📱" },
+  { value: "🏧", label: "ATM", emoji: "🏧" },
+  { value: "📊", label: "Investasi", emoji: "📊" },
+  { value: "💎", label: "Aset Premium", emoji: "💎" },
+  { value: "🪙", label: "Kripto", emoji: "🪙" },
+  { value: "🏠", label: "Properti", emoji: "🏠" },
+  { value: "🚗", label: "Kendaraan", emoji: "🚗" },
+  { value: "💼", label: "Bisnis", emoji: "💼" },
+  { value: "🎯", label: "Target/Goal", emoji: "🎯" },
+  { value: "🔒", label: "Dana Darurat", emoji: "🔒" },
+] as const;
 
 export interface AccountFormInitial {
   id?: string;
@@ -52,6 +73,8 @@ const COLOR_SWATCHES = [
 export function AccountForm({ mode, initial, onSuccess, onCancel }: Props) {
   const [color, setColor] = useState<string>(initial.color ?? COLOR_SWATCHES[0]);
   const [type, setType] = useState<AccountTypeInput>(initial.type);
+  const [icon, setIcon] = useState<string>(initial.icon && initial.icon !== "" ? initial.icon : "none");
+  const [startingBalance, setStartingBalance] = useState<string>("0");
 
   const action =
     mode === "edit" && initial.id
@@ -68,9 +91,10 @@ export function AccountForm({ mode, initial, onSuccess, onCancel }: Props) {
   }, undefined);
 
   return (
-    <form action={formAction} className="space-y-4" noValidate>
-      <div className="space-y-1.5">
-        <Label htmlFor="name">Nama akun</Label>
+    <form action={formAction} className="space-y-5" noValidate>
+      {/* Nama Akun */}
+      <div className="space-y-2">
+        <Label htmlFor="name" className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">Nama akun</Label>
         <Input
           id="name"
           name="name"
@@ -81,45 +105,83 @@ export function AccountForm({ mode, initial, onSuccess, onCancel }: Props) {
           aria-invalid={!!state?.fieldErrors?.name}
         />
         {state?.fieldErrors?.name?.[0] ? (
-          <p className="text-xs text-destructive">{state.fieldErrors.name[0]}</p>
+          <p className="text-xs text-destructive mt-1 flex items-center gap-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
+            {state.fieldErrors.name[0]}
+          </p>
         ) : null}
       </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="type">Tipe akun</Label>
-        <Select value={type} onValueChange={(v) => setType(v as AccountTypeInput)} name="type" required>
-          <SelectTrigger id="type" aria-invalid={!!state?.fieldErrors?.type}>
-            <SelectValue placeholder="Pilih tipe" />
-          </SelectTrigger>
-          <SelectContent>
-            {TYPE_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      {/* Tipe Akun (Segmented Grid) */}
+      <div className="space-y-2">
+        <Label className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">Tipe akun</Label>
+        <div className="grid grid-cols-2 gap-2.5">
+          {TYPE_OPTIONS.map((opt) => {
+            const isSelected = type === opt.value;
+            const emoji = opt.value === "bank" ? "🏦" : opt.value === "wallet" ? "📱" : opt.value === "cash" ? "💵" : "📊";
+            return (
+              <button
+                type="button"
+                key={opt.value}
+                onClick={() => setType(opt.value)}
+                className={cn(
+                  "flex items-center gap-3 p-3 rounded-xl border text-left transition-all duration-300 outline-none",
+                  isSelected
+                    ? "border-accent bg-accent/[0.08] shadow-[0_0_15px_rgba(56,139,253,0.15)] text-foreground font-bold"
+                    : "border-white/[0.06] bg-white/[0.01] text-muted-foreground/70 hover:border-white/[0.12] hover:bg-white/[0.03] hover:text-foreground"
+                )}
+              >
+                <span className="text-lg" aria-hidden>{emoji}</span>
+                <span className="text-[13px] tracking-tight">{opt.label}</span>
+              </button>
+            );
+          })}
+        </div>
+        <input type="hidden" name="type" value={type} />
         {state?.fieldErrors?.type?.[0] ? (
-          <p className="text-xs text-destructive">{state.fieldErrors.type[0]}</p>
+          <p className="text-xs text-destructive mt-1 flex items-center gap-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
+            {state.fieldErrors.type[0]}
+          </p>
         ) : null}
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1.5">
-          <Label htmlFor="icon">Ikon (opsional)</Label>
-          <Input
-            id="icon"
-            name="icon"
-            maxLength={8}
-            defaultValue={initial.icon ?? ""}
-            placeholder="🏦"
-            aria-invalid={!!state?.fieldErrors?.icon}
-          />
+      {/* Ikon & Warna Aksen */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Ikon Institusi */}
+        <div className="space-y-2">
+          <Label htmlFor="icon" className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">Ikon Institusi</Label>
+          <Select value={icon} onValueChange={setIcon}>
+            <SelectTrigger id="icon" aria-invalid={!!state?.fieldErrors?.icon}>
+              <SelectValue placeholder="Pilih ikon" />
+            </SelectTrigger>
+            <SelectContent className="max-h-[250px]">
+              {FINANCIAL_ICONS.map((opt) => (
+                <SelectItem
+                  key={opt.value || "empty"}
+                  value={opt.value}
+                >
+                  <span className="flex items-center gap-2">
+                    {opt.emoji && <span className="text-base" aria-hidden>{opt.emoji}</span>}
+                    <span>{opt.label}</span>
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <input type="hidden" name="icon" value={icon} />
+          {state?.fieldErrors?.icon?.[0] ? (
+            <p className="text-xs text-destructive mt-1 flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
+              {state.fieldErrors.icon[0]}
+            </p>
+          ) : null}
         </div>
 
-        <div className="space-y-1.5">
-          <Label>Warna</Label>
-          <div className="flex items-center gap-1.5 flex-wrap">
+        {/* Warna Aksen */}
+        <div className="space-y-2">
+          <Label className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider block">Warna Aksen</Label>
+          <div className="flex items-center gap-2.5 h-11 px-1">
             {COLOR_SWATCHES.map((c) => (
               <button
                 type="button"
@@ -127,12 +189,16 @@ export function AccountForm({ mode, initial, onSuccess, onCancel }: Props) {
                 onClick={() => setColor(c)}
                 aria-label={`Pilih warna ${c}`}
                 aria-pressed={color === c}
-                className={`w-7 h-7 rounded-full border-2 transition-all duration-150 ${
-                  color === c
-                    ? "border-foreground scale-110"
-                    : "border-transparent hover:border-border"
-                }`}
-                style={{ background: c }}
+                className={cn(
+                  "w-7 h-7 rounded-full transition-all duration-300 relative flex items-center justify-center outline-none",
+                  "hover:scale-110 active:scale-95"
+                )}
+                style={{ 
+                  background: c,
+                  boxShadow: color === c 
+                    ? `0 0 0 2px #121214, 0 0 0 4px ${c}, 0 4px 10px ${c}50` 
+                    : "0 2px 4px rgba(0,0,0,0.2)"
+                }}
               />
             ))}
           </div>
@@ -140,55 +206,74 @@ export function AccountForm({ mode, initial, onSuccess, onCancel }: Props) {
         </div>
       </div>
 
+      {/* Saldo Awal / Status Aktif */}
       {mode === "create" ? (
-        <div className="space-y-1.5">
-          <Label htmlFor="startingBalance">Saldo awal</Label>
-          <Input
-            id="startingBalance"
-            name="startingBalance"
-            type="number"
-            inputMode="numeric"
-            min="0"
-            step="1"
-            defaultValue="0"
-            aria-invalid={!!state?.fieldErrors?.startingBalance}
-          />
-          <p className="text-xs text-muted-foreground">
-            Saldo akan dihitung ulang dari transaksi setelah ini.
+        <div className="space-y-2">
+          <Label htmlFor="startingBalance" className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">Saldo awal</Label>
+          <div className="relative group">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground/45 select-none transition-colors duration-300 group-focus-within:text-foreground">
+              Rp
+            </span>
+            <Input
+              id="startingBalance"
+              name="startingBalance"
+              type="text"
+              inputMode="numeric"
+              required
+              value={startingBalance}
+              onChange={(e) => setStartingBalance(formatInputRupiah(e.target.value))}
+              className="pl-10 font-mono font-semibold"
+              aria-invalid={!!state?.fieldErrors?.startingBalance}
+            />
+          </div>
+          <p className="text-[10px] text-muted-foreground/50">
+            Saldo akan dihitung secara kumulatif dari transaksi setelah ini.
           </p>
           {state?.fieldErrors?.startingBalance?.[0] ? (
-            <p className="text-xs text-destructive">
+            <p className="text-xs text-destructive mt-1 flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
               {state.fieldErrors.startingBalance[0]}
             </p>
           ) : null}
         </div>
       ) : (
-        <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
-          <input
-            type="checkbox"
-            name="isActive"
-            defaultChecked={initial.isActive}
-            className="w-4 h-4 accent-primary"
-          />
-          <span>Akun aktif</span>
-          <span className="ml-1 text-xs text-muted-foreground">
-            (akun nonaktif disembunyikan dari dashboard)
-          </span>
-        </label>
+        <div className="p-3.5 rounded-xl border border-white/[0.04] bg-white/[0.01] flex items-center">
+          <label className="flex items-center gap-2.5 text-sm text-foreground/80 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              name="isActive"
+              defaultChecked={initial.isActive}
+              className="w-4 h-4 rounded border-white/[0.1] bg-white/[0.02] text-accent focus:ring-accent/30 cursor-pointer"
+            />
+            <div className="flex flex-col">
+              <span className="font-semibold text-[13px] text-foreground">Akun aktif</span>
+              <span className="text-[10px] text-muted-foreground/60 mt-0.5">
+                Akun nonaktif disembunyikan dari dashboard utama.
+              </span>
+            </div>
+          </label>
+        </div>
       )}
 
-      {state?.error ? <p className="text-xs text-destructive">{state.error}</p> : null}
+      {state?.error ? (
+        <p className="text-xs text-destructive mt-1 flex items-center gap-1.5">
+          <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
+          {state.error}
+        </p>
+      ) : null}
 
-      <div className="flex items-center gap-2 pt-2">
-        <Button type="submit" disabled={pending} className="flex-1">
-          {pending ? <Loader2 size={14} className="animate-spin" /> : null}
-          {mode === "edit" ? "Simpan perubahan" : "Tambah akun"}
+      {/* Action Buttons */}
+      <div className="flex items-center gap-2.5 pt-3 border-t border-white/[0.04] mt-2">
+        <Button type="submit" disabled={pending} className="flex-1 h-10 text-[13px] font-bold">
+          {pending && <Loader2 size={14} className="animate-spin mr-1.5" />}
+          {mode === "edit" ? "Simpan Perubahan" : "Tambah Akun Baru"}
         </Button>
         <Button
           type="button"
           variant="secondary"
           onClick={onCancel}
           disabled={pending}
+          className="h-10 text-[13px] px-5 bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08]"
         >
           Batal
         </Button>

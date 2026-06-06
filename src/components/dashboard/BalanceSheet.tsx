@@ -72,11 +72,11 @@ function BalanceSide({ title, total, groups }: SideProps) {
   const indoTitle = title === "Assets" ? "Aset" : "Liabilitas";
 
   return (
-    <div className="rounded-xl border border-border bg-card p-5 space-y-4">
-      <div className="flex items-baseline gap-2">
-        <h2 className="text-base font-medium text-foreground">{indoTitle}</h2>
-        <span className="text-muted-foreground">·</span>
-        <p className="text-base font-medium font-mono tabular-nums text-muted-foreground">
+    <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 space-y-5">
+      <div className="flex items-baseline gap-2.5">
+        <h2 className="text-sm font-semibold text-foreground">{indoTitle}</h2>
+        <span className="text-muted-foreground/30">·</span>
+        <p className="text-sm font-semibold font-mono tabular-nums text-muted-foreground/70">
           {formatIDR(total)}
         </p>
       </div>
@@ -120,8 +120,8 @@ function BalanceSide({ title, total, groups }: SideProps) {
           </div>
 
           {/* Group list */}
-          <div className="rounded-lg bg-elevated overflow-hidden">
-            <header className="px-4 py-2 flex items-center text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+          <div className="rounded-xl bg-white/[0.02] overflow-hidden border border-white/[0.04]">
+            <header className="px-4 py-2.5 flex items-center text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-widest">
               <span className="w-32">Nama</span>
               <span className="ml-auto flex items-center gap-6">
                 <span className="w-24 text-right">Bobot</span>
@@ -180,13 +180,13 @@ function GroupRow({ group, isLast }: { group: BalanceGroup; isLast: boolean }) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="w-full px-4 py-3 flex items-center hover:bg-elevated/40 transition-colors duration-150"
+        className="group w-full px-4 py-3 flex items-center hover:bg-elevated/40 transition-all duration-200 hover:pl-5"
       >
-        <span className="w-32 flex items-center gap-2 text-sm font-medium text-foreground">
+        <span className="w-32 flex items-center gap-2 text-sm font-medium text-foreground transition-colors duration-200 group-hover:text-accent">
           <ChevronRight
             size={14}
             className={cn(
-              "text-muted-foreground transition-transform",
+              "text-muted-foreground transition-all duration-300 group-hover:text-accent",
               open && "rotate-90",
             )}
           />
@@ -196,26 +196,26 @@ function GroupRow({ group, isLast }: { group: BalanceGroup; isLast: boolean }) {
           <span className="w-24 flex justify-end">
             <DotWeight percent={group.percent} color={group.color} />
           </span>
-          <span className="w-32 text-right font-mono tabular-nums text-foreground">
+          <span className="w-32 text-right font-mono tabular-nums text-foreground transition-all duration-200 group-hover:scale-105 group-hover:font-bold">
             {formatIDR(group.total)}
           </span>
         </span>
       </button>
 
       {open ? (
-        <div className="bg-elevated/30">
+        <div className="bg-elevated/30 animate-in slide-in-from-top-2 duration-300">
           {group.accounts.map((acc, idx) => (
             <Link
               key={acc.id}
               to={`/accounts/${acc.id}`}
               className={cn(
-                "pl-12 pr-4 py-2.5 flex items-center text-sm hover:bg-elevated/60 transition-colors duration-150",
+                "group/account pl-12 pr-4 py-2.5 flex items-center text-sm hover:bg-elevated/60 transition-all duration-200 hover:pl-14",
                 idx > 0 && "border-t border-border/60",
               )}
             >
               <span className="w-32 flex items-center gap-2.5">
                 <span
-                  className="size-6 rounded-full border flex items-center justify-center text-[10px] font-medium uppercase shrink-0"
+                  className="size-6 rounded-full border flex items-center justify-center text-[10px] font-medium uppercase shrink-0 transition-all duration-200 group-hover/account:scale-110 group-hover/account:shadow-lg"
                   style={{
                     backgroundColor: `color-mix(in oklab, ${group.color} 12%, transparent)`,
                     borderColor: `color-mix(in oklab, ${group.color} 30%, transparent)`,
@@ -224,13 +224,13 @@ function GroupRow({ group, isLast }: { group: BalanceGroup; isLast: boolean }) {
                 >
                   {acc.initial}
                 </span>
-                <span className="text-foreground truncate">{acc.name}</span>
+                <span className="text-foreground truncate transition-colors duration-200 group-hover/account:text-accent">{acc.name}</span>
               </span>
               <span className="ml-auto flex items-center gap-6">
                 <span className="w-24 flex justify-end">
                   <DotWeight percent={acc.percent} color={group.color} />
                 </span>
-                <span className="w-32 text-right font-mono tabular-nums text-foreground">
+                <span className="w-32 text-right font-mono tabular-nums text-foreground transition-all duration-200 group-hover/account:scale-105 group-hover/account:font-bold group-hover/account:text-accent">
                   {formatIDR(acc.value)}
                 </span>
               </span>

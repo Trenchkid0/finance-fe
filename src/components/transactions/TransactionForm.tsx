@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState, useEffect, useState, useTransition } from "react";
-import { Camera, Loader2, Sparkles, WandSparkles } from "lucide-react";
+import { Camera, Loader2, Sparkles, WandSparkles, TrendingDown, TrendingUp, ArrowLeftRight } from "lucide-react";
+import { cn } from "@/lib/utils/cn";
 import { toast } from "sonner";
 import {
   createTransaction,
@@ -9,6 +10,7 @@ import {
 } from "@/app/actions/transactions";
 import { scanTransactionText } from "@/app/actions/ai";
 import type { ActionResult } from "@/types";
+import { formatIDR, formatInputRupiah } from "@/lib/utils/formatters";
 import type { TransactionTypeInput } from "@/lib/utils/validators";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -118,7 +120,7 @@ export function TransactionForm({
   const [categoryId, setCategoryId] = useState<string>(initial.categoryId ?? "");
   const [transferToId, setTransferToId] = useState<string>(initial.transferToId ?? "");
   const [amount, setAmount] = useState<string>(
-    initial.amount > 0 ? String(initial.amount) : "",
+    initial.amount > 0 ? formatInputRupiah(String(initial.amount)) : "",
   );
   const [date, setDate] = useState<string>(initial.date);
   const [description, setDescription] = useState<string>(initial.description);
@@ -202,44 +204,80 @@ export function TransactionForm({
   const formContent = (
     <form action={formAction} className="space-y-4" noValidate>
       {/* Type segmented control */}
-      <div className="space-y-1.5">
-        <Label>Tipe</Label>
+      <div className="space-y-2">
+        <Label className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">Tipe Transaksi</Label>
         <ToggleGroup
           type="single"
           value={type}
           onValueChange={(v) => v && setType(v as TransactionTypeInput)}
-          className="grid grid-cols-3 w-full"
+          className="grid grid-cols-3 w-full bg-white/[0.01] border border-white/[0.06] rounded-xl p-1 gap-1"
           aria-label="Tipe transaksi"
         >
-          <ToggleGroupItem value="expense">Pengeluaran</ToggleGroupItem>
-          <ToggleGroupItem value="income">Pemasukan</ToggleGroupItem>
-          <ToggleGroupItem value="transfer">Transfer</ToggleGroupItem>
+          <ToggleGroupItem 
+            value="expense"
+            className={cn(
+              "rounded-lg py-2.5 text-xs font-bold transition-all duration-300 outline-none flex items-center justify-center gap-1.5",
+              "data-[state=on]:bg-expense/10 data-[state=on]:text-expense data-[state=on]:border-expense/20"
+            )}
+          >
+            <TrendingDown size={14} />
+            <span>Pengeluaran</span>
+          </ToggleGroupItem>
+          <ToggleGroupItem 
+            value="income"
+            className={cn(
+              "rounded-lg py-2.5 text-xs font-bold transition-all duration-300 outline-none flex items-center justify-center gap-1.5",
+              "data-[state=on]:bg-income/10 data-[state=on]:text-income data-[state=on]:border-income/20"
+            )}
+          >
+            <TrendingUp size={14} />
+            <span>Pemasukan</span>
+          </ToggleGroupItem>
+          <ToggleGroupItem 
+            value="transfer"
+            className={cn(
+              "rounded-lg py-2.5 text-xs font-bold transition-all duration-300 outline-none flex items-center justify-center gap-1.5",
+              "data-[state=on]:bg-accent/10 data-[state=on]:text-accent data-[state=on]:border-accent/20"
+            )}
+          >
+            <ArrowLeftRight size={14} />
+            <span>Transfer</span>
+          </ToggleGroupItem>
         </ToggleGroup>
         <input type="hidden" name="type" value={type} />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1.5">
-          <Label htmlFor="amount">Jumlah</Label>
-          <Input
-            id="amount"
-            name="amount"
-            type="number"
-            inputMode="numeric"
-            min="1"
-            step="1"
-            required
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            aria-invalid={!!state?.fieldErrors?.amount}
-          />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Jumlah */}
+        <div className="space-y-2">
+          <Label htmlFor="amount" className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">Jumlah</Label>
+          <div className="relative group">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground/45 select-none transition-colors duration-300 group-focus-within:text-foreground">
+              Rp
+            </span>
+            <Input
+              id="amount"
+              name="amount"
+              type="text"
+              inputMode="numeric"
+              required
+              value={amount}
+              onChange={(e) => setAmount(formatInputRupiah(e.target.value))}
+              className="pl-10 font-mono font-semibold"
+              aria-invalid={!!state?.fieldErrors?.amount}
+            />
+          </div>
           {state?.fieldErrors?.amount?.[0] ? (
-            <p className="text-xs text-destructive">{state.fieldErrors.amount[0]}</p>
+            <p className="text-xs text-destructive mt-1 flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
+              {state.fieldErrors.amount[0]}
+            </p>
           ) : null}
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="date">Tanggal</Label>
+        {/* Tanggal */}
+        <div className="space-y-2">
+          <Label htmlFor="date" className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">Tanggal</Label>
           <Input
             id="date"
             name="date"
@@ -250,41 +288,23 @@ export function TransactionForm({
             aria-invalid={!!state?.fieldErrors?.date}
           />
           {state?.fieldErrors?.date?.[0] ? (
-            <p className="text-xs text-destructive">{state.fieldErrors.date[0]}</p>
+            <p className="text-xs text-destructive mt-1 flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
+              {state.fieldErrors.date[0]}
+            </p>
           ) : null}
         </div>
       </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="accountId">{type === "transfer" ? "Dari akun" : "Akun"}</Label>
-        <Select value={accountId} onValueChange={setAccountId} name="accountId" required>
-          <SelectTrigger id="accountId" aria-invalid={!!state?.fieldErrors?.accountId}>
-            <SelectValue placeholder="Pilih akun" />
-          </SelectTrigger>
-          <SelectContent>
-            {accounts.map((a) => (
-              <SelectItem key={a.id} value={a.id}>
-                {a.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {state?.fieldErrors?.accountId?.[0] ? (
-          <p className="text-xs text-destructive">{state.fieldErrors.accountId[0]}</p>
-        ) : null}
-      </div>
-
-      {type === "transfer" ? (
-        <div className="space-y-1.5">
-          <Label htmlFor="transferToId">Ke akun</Label>
-          <Select
-            value={transferToId}
-            onValueChange={setTransferToId}
-            name="transferToId"
-            required
-          >
-            <SelectTrigger id="transferToId" aria-invalid={!!state?.fieldErrors?.transferToId}>
-              <SelectValue placeholder="Pilih akun tujuan" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Akun */}
+        <div className="space-y-2">
+          <Label htmlFor="accountId" className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">
+            {type === "transfer" ? "Dari akun" : "Akun"}
+          </Label>
+          <Select value={accountId} onValueChange={setAccountId} name="accountId" required>
+            <SelectTrigger id="accountId" aria-invalid={!!state?.fieldErrors?.accountId}>
+              <SelectValue placeholder="Pilih akun" />
             </SelectTrigger>
             <SelectContent>
               {accounts.map((a) => (
@@ -294,43 +314,76 @@ export function TransactionForm({
               ))}
             </SelectContent>
           </Select>
-          {state?.fieldErrors?.transferToId?.[0] ? (
-            <p className="text-xs text-destructive">
-              {state.fieldErrors.transferToId[0]}
+          {state?.fieldErrors?.accountId?.[0] ? (
+            <p className="text-xs text-destructive mt-1 flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
+              {state.fieldErrors.accountId[0]}
             </p>
           ) : null}
         </div>
-      ) : (
-        <div className="space-y-1.5">
-          <Label htmlFor="categoryId">Kategori</Label>
-          <Select
-            value={categoryId}
-            onValueChange={setCategoryId}
-            name="categoryId"
-            required
-          >
-            <SelectTrigger id="categoryId" aria-invalid={!!state?.fieldErrors?.categoryId}>
-              <SelectValue placeholder="Pilih kategori" />
-            </SelectTrigger>
-            <SelectContent>
-              {filteredCategories.map((c) => (
-                <SelectItem key={c.id} value={c.id}>
-                  {c.icon ? `${c.icon} ` : ""}
-                  {c.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {state?.fieldErrors?.categoryId?.[0] ? (
-            <p className="text-xs text-destructive">
-              {state.fieldErrors.categoryId[0]}
-            </p>
-          ) : null}
-        </div>
-      )}
 
-      <div className="space-y-1.5">
-        <Label htmlFor="description">Deskripsi</Label>
+        {/* Dynamic field: Kategori or Ke akun */}
+        {type === "transfer" ? (
+          <div className="space-y-2">
+            <Label htmlFor="transferToId" className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">Ke akun</Label>
+            <Select
+              value={transferToId}
+              onValueChange={setTransferToId}
+              name="transferToId"
+              required
+            >
+              <SelectTrigger id="transferToId" aria-invalid={!!state?.fieldErrors?.transferToId}>
+                <SelectValue placeholder="Pilih akun tujuan" />
+              </SelectTrigger>
+              <SelectContent>
+                {accounts.map((a) => (
+                  <SelectItem key={a.id} value={a.id}>
+                    {a.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {state?.fieldErrors?.transferToId?.[0] ? (
+              <p className="text-xs text-destructive mt-1 flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
+                {state.fieldErrors.transferToId[0]}
+              </p>
+            ) : null}
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <Label htmlFor="categoryId" className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">Kategori</Label>
+            <Select
+              value={categoryId}
+              onValueChange={setCategoryId}
+              name="categoryId"
+              required
+            >
+              <SelectTrigger id="categoryId" aria-invalid={!!state?.fieldErrors?.categoryId}>
+                <SelectValue placeholder="Pilih kategori" />
+              </SelectTrigger>
+              <SelectContent>
+                {filteredCategories.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.icon ? `${c.icon} ` : ""}
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {state?.fieldErrors?.categoryId?.[0] ? (
+              <p className="text-xs text-destructive mt-1 flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
+                {state.fieldErrors.categoryId[0]}
+              </p>
+            ) : null}
+          </div>
+        )}
+      </div>
+
+      {/* Deskripsi */}
+      <div className="space-y-2">
+        <Label htmlFor="description" className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">Deskripsi</Label>
         <Input
           id="description"
           name="description"
@@ -341,8 +394,9 @@ export function TransactionForm({
         />
       </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="note">Catatan (opsional)</Label>
+      {/* Catatan */}
+      <div className="space-y-2">
+        <Label htmlFor="note" className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">Catatan (opsional)</Label>
         <Textarea
           id="note"
           name="note"
@@ -350,21 +404,29 @@ export function TransactionForm({
           value={note}
           onChange={(e) => setNote(e.target.value)}
           rows={2}
+          className="rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-3 text-sm hover:border-white/[0.12] hover:bg-white/[0.05] focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50 focus:bg-white/[0.04] transition-all duration-300 ease-out min-h-[70px]"
         />
       </div>
 
-      {state?.error ? <p className="text-xs text-destructive">{state.error}</p> : null}
+      {state?.error ? (
+        <p className="text-xs text-destructive mt-1 flex items-center gap-1.5">
+          <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
+          {state.error}
+        </p>
+      ) : null}
 
-      <div className="flex items-center gap-2 pt-2">
-        <Button type="submit" disabled={pending} className="flex-1">
-          {pending ? <Loader2 size={14} className="animate-spin" /> : null}
-          {mode === "edit" ? "Simpan perubahan" : "Tambah transaksi"}
+      {/* Action Buttons */}
+      <div className="flex items-center gap-2.5 pt-3 border-t border-white/[0.04] mt-2">
+        <Button type="submit" disabled={pending} className="flex-1 h-10 text-[13px] font-bold">
+          {pending && <Loader2 size={14} className="animate-spin mr-1.5" />}
+          {mode === "edit" ? "Simpan Perubahan" : "Tambah Transaksi"}
         </Button>
         <Button
           type="button"
           variant="secondary"
           onClick={onCancel}
           disabled={pending}
+          className="h-10 text-[13px] px-5 bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08]"
         >
           Batal
         </Button>
@@ -641,7 +703,7 @@ function AIScanPanel({ enabled, onApply, accounts, categories }: AIPanelProps) {
               label="Jumlah"
               value={
                 <span className="font-mono tabular-nums">
-                  {preview.amount.toLocaleString("id-ID")}
+                  {formatIDR(preview.amount)}
                 </span>
               }
             />

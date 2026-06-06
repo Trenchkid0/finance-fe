@@ -16,13 +16,14 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex h-9 w-full items-center justify-between rounded-md border border-border bg-elevated px-3 py-1.5 text-sm text-foreground",
-      "placeholder:text-muted-foreground [&>span]:line-clamp-1",
-      "focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-ring",
-      "transition-all duration-200",
+      "flex h-11 w-full items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-2 text-sm text-foreground",
+      "placeholder:text-muted-foreground/60 [&>span]:line-clamp-1",
+      "hover:border-white/[0.12] hover:bg-white/[0.05]",
+      "focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50 focus:bg-white/[0.04]",
+      "transition-all duration-300 ease-out",
       "disabled:cursor-not-allowed disabled:opacity-60",
-      "aria-[invalid=true]:border-destructive aria-[invalid=true]:focus:ring-destructive/40",
-      "data-[placeholder]:text-muted-foreground",
+      "aria-[invalid=true]:border-destructive/60 aria-[invalid=true]:focus:ring-destructive/30",
+      "data-[placeholder]:text-muted-foreground/60",
       className,
     )}
     {...props}
@@ -72,7 +73,7 @@ const SelectContent = React.forwardRef<
       ref={ref}
       position={position}
       className={cn(
-        "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border border-border bg-popover text-popover-foreground",
+        "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-2xl border border-white/[0.08] bg-popover/95 backdrop-blur-xl text-popover-foreground shadow-2xl shadow-black/45",
         "data-[state=open]:animate-in data-[state=closed]:animate-out",
         "data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0",
         "data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95",
@@ -117,16 +118,17 @@ const SelectItem = React.forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-7 pr-2 text-sm outline-none",
-      "focus:bg-elevated focus:text-foreground",
+      "relative flex w-full cursor-default select-none items-center rounded-lg py-2.5 pl-9 pr-3 text-sm outline-none transition-colors duration-200",
+      "focus:bg-white/[0.06] focus:text-foreground",
+      "data-[state=checked]:bg-white/[0.04] data-[state=checked]:text-foreground data-[state=checked]:font-semibold",
       "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       className,
     )}
     {...props}
   >
-    <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+    <span className="absolute left-3 flex h-3.5 w-3.5 items-center justify-center">
       <SelectPrimitive.ItemIndicator>
-        <Check size={12} />
+        <Check size={14} className="text-accent" />
       </SelectPrimitive.ItemIndicator>
     </span>
     <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>

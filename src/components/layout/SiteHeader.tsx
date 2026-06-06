@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -20,41 +20,62 @@ export function SiteHeader() {
   const { open: openQuickAdd, canCreate } = useQuickAdd();
 
   return (
-    <header className="flex h-12 shrink-0 items-center gap-2 border-b border-border bg-background/80 backdrop-blur-md sticky top-0 z-30">
-      <div className="flex w-full items-center gap-2 px-3 lg:px-4">
-        <SidebarTrigger className="-ml-1" />
+    <header className="flex h-14 shrink-0 items-center gap-2 border-b border-white/[0.04] bg-canvas/80 backdrop-blur-xl sticky top-0 z-30">
+      <div className="flex w-full items-center gap-3 px-4 lg:px-6">
+        {/* Sidebar trigger */}
+        <SidebarTrigger className="-ml-1 text-muted-foreground/50 hover:text-foreground hover:bg-white/[0.04] transition-all duration-200 rounded-lg" />
         <Separator
           orientation="vertical"
-          className="mx-1 h-4 data-[orientation=vertical]:h-4"
+          className="mx-0.5 h-4 bg-white/[0.06]"
         />
 
-        {/* Search trigger — bukan input asli, klik untuk buka command palette.
-            Hint shortcut "⌘K" terlihat di kanan supaya user paham. */}
+        {/* Search trigger — command palette */}
         <button
           type="button"
           onClick={openCommandPalette}
-          className="hidden md:flex items-center gap-2 h-7 px-2 rounded-md border border-border bg-elevated text-xs text-muted-foreground hover:text-foreground hover:border-[#444C56] transition-colors w-56 lg:w-72"
+          className="hidden md:flex items-center gap-2.5 h-9 px-3.5 rounded-xl border border-white/[0.06] bg-white/[0.02] text-xs text-muted-foreground/50 hover:text-foreground/80 hover:border-white/[0.12] hover:bg-white/[0.04] transition-all duration-300 w-64 lg:w-80 group"
           aria-label="Buka pencarian cepat"
         >
-          <Search size={12} />
-          <span className="flex-1 text-left">Cari halaman, akun…</span>
-          <kbd className="ml-auto text-[10px] font-mono px-1.5 py-0.5 rounded bg-card border border-border">
+          <Search size={14} className="shrink-0 text-muted-foreground/40 group-hover:text-accent/60 transition-colors" />
+          <span className="flex-1 text-left text-[12px]">Cari halaman, akun, transaksi…</span>
+          <kbd className="ml-auto text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.08] text-muted-foreground/40 tracking-wide">
             ⌘K
           </kbd>
         </button>
 
-        <div className="ml-auto flex items-center gap-1">
-          {/* Mobile-only icon search */}
+        {/* Right side actions */}
+        <div className="ml-auto flex items-center gap-1.5">
+          {/* Mobile search */}
           <Button
             variant="ghost"
             size="icon"
             aria-label="Cari"
-            className="h-7 w-7 md:hidden"
+            className="h-9 w-9 md:hidden rounded-xl text-muted-foreground/50 hover:text-foreground"
             onClick={openCommandPalette}
           >
-            <Search size={14} />
+            <Search size={16} />
           </Button>
 
+          {/* Notifications bell (placeholder) */}
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Notifikasi"
+            className="h-9 w-9 rounded-xl text-muted-foreground/50 hover:text-foreground relative"
+            disabled
+          >
+            <Bell size={16} />
+            {/* Badge dot */}
+            <span className="absolute top-2 right-2 size-1.5 rounded-full bg-accent" />
+          </Button>
+
+          {/* Separator */}
+          <Separator
+            orientation="vertical"
+            className="mx-1 h-5 bg-white/[0.06] hidden sm:block"
+          />
+
+          {/* Add transaction */}
           <Button
             size="sm"
             onClick={openQuickAdd}
@@ -64,9 +85,9 @@ export function SiteHeader() {
                 ? "Tambah transaksi (N)"
                 : "Tambahkan akun terlebih dahulu"
             }
-            className="h-7 gap-1.5"
+            className="h-9 gap-2 rounded-xl text-[12px] px-4"
           >
-            <Plus size={12} />
+            <Plus size={14} strokeWidth={2.5} />
             <span className="hidden sm:inline">Tambah</span>
           </Button>
         </div>

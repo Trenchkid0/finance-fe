@@ -1,5 +1,6 @@
 import { api } from "@/lib/api";
 import type { ActionResult } from "@/types";
+import { cleanMoneyString } from "@/lib/utils/formatters";
 
 function getString(fd: FormData, name: string): string | undefined {
   const v = fd.get(name);
@@ -12,17 +13,17 @@ export async function createTransaction(
   _prev: ActionResult<null> | undefined,
   formData: FormData
 ): Promise<ActionResult<null>> {
+  const rawAmount = getString(formData, "amount") || "0";
   const payload = {
     type: getString(formData, "type"),
     accountId: getString(formData, "accountId"),
-    amount: parseFloat(getString(formData, "amount") || "0"),
+    amount: parseFloat(cleanMoneyString(rawAmount)),
     date: getString(formData, "date"),
     description: getString(formData, "description"),
     note: getString(formData, "note") || "",
     categoryId: getString(formData, "categoryId") || null,
     transferToId: getString(formData, "transferToId") || null,
   };
-
   try {
     await api.post("/api/transactions", payload);
     window.dispatchEvent(new CustomEvent("refresh-app-data"));
@@ -37,10 +38,11 @@ export async function updateTransaction(
   _prev: ActionResult<null> | undefined,
   formData: FormData
 ): Promise<ActionResult<null>> {
+  const rawAmount = getString(formData, "amount") || "0";
   const payload = {
     type: getString(formData, "type"),
     accountId: getString(formData, "accountId"),
-    amount: parseFloat(getString(formData, "amount") || "0"),
+    amount: parseFloat(cleanMoneyString(rawAmount)),
     date: getString(formData, "date"),
     description: getString(formData, "description"),
     note: getString(formData, "note") || "",

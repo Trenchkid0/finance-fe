@@ -123,21 +123,21 @@ export function CashflowSankey({ data, period }: Props) {
     startTransition(() => navigate(qs ? `${pathname}?${qs}` : pathname));
   }
 
-  const hasData = data.inflow.length > 0 || data.outflow.length > 0;
+  const hasData = (data?.inflow || []).length > 0 || (data?.outflow || []).length > 0;
 
   return (
     <section
-      className="rounded-xl border border-border bg-card p-5 space-y-4"
+      className="group rounded-xl border border-border bg-card p-5 space-y-4 hover:border-white/[0.12] hover:shadow-[0_8px_30px_rgba(0,0,0,0.3)] transition-all duration-300"
       aria-label="Cash Flow Sankey Diagram"
       role="region"
     >
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-medium text-foreground">Arus kas</h2>
+        <h2 className="text-base font-medium text-foreground transition-colors duration-300 group-hover:text-accent">Arus kas</h2>
         <select
           value={period}
           onChange={(e) => setPeriod(e.target.value as Props["period"])}
           disabled={pending}
-          className="bg-elevated border border-border text-foreground text-xs font-medium rounded-md px-2.5 py-1.5 cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring/50 hover:border-[#444C56] transition-colors disabled:opacity-50"
+          className="bg-elevated border border-border text-foreground text-xs font-medium rounded-md px-2.5 py-1.5 cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring/50 hover:border-[#444C56] hover:bg-elevated/80 transition-all duration-200 disabled:opacity-50"
           aria-label="Periode arus kas"
         >
           {PERIOD_OPTIONS.map((o) => (
@@ -153,12 +153,12 @@ export function CashflowSankey({ data, period }: Props) {
         className="w-full"
         role="img"
         aria-label={hasData
-          ? `Cash flow diagram showing ${formatIDR(data.total)} total flow with ${data.inflow.length} income sources and ${data.outflow.length} expense categories`
+          ? `Cash flow diagram showing ${formatIDR(data.total)} total flow with ${(data.inflow || []).length} income sources and ${(data.outflow || []).length} expense categories`
           : "No cash flow data available for this period"
         }
       >
         {hasData ? (
-          <SankeyChart data={data} width={width} height={Math.max(320, data.outflow.length * 40)} />
+          <SankeyChart data={data} width={width} height={Math.max(320, (data.outflow || []).length * 40)} />
         ) : (
           <div className="h-64 flex items-center justify-center text-center">
             <div>
@@ -194,11 +194,11 @@ function SankeyChart({
   // berdasarkan urutan biggest-first, sehingga node terbesar dapat warna
   // paling kuat. Cash Flow node tengah & Surplus pakai brand blue.
 
-  const inflowColored = data.inflow.map((n, i) => ({
+  const inflowColored = (data.inflow || []).map((n, i) => ({
     ...n,
     color: BLUE_PALETTE[i % BLUE_PALETTE.length],
   }));
-  const outflowColored = data.outflow.map((n, i) => ({
+  const outflowColored = (data.outflow || []).map((n, i) => ({
     ...n,
     color: BLUE_PALETTE[i % BLUE_PALETTE.length],
   }));
@@ -288,6 +288,11 @@ function SankeyChart({
             stroke={`url(#sankey-grad-${i})`}
             strokeWidth={Math.max(1, link.width ?? 1)}
             opacity={0.8}
+            className="transition-all duration-300 hover:opacity-100 hover:stroke-[3] cursor-pointer"
+            style={{
+              filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.3))',
+              transition: 'all 0.3s ease'
+            }}
           >
             <title>
               {(link.source as SankeyNode).name} →{" "}
@@ -311,7 +316,7 @@ function SankeyChart({
           const anchor = isLeft ? "start" : "end";
 
           return (
-            <g key={`node-${i}`}>
+            <g key={`node-${i}`} className="group/node cursor-pointer">
               <rect
                 x={x0}
                 y={y0}
@@ -319,17 +324,40 @@ function SankeyChart({
                 height={Math.max(2, h)}
                 fill={n.color}
                 rx={3}
+                className="transition-all duration-300"
+                style={{
+                  filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
+                }}
               >
                 <title>
                   {n.name}: {formatIDR(n.value ?? 0)}
                 </title>
+                <animate
+                  attributeName="opacity"
+                  values="1;0.85;1"
+                  dur="2s"
+                  repeatCount="indefinite"
+                />
               </rect>
+              {/* Hover glow effect */}
+              <rect
+                x={x0 - 2}
+                y={y0 - 2}
+                width={Math.max(2, w) + 4}
+                height={Math.max(2, h) + 4}
+                fill="none"
+                stroke={n.color}
+                strokeWidth="2"
+                rx={4}
+                opacity="0"
+                className="transition-opacity duration-300 group-hover/node:opacity-50"
+              />
               <text
                 x={labelX}
                 y={(y0 + y1) / 2}
                 dy="-0.2em"
                 textAnchor={anchor}
-                className="fill-foreground"
+                className="fill-foreground transition-all duration-300 group-hover/node:fill-accent group-hover/node:font-bold"
                 style={{ fontSize: 11, fontWeight: 500 }}
               >
                 {n.name}
@@ -339,7 +367,7 @@ function SankeyChart({
                 y={(y0 + y1) / 2}
                 dy="1em"
                 textAnchor={anchor}
-                className="fill-muted-foreground font-mono"
+                className="fill-muted-foreground font-mono transition-all duration-300 group-hover/node:fill-foreground group-hover/node:font-bold"
                 style={{ fontSize: 10 }}
               >
                 {formatIDR(n.value ?? 0)}

@@ -28,14 +28,13 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { NavUser } from "./NavUser";
+import { cn } from "@/lib/utils/cn";
 
 interface NavItem {
   href: string;
   label: string;
   icon: LucideIcon;
-  /** Optional numeric badge — count of related resources. */
   badge?: number;
-  /** Tone untuk badge. Default neutral. `warning` = ada masalah (mis. saldo minus). */
   badgeTone?: "neutral" | "warning";
 }
 
@@ -45,21 +44,13 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
     email?: string | null;
     image?: string | null;
   };
-  /** Counts surfaced as nav badges. Hidden when 0. */
   counts?: {
     accounts?: number;
     transactions?: number;
-    /** Akun dengan saldo ≤ 0 — surface sebagai warning badge supaya user tahu. */
     accountsAtRisk?: number;
   };
 }
 
-/**
- * App-shell sidebar — dashboard-01 shape: brand header, three nav
- * groups, user dropdown footer. The earlier BudgetCallout card was
- * removed since the same destination already lives in the analytics
- * nav group (Poin 15 audit — no point in two CTAs to the same place).
- */
 export function AppSidebar({ user, counts, ...props }: AppSidebarProps) {
   const { pathname } = useLocation();
 
@@ -95,29 +86,44 @@ export function AppSidebar({ user, counts, ...props }: AppSidebarProps) {
 
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
+      {/* ─── Brand Header ─── */}
+      <SidebarHeader className="p-4 pb-5">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
               tooltip="Maybe Finance"
-              className="!p-1.5"
+              className="!p-0 hover:bg-transparent"
             >
-              <Link to="/">
-                <span
-                  className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground text-xs font-bold"
-                  aria-hidden
-                >
-                  M
-                </span>
-                <span className="text-base font-semibold tracking-tight">
-                  Maybe Finance
-                </span>
+              <Link to="/" className="flex items-center gap-3">
+                <div className="relative">
+                  <span
+                    className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-accent via-blue-500 to-indigo-600 text-white font-black text-base shadow-[0_4px_20px_rgba(56,139,253,0.35)]"
+                    aria-hidden
+                  >
+                    M
+                  </span>
+                  {/* Online indicator */}
+                  <span className="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full bg-income border-[1.5px] border-sidebar" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-sm font-bold tracking-tight text-foreground leading-tight">
+                    Maybe Finance
+                  </span>
+                  <span className="text-[10px] text-muted-foreground/50 font-medium">
+                    Personal Dashboard
+                  </span>
+                </div>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
+
+      {/* ─── Separator with subtle glow ─── */}
+      <div className="mx-4 mb-1">
+        <div className="h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
+      </div>
 
       <SidebarContent>
         <NavGroup label="Menu Utama" items={navMain} pathname={pathname} />
@@ -126,6 +132,9 @@ export function AppSidebar({ user, counts, ...props }: AppSidebarProps) {
           items={navAnalytics}
           pathname={pathname}
         />
+
+
+
         <NavGroup
           label="Preferensi"
           items={navPrefs}
@@ -134,7 +143,11 @@ export function AppSidebar({ user, counts, ...props }: AppSidebarProps) {
         />
       </SidebarContent>
 
-      <SidebarFooter>
+      {/* ─── User Footer ─── */}
+      <div className="mx-4 mb-1">
+        <div className="h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
+      </div>
+      <SidebarFooter className="p-3">
         <NavUser user={user} />
       </SidebarFooter>
     </Sidebar>
@@ -154,9 +167,11 @@ function NavGroup({
 }) {
   return (
     <SidebarGroup className={className}>
-      <SidebarGroupLabel>{label}</SidebarGroupLabel>
+      <SidebarGroupLabel className="px-4 text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground/40">
+        {label}
+      </SidebarGroupLabel>
       <SidebarGroupContent>
-        <SidebarMenu>
+        <SidebarMenu className="px-2 gap-0.5">
           {items.map((item) => {
             const isActive =
               item.href === "/"
@@ -169,14 +184,33 @@ function NavGroup({
                   asChild
                   isActive={isActive}
                   tooltip={item.label}
+                  className={cn(
+                    "transition-colors duration-200 relative rounded-lg h-9 px-3 group/btn",
+                    isActive
+                      ? "bg-accent text-sidebar font-medium shadow-sm"
+                      : "text-muted-foreground/70 hover:text-foreground hover:bg-sidebar-accent"
+                  )}
                 >
                   <Link to={item.href}>
-                    <Icon />
-                    <span>{item.label}</span>
+                    <Icon
+                      size={16}
+                      strokeWidth={isActive ? 2.5 : 2}
+                      className="transition-colors duration-200 shrink-0"
+                    />
+                    <span className="text-[13px]">{item.label}</span>
                   </Link>
                 </SidebarMenuButton>
                 {typeof item.badge === "number" ? (
-                  <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>
+                  <SidebarMenuBadge
+                    className={cn(
+                      "rounded-full min-w-[18px] h-[18px] text-[10px] font-bold flex items-center justify-center transition-colors duration-200",
+                      isActive
+                        ? "bg-sidebar text-accent"
+                        : "bg-sidebar-accent text-muted-foreground/60"
+                    )}
+                  >
+                    {item.badge}
+                  </SidebarMenuBadge>
                 ) : null}
               </SidebarMenuItem>
             );

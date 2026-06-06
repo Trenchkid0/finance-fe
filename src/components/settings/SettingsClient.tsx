@@ -175,7 +175,7 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
                     {customCategories.map((cat) => (
                       <div
                         key={cat.id}
-                        className="bg-elevated border border-border rounded-lg p-3 flex items-center justify-between hover:border-[#444C56] transition-all"
+                        className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-3 flex items-center justify-between hover:border-white/[0.15] hover:bg-white/[0.04] transition-all duration-200"
                       >
                         <div className="flex items-center gap-2 min-w-0">
                           <span aria-hidden>{cat.icon ?? "📂"}</span>
@@ -223,7 +223,7 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
                       {defaultCategories.map((cat) => (
                         <div
                           key={cat.id}
-                          className="bg-elevated border border-border rounded-lg p-3 flex items-center gap-2"
+                          className="bg-white/[0.01] border border-white/[0.04] rounded-xl p-3 flex items-center gap-2.5 opacity-80 hover:opacity-100 transition-opacity"
                         >
                           <span aria-hidden>{cat.icon ?? "📂"}</span>
                           <div className="min-w-0">
