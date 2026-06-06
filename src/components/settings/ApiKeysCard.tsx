@@ -8,6 +8,7 @@ import {
   KeyRound,
   Loader2,
   Plus,
+  Sparkles,
   Trash2,
   XCircle,
 } from "lucide-react";
@@ -285,6 +286,11 @@ function CreateKeyDialog({
     });
   }
 
+  function handleGenerateName() {
+    const randomHex = Math.random().toString(16).substring(2, 6);
+    setName(`bot-keuangan-${randomHex}`);
+  }
+
   return (
     <Dialog
       open={open}
@@ -306,15 +312,27 @@ function CreateKeyDialog({
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="key-name">Nama kunci</Label>
-              <Input
-                id="key-name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Mis. Telegram bot personal"
-                maxLength={64}
-                autoFocus
-                aria-invalid={!!error}
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="key-name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Mis. Telegram bot personal"
+                  maxLength={64}
+                  autoFocus
+                  aria-invalid={!!error}
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleGenerateName}
+                  className="shrink-0 flex items-center gap-1.5"
+                >
+                  <Sparkles size={14} />
+                  Generate
+                </Button>
+              </div>
               {error ? (
                 <p className="text-xs text-destructive">{error}</p>
               ) : null}
