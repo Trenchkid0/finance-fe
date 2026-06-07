@@ -6,6 +6,7 @@ import { ChevronRight, Plus } from "lucide-react";
 import { formatIDR } from "@/lib/utils/formatters";
 import { cn } from "@/lib/utils/cn";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
+import { Card } from "@/components/ui/card";
 
 /**
  * Balance sheet — pola Maybe Finance asli.
@@ -76,7 +77,7 @@ function BalanceSide({ title, total, groups }: SideProps) {
     : title;
 
   return (
-    <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 space-y-5">
+    <Card className="p-6 space-y-5">
       <div className="flex items-baseline gap-2.5">
         <h2 className="text-sm font-semibold text-foreground">{sideTitle}</h2>
         <span className="text-muted-foreground/30">·</span>
@@ -91,7 +92,7 @@ function BalanceSide({ title, total, groups }: SideProps) {
         <>
           {/* Stacked bar */}
           <div className="space-y-3">
-            <div className="h-1.5 w-full bg-white/[0.06] rounded-full overflow-hidden flex">
+            <div className="h-1.5 w-full bg-border/30 rounded-full overflow-hidden flex">
               {groups.map((g) => (
                 <div
                   key={g.name}
@@ -124,7 +125,7 @@ function BalanceSide({ title, total, groups }: SideProps) {
           </div>
 
           {/* Group list */}
-          <div className="rounded-xl bg-white/[0.02] overflow-hidden border border-white/[0.04]">
+          <div className="rounded-xl bg-white/[0.01] overflow-hidden border border-border/30">
             <header className="px-4 py-2.5 flex items-center text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-widest">
               <span className="flex-1 min-w-0">{language === "id" ? "Nama" : "Name"}</span>
               <span className="ml-auto flex items-center gap-6 shrink-0">
@@ -132,7 +133,7 @@ function BalanceSide({ title, total, groups }: SideProps) {
                 <span className="w-32 text-right">{language === "id" ? "Nilai" : "Value"}</span>
               </span>
             </header>
-            <div className="bg-card rounded-md m-1 mt-0">
+            <div className="bg-card/35 rounded-md m-1 mt-0">
               {groups.map((g, idx) => (
                 <GroupRow
                   key={g.name}
@@ -144,7 +145,7 @@ function BalanceSide({ title, total, groups }: SideProps) {
           </div>
         </>
       )}
-    </div>
+    </Card>
   );
 }
 
@@ -264,7 +265,7 @@ function GroupRow({ group, isLast }: { group: BalanceGroup; isLast: boolean }) {
 function DotWeight({ percent, color }: { percent: number; color: string }) {
   return (
     <span className="flex items-center gap-2">
-      <div className="h-1.5 w-16 bg-white/[0.06] rounded-full overflow-hidden shrink-0">
+      <div className="h-1.5 w-16 bg-border/30 rounded-full overflow-hidden shrink-0">
         <div
           className="h-full rounded-full transition-all duration-500 ease-out"
           style={{

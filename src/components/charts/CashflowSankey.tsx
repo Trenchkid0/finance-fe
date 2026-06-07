@@ -9,6 +9,7 @@ import {
 } from "d3-sankey";
 import { formatIDR } from "@/lib/utils/formatters";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -133,8 +134,8 @@ export function CashflowSankey({ data, period }: Props) {
   const hasData = (data?.inflow || []).length > 0 || (data?.outflow || []).length > 0;
 
   return (
-    <section
-      className="group rounded-xl border border-border bg-card p-5 space-y-4 hover:border-white/[0.12] hover:shadow-[0_8px_30px_rgba(0,0,0,0.3)] transition-all duration-300"
+    <Card
+      className="group p-5 space-y-4 hover:border-white/[0.12] transition-all duration-300"
       aria-label="Cash Flow Sankey Diagram"
       role="region"
     >
@@ -188,7 +189,7 @@ export function CashflowSankey({ data, period }: Props) {
           </div>
         )}
       </div>
-    </section>
+    </Card>
   );
 }
 

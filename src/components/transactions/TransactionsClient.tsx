@@ -36,6 +36,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -379,24 +380,24 @@ export function TransactionsClient({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+        <Card className="p-4 gap-0">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">{t("totalTransactions")}</p>
           <p className="text-lg font-black font-mono tabular-nums text-foreground">
             {summary.total} <span className="text-xs text-muted-foreground/60 font-sans font-semibold ml-1">{language === "id" ? "transaksi" : "transactions"}</span>
           </p>
-        </div>
-        <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+        </Card>
+        <Card className="p-4 gap-0">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">{t("incomeLabel")}</p>
           <p className="text-lg font-black font-mono tabular-nums text-income">
             {formatIDR(summary.income)}
           </p>
-        </div>
-        <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+        </Card>
+        <Card className="p-4 gap-0">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">{t("expenseLabel")}</p>
           <p className="text-lg font-black font-mono tabular-nums text-expense">
             {formatIDR(summary.expense)}
           </p>
-        </div>
+        </Card>
       </div>
 
       <FilterBar
@@ -481,7 +482,7 @@ export function TransactionsClient({
       ) : (
         <div className="space-y-6">
           {/* Calendar Card */}
-          <div className="bg-surface border border-border rounded-xl p-5">
+          <Card className="p-5 gap-0">
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
@@ -668,7 +669,7 @@ export function TransactionsClient({
                 })()}
               </div>
             )}
-          </div>
+          </Card>
 
           {/* Daily Detail Card */}
           {selectedDay && (() => {
@@ -680,7 +681,7 @@ export function TransactionsClient({
               : `${months[dateObj.getMonth()]} ${dateObj.getDate()}, ${dateObj.getFullYear()}`;
 
             return (
-              <div className="bg-surface border border-border rounded-xl p-5 space-y-4 animate-fade-in">
+              <Card className="p-5 space-y-4 animate-fade-in gap-0">
                 <div className="flex items-center justify-between border-b border-border pb-3">
                   <h4 className="text-sm font-bold text-text-primary">
                     {language === "id" ? `Transaksi Pada ${formattedDate}` : `Transactions on ${formattedDate}`}
@@ -777,7 +778,7 @@ export function TransactionsClient({
                     ))}
                   </div>
                 )}
-              </div>
+              </Card>
             );
           })()}
         </div>
@@ -925,20 +926,21 @@ function FilterBar({
   const active = isFilterActive(filters);
 
   return (
-    <form
-      ref={formRef}
-      action=""
-      onSubmit={(e) => {
-        e.preventDefault();
-        const fd = new FormData(e.currentTarget);
-        pushFilter({
-          q: (fd.get("q") as string) ?? "",
-          startDate: (fd.get("startDate") as string) || null,
-          endDate: (fd.get("endDate") as string) || null,
-        });
-      }}
-      className="flex flex-col gap-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5"
-    >
+    <Card className="p-0">
+      <form
+        ref={formRef}
+        action=""
+        onSubmit={(e) => {
+          e.preventDefault();
+          const fd = new FormData(e.currentTarget);
+          pushFilter({
+            q: (fd.get("q") as string) ?? "",
+            startDate: (fd.get("startDate") as string) || null,
+            endDate: (fd.get("endDate") as string) || null,
+          });
+        }}
+        className="flex flex-col gap-4 p-5"
+      >
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
         {/* Search */}
         <div className="relative flex-1">
@@ -1038,7 +1040,8 @@ function FilterBar({
           </Button>
         </div>
       </div>
-    </form>
+      </form>
+    </Card>
   );
 }
 
@@ -1554,9 +1557,9 @@ function TransactionsList({
 }) {
   if (transactions.length === 0) {
     return (
-      <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02]">
+      <Card className="gap-0">
         {emptyState}
-      </div>
+      </Card>
     );
   }
 
@@ -1708,7 +1711,7 @@ function DateGroup({
         </p>
       </header>
 
-      <div className="rounded-2xl bg-white/[0.02] border border-white/[0.06] divide-y divide-white/[0.04] overflow-hidden">
+      <Card className="divide-y divide-white/[0.04] overflow-hidden gap-0">
         {group.items.map((tx) => (
           <TransactionRow
             key={tx.id}
@@ -1721,7 +1724,7 @@ function DateGroup({
             onToggleSelect={() => toggleSelect(tx.id)}
           />
         ))}
-      </div>
+      </Card>
     </section>
   );
 }
@@ -2030,14 +2033,14 @@ function ConfirmDelete({
         </DialogHeader>
         <DialogBody>
           {target ? (
-            <div className="px-4 py-3 bg-white/[0.02] border border-white/[0.06] rounded-xl">
+            <Card className="px-4 py-3 gap-0">
               <p className="text-sm text-foreground">
                 {target.description ?? target.categoryName ?? (language === "id" ? "Transaksi" : "Transaction")}
               </p>
               <p className="text-xs text-muted-foreground font-mono tabular-nums">
                 {formatIDR(target.amount)} · {formatDateShort(target.date)}
               </p>
-            </div>
+            </Card>
           ) : null}
         </DialogBody>
         <DialogFooter>

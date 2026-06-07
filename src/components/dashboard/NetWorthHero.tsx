@@ -5,6 +5,7 @@ import { ArrowDown, ArrowUp, Minus } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from "recharts";
 import { formatDateShort, formatIDR } from "@/lib/utils/formatters";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -68,7 +69,7 @@ export function NetWorthHero({ current, previous, period, series }: Props) {
   const periodLabel = PERIOD_OPTIONS.find((o) => o.value === period)?.label ?? "";
 
   return (
-    <section className="group rounded-2xl border border-border/40 bg-card/40 overflow-hidden hover:border-accent/30 hover:shadow-[0_8px_30px_rgba(0,0,0,0.15)] transition-all duration-300" aria-label="Grafik Total Kekayaan" role="region">
+    <Card className="group overflow-hidden p-0 gap-0" aria-label="Grafik Total Kekayaan" role="region">
       <div className="flex items-start justify-between gap-4 p-6 pb-1">
         <div className="space-y-2">
           {/* PERUBAHAN: "Net Worth" -> "Total Kekayaan" */}
@@ -128,7 +129,7 @@ export function NetWorthHero({ current, previous, period, series }: Props) {
           </ResponsiveContainer>
         )}
       </div>
-    </section>
+    </Card>
   );
 }
 

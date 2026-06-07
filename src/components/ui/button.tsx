@@ -21,7 +21,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-gradient-to-r from-accent to-blue-500 text-white hover:from-blue-500 hover:to-accent hover:shadow-[0_6px_24px_rgba(56,139,253,0.35)] active:scale-[0.97] active:shadow-[0_2px_8px_rgba(56,139,253,0.2)]",
+        default: "bg-accent text-white hover:opacity-90 active:scale-[0.97]",
         destructive:
           "bg-destructive/10 text-destructive border border-destructive/30 hover:bg-destructive/20 active:scale-[0.97]",
         outline:

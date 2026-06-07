@@ -3,6 +3,7 @@ import { ArrowLeftRight, Plus, Wallet, ArrowRight } from "lucide-react";
 import { formatDateShort, formatIDR } from "@/lib/utils/formatters";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils/cn";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 
@@ -26,7 +27,7 @@ export function RecentTransactions({ transactions }: Props) {
   const { language } = useLanguage();
 
   return (
-    <section className="rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden flex flex-col transition-all duration-300 hover:border-white/[0.1] hover:shadow-[0_8px_30px_rgba(0,0,0,0.3)]">
+    <Card className="overflow-hidden flex flex-col p-0 gap-0">
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-6 border-b border-white/[0.04] shrink-0">
         <div className="space-y-1.5">
@@ -231,7 +232,7 @@ export function RecentTransactions({ transactions }: Props) {
           )}
         </>
       )}
-    </section>
+    </Card>
   );
 }
 

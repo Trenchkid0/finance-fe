@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
+import { Card } from "@/components/ui/card";
 
 export interface BudgetCategoryData {
   id: string;
@@ -135,7 +136,7 @@ export function BudgetClient({
   return (
     <div className="space-y-6">
       {/* Month picker section */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 rounded-2xl border border-white/[0.06] bg-white/[0.02]">
+      <Card className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-5 gap-4">
         <div className="flex items-center gap-2.5">
           <Calendar size={16} className="text-accent shrink-0" />
           <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">
@@ -157,7 +158,7 @@ export function BudgetClient({
           }}
           pending={pending}
         />
-      </div>
+      </Card>
 
       {/* Budget Warning System (Alerts for spent >= 80% of limit) */}
       {(() => {
@@ -180,7 +181,13 @@ export function BudgetClient({
         if (budgetAlerts.length === 0) return null;
 
         return (
-          <div className="p-5 rounded-2xl border border-expense/20 bg-expense/5 space-y-3.5 relative overflow-hidden backdrop-blur-sm">
+          <Card
+            className="p-5 space-y-3.5 relative overflow-hidden gap-0"
+            style={{
+              borderColor: "color-mix(in srgb, var(--expense) 20%, transparent)",
+              backgroundColor: "color-mix(in srgb, var(--expense) 5%, transparent)",
+            }}
+          >
             {/* Top glowing indicator strip */}
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-expense via-warning to-expense/50" />
             
@@ -198,7 +205,7 @@ export function BudgetClient({
               {budgetAlerts.map((alert) => (
                 <div 
                   key={alert.id}
-                  className="flex items-center justify-between p-3.5 rounded-xl border border-white/[0.04] bg-white/[0.01] hover:bg-white/[0.02] transition-colors"
+                  className="flex items-center justify-between p-3.5 rounded-xl border border-white/[0.04] bg-white/[0.01] hover:bg-white/[0.02] transition-colors gap-0"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div 
@@ -243,7 +250,7 @@ export function BudgetClient({
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
         );
       })()}
 
@@ -267,7 +274,7 @@ export function BudgetClient({
         </div>
 
         {/* Right Column: Categories List */}
-        <div className="lg:col-span-2 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 space-y-4">
+        <Card className="lg:col-span-2 p-6 space-y-4 gap-0">
           <div className="flex items-center justify-between pb-4 border-b border-white/[0.04]">
             <div>
               <h2 className="text-base font-bold text-foreground">
@@ -287,7 +294,7 @@ export function BudgetClient({
           <div className="overflow-y-auto max-h-[600px] pr-1 scrollbar-thin">
             <CategoriesList categories={categoriesWithColor} />
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );
@@ -550,7 +557,7 @@ function BudgetDonut({
   }
 
   return (
-    <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 space-y-4 transition-colors duration-200">
+    <Card className="p-6 space-y-4 transition-colors duration-200 gap-0">
       <div className="flex justify-between items-center">
         <h3 className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-[0.12em]">
           {language === "id" ? "Ringkasan Alokasi" : "Allocation Summary"}
@@ -588,7 +595,7 @@ function BudgetDonut({
           </div>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 

@@ -7,6 +7,7 @@ import { formatIDR, formatDate } from "@/lib/utils/formatters";
 import { toast } from "sonner";
 import { Plus, Target, Edit2, Trash2, Calendar, PiggyBank } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -132,30 +133,30 @@ export default function Goals() {
 
       {/* Metrics Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+        <Card className="p-4 gap-0">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">
             {language === "id" ? "TOTAL TARGET AKUMULATIF" : "TOTAL TARGET AMOUNT"}
           </p>
           <p className="text-lg font-black font-mono tabular-nums text-foreground">
             {formatIDR(totalTarget)}
           </p>
-        </div>
-        <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+        </Card>
+        <Card className="p-4 gap-0">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">
             {language === "id" ? "TOTAL TERKUMPUL" : "TOTAL SAVED"}
           </p>
           <p className="text-lg font-black font-mono tabular-nums text-income">
             {formatIDR(totalSaved)}
           </p>
-        </div>
-        <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+        </Card>
+        <Card className="p-4 gap-0">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">
             {language === "id" ? "RATA-RATA PROGRES" : "AVERAGE PROGRESS"}
           </p>
           <p className="text-lg font-black font-mono tabular-nums text-accent">
             {averageProgress.toFixed(1)}%
           </p>
-        </div>
+        </Card>
       </div>
 
       {/* Main List */}
@@ -214,9 +215,9 @@ export default function Goals() {
             }
 
             return (
-              <div
+              <Card
                 key={goal.id}
-                className="bg-surface border border-border rounded-xl p-5 hover:border-[#444C56] transition-all duration-200 flex flex-col justify-between"
+                className="bg-surface border border-border rounded-xl p-5 hover:border-[#444C56] transition-all duration-200 flex flex-col justify-between gap-0"
               >
                 <div>
                   <div className="flex justify-between items-start gap-2">
@@ -296,9 +297,9 @@ export default function Goals() {
                       <span className="font-semibold text-text-primary">{pct.toFixed(0)}%</span>
                     </div>
                   </div>
-                  <div className="relative h-2.5 w-full bg-[#1C2128] border border-border rounded-full overflow-hidden p-0.5">
+                  <div className="relative h-2.5 w-full bg-muted/40 border border-border rounded-full overflow-hidden p-0.5">
                     <div
-                      className="h-full bg-gradient-to-r from-accent to-blue-500 rounded-full transition-all duration-500"
+                      className="h-full bg-progress rounded-full transition-all duration-500"
                       style={{ width: `${pct}%` }}
                     />
                     {/* Milestone Ticks */}
@@ -329,7 +330,7 @@ export default function Goals() {
                     </span>
                   </div>
                 </div>
-              </div>
+              </Card>
             );
           })}
         </div>

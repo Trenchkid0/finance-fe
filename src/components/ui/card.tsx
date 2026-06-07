@@ -9,14 +9,23 @@ import { cn } from "@/lib/utils/cn";
  * on the left while `CardAction` floats to the right.
  */
 const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
+  ({ className, style, ...props }, ref) => (
     <div
       ref={ref}
       data-slot="card"
       className={cn(
-        "rounded-2xl border border-border/50 bg-card/75 backdrop-blur-md text-card-foreground transition-all duration-300 hover:border-accent/30 hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)] hover:shadow-accent/[0.02] hover:-translate-y-0.5 flex flex-col gap-4",
+        "border text-card-foreground transition-all duration-300 hover:border-accent/30 hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)] hover:shadow-accent/[0.02] hover:-translate-y-0.5 flex flex-col gap-4",
         className,
       )}
+      style={{
+        borderRadius: "var(--card-radius)",
+        borderWidth: "var(--card-border-width)",
+        borderColor: "color-mix(in srgb, var(--border) 50%, transparent)",
+        backdropFilter: "blur(var(--card-backdrop-blur))",
+        WebkitBackdropFilter: "blur(var(--card-backdrop-blur))",
+        backgroundColor: "color-mix(in srgb, var(--card-bg) calc(var(--card-opacity) * 100%), transparent)",
+        ...style,
+      }}
       {...props}
     />
   ),

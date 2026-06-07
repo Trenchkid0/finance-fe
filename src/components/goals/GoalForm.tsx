@@ -233,9 +233,9 @@ export function GoalForm({ open, onClose, goal, accounts, onSubmit }: GoalModalP
                   {progress.pct.toFixed(0)}%
                 </span>
               </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-white/[0.07]">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-muted/40">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-accent to-accent/60 transition-all duration-500"
+                  className="h-full rounded-full bg-progress transition-all duration-500"
                   style={{ width: `${progress.pct}%` }}
                 />
               </div>

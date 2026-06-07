@@ -13,6 +13,7 @@ export interface ThemeVariables {
   expense: string;
   warning: string;
   accent: string;
+  progress: string;
   sidebar: string;
   "sidebar-foreground": string;
   "sidebar-accent": string;
@@ -54,6 +55,7 @@ export const THEME_PRESETS: ThemePreset[] = [
       expense: "#EF4444",
       warning: "#F59E0B",
       accent: "#3B82F6",
+      progress: "#A78BFA",
       sidebar: "#0F172A",
       "sidebar-foreground": "#F8FAFC",
       "sidebar-accent": "#1E293B",
@@ -84,6 +86,7 @@ export const THEME_PRESETS: ThemePreset[] = [
       expense: "#F85149",
       warning: "#D29922",
       accent: "#388BFD",
+      progress: "#A371F7",
       sidebar: "#0D1117",
       "sidebar-foreground": "#F0F6FC",
       "sidebar-accent": "#161B22",
@@ -114,6 +117,7 @@ export const THEME_PRESETS: ThemePreset[] = [
       expense: "#F43F5E",
       warning: "#F59E0B",
       accent: "#F43F5E",
+      progress: "#F472B6",
       sidebar: "#050505",
       "sidebar-foreground": "#FAFAFA",
       "sidebar-accent": "#0A0A0A",
@@ -144,6 +148,7 @@ export const THEME_PRESETS: ThemePreset[] = [
       expense: "#DC2626",
       warning: "#D97706",
       accent: "#0F172A",
+      progress: "#6366F1",
       sidebar: "#F8FAFC",
       "sidebar-foreground": "#0F172A",
       "sidebar-border": "#E2E8F0",
@@ -174,6 +179,7 @@ export const THEME_PRESETS: ThemePreset[] = [
       expense: "#B91C1C",
       warning: "#A16207",
       accent: "#B45309",
+      progress: "#D97706",
       sidebar: "#F3ECE0",
       "sidebar-foreground": "#3F2B1B",
       "sidebar-border": "#E5D9C4",
@@ -204,6 +210,7 @@ export const THEME_PRESETS: ThemePreset[] = [
       expense: "#F43F5E",
       warning: "#F59E0B",
       accent: "#10B981",
+      progress: "#06B6D4",
       sidebar: "#060D0B",
       "sidebar-foreground": "#ECFDF5",
       "sidebar-accent": "#0D1F1A",
@@ -234,6 +241,7 @@ export const THEME_PRESETS: ThemePreset[] = [
       expense: "#FF4B72",
       warning: "#FFB800",
       accent: "#00F0FF",
+      progress: "#8B5CF6",
       sidebar: "#04091A",
       "sidebar-foreground": "#F0F4FF",
       "sidebar-accent": "#0B132B",
@@ -264,6 +272,7 @@ export const THEME_PRESETS: ThemePreset[] = [
       expense: "#F43F5E",
       warning: "#EAB308",
       accent: "#EAB308",
+      progress: "#F97316",
       sidebar: "#0C0A09",
       "sidebar-foreground": "#F5F5F4",
       "sidebar-accent": "#1C1917",
@@ -294,6 +303,7 @@ export const THEME_PRESETS: ThemePreset[] = [
       expense: "#C83232",
       warning: "#B45309",
       accent: "#962D2D",
+      progress: "#B45309",
       sidebar: "#FAF9F6",
       "sidebar-foreground": "#1C1A17",
       "sidebar-border": "#EAE6DF",
@@ -351,9 +361,47 @@ export function applyTheme(themeId: string, customVars?: Partial<ThemeVariables>
   }
 }
 
+export interface CardStyles {
+  radius: string;      // "0px" | "8px" | "16px" | "24px"
+  borderWidth: string; // "0px" | "1px" | "2px" | "3px"
+  blur: string;        // "0px" | "12px" | "24px"
+  opacity: string;     // "1" | "0.75" | "0.5"
+}
+
+export function applyCardStyles(styles: CardStyles) {
+  if (typeof window === "undefined") return;
+  const root = document.documentElement;
+  root.style.setProperty("--card-radius", styles.radius);
+  root.style.setProperty("--card-border-width", styles.borderWidth);
+  root.style.setProperty("--card-backdrop-blur", styles.blur);
+  root.style.setProperty("--card-opacity", styles.opacity);
+  localStorage.setItem("racks-card-styles", JSON.stringify(styles));
+}
+
+export function loadSavedCardStyles() {
+  if (typeof window === "undefined") return;
+  const defaults: CardStyles = {
+    radius: "16px",
+    borderWidth: "1px",
+    blur: "12px",
+    opacity: "0.75"
+  };
+  const savedStr = localStorage.getItem("racks-card-styles");
+  let styles = defaults;
+  if (savedStr) {
+    try {
+      styles = { ...defaults, ...JSON.parse(savedStr) };
+    } catch (e) {
+      // Ignore
+    }
+  }
+  applyCardStyles(styles);
+}
+
 export function loadSavedTheme() {
   if (typeof window === "undefined") return;
   loadSavedFont();
+  loadSavedCardStyles();
   const themeId = localStorage.getItem("racks-theme-id") || "nordic-midnight";
   const customVarsStr = localStorage.getItem("racks-custom-theme-vars");
   let customVars = undefined;

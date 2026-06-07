@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
+import { Card } from "@/components/ui/card";
 
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 
@@ -107,7 +108,10 @@ export default function AccountDetail() {
       </header>
 
       {/* Account Info Card */}
-      <div className="relative rounded-2xl border border-white/[0.06] bg-gradient-to-br from-white/[0.03] via-white/[0.01] to-transparent p-6 overflow-hidden">
+      <Card
+        className="relative p-6 overflow-hidden bg-gradient-to-br from-white/[0.03] via-white/[0.01] to-transparent gap-0"
+        style={{ backgroundColor: "transparent" }}
+      >
         {/* Decorative background glow using account color */}
         <div 
           className="absolute -right-12 -top-12 w-36 h-36 rounded-full blur-[60px] opacity-15 pointer-events-none" 
@@ -145,10 +149,9 @@ export default function AccountDetail() {
             </p>
           </div>
         </div>
-      </div>
+      </Card>
 
-      {/* Transaction List Card */}
-      <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 space-y-4">
+      <Card className="p-5 space-y-4 gap-0">
         <div className="flex items-center justify-between pb-3 border-b border-white/[0.04]">
           <div>
             <h3 className="text-base font-bold text-foreground">
@@ -258,7 +261,7 @@ export default function AccountDetail() {
             })}
           </div>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

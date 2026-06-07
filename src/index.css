@@ -24,6 +24,10 @@
   --sidebar-border: #334155;
   --muted-foreground: #94A3B8;
   --muted-bg: #1E293B;
+  --card-radius: 16px;
+  --card-border-width: 1px;
+  --card-backdrop-blur: 12px;
+  --card-opacity: 0.75;
 }
 
 html,

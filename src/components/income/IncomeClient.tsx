@@ -29,6 +29,7 @@ import {
 
 import { formatDateShort, formatIDR } from "@/lib/utils/formatters";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils/cn";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 
@@ -189,7 +190,7 @@ export function IncomeClient({
 				</div>
 
 				{/* High-end Value Hero Display */}
-				<div className="relative overflow-hidden rounded-2xl border border-border/40 bg-card/40 p-5 lg:p-6 min-w-[280px] lg:text-right flex items-center justify-between lg:block hover:border-accent/30 transition-all">
+				<Card className="relative overflow-hidden p-5 lg:p-6 min-w-[280px] lg:text-right flex flex-row lg:flex-col items-center justify-between lg:justify-start hover:border-accent/30 transition-all gap-0">
 					<div className="absolute -top-10 -right-10 h-28 w-28 rounded-full bg-income/5 blur-[30px]" />
 					<div>
 						<p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/50">
@@ -202,7 +203,7 @@ export function IncomeClient({
 					<div className="lg:mt-2 lg:flex lg:justify-end">
 						<DeltaPill delta={monthlyDelta} />
 					</div>
-				</div>
+				</Card>
 			</header>
 
 			{/* ──────────────── KPI Grid Section ──────────────── */}
@@ -234,7 +235,7 @@ export function IncomeClient({
 				<div className="lg:col-span-2 space-y-6">
 					
 					{/* Chart Panel */}
-					<section className="rounded-2xl border border-border/40 bg-card/40 p-6 space-y-6">
+					<Card className="p-6 space-y-6">
 						<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 							<div>
 								<h3 className="text-sm font-bold text-foreground">
@@ -307,7 +308,7 @@ export function IncomeClient({
 							) : (
 								<ResponsiveContainer width="100%" height="100%">
 									{visType === "area" ? (
-										<AreaChart data={activeChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+										<AreaChart data={activeChartData} margin={{ top: 10, right: 10, left: 15, bottom: 0 }}>
 											<defs>
 												<linearGradient id="incomeAreaGlow" x1="0" y1="0" x2="0" y2="1">
 													<stop offset="0%" stopColor="var(--income)" stopOpacity={0.25} />
@@ -330,7 +331,7 @@ export function IncomeClient({
 												fontSize={11}
 												tickLine={false}
 												axisLine={false}
-												width={65}
+												width={75}
 												tickFormatter={(v: number) => formatIDR(v, { compact: true })}
 											/>
 											<Tooltip content={<CustomTooltip activeChartData={activeChartData} />} cursor={{ stroke: "var(--income)", strokeWidth: 1.5, opacity: 0.15 }} />
@@ -344,7 +345,7 @@ export function IncomeClient({
 											/>
 										</AreaChart>
 									) : visType === "line" ? (
-										<LineChart data={activeChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+										<LineChart data={activeChartData} margin={{ top: 10, right: 10, left: 15, bottom: 0 }}>
 											<CartesianGrid stroke="var(--border)" strokeOpacity={0.15} vertical={false} />
 											<XAxis
 												dataKey="month"
@@ -361,7 +362,7 @@ export function IncomeClient({
 												fontSize={11}
 												tickLine={false}
 												axisLine={false}
-												width={65}
+												width={75}
 												tickFormatter={(v: number) => formatIDR(v, { compact: true })}
 											/>
 											<Tooltip content={<CustomTooltip activeChartData={activeChartData} />} cursor={{ stroke: "var(--income)", strokeWidth: 1.5, opacity: 0.15 }} />
@@ -375,7 +376,7 @@ export function IncomeClient({
 											/>
 										</LineChart>
 									) : (
-										<BarChart data={activeChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+										<BarChart data={activeChartData} margin={{ top: 10, right: 10, left: 15, bottom: 0 }}>
 											<CartesianGrid stroke="var(--border)" strokeOpacity={0.15} vertical={false} />
 											<XAxis
 												dataKey="month"
@@ -392,7 +393,7 @@ export function IncomeClient({
 												fontSize={11}
 												tickLine={false}
 												axisLine={false}
-												width={65}
+												width={75}
 												tickFormatter={(v: number) => formatIDR(v, { compact: true })}
 											/>
 											<Tooltip content={<CustomTooltip activeChartData={activeChartData} />} cursor={{ fill: "var(--income)", opacity: 0.05 }} />
@@ -407,10 +408,10 @@ export function IncomeClient({
 								</ResponsiveContainer>
 							)}
 						</div>
-					</section>
+					</Card>
 
 					{/* NEW Goal Target Planner Widget */}
-					<section className="rounded-2xl border border-border/40 bg-card/40 p-6 space-y-5 relative overflow-hidden">
+					<Card className="p-6 space-y-5 relative overflow-hidden">
 						<div className="absolute -bottom-12 -left-12 h-36 w-36 rounded-full bg-income/5 blur-[40px] pointer-events-none" />
 						
 						<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -478,12 +479,12 @@ export function IncomeClient({
 								</span>
 							</div>
 						</div>
-					</section>
+					</Card>
 
 				</div>
 
 				{/* RIGHT: Top Source Categories breakdown */}
-				<section className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 flex flex-col space-y-6">
+				<Card className="p-6 flex flex-col space-y-6">
 					<div>
 						<h3 className="text-sm font-bold text-foreground">
 							{language === "id" ? "Distribusi Kategori" : "Category Distribution"}
@@ -552,12 +553,12 @@ export function IncomeClient({
 							</Link>
 						</div>
 					)}
-				</section>
+				</Card>
 			</div>
 
 			{/* ──────────────── Bottom Section: Audit Log ──────────────── */}
 			{transactions.length > 0 && (
-				<section className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 space-y-4">
+				<Card className="p-6 space-y-4">
 					<div className="flex items-center justify-between">
 						<div>
 							<h3 className="text-sm font-bold text-foreground">
@@ -606,7 +607,7 @@ export function IncomeClient({
 							</div>
 						))}
 					</div>
-				</section>
+				</Card>
 			)}
 		</div>
 	);
@@ -644,7 +645,7 @@ function KPIStatCard({
 	description: string;
 }) {
 	return (
-		<div className="relative overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 transition-all duration-300 hover:border-white/[0.12] hover:bg-white/[0.04] hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.3)] group">
+		<Card className="relative overflow-hidden p-5 transition-all duration-300 hover:-translate-y-0.5 group gap-0">
 			<div className="flex justify-between items-start">
 				<div className="space-y-1">
 					<p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/50 transition-colors group-hover:text-foreground/80">
@@ -667,6 +668,6 @@ function KPIStatCard({
 			<div className="mt-4 pt-3 border-t border-white/[0.04]">
 				<p className="text-[10px] text-muted-foreground/40 font-medium">{description}</p>
 			</div>
-		</div>
+		</Card>
 	);
 }

@@ -11,13 +11,14 @@ import { SkeletonDashboard } from "@/components/ui/skeleton-loader";
 import { useApp } from "@/components/layout/AppLayout";
 import { formatIDR } from "@/lib/utils/formatters";
 import { cn } from "@/lib/utils/cn";
+import { Card } from "@/components/ui/card";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 
 const ASSET_GROUP_COLOR: Record<string, string> = {
-  cash: "#79B8FF",
-  wallet: "#79B8FF",
-  bank: "#388BFD",
-  investment: "#1F6FEB",
+  cash: "var(--income)",
+  wallet: "var(--warning)",
+  bank: "var(--accent)",
+  investment: "var(--progress)",
 };
 
 function buildAssetGroups(
@@ -362,10 +363,10 @@ function QuickStatCard({
   quickAction?: { label: string; icon: React.ReactNode; href: string };
 }) {
   return (
-    <div
+    <Card
       className={cn(
-        "group relative overflow-hidden rounded-xl border-2 bg-card p-5 transition-all duration-200",
-        "hover:border-accent/40 hover:shadow-xl hover:shadow-accent/10 hover:-translate-y-0.5",
+        "group relative overflow-hidden p-5 transition-all duration-300",
+        "hover:border-accent/40 hover:-translate-y-0.5",
         accent && "border-accent/40 bg-gradient-to-br from-accent/10 to-accent/5"
       )}
     >
@@ -425,7 +426,7 @@ function QuickStatCard({
           </Link>
         )}
       </div>
-    </div>
+    </Card>
   );
 }
 

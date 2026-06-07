@@ -3,7 +3,7 @@
 import { useActionState, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, Inbox, Key, Loader2, Palette, Plus, Shapes, Shield, Trash2, User, X } from "lucide-react";
-import { applyTheme, THEME_PRESETS, FONT_OPTIONS, applyFont, type ThemeVariables } from "@/lib/utils/theme";
+import { applyTheme, THEME_PRESETS, FONT_OPTIONS, applyFont, type ThemeVariables, type CardStyles, applyCardStyles } from "@/lib/utils/theme";
 import { toast } from "sonner";
 import { createCategory, deleteCategory } from "@/app/actions/categories";
 import type { ActionResult } from "@/types";
@@ -84,6 +84,35 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
     if (typeof window === "undefined") return "jakarta";
     return localStorage.getItem("racks-font-family") || "jakarta";
   });
+
+  const [cardStyles, setCardStyles] = useState<CardStyles>(() => {
+    if (typeof window === "undefined") {
+      return {
+        radius: "16px",
+        borderWidth: "1px",
+        blur: "12px",
+        opacity: "0.75",
+      };
+    }
+    const defaults: CardStyles = {
+      radius: "16px",
+      borderWidth: "1px",
+      blur: "12px",
+      opacity: "0.75",
+    };
+    const stored = localStorage.getItem("racks-card-styles");
+    try {
+      return stored ? { ...defaults, ...JSON.parse(stored) } : defaults;
+    } catch {
+      return defaults;
+    }
+  });
+
+  const handleCardStyleChange = (key: keyof CardStyles, value: string) => {
+    const updated = { ...cardStyles, [key]: value };
+    setCardStyles(updated);
+    applyCardStyles(updated);
+  };
 
   const handleFontChange = (id: string) => {
     setActiveFontId(id);
@@ -464,6 +493,20 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
                       {language === "id" ? "Garis Batas & Pembatas" : "Borders & Dividers"}
                     </span>
                   </div>
+
+                  {/* Progress Color */}
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={customVars.progress || THEME_PRESETS.find(p => p.id === activePresetId)?.variables.progress || "#3B82F6"}
+                      onChange={(e) => handleCustomVarChange("progress", e.target.value)}
+                      onInput={(e) => handleCustomVarChange("progress", (e.target as HTMLInputElement).value)}
+                      className="h-8 w-8 rounded-lg cursor-pointer border border-border bg-transparent shrink-0"
+                    />
+                    <span className="text-xs text-foreground font-medium">
+                      {language === "id" ? "Warna Progress Bar" : "Progress Bar Color"}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Reset Customizations Button */}
@@ -487,6 +530,158 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
                     </Button>
                   </div>
                 )}
+              </div>
+
+              {/* Informational Color Breakdown Guide */}
+              <div className="mt-8 border-t border-border/60 pt-6 space-y-4">
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  {language === "id" ? "Panduan Peruntukan Warna" : "Color Mapping Guide"}
+                </h3>
+                
+                <div className="flex flex-col lg:flex-row gap-6 items-stretch">
+                  {/* Visual UI Mapping Demo Widget */}
+                  <div className="w-full lg:w-80 p-5 rounded-2xl border border-border bg-card/60 backdrop-blur-md space-y-4 text-left flex flex-col justify-between shrink-0">
+                    <div>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-3">
+                        {language === "id" ? "Skema Variabel Elemen UI" : "UI Element Variable Mapping"}
+                      </p>
+                      
+                      <div className="space-y-3">
+                        {/* Mock Search input (elevated) */}
+                        <div className="p-2 rounded-lg bg-elevated border border-border flex justify-between items-center text-[10px] text-muted-foreground">
+                          <span>{language === "id" ? "Cari transaksi..." : "Search..."}</span>
+                          <span className="text-[8px] px-1.5 py-0.5 rounded bg-black/30 font-mono text-foreground/75">var(--elevated)</span>
+                        </div>
+
+                        {/* Mock Item (border & bg-card & text) */}
+                        <div className="p-3 rounded-xl border border-border bg-card/85 flex justify-between items-center">
+                          <div>
+                            <p className="text-xs font-bold text-foreground">{language === "id" ? "Pekerjaan Lepas" : "Freelance Income"}</p>
+                            <p className="text-[8px] text-muted-foreground font-mono">var(--card-bg)</p>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-xs font-semibold text-income font-mono tabular-nums">+Rp 1.500.000</span>
+                            <span className="text-[8px] text-muted-foreground block font-mono">var(--income)</span>
+                          </div>
+                        </div>
+
+                        {/* Mock Expense Item */}
+                        <div className="p-3 rounded-xl border border-border bg-card/85 flex justify-between items-center">
+                          <div>
+                            <p className="text-xs font-bold text-foreground">{language === "id" ? "Pembelian Kopi" : "Coffee Shop"}</p>
+                            <p className="text-[8px] text-muted-foreground font-mono">var(--card-bg)</p>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-xs font-semibold text-expense font-mono tabular-nums">-Rp 45.000</span>
+                            <span className="text-[8px] text-muted-foreground block font-mono">var(--expense)</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Mock Action (accent) */}
+                    <div className="space-y-3 pt-2">
+                      <div className="flex gap-2">
+                        <button type="button" className="flex-1 py-1.5 rounded-lg border border-border hover:bg-white/[0.02] text-[10px] text-muted-foreground transition">
+                          {language === "id" ? "Batal" : "Cancel"}
+                        </button>
+                        <button type="button" className="px-3 py-1.5 rounded-lg bg-accent text-white text-[10px] font-semibold hover:bg-accent/80 transition flex items-center gap-1.5">
+                          <span>{language === "id" ? "Simpan" : "Save"}</span>
+                          <span className="text-[8px] opacity-75 font-mono">var(--accent)</span>
+                        </button>
+                      </div>
+
+                      {/* Footer showing global layout variables */}
+                      <div className="pt-3 border-t border-border/50 space-y-1.5 text-[9px] text-muted-foreground">
+                        <div className="flex justify-between">
+                          <span>{language === "id" ? "Latar Kanvas:" : "Canvas Background:"}</span>
+                          <span className="font-mono text-foreground font-semibold">var(--background)</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>{language === "id" ? "Garis Batas:" : "Borders / Dividers:"}</span>
+                          <span className="font-mono text-foreground font-semibold">var(--border)</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Descriptions Grid */}
+                  <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                    <div className="p-3.5 bg-white/[0.01] border border-border/40 rounded-xl space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className="w-3 h-3 rounded-full bg-accent" />
+                        <span className="text-xs font-bold text-foreground">Accent / Brand Color</span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground leading-normal">
+                        {language === "id"
+                          ? "Digunakan untuk tombol utama (CTA), tautan aktif, fokus ring, dan status penanda utama di dashboard."
+                          : "Used for primary call-to-action buttons, active navigation links, focus rings, and primary highlights."}
+                      </p>
+                    </div>
+
+                    <div className="p-3.5 bg-white/[0.01] border border-border/40 rounded-xl space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className="w-3 h-3 rounded-full bg-background" />
+                        <span className="text-xs font-bold text-foreground">Background Canvas</span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground leading-normal">
+                        {language === "id"
+                          ? "Warna dasar latar belakang halaman utama website. Menentukan atmosfer kontras (Terang/Gelap) seluruh dashboard."
+                          : "The base background color of the main workspace canvas. Sets the contrast tone of the whole application."}
+                      </p>
+                    </div>
+
+                    <div className="p-3.5 bg-white/[0.01] border border-border/40 rounded-xl space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className="w-3 h-3 rounded-full bg-surface" />
+                        <span className="text-xs font-bold text-foreground">Card Surface Color</span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground leading-normal">
+                        {language === "id"
+                          ? "Digunakan sebagai latar belakang panel statistik, ringkasan saldo, tabel transaksi, dan kartu modul."
+                          : "Used as the surface color for stat cards, balance summaries, transaction tables, and panel elements."}
+                      </p>
+                    </div>
+
+                    <div className="p-3.5 bg-white/[0.01] border border-border/40 rounded-xl space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className="w-3 h-3 rounded-full bg-elevated" />
+                        <span className="text-xs font-bold text-foreground">Elevated Surface</span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground leading-normal">
+                        {language === "id"
+                          ? "Digunakan untuk dropdown menu, dialog modal melayang, tooltip, serta bar pencarian input."
+                          : "Used for dropdown menus, modal boxes, hover tooltips, and default input search bars."}
+                      </p>
+                    </div>
+
+                    <div className="p-3.5 bg-white/[0.01] border border-border/40 rounded-xl space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className="w-3 h-3 rounded-full bg-border" />
+                        <span className="text-xs font-bold text-foreground">Border / Dividers</span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground leading-normal">
+                        {language === "id"
+                          ? "Digunakan untuk seluruh garis pemisah, garis tabel, dan outline border pada input serta panel."
+                          : "Used for all horizontal dividers, grid lines, table row borders, and panel outline strokes."}
+                      </p>
+                    </div>
+
+                    <div className="p-3.5 bg-white/[0.01] border border-border/40 rounded-xl space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className="w-3.5 h-3.5 flex items-center justify-center rounded-full bg-income/20 border border-income/30">
+                          <span className="w-1.5 h-1.5 rounded-full bg-income" />
+                        </span>
+                        <span className="text-xs font-bold text-foreground">Financial Status (Income / Expense)</span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground leading-normal">
+                        {language === "id"
+                          ? "Hijau digunakan untuk nominal pemasukan dan kenaikan aset; merah digunakan untuk nominal pengeluaran dan kerugian."
+                          : "Green tracks positive cashflow and asset appreciation; red tracks expenses and capital losses."}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Typography Customization */}
@@ -529,85 +724,162 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
                 </div>
               </div>
 
-              {/* Informational Color Breakdown Guide */}
-              <div className="mt-8 border-t border-border/60 pt-6 space-y-4">
+              {/* Card Style Customization */}
+              <div className="mt-8 border-t border-border/60 pt-6 space-y-6">
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                  {language === "id" ? "Panduan Peruntukan Warna" : "Color Mapping Guide"}
+                  {language === "id" ? "Gaya & Tampilan Kartu" : "Card Styles & Appearance"}
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-left">
-                  <div className="p-3 bg-white/[0.01] border border-border/40 rounded-xl space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="w-3 h-3 rounded-full bg-accent" />
-                      <span className="text-xs font-bold text-foreground">Accent / Brand Color</span>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground">
-                      {language === "id"
-                        ? "Digunakan untuk tombol utama (CTA), tautan aktif, fokus ring, dan status penanda utama di dashboard."
-                        : "Used for primary call-to-action buttons, active navigation links, focus rings, and primary highlights."}
-                    </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                  {/* Card Roundedness */}
+                  <div className="space-y-2 flex flex-col">
+                    <label className="text-xs font-semibold text-foreground">
+                      {language === "id" ? "Sudut Kelengkungan" : "Corner Radius"}
+                    </label>
+                    <select
+                      value={cardStyles.radius}
+                      onChange={(e) => handleCardStyleChange("radius", e.target.value)}
+                      className="bg-elevated border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-accent w-full cursor-pointer h-9"
+                    >
+                      <option value="0px">{language === "id" ? "Tajam (0px)" : "Sharp (0px)"}</option>
+                      <option value="8px">{language === "id" ? "Kompak (8px)" : "Compact (8px)"}</option>
+                      <option value="16px">{language === "id" ? "Sedang (16px)" : "Medium (16px)"}</option>
+                      <option value="24px">{language === "id" ? "Sangat Bulat (24px)" : "Extra Rounded (24px)"}</option>
+                    </select>
                   </div>
 
-                  <div className="p-3 bg-white/[0.01] border border-border/40 rounded-xl space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="w-3 h-3 rounded-full bg-background" />
-                      <span className="text-xs font-bold text-foreground">Background Canvas</span>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground">
-                      {language === "id"
-                        ? "Warna dasar latar belakang halaman utama website. Menentukan atmosfer kontras (Terang/Gelap) seluruh dashboard."
-                        : "The base background color of the main workspace canvas. Sets the contrast tone of the whole application."}
-                    </p>
+                  {/* Card Border Thickness */}
+                  <div className="space-y-2 flex flex-col">
+                    <label className="text-xs font-semibold text-foreground">
+                      {language === "id" ? "Ketebalan Garis Batas" : "Border Thickness"}
+                    </label>
+                    <select
+                      value={cardStyles.borderWidth}
+                      onChange={(e) => handleCardStyleChange("borderWidth", e.target.value)}
+                      className="bg-elevated border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-accent w-full cursor-pointer h-9"
+                    >
+                      <option value="0px">{language === "id" ? "Tanpa Garis (0px)" : "None (0px)"}</option>
+                      <option value="1px">{language === "id" ? "Tipis (1px)" : "Thin (1px)"}</option>
+                      <option value="2px">{language === "id" ? "Sedang (2px)" : "Medium (2px)"}</option>
+                      <option value="3px">{language === "id" ? "Tebal (3px)" : "Thick (3px)"}</option>
+                    </select>
                   </div>
 
-                  <div className="p-3 bg-white/[0.01] border border-border/40 rounded-xl space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="w-3 h-3 rounded-full bg-surface" />
-                      <span className="text-xs font-bold text-foreground">Card Surface Color</span>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground">
-                      {language === "id"
-                        ? "Digunakan sebagai latar belakang panel statistik, ringkasan saldo, tabel transaksi, dan kartu modul."
-                        : "Used as the surface color for stat cards, balance summaries, transaction tables, and panel elements."}
-                    </p>
+                  {/* Card Glassmorphism Backdrop Blur */}
+                  <div className="space-y-2 flex flex-col">
+                    <label className="text-xs font-semibold text-foreground">
+                      {language === "id" ? "Kekaburan Latar (Blur)" : "Backdrop Blur"}
+                    </label>
+                    <select
+                      value={cardStyles.blur}
+                      onChange={(e) => handleCardStyleChange("blur", e.target.value)}
+                      className="bg-elevated border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-accent w-full cursor-pointer h-9"
+                    >
+                      <option value="0px">{language === "id" ? "Tanpa Blur (0px)" : "None (0px)"}</option>
+                      <option value="12px">{language === "id" ? "Sedang (12px)" : "Medium (12px)"}</option>
+                      <option value="24px">{language === "id" ? "Tebal (24px)" : "Heavy Frost (24px)"}</option>
+                    </select>
                   </div>
 
-                  <div className="p-3 bg-white/[0.01] border border-border/40 rounded-xl space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="w-3 h-3 rounded-full bg-elevated" />
-                      <span className="text-xs font-bold text-foreground">Elevated Surface</span>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground">
-                      {language === "id"
-                        ? "Digunakan untuk dropdown menu, dialog modal melayang, tooltip, serta bar pencarian input."
-                        : "Used for dropdown menus, modal boxes, hover tooltips, and default input search bars."}
-                    </p>
+                  {/* Card Background Opacity */}
+                  <div className="space-y-2 flex flex-col">
+                    <label className="text-xs font-semibold text-foreground">
+                      {language === "id" ? "Tingkat Transparansi" : "Card Transparency"}
+                    </label>
+                    <select
+                      value={cardStyles.opacity}
+                      onChange={(e) => handleCardStyleChange("opacity", e.target.value)}
+                      className="bg-elevated border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-accent w-full cursor-pointer h-9"
+                    >
+                      <option value="1">{language === "id" ? "Padat (100%)" : "Solid (100%)"}</option>
+                      <option value="0.75">{language === "id" ? "Sedang (75%)" : "Medium (75%)"}</option>
+                      <option value="0.5">{language === "id" ? "Transparan (50%)" : "Clear (50%)"}</option>
+                    </select>
                   </div>
+                </div>
 
-                  <div className="p-3 bg-white/[0.01] border border-border/40 rounded-xl space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="w-3 h-3 rounded-full bg-border" />
-                      <span className="text-xs font-bold text-foreground">Border / Dividers</span>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground">
-                      {language === "id"
-                        ? "Digunakan untuk seluruh garis pemisah, garis tabel, dan outline border pada input serta panel."
-                        : "Used for all horizontal dividers, grid lines, table row borders, and panel outline strokes."}
-                    </p>
-                  </div>
+                {/* Real-time Preview */}
+                <div className="mt-6 p-5 rounded-2xl border border-border/30 bg-white/[0.01]">
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">
+                    {language === "id" ? "Pratinjau Kartu Terkustomisasi" : "Customized Card Preview"}
+                  </p>
+                  
+                  <div className="flex flex-col lg:flex-row gap-6 items-center lg:items-stretch">
+                    {/* The actual Card Preview */}
+                    <div 
+                      className="w-full lg:w-[360px] p-6 border text-card-foreground flex flex-col justify-between gap-4 transition-all duration-300"
+                      style={{
+                        borderRadius: cardStyles.radius,
+                        borderWidth: cardStyles.borderWidth,
+                        borderColor: "color-mix(in srgb, var(--border) 50%, transparent)",
+                        backdropFilter: `blur(${cardStyles.blur})`,
+                        WebkitBackdropFilter: `blur(${cardStyles.blur})`,
+                        backgroundColor: `color-mix(in srgb, var(--card-bg) calc(${cardStyles.opacity} * 100%), transparent)`,
+                      }}
+                    >
+                      <div className="space-y-4">
+                        {/* Card Header */}
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                              {language === "id" ? "Total Kekayaan Bersih" : "Total Net Worth"}
+                            </p>
+                            <h4 className="text-lg font-bold font-mono tabular-nums text-foreground mt-0.5">
+                              Rp 150.250.000
+                            </h4>
+                          </div>
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-income/10 text-income border border-income/20">
+                            +12.4%
+                          </span>
+                        </div>
 
-                  <div className="p-3 bg-white/[0.01] border border-border/40 rounded-xl space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="w-3 h-3 rounded-full bg-income" />
-                      <span className="text-xs font-bold text-foreground">Financial Status (Success / Expense)</span>
+                        {/* Card Inner Content - mini progress indicator */}
+                        <div className="space-y-1.5">
+                          <div className="flex justify-between text-[10px] text-muted-foreground">
+                            <span>{language === "id" ? "Target Investasi" : "Investment Target"}</span>
+                            <span>75%</span>
+                          </div>
+                          <div className="h-1.5 w-full bg-border/20 rounded-full overflow-hidden">
+                            <div className="h-full bg-accent rounded-full transition-all duration-500" style={{ width: "75%" }} />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Card Footer Action */}
+                      <div className="flex justify-end gap-2 pt-3 border-t border-border/20">
+                        <button type="button" className="px-2.5 py-1.5 rounded-lg border border-border text-[10px] font-semibold text-muted-foreground hover:text-foreground hover:bg-white/[0.03] transition-all">
+                          {language === "id" ? "Batal" : "Cancel"}
+                        </button>
+                        <button type="button" className="px-2.5 py-1.5 rounded-lg bg-accent text-white text-[10px] font-semibold hover:bg-accent/80 transition-all">
+                          {language === "id" ? "Terapkan" : "Apply"}
+                        </button>
+                      </div>
                     </div>
-                    <p className="text-[10px] text-muted-foreground">
-                      {language === "id"
-                        ? "Hijau digunakan untuk nominal pemasukan dan kenaikan aset; merah digunakan untuk nominal pengeluaran dan kerugian."
-                        : "Green tracks positive cashflow and asset appreciation; red tracks expenses and capital losses."}
-                    </p>
+
+                    {/* Explanatory notes */}
+                    <div className="flex-1 p-5 rounded-xl bg-white/[0.01] border border-border/20 flex flex-col justify-center text-left text-xs text-muted-foreground space-y-2.5">
+                      <p className="font-semibold text-foreground text-sm">
+                        {language === "id" ? "Detail Penerapan Gaya Kartu:" : "Card Styling Properties Applied:"}
+                      </p>
+                      <ul className="list-disc pl-4 space-y-1.5">
+                        <li>
+                          <strong>{language === "id" ? "Sudut Kelengkungan" : "Corner Radius"}:</strong> {language === "id" ? `Tepi luar kotak kartu melengkung sebesar ${cardStyles.radius}` : `Card corner radius set to ${cardStyles.radius}`}.
+                        </li>
+                        <li>
+                          <strong>{language === "id" ? "Ketebalan Garis" : "Border Thickness"}:</strong> {language === "id" ? `Garis pembatas luar berukuran ${cardStyles.borderWidth}` : `Outer outlines stroke is ${cardStyles.borderWidth}`}.
+                        </li>
+                        <li>
+                          <strong>{language === "id" ? "Kekaburan Latar" : "Backdrop Blur"}:</strong> {language === "id" ? `Efek kaca buram (blur) di latar belakang diatur ke ${cardStyles.blur}` : `Glass backdrop frosted blur is ${cardStyles.blur}`}.
+                        </li>
+                        <li>
+                          <strong>{language === "id" ? "Tingkat Transparansi" : "Card Transparency"}:</strong> {language === "id" ? `Kepadatan latar kartu diatur ke ${Math.round(parseFloat(cardStyles.opacity) * 100)}%` : `Card surface color opacity is ${Math.round(parseFloat(cardStyles.opacity) * 100)}%`}.
+                        </li>
+                      </ul>
+                    </div>
                   </div>
                 </div>
               </div>
+
+
             </Card>
           </div>
         )}

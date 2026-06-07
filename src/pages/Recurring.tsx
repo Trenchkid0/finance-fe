@@ -7,16 +7,23 @@ import { toast } from "sonner";
 import {
   Plus,
   Calendar,
-  CreditCard,
   Edit2,
   Trash2,
-  TrendingUp,
   Clock,
   ChevronLeft,
   ChevronRight,
   Info,
+  Repeat,
+  CalendarRange,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardAction,
+} from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -100,20 +107,17 @@ export default function Recurring() {
     try {
       if (editingBill?.id) {
         await api.put(`/api/recurring/${editingBill.id}`, data);
-        toast.success(
-          language === "id" ? "Tagihan berulang berhasil diperbarui" : "Recurring bill updated successfully"
-        );
+        toast.success(language === "id" ? "Tagihan berhasil diperbarui" : "Bill updated successfully");
       } else {
         await api.post("/api/recurring", data);
-        toast.success(
-          language === "id" ? "Tagihan berulang berhasil ditambahkan" : "Recurring bill added successfully"
-        );
+        toast.success(language === "id" ? "Tagihan berhasil ditambahkan" : "Bill added successfully");
       }
       setIsModalOpen(false);
       setEditingBill(null);
       fetchBills();
-    } catch (err: any) {
-      throw new Error(err.message || (language === "id" ? "Gagal menyimpan tagihan" : "Failed to save bill"));
+    } catch (err) {
+      console.error(err);
+      toast.error(language === "id" ? "Gagal menyimpan tagihan" : "Failed to save bill");
     }
   };
 
@@ -121,41 +125,34 @@ export default function Recurring() {
     if (!deletingBill) return;
     try {
       await api.delete(`/api/recurring/${deletingBill.id}`);
-      toast.success(
-        language === "id" ? "Tagihan berulang berhasil dihapus" : "Recurring bill deleted successfully"
-      );
+      toast.success(language === "id" ? "Tagihan berhasil dihapus" : "Bill deleted successfully");
       setDeletingBill(null);
       fetchBills();
-    } catch {
+    } catch (err) {
+      console.error(err);
       toast.error(language === "id" ? "Gagal menghapus tagihan" : "Failed to delete bill");
     }
   };
 
   const handleTestTelegram = async () => {
+    setTestingTelegram(true);
     try {
-      setTestingTelegram(true);
       await api.post("/api/recurring/test-telegram", {});
-      toast.success(
-        language === "id"
-          ? "Pesan tes berhasil dikirim! Silakan periksa bot Telegram Anda."
-          : "Test message sent successfully! Please check your Telegram bot."
-      );
-    } catch (err: any) {
-      toast.error(
-        err.message || (language === "id"
-          ? "Gagal mengirim pesan tes. Pastikan bot Anda dikonfigurasi di file .env backend."
-          : "Failed to send test message. Make sure your bot is configured in the backend .env file.")
-      );
+      toast.success(language === "id" ? "Uji coba notifikasi Telegram berhasil dikirim!" : "Telegram test notification sent successfully!");
+    } catch (err) {
+      console.error(err);
+      toast.error(language === "id" ? "Gagal mengirim uji coba notifikasi" : "Failed to send test notification");
     } finally {
       setTestingTelegram(false);
     }
   };
 
   // Metrics
-  const monthlyTotal = bills.reduce((sum, b) => {
-    if (b.frequency === "weekly") return sum + b.amount * 4.3; // Approx weeks in month
-    if (b.frequency === "yearly") return sum + b.amount / 12;
-    return sum + b.amount;
+  const monthlyTotal = bills.reduce((acc, b) => {
+    if (b.frequency === "monthly") return acc + b.amount;
+    if (b.frequency === "weekly") return acc + b.amount * 4; // approximate
+    if (b.frequency === "yearly") return acc + b.amount / 12; // approximate
+    return acc;
   }, 0);
 
   // Month navigation helpers
@@ -235,41 +232,47 @@ export default function Recurring() {
         </Button>
       </div>
 
-      {/* Stats Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 flex items-center justify-between">
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">
+        <Card className="p-4 gap-0">
+          <CardHeader className="p-0">
+            <CardDescription className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
               {language === "id" ? "TOTAL BULANAN" : "TOTAL MONTHLY COMMITMENT"}
-            </p>
-            <p className="text-lg font-black font-mono tabular-nums text-foreground">
+            </CardDescription>
+            <CardTitle className="text-lg font-black font-mono tabular-nums text-foreground mt-1">
               {formatIDR(monthlyTotal)}
-            </p>
-          </div>
-          <div className="size-9 rounded-xl bg-expense/10 border border-expense/20 flex items-center justify-center text-expense">
-            <TrendingUp size={16} />
-          </div>
-        </div>
+            </CardTitle>
+            <CardAction>
+              <div className="size-9 rounded-xl bg-expense/10 border border-expense/20 flex items-center justify-center text-expense">
+                <Repeat size={16} />
+              </div>
+            </CardAction>
+          </CardHeader>
+        </Card>
 
-        <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 flex items-center justify-between">
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">
+        <Card className="p-4 gap-0">
+          <CardHeader className="p-0">
+            <CardDescription className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
               {language === "id" ? "LAYANAN AKTIF" : "ACTIVE SUBSCRIPTIONS"}
-            </p>
-            <p className="text-lg font-black font-mono tabular-nums text-foreground">
-              {bills.length} <span className="text-xs text-muted-foreground/60 font-sans font-semibold ml-1">{language === "id" ? "tagihan" : "items"}</span>
-            </p>
-          </div>
-          <div className="size-9 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
-            <CreditCard size={16} />
-          </div>
-        </div>
+            </CardDescription>
+            <CardTitle className="text-lg font-black font-mono tabular-nums text-foreground mt-1 flex items-baseline gap-1">
+              <span>{bills.length}</span>
+              <span className="text-xs text-muted-foreground/60 font-sans font-semibold">
+                {language === "id" ? "tagihan" : "items"}
+              </span>
+            </CardTitle>
+            <CardAction>
+              <div className="size-9 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
+                <CalendarRange size={16} />
+              </div>
+            </CardAction>
+          </CardHeader>
+        </Card>
       </div>
 
       {/* Calendar layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Calendar Grid */}
-        <div className="lg:col-span-2 rounded-xl border border-border bg-surface overflow-hidden">
+        <Card className="lg:col-span-2 overflow-hidden gap-0">
           {/* Calendar Header with Navigation */}
           <div className="p-4 border-b border-border bg-white/[0.01] flex items-center justify-between">
             <h3 className="text-sm font-bold text-text-primary uppercase tracking-wide">
@@ -384,11 +387,11 @@ export default function Recurring() {
               })}
             </div>
           )}
-        </div>
+        </Card>
 
         {/* Selected Day Bill Detail List Panel */}
         <div className="lg:col-span-1 flex flex-col gap-4">
-          <div className="rounded-xl border border-border bg-surface p-5 flex flex-col justify-between min-h-[300px]">
+          <Card className="p-5 flex flex-col justify-between min-h-[300px] gap-0">
             <div>
               <div className="flex justify-between items-center pb-3 border-b border-border mb-4">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-text-primary flex items-center gap-1.5">
@@ -484,10 +487,10 @@ export default function Recurring() {
                 </div>
               )}
             </div>
-          </div>
+          </Card>
 
           {/* Telegram Settings Card */}
-          <div className="rounded-xl border border-border bg-surface p-5 space-y-4">
+          <Card className="p-5 space-y-4 gap-0">
             <h3 className="text-xs font-bold uppercase tracking-wider text-text-primary flex items-center gap-1.5">
               <span className="text-sky-500">🔵</span>
               Telegram Bot Notifier
@@ -514,7 +517,7 @@ export default function Recurring() {
                 ? "Konfigurasi TELEGRAM_BOT_TOKEN dan TELEGRAM_CHAT_ID di file .env backend untuk mengaktifkan notifikasi."
                 : "Configure TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in backend .env to enable alerts."}
             </p>
-          </div>
+          </Card>
         </div>
       </div>
 

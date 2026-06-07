@@ -59,6 +59,7 @@ const config: Config = {
         expense: withOpacity("--expense"),
         warning: withOpacity("--warning"),
         accent: withOpacity("--accent"),
+        progress: withOpacity("--progress"),
         
         // Additional accent colors for variety
         purple: "#8B5CF6",
