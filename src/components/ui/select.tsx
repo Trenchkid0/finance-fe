@@ -5,7 +5,10 @@ import * as SelectPrimitive from "@radix-ui/react-select";
 import { Check, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
-const Select = SelectPrimitive.Root;
+const Select = ({ modal = false, ...props }: React.ComponentProps<typeof SelectPrimitive.Root> & { modal?: boolean }) => {
+  const Root = SelectPrimitive.Root as any;
+  return <Root modal={modal} {...props} />;
+};
 const SelectGroup = SelectPrimitive.Group;
 const SelectValue = SelectPrimitive.Value;
 

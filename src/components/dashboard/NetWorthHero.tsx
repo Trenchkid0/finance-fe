@@ -172,7 +172,7 @@ function PeriodSelect({ value, onChange, disabled }: {
           <DropdownMenuItem
             key={o.value}
             className="text-xs font-semibold cursor-pointer"
-            onSelect={() => onChange(o.value)}
+            onClick={() => onChange(o.value)}
           >
             {o.label}
           </DropdownMenuItem>

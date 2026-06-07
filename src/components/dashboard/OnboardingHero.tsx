@@ -32,7 +32,7 @@ export function OnboardingHero({ userName }: Props) {
           </span>
           <div>
             <h2 className="text-base font-medium text-foreground">
-              Mulai pakai Maybe Finance
+              Mulai pakai Racks Finance
             </h2>
             <p className="text-sm text-muted-foreground mt-0.5">
               Setelah satu transaksi pertama, dashboard akan langsung

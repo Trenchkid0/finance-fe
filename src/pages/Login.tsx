@@ -20,7 +20,7 @@ export default function Login() {
       <div className="relative flex flex-col justify-center px-6 py-10 sm:px-10 lg:px-14 xl:px-20 z-10">
         {/* Language selector floating top right */}
         <div className="absolute top-5 right-5 z-20">
-          <DropdownMenu>
+          <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
@@ -60,12 +60,12 @@ export default function Login() {
                 className="flex size-10 items-center justify-center rounded-2xl bg-gradient-to-br from-accent via-blue-500 to-indigo-600 text-white font-black text-lg shadow-[0_4px_20px_rgba(56,139,253,0.4)]"
                 aria-hidden
               >
-                M
+                R
               </span>
               <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full bg-income border-2 border-canvas" />
             </div>
             <span className="text-lg font-bold tracking-tight text-foreground">
-              Maybe Finance
+              Racks Finance
             </span>
           </div>
 

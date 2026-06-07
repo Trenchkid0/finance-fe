@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition, useRef } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeftRight,
   Calendar,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
@@ -46,13 +47,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   TransactionForm,
   type AccountOption,
@@ -354,7 +348,7 @@ export function TransactionsClient({
               <span>{language === "id" ? "Kalender" : "Calendar"}</span>
             </button>
           </div>
-          <DropdownMenu>
+          <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="h-9 rounded-xl gap-2 text-xs font-semibold px-4">
                 <Download size={14} />
@@ -908,9 +902,23 @@ function FilterBar({
   const { pathname } = useLocation();
   const [searchParams] = useSearchParams();
   const [pending, startTransition] = useTransition();
+  const formRef = useRef<HTMLFormElement>(null);
 
   function pushFilter(patch: Record<string, string | null | undefined>) {
-    const qs = withParams(searchParams, patch);
+    // Read current values of other form fields directly from the form DOM to preserve them
+    const fd = formRef.current ? new FormData(formRef.current) : null;
+    const currentQ = fd ? (fd.get("q") as string) : filters.q;
+    const currentStart = fd ? (fd.get("startDate") as string) : filters.startDate;
+    const currentEnd = fd ? (fd.get("endDate") as string) : filters.endDate;
+
+    const mergedPatch = {
+      q: currentQ || null,
+      startDate: currentStart || null,
+      endDate: currentEnd || null,
+      ...patch,
+    };
+
+    const qs = withParams(searchParams, mergedPatch);
     startTransition(() => navigate(qs ? `${pathname}?${qs}` : pathname));
   }
 
@@ -918,6 +926,7 @@ function FilterBar({
 
   return (
     <form
+      ref={formRef}
       action=""
       onSubmit={(e) => {
         e.preventDefault();
@@ -989,30 +998,15 @@ function FilterBar({
       <div className="flex flex-col gap-3 pt-4 border-t border-white/[0.04] sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <span className="text-xs font-semibold text-text-muted shrink-0">Rentang Tanggal</span>
-          <div className="flex items-center gap-1.5 shrink-0">
-            <Input
-              type="date"
-              name="startDate"
-              defaultValue={filters.startDate}
-              max={filters.endDate || undefined}
-              className="h-8 text-xs w-36 bg-elevated"
-              aria-label="Tanggal mulai"
-            />
-            <span className="text-muted-foreground text-xs">→</span>
-            <Input
-              type="date"
-              name="endDate"
-              defaultValue={filters.endDate}
-              min={filters.startDate || undefined}
-              className="h-8 text-xs w-36 bg-elevated"
-              aria-label="Tanggal akhir"
-            />
-          </div>
-          <DateRangePresets
+          <input type="hidden" name="startDate" value={filters.startDate || ""} />
+          <input type="hidden" name="endDate" value={filters.endDate || ""} />
+          <CustomDateRangePicker
+            startDate={filters.startDate || ""}
+            endDate={filters.endDate || ""}
             onPick={(range) =>
               pushFilter({
-                startDate: range.start,
-                endDate: range.end,
+                startDate: range.start || null,
+                endDate: range.end || null,
               })
             }
           />
@@ -1048,49 +1042,417 @@ function FilterBar({
   );
 }
 
-// --- Date range presets --------------------------------------------------
+// --- Date range presets & Period Selection ----------------------------------
 
 interface DateRange {
   start: string;
   end: string;
 }
 
-function DateRangePresets({ onPick }: { onPick: (r: DateRange) => void }) {
+function getDateRangeForPeriod(period: string): DateRange {
   const today = new Date();
-  const isoToday = isoFromDate(today);
+  const end = isoFromDate(today);
 
-  function preset(label: string, range: DateRange) {
-    return (
-      <button
-        key={label}
-        type="button"
-        onClick={() => onPick(range)}
-        className="text-[10px] px-2.5 py-1 rounded-full bg-elevated border border-border/80 text-text-muted hover:text-text-primary hover:bg-[#2D333B] hover:border-[#444C56] transition-all duration-150 font-medium"
-      >
-        {label}
-      </button>
-    );
+  switch (period) {
+    case "1d":
+      return { start: end, end };
+    case "7d": {
+      const d = new Date(today);
+      d.setDate(d.getDate() - 6);
+      return { start: isoFromDate(d), end };
+    }
+    case "30d": {
+      const d = new Date(today);
+      d.setDate(d.getDate() - 29);
+      return { start: isoFromDate(d), end };
+    }
+    case "90d": {
+      const d = new Date(today);
+      d.setDate(d.getDate() - 89);
+      return { start: isoFromDate(d), end };
+    }
+    case "ytd": {
+      const d = new Date(today.getFullYear(), 0, 1);
+      return { start: isoFromDate(d), end };
+    }
+    case "365d": {
+      const d = new Date(today);
+      d.setDate(d.getDate() - 364);
+      return { start: isoFromDate(d), end };
+    }
+    case "5y": {
+      const d = new Date(today.getFullYear() - 5, today.getMonth(), today.getDate());
+      return { start: isoFromDate(d), end };
+    }
+    default:
+      return { start: "", end: "" };
+  }
+}
+
+
+function formatFriendlyDate(iso: string): string {
+  if (!iso) return "";
+  const d = new Date(`${iso}T00:00:00`);
+  if (isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "short",
+  });
+}
+
+function CustomDateRangePicker({
+  startDate,
+  endDate,
+  onPick,
+}: {
+  startDate: string;
+  endDate: string;
+  onPick: (range: { start: string; end: string }) => void;
+}) {
+  const [viewDate, setViewDate] = useState(() => {
+    const d = startDate ? new Date(startDate) : new Date();
+    return isNaN(d.getTime()) ? new Date() : d;
+  });
+
+  const [tempStart, setTempStart] = useState(startDate);
+  const [tempEnd, setTempEnd] = useState(endDate);
+  const [viewMode, setViewMode] = useState<'days' | 'months' | 'years'>('days');
+  const [yearPageStart, setYearPageStart] = useState(() => {
+    const currentYear = startDate ? new Date(startDate).getFullYear() : new Date().getFullYear();
+    return Math.floor(currentYear / 16) * 16;
+  });
+
+  useEffect(() => {
+    const vYear = viewDate.getFullYear();
+    setYearPageStart(Math.floor(vYear / 16) * 16);
+  }, [viewDate]);
+
+  useEffect(() => {
+    setTempStart(startDate);
+    setTempEnd(endDate);
+  }, [startDate, endDate]);
+
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+
+  const totalDays = new Date(year, month + 1, 0).getDate();
+  let startOffset = new Date(year, month, 1).getDay();
+  startOffset = startOffset === 0 ? 6 : startOffset - 1;
+
+  const calendarDays: (number | null)[] = [];
+  for (let i = 0; i < startOffset; i++) {
+    calendarDays.push(null);
+  }
+  for (let d = 1; d <= totalDays; d++) {
+    calendarDays.push(d);
   }
 
-  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-  const startOfPrevMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-  const endOfPrevMonth = new Date(today.getFullYear(), today.getMonth(), 0);
-  const last7 = new Date(today);
-  last7.setDate(last7.getDate() - 6);
-  const last30 = new Date(today);
-  last30.setDate(last30.getDate() - 29);
+  const handlePrevMonth = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (viewMode === "years") {
+      setYearPageStart((prev) => prev - 16);
+    } else {
+      setViewDate(new Date(year, month - 1, 1));
+    }
+  };
+
+  const handleNextMonth = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (viewMode === "years") {
+      setYearPageStart((prev) => prev + 16);
+    } else {
+      setViewDate(new Date(year, month + 1, 1));
+    }
+  };
+
+  const handleDayClick = (day: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+
+    if (!tempStart || (tempStart && tempEnd)) {
+      setTempStart(dateStr);
+      setTempEnd("");
+    } else {
+      if (new Date(dateStr) < new Date(tempStart)) {
+        setTempStart(dateStr);
+      } else {
+        setTempEnd(dateStr);
+      }
+    }
+  };
+
+  const applyPreset = (presetName: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const range = getDateRangeForPeriod(presetName);
+    setTempStart(range.start);
+    setTempEnd(range.end);
+    onPick(range);
+  };
+
+  const handleApply = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onPick({ start: tempStart, end: tempEnd });
+  };
+
+  const handleReset = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setTempStart("");
+    setTempEnd("");
+    onPick({ start: "", end: "" });
+  };
+
+  let label = "Pilih Tanggal";
+  if (startDate && endDate) {
+    if (startDate === endDate) {
+      label = formatFriendlyDate(startDate);
+    } else {
+      label = `${formatFriendlyDate(startDate)} — ${formatFriendlyDate(endDate)}`;
+    }
+  } else if (startDate) {
+    label = `Mulai ${formatFriendlyDate(startDate)}`;
+  } else if (endDate) {
+    label = `Sampai ${formatFriendlyDate(endDate)}`;
+  } else {
+    label = "Semua Waktu";
+  }
+
 
   return (
-    <div className="flex items-center gap-1.5 flex-wrap">
-      {preset("Hari ini", { start: isoToday, end: isoToday })}
-      {preset("7 hari", { start: isoFromDate(last7), end: isoToday })}
-      {preset("30 hari", { start: isoFromDate(last30), end: isoToday })}
-      {preset("Bulan ini", { start: isoFromDate(startOfMonth), end: isoToday })}
-      {preset("Bulan lalu", {
-        start: isoFromDate(startOfPrevMonth),
-        end: isoFromDate(endOfPrevMonth),
-      })}
-    </div>
+    <DropdownMenu modal={false}>
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          className="h-8 gap-2 px-3 text-xs font-semibold text-text-primary bg-white/[0.03] border-white/[0.08] hover:border-white/[0.15] hover:bg-white/[0.05] rounded-lg transition-all"
+        >
+          <Calendar size={12} className="text-text-muted pointer-events-none" />
+          <span>{label}</span>
+          <ChevronDown size={12} className="text-text-muted opacity-60 ml-0.5" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="start"
+        className="p-4 w-[280px] rounded-xl border border-white/[0.08] bg-popover/95 backdrop-blur-xl flex flex-col gap-3.5 text-text-primary shadow-2xl"
+      >
+        {/* Presets Grid */}
+        <div className="grid grid-cols-3 gap-1">
+          {["1d", "7d", "30d", "ytd", "365d", "all"].map((p) => {
+            const labels: Record<string, string> = {
+              "1d": "Hari Ini",
+              "7d": "7 Hari",
+              "30d": "30 Hari",
+              "ytd": "Tahun Ini",
+              "365d": "1 Tahun",
+              "all": "Semua",
+            };
+            return (
+              <button
+                key={p}
+                type="button"
+                onClick={(e) => applyPreset(p, e)}
+                className="text-[10px] py-1 px-1.5 rounded-lg border border-white/[0.04] bg-white/[0.02] hover:bg-white/[0.08] hover:border-white/[0.12] text-text-muted hover:text-text-primary transition-all font-semibold"
+              >
+                {labels[p]}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="border-t border-white/[0.06]" />
+
+        {/* Calendar Control Header */}
+        <div className="flex items-center justify-between px-1">
+          <div className="flex items-center gap-1">
+            {viewMode === "years" ? (
+              <span className="px-1.5 py-0.5 text-xs font-bold text-text-primary font-mono">
+                {yearPageStart} — {yearPageStart + 15}
+              </span>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setViewMode(viewMode === "months" ? "days" : "months");
+                  }}
+                  className={cn(
+                    "px-1.5 py-0.5 rounded-lg text-xs font-bold text-text-primary uppercase tracking-wide hover:bg-white/[0.06] hover:text-accent transition-colors",
+                    viewMode === "months" && "bg-white/[0.08] text-accent hover:text-accent"
+                  )}
+                >
+                  {[
+                    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+                    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+                  ][month].substring(0, 3)}
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setViewMode("years");
+                  }}
+                  className="px-1.5 py-0.5 rounded-lg text-xs font-bold text-text-primary uppercase tracking-wide hover:bg-white/[0.06] hover:text-accent transition-colors font-mono"
+                >
+                  {year}
+                </button>
+              </>
+            )}
+          </div>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={handlePrevMonth}
+              disabled={viewMode === "months"}
+              className="p-1 rounded-lg hover:bg-white/[0.06] text-text-muted hover:text-text-primary transition-all disabled:opacity-30 disabled:pointer-events-none"
+            >
+              <ChevronLeft size={14} />
+            </button>
+            <button
+              type="button"
+              onClick={handleNextMonth}
+              disabled={viewMode === "months"}
+              className="p-1 rounded-lg hover:bg-white/[0.06] text-text-muted hover:text-text-primary transition-all disabled:opacity-30 disabled:pointer-events-none"
+            >
+              <ChevronRight size={14} />
+            </button>
+          </div>
+        </div>
+
+        {/* View Grid based on mode */}
+        {viewMode === "days" && (
+          <>
+            {/* Weekday headers */}
+            <div className="grid grid-cols-7 text-center">
+              {["Sn", "Sl", "Rb", "Km", "Jm", "Sb", "Mg"].map((day, idx) => (
+                <span key={idx} className="text-[9px] font-bold text-text-muted uppercase">
+                  {day}
+                </span>
+              ))}
+            </div>
+
+            {/* Days Grid */}
+            <div className="grid grid-cols-7 gap-1 text-center font-mono">
+              {calendarDays.map((day, idx) => {
+                if (day === null) {
+                  return <div key={`empty-${idx}`} className="h-7 w-7" />;
+                }
+
+                const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+                const isSelectedStart = tempStart === dateStr;
+                const isSelectedEnd = tempEnd === dateStr;
+                const isInRange =
+                  tempStart &&
+                  tempEnd &&
+                  new Date(dateStr) > new Date(tempStart) &&
+                  new Date(dateStr) < new Date(tempEnd);
+
+                return (
+                  <button
+                    key={`day-${day}`}
+                    type="button"
+                    onClick={(e) => handleDayClick(day, e)}
+                    className={cn(
+                      "h-7 w-7 text-xs rounded-lg flex items-center justify-center font-semibold transition-all hover:bg-white/[0.08] hover:text-text-primary",
+                      isSelectedStart && "bg-accent text-white font-bold hover:bg-accent",
+                      isSelectedEnd && "bg-accent text-white font-bold hover:bg-accent",
+                      isInRange && "bg-accent/15 text-accent font-medium rounded-none"
+                    )}
+                  >
+                    {day}
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
+
+        {viewMode === "months" && (
+          <div className="grid grid-cols-3 gap-2 py-1 text-center">
+            {[
+              "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+              "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+            ].map((m, mIdx) => (
+              <button
+                key={mIdx}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setViewDate(new Date(year, mIdx, 1));
+                  setViewMode("days");
+                }}
+                className={cn(
+                  "h-10 text-xs rounded-lg font-semibold transition-all hover:bg-white/[0.08] hover:text-text-primary",
+                  mIdx === month && "bg-accent text-white font-bold hover:bg-accent"
+                )}
+              >
+                {m.substring(0, 3)}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {viewMode === "years" && (
+          <div className="grid grid-cols-4 gap-2 py-1 text-center font-mono">
+            {Array.from({ length: 16 }, (_, i) => yearPageStart + i).map((y) => (
+              <button
+                key={y}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setViewDate(new Date(y, month, 1));
+                  setViewMode("months");
+                }}
+                className={cn(
+                  "h-10 text-xs rounded-lg font-semibold transition-all hover:bg-white/[0.08] hover:text-text-primary",
+                  y === year && "bg-accent text-white font-bold hover:bg-accent"
+                )}
+              >
+                {y}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="border-t border-white/[0.06]" />
+
+        {/* Custom Input Form fields */}
+        <div className="flex items-center justify-between gap-1.5">
+          <input
+            type="text"
+            placeholder="YYYY-MM-DD"
+            value={tempStart}
+            onChange={(e) => setTempStart(e.target.value)}
+            className="w-[105px] h-7 text-[10px] text-center font-mono px-1.5 rounded-lg bg-white/[0.02] border border-white/[0.06] text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent"
+          />
+          <span className="text-text-muted text-[10px]">→</span>
+          <input
+            type="text"
+            placeholder="YYYY-MM-DD"
+            value={tempEnd}
+            onChange={(e) => setTempEnd(e.target.value)}
+            className="w-[105px] h-7 text-[10px] text-center font-mono px-1.5 rounded-lg bg-white/[0.02] border border-white/[0.06] text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent"
+          />
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={handleReset}
+            className="w-1/2 h-7.5 py-1 text-[11px] font-bold rounded-lg border border-white/[0.06] hover:bg-white/[0.06] text-text-muted hover:text-text-primary transition-all"
+          >
+            Hapus
+          </button>
+          <button
+            type="button"
+            onClick={handleApply}
+            className="w-1/2 h-7.5 py-1 text-[11px] font-bold rounded-lg bg-accent text-white hover:bg-accent/80 transition-all"
+          >
+            Terapkan
+          </button>
+        </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -1117,21 +1479,34 @@ function FilterSelect({
   onChange: (v: string) => void;
   options: FilterSelectOption[];
 }) {
+  const selectedLabel = options.find((opt) => opt.value === value)?.label ?? label;
+
   return (
     <div className="grid gap-1.5 sm:gap-1">
       <Label className="sr-only">{label}</Label>
-      <Select value={value} onValueChange={onChange}>
-        <SelectTrigger aria-label={label} className="bg-elevated">
-          <SelectValue placeholder={label} />
-        </SelectTrigger>
-        <SelectContent>
+      <DropdownMenu modal={false}>
+        <DropdownMenuTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            className="flex h-11 w-full items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-2 text-sm text-foreground hover:border-white/[0.12] hover:bg-white/[0.05] focus:outline-none transition-all duration-300 ease-out text-left"
+          >
+            <span>{selectedLabel}</span>
+            <ChevronDown size={14} className="opacity-60 shrink-0 ml-2" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="min-w-[150px] rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl">
           {options.map((opt) => (
-            <SelectItem key={opt.value} value={opt.value}>
+            <DropdownMenuItem
+              key={opt.value}
+              className="text-xs font-semibold cursor-pointer"
+              onClick={() => onChange(opt.value)}
+            >
               {opt.label}
-            </SelectItem>
+            </DropdownMenuItem>
           ))}
-        </SelectContent>
-      </Select>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }
@@ -1444,7 +1819,7 @@ function TransactionRow({
           {amountPrefix(tx.type)}
           {formatIDR(tx.amount)}
         </p>
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
@@ -1535,18 +1910,29 @@ function PaginationBar({
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2">
           <span className="hidden sm:inline">Per halaman</span>
-          <Select value={String(pageSize)} onValueChange={setSize}>
-            <SelectTrigger className="h-8 w-20" aria-label="Baris per halaman">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
+          <DropdownMenu modal={false}>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-8 w-20 flex items-center justify-between px-2.5 text-xs font-semibold text-text-primary hover:bg-white/[0.04] bg-white/[0.03] border border-white/[0.08] transition-all rounded-lg"
+              >
+                <span>{pageSize}</span>
+                <ChevronDown size={12} className="opacity-60 shrink-0 ml-1" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-[80px] rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl">
               {pageSizeOptions.map((size) => (
-                <SelectItem key={size} value={String(size)}>
+                <DropdownMenuItem
+                  key={size}
+                  className="text-xs font-semibold cursor-pointer"
+                  onClick={() => setSize(String(size))}
+                >
                   {size}
-                </SelectItem>
+                </DropdownMenuItem>
               ))}
-            </SelectContent>
-          </Select>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <div className="flex items-center gap-1">

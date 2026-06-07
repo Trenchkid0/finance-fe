@@ -115,7 +115,7 @@ export function InlineCategoryPicker({
   );
 
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger
         asChild
         disabled={pending}

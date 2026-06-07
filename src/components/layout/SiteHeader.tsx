@@ -78,7 +78,7 @@ export function SiteHeader() {
           </Button>
 
           {/* Language selector */}
-          <DropdownMenu>
+          <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"

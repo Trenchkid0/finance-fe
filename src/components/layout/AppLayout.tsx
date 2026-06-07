@@ -105,7 +105,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   if (loading) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-background text-foreground font-mono">
-        <div className="text-sm animate-pulse">Menghubungkan ke Maybe Finance...</div>
+        <div className="text-sm animate-pulse">Menghubungkan ke Racks Finance...</div>
       </div>
     );
   }
@@ -118,13 +118,14 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         style={
           {
             "--sidebar-width": "16rem",
+            "--sidebar-width-icon": "4rem",
             "--header-height": "3rem",
           } as React.CSSProperties
         }
       >
         <QuickAddProvider canCreate={canCreate}>
           <AppSidebar
-            variant="inset"
+            variant="sidebar"
             user={user ?? { name: "", email: "" }}
             counts={{
               accounts: counts.accounts,

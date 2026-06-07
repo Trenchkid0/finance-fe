@@ -101,37 +101,35 @@ export function AppSidebar({ user, counts, ...props }: AppSidebarProps) {
   return (
     <Sidebar collapsible="icon" {...props}>
       {/* ─── Brand Header ─── */}
-      <SidebarHeader className="p-4 pb-5">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              tooltip="Maybe Finance"
-              className="!p-0 hover:bg-transparent"
+      <SidebarHeader className="p-4 pb-5 flex flex-row items-center justify-start group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:py-4 transition-all duration-300">
+        <Link to="/" className="flex items-center gap-3 group/brand">
+          <div className="relative">
+            {/* Main Logo Container */}
+            <span
+              className="relative flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-accent via-blue-500 to-indigo-600 text-white font-black text-base border border-white/10 shadow-[0_4px_12px_rgba(56,139,253,0.25)]"
+              aria-hidden
             >
-              <Link to="/" className="flex items-center gap-3">
-                <div className="relative">
-                  <span
-                    className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-accent via-blue-500 to-indigo-600 text-white font-black text-base shadow-[0_4px_20px_rgba(56,139,253,0.35)]"
-                    aria-hidden
-                  >
-                    M
-                  </span>
-                  {/* Online indicator */}
-                  <span className="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full bg-income border-[1.5px] border-sidebar" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-sm font-bold tracking-tight text-foreground leading-tight">
-                    Maybe Finance
-                  </span>
-                  <span className="text-[10px] text-muted-foreground/50 font-medium">
-                    Personal Dashboard
-                  </span>
-                </div>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+              R
+            </span>
+          </div>
+          
+          {/* Text section (hidden when collapsed) */}
+          <div className="flex flex-col group-data-[collapsible=icon]:hidden transition-all duration-300">
+            <span className="text-sm font-bold tracking-tight text-text-primary leading-tight flex items-center gap-1.5 group-hover/brand:text-accent transition-colors duration-200">
+              Racks Finance
+            </span>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              {/* Live indicator dot */}
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+              </span>
+              <span className="text-[10px] text-text-muted font-medium tracking-wide">
+                Personal Dashboard
+              </span>
+            </div>
+          </div>
+        </Link>
       </SidebarHeader>
 
       {/* ─── Separator with subtle glow ─── */}

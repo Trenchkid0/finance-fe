@@ -140,7 +140,7 @@ export function AccountsClient({ accounts }: Props) {
                 <span className="size-1.5 rounded-full bg-income" />
                 {language === "id" ? "Akun Aktif" : "Active Accounts"}
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {activeAccounts.map((account) => (
                   <AccountCard
                     key={account.id}
@@ -160,7 +160,7 @@ export function AccountsClient({ accounts }: Props) {
                 <span className="size-1.5 rounded-full bg-white/[0.2]" />
                 {language === "id" ? "Nonaktif" : "Inactive"}
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {inactiveAccounts.map((account) => (
                   <AccountCard
                     key={account.id}
@@ -247,31 +247,31 @@ function AccountCard({
       <Link
         to={`/accounts/${account.id}`}
         className={cn(
-          "relative block rounded-2xl border border-white/[0.06] bg-gradient-to-br from-white/[0.03] via-white/[0.01] to-transparent p-6 pb-16 min-h-[210px] transition-all duration-300 hover:border-white/[0.15] hover:shadow-[0_8px_30px_rgba(0,0,0,0.3)] hover:-translate-y-1 overflow-hidden select-none cursor-pointer",
+          "relative block rounded-xl border border-white/[0.06] bg-gradient-to-br from-white/[0.03] via-white/[0.01] to-transparent p-4 pb-12 min-h-[160px] transition-all duration-300 hover:border-white/[0.15] hover:shadow-[0_6px_24px_rgba(0,0,0,0.3)] hover:-translate-y-1 overflow-hidden select-none cursor-pointer",
           !account.isActive && "opacity-40 grayscale"
         )}
       >
         {/* Dynamic swatch glow - Enhanced */}
         <div
-          className="absolute -right-10 -top-10 w-32 h-32 rounded-full blur-3xl opacity-[0.15] pointer-events-none transition-all duration-500 group-hover:opacity-30 group-hover:scale-125"
+          className="absolute -right-8 -top-8 w-24 h-24 rounded-full blur-3xl opacity-[0.15] pointer-events-none transition-all duration-500 group-hover:opacity-30 group-hover:scale-125"
           style={{ backgroundColor: swatch }}
         />
         
         {/* Secondary glow for depth */}
         <div
-          className="absolute -left-10 -bottom-10 w-24 h-24 rounded-full blur-2xl opacity-[0.08] pointer-events-none transition-all duration-500 group-hover:opacity-20"
+          className="absolute -left-8 -bottom-8 w-20 h-20 rounded-full blur-2xl opacity-[0.08] pointer-events-none transition-all duration-500 group-hover:opacity-20"
           style={{ backgroundColor: swatch }}
         />
 
         {/* Card Header: Icon/Chip & Status */}
-        <div className="flex items-start justify-between mb-6 relative z-10">
+        <div className="flex items-start justify-between mb-4 relative z-10">
           {/* Institution Icon or EMV Chip */}
           {account.icon ? (
-            <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] backdrop-blur-sm transition-all duration-300 group-hover:bg-white/[0.08] group-hover:border-white/[0.12] group-hover:scale-105">
-              <span className="text-2xl">{account.icon}</span>
+            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-white/[0.04] border border-white/[0.08] backdrop-blur-sm transition-all duration-300 group-hover:bg-white/[0.08] group-hover:border-white/[0.12] group-hover:scale-105">
+              <span className="text-xl">{account.icon}</span>
             </div>
           ) : (
-            <div className="w-9 h-7 rounded-lg bg-gradient-to-br from-amber-500/20 to-amber-600/30 border border-amber-500/30 relative overflow-hidden flex flex-wrap p-0.5 opacity-80 shadow-inner">
+            <div className="w-8 h-6 rounded bg-gradient-to-br from-amber-500/20 to-amber-600/30 border border-amber-500/30 relative overflow-hidden flex flex-wrap p-0.5 opacity-80 shadow-inner">
               <div className="w-1/2 h-1/2 border-r border-b border-amber-500/30" />
               <div className="w-1/2 h-1/2 border-b border-amber-500/30" />
               <div className="w-1/2 h-1/2 border-r border-amber-500/30" />
@@ -281,9 +281,9 @@ function AccountCard({
           )}
           
           {/* Account Type Badge */}
-          <div className="flex flex-col items-end gap-1.5">
+          <div className="flex flex-col items-end gap-1">
             <span
-              className="inline-flex items-center px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border backdrop-blur-sm transition-all duration-300 group-hover:scale-105"
+              className="inline-flex items-center px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider border backdrop-blur-sm transition-all duration-300 group-hover:scale-105"
               style={{
                 backgroundColor: `${swatch}15`,
                 color: swatch,
@@ -293,8 +293,8 @@ function AccountCard({
               {typeLabel[account.type]}
             </span>
             {!account.isActive && (
-              <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/40 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40" />
+              <span className="text-[8px] font-semibold uppercase tracking-wider text-muted-foreground/40 flex items-center gap-1">
+                <span className="w-1 h-1 rounded-full bg-muted-foreground/40" />
                 {language === "id" ? "Nonaktif" : "Inactive"}
               </span>
             )}
@@ -302,37 +302,37 @@ function AccountCard({
         </div>
 
         {/* Card Body: Balance & Card Number */}
-        <div className="space-y-2 relative z-10 mb-6">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/50">
+        <div className="space-y-1 relative z-10 mb-4">
+          <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground/50">
             {language === "id" ? "Saldo Tersedia" : "Available Balance"}
           </p>
           <p className={cn(
-            "text-3xl font-black font-mono tracking-tight tabular-nums transition-colors duration-300",
+            "text-2xl font-black font-mono tracking-tight tabular-nums transition-colors duration-300",
             isNegative ? "text-expense" : "text-foreground group-hover:text-white"
           )}>
             {formatIDR(account.balance)}
           </p>
-          <p className="text-[11px] font-mono text-muted-foreground/30 tracking-[0.2em] pt-1">
+          <p className="text-[10px] font-mono text-muted-foreground/30 tracking-[0.2em] pt-0.5">
             {maskedNumber}
           </p>
         </div>
 
         {/* Card Footer: Holder Name & Transaction Count */}
-        <div className="flex items-end justify-between border-t border-white/[0.06] pt-4 relative z-10">
+        <div className="flex items-end justify-between border-t border-white/[0.06] pt-3 relative z-10">
           <div className="min-w-0 flex-1 pr-3">
-            <p className="text-[9px] uppercase tracking-wider text-muted-foreground/50 font-bold mb-1">
-              {language === "id" ? "Pemegang Akun" : "Account Holder"}
+            <p className="text-[8px] uppercase tracking-wider text-muted-foreground/50 font-bold mb-0.5">
+              {language === "id" ? "Nama Akun" : "Account Name"}
             </p>
-            <p className="text-sm font-bold text-foreground truncate tracking-wide transition-colors duration-300 group-hover:text-white">
+            <p className="text-xs font-bold text-foreground truncate tracking-wide transition-colors duration-300 group-hover:text-white">
               {account.name}
             </p>
           </div>
           
-          <div className="flex items-center gap-1.5 shrink-0 px-2.5 py-1 rounded-lg bg-white/[0.02] border border-white/[0.04]">
-            <svg className="w-3 h-3 text-muted-foreground/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <div className="flex items-center gap-1 shrink-0 px-2 py-0.5 rounded bg-white/[0.02] border border-white/[0.04]">
+            <svg className="w-2.5 h-2.5 text-muted-foreground/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <span className="text-[10px] font-mono text-muted-foreground/60 font-bold tabular-nums">
+            <span className="text-[9px] font-mono text-muted-foreground/60 font-bold tabular-nums">
               {account.transactionCount}
             </span>
           </div>
@@ -345,22 +345,22 @@ function AccountCard({
       </Link>
 
       {/* Floating Action Dropdown Menu - Outside Link */}
-      <div className="absolute bottom-6 left-6 right-6 z-30 pointer-events-none">
+      <div className="absolute bottom-3 left-4 right-4 z-30 pointer-events-none">
         <div className="flex items-center justify-between pointer-events-auto">
-          <div className="text-[10px] text-muted-foreground/40 font-mono">
-            ID: {account.id.slice(-8)}
+          <div className="text-[9px] text-muted-foreground/40 font-mono">
+            ID: {account.id.slice(-6)}
           </div>
-          <DropdownMenu>
+          <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
                 aria-label={language === "id" ? "Aksi akun" : "Account actions"}
-                className="h-8 w-8 rounded-lg hover:bg-white/[0.12] bg-white/[0.04] border border-white/[0.08] text-muted-foreground/60 hover:text-foreground hover:border-white/[0.15] shrink-0 transition-all duration-200 backdrop-blur-md shadow-lg"
+                className="h-7 w-7 rounded-lg hover:bg-white/[0.12] bg-white/[0.04] border border-white/[0.08] text-muted-foreground/60 hover:text-foreground hover:border-white/[0.15] shrink-0 transition-all duration-200 backdrop-blur-md shadow-lg"
                 disabled={pending}
                 onClick={(e) => e.stopPropagation()}
               >
-                <MoreVertical size={15} />
+                <MoreVertical size={13} />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl shadow-2xl p-1">
