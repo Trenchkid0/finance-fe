@@ -17,9 +17,15 @@ import Profile from "@/pages/Profile";
 import Goals from "@/pages/Goals";
 import Recurring from "@/pages/Recurring";
 
+import { useEffect } from "react";
 import { LanguageProvider } from "@/lib/contexts/LanguageContext";
+import { loadSavedTheme } from "@/lib/utils/theme";
 
 export default function App() {
+  useEffect(() => {
+    loadSavedTheme();
+  }, []);
+
   return (
     <LanguageProvider>
       <BrowserRouter>

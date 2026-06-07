@@ -227,7 +227,7 @@ function Sidebar({
       <div
         data-slot="sidebar-gap"
         className={cn(
-          "relative bg-transparent transition-[width] duration-200 ease-linear",
+          "relative bg-transparent transition-[width] duration-300 ease-in-out",
           "w-[var(--sidebar-width)]",
           "group-data-[collapsible=offcanvas]:w-0",
           "group-data-[side=right]:rotate-180",
@@ -239,14 +239,14 @@ function Sidebar({
       <div
         data-slot="sidebar-container"
         className={cn(
-          "fixed inset-y-0 z-10 hidden h-svh transition-[left,right,width] duration-200 ease-linear md:flex",
+          "fixed inset-y-0 z-10 hidden h-svh transition-[left,right,width] duration-300 ease-in-out md:flex",
           "w-[var(--sidebar-width)]",
           side === "left"
             ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
             : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
           variant === "floating" || variant === "inset"
             ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+1rem+2px)]"
-            : "group-data-[collapsible=icon]:w-[var(--sidebar-width-icon)] group-data-[side=left]:border-r group-data-[side=right]:border-l",
+            : "group-data-[collapsible=icon]:w-[var(--sidebar-width-icon)] group-data-[side=left]:border-r group-data-[side=left]:border-border/30 group-data-[side=right]:border-l group-data-[side=right]:border-border/30",
           className,
         )}
         {...props}
@@ -301,7 +301,7 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
       onClick={toggleSidebar}
       title="Toggle Sidebar"
       className={cn(
-        "absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear",
+        "absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-in-out duration-300",
         "group-data-[side=left]:-right-4 group-data-[side=right]:left-0",
         "after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] hover:after:bg-sidebar-border sm:flex",
         className,
@@ -513,50 +513,60 @@ const sidebarMenuButtonVariants = cva(
   },
 );
 
-function SidebarMenuButton({
-  asChild = false,
-  isActive = false,
-  variant = "default",
-  size = "default",
-  tooltip,
-  className,
-  ...props
-}: React.ComponentProps<"button"> & {
-  asChild?: boolean;
-  isActive?: boolean;
-  tooltip?: string | React.ComponentProps<typeof TooltipContent>;
-} & VariantProps<typeof sidebarMenuButtonVariants>) {
-  const Comp = asChild ? Slot : "button";
-  const { isMobile, state } = useSidebar();
+const SidebarMenuButton = React.forwardRef<
+  HTMLButtonElement,
+  React.ComponentProps<"button"> & {
+    asChild?: boolean;
+    isActive?: boolean;
+    tooltip?: string | React.ComponentProps<typeof TooltipContent>;
+  } & VariantProps<typeof sidebarMenuButtonVariants>
+>(
+  (
+    {
+      asChild = false,
+      isActive = false,
+      variant = "default",
+      size = "default",
+      tooltip,
+      className,
+      ...props
+    },
+    ref
+  ) => {
+    const Comp = asChild ? Slot : "button";
+    const { isMobile, state } = useSidebar();
 
-  const button = (
-    <Comp
-      data-slot="sidebar-menu-button"
-      data-sidebar="menu-button"
-      data-size={size}
-      data-active={isActive}
-      className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
-      {...props}
-    />
-  );
-
-  if (!tooltip) return button;
-
-  const tooltipProps =
-    typeof tooltip === "string" ? { children: tooltip } : tooltip;
-
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>{button}</TooltipTrigger>
-      <TooltipContent
-        side="right"
-        align="center"
-        hidden={state !== "collapsed" || isMobile}
-        {...tooltipProps}
+    const button = (
+      <Comp
+        ref={ref}
+        data-slot="sidebar-menu-button"
+        data-sidebar="menu-button"
+        data-size={size}
+        data-active={isActive}
+        className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
+        {...props}
       />
-    </Tooltip>
-  );
-}
+    );
+
+    if (!tooltip) return button;
+
+    const tooltipProps =
+      typeof tooltip === "string" ? { children: tooltip } : tooltip;
+
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>{button}</TooltipTrigger>
+        <TooltipContent
+          side="right"
+          align="center"
+          hidden={state !== "collapsed" || isMobile}
+          {...tooltipProps}
+        />
+      </Tooltip>
+    );
+  }
+);
+SidebarMenuButton.displayName = "SidebarMenuButton";
 
 function SidebarMenuAction({
   className,

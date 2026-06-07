@@ -2,7 +2,8 @@
 
 import { useActionState, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
-import { ChevronDown, Inbox, Key, Loader2, Plus, Shapes, Shield, Trash2, User, X } from "lucide-react";
+import { ChevronDown, Inbox, Key, Loader2, Palette, Plus, Shapes, Shield, Trash2, User, X } from "lucide-react";
+import { applyTheme, THEME_PRESETS, FONT_OPTIONS, applyFont, type ThemeVariables } from "@/lib/utils/theme";
 import { toast } from "sonner";
 import { createCategory, deleteCategory } from "@/app/actions/categories";
 import type { ActionResult } from "@/types";
@@ -54,7 +55,7 @@ const PRESET_EMOJIS = [
   "🍕", "🏥", "📚", "✈️", "👔", "🎁", "☕",
 ];
 
-type Tab = "categories" | "api";
+type Tab = "categories" | "api" | "theme";
 
 export function SettingsClient({ user, categories, apiKeys }: Props) {
   const { language } = useLanguage();
@@ -63,6 +64,53 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
   const [confirmDelete, setConfirmDelete] = useState<CategoryItem | null>(null);
   const [type, setType] = useState<CategoryTypeInput>("expense");
   const [selectedEmoji, setSelectedEmoji] = useState(PRESET_EMOJIS[0]);
+
+  const [activePresetId, setActivePresetId] = useState(() => {
+    if (typeof window === "undefined") return "nordic-midnight";
+    return localStorage.getItem("racks-theme-id") || "nordic-midnight";
+  });
+
+  const [customVars, setCustomVars] = useState<Partial<ThemeVariables>>(() => {
+    if (typeof window === "undefined") return {};
+    const stored = localStorage.getItem("racks-custom-theme-vars");
+    try {
+      return stored ? JSON.parse(stored) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  const [activeFontId, setActiveFontId] = useState(() => {
+    if (typeof window === "undefined") return "jakarta";
+    return localStorage.getItem("racks-font-family") || "jakarta";
+  });
+
+  const handleFontChange = (id: string) => {
+    setActiveFontId(id);
+    applyFont(id);
+    toast.success(
+      language === "id"
+        ? `Gaya font berhasil diubah ke ${FONT_OPTIONS.find(f => f.id === id)?.name}`
+        : `Font style updated to ${FONT_OPTIONS.find(f => f.id === id)?.nameEn}`
+    );
+  };
+
+  const handlePresetSelect = (id: string) => {
+    setActivePresetId(id);
+    setCustomVars({});
+    applyTheme(id);
+    toast.success(
+      language === "id"
+        ? `Tema warna berhasil diubah ke ${THEME_PRESETS.find(p => p.id === id)?.name}`
+        : `Theme color updated to ${THEME_PRESETS.find(p => p.id === id)?.nameEn}`
+    );
+  };
+
+  const handleCustomVarChange = (key: keyof ThemeVariables, value: string) => {
+    const updated = { ...customVars, [key]: value };
+    setCustomVars(updated);
+    applyTheme(activePresetId, updated);
+  };
 
   const [state, formAction, pending] = useActionState<
     ActionResult<null> | undefined,
@@ -88,6 +136,7 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
     { id: "categories", label: language === "id" ? "Kategori" : "Categories", icon: <Shapes size={14} /> },
     { id: "api", label: language === "id" ? "API & Integrasi" : "API & Integrations", icon: <Key size={14} /> },
+    { id: "theme", label: language === "id" ? "Kustomisasi Warna" : "Color Customization", icon: <Palette size={14} /> },
   ];
 
   return (
@@ -268,6 +317,299 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
         {/* Tab: API & Integrasi */}
         {activeTab === "api" && (
           <ApiKeysCard apiKeys={apiKeys} />
+        )}
+
+        {/* Tab: Kustomisasi Warna */}
+        {activeTab === "theme" && (
+          <div className="space-y-6">
+            <Card className="p-6">
+              <div className="mb-6">
+                <h2 className="text-base font-medium text-foreground flex items-center gap-2">
+                  <Palette size={14} className="text-muted-foreground" />
+                  {language === "id" ? "Kustomisasi Warna Website" : "Website Color Customization"}
+                </h2>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {language === "id"
+                    ? "Pilih preset tema warna yang direkomendasikan atau sesuaikan warna secara manual untuk mempersonalisasi dashboard keuangan Anda."
+                    : "Select a recommended theme preset or customize colors manually to personalize your financial dashboard."}
+                </p>
+              </div>
+
+              {/* Preset Cards Grid */}
+              <div className="space-y-4">
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  {language === "id" ? "Rekomendasi Preset Warna (Terang & Gelap)" : "Recommended Color Presets (Light & Dark)"}
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {THEME_PRESETS.map((preset) => {
+                    const isSelected = activePresetId === preset.id;
+                    return (
+                      <button
+                        key={preset.id}
+                        onClick={() => handlePresetSelect(preset.id)}
+                        className={cn(
+                          "flex flex-col text-left p-4 rounded-2xl border text-sm transition-all duration-200 hover:scale-[1.01] relative overflow-hidden",
+                          isSelected
+                            ? "bg-accent/5 border-accent shadow-md shadow-accent/5"
+                            : "bg-surface/50 border-border hover:border-border/80"
+                        )}
+                        style={{
+                          backgroundColor: preset.variables.background,
+                          color: preset.variables.foreground,
+                          borderColor: isSelected ? preset.variables.accent : undefined
+                        }}
+                      >
+                        {/* Selected Indicator Badge */}
+                        {isSelected && (
+                          <div className="absolute top-2.5 right-2.5 bg-accent/20 border border-accent/40 text-accent text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                            {language === "id" ? "Aktif" : "Active"}
+                          </div>
+                        )}
+
+                        <span className="font-bold text-[14px]">
+                          {language === "id" ? preset.name : preset.nameEn}
+                        </span>
+                        <span className="text-[10px] opacity-60 mt-1 line-clamp-2">
+                          {language === "id" ? preset.description : preset.descriptionEn}
+                        </span>
+
+                        {/* Color Preview Strip */}
+                        <div className="flex gap-1.5 mt-4 w-full">
+                          <div className="w-5 h-5 rounded-md border border-white/[0.08] shrink-0" style={{ backgroundColor: preset.variables.background }} title="Background" />
+                          <div className="w-5 h-5 rounded-md border border-white/[0.08] shrink-0" style={{ backgroundColor: preset.variables.surface }} title="Card/Surface" />
+                          <div className="w-5 h-5 rounded-md border border-white/[0.08] shrink-0" style={{ backgroundColor: preset.variables.elevated }} title="Popover/Elevated" />
+                          <div className="w-5 h-5 rounded-md border border-white/[0.08] shrink-0" style={{ backgroundColor: preset.variables.border }} title="Border" />
+                          <div className="w-5 h-5 rounded-md border border-white/[0.08] shrink-0" style={{ backgroundColor: preset.variables.accent }} title="Accent" />
+                          <div className="w-5 h-5 rounded-md border border-white/[0.08] shrink-0 ml-auto" style={{ backgroundColor: preset.variables.income }} title="Income" />
+                          <div className="w-5 h-5 rounded-md border border-white/[0.08] shrink-0" style={{ backgroundColor: preset.variables.expense }} title="Expense" />
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Manual Color Adjust Panel */}
+              <div className="mt-8 border-t border-border/60 pt-6 space-y-4">
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  {language === "id" ? "Penyesuaian Warna Manual" : "Manual Color Adjustments"}
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-4">
+                  {/* Accent Color */}
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={customVars.accent || THEME_PRESETS.find(p => p.id === activePresetId)?.variables.accent || "#3B82F6"}
+                      onChange={(e) => handleCustomVarChange("accent", e.target.value)}
+                      onInput={(e) => handleCustomVarChange("accent", (e.target as HTMLInputElement).value)}
+                      className="h-8 w-8 rounded-lg cursor-pointer border border-border bg-transparent shrink-0"
+                    />
+                    <span className="text-xs text-foreground font-medium">
+                      {language === "id" ? "Aksen / Tombol Utama" : "Accent / Primary Buttons"}
+                    </span>
+                  </div>
+
+                  {/* Canvas Color */}
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={customVars.background || THEME_PRESETS.find(p => p.id === activePresetId)?.variables.background || "#0A0E1A"}
+                      onChange={(e) => handleCustomVarChange("background", e.target.value)}
+                      onInput={(e) => handleCustomVarChange("background", (e.target as HTMLInputElement).value)}
+                      className="h-8 w-8 rounded-lg cursor-pointer border border-border bg-transparent shrink-0"
+                    />
+                    <span className="text-xs text-foreground font-medium">
+                      {language === "id" ? "Latar Belakang Halaman" : "Page Background"}
+                    </span>
+                  </div>
+
+                  {/* Card Surface */}
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={customVars["card-bg"] || THEME_PRESETS.find(p => p.id === activePresetId)?.variables["card-bg"] || "#111827"}
+                      onChange={(e) => handleCustomVarChange("card-bg", e.target.value)}
+                      onInput={(e) => handleCustomVarChange("card-bg", (e.target as HTMLInputElement).value)}
+                      className="h-8 w-8 rounded-lg cursor-pointer border border-border bg-transparent shrink-0"
+                    />
+                    <span className="text-xs text-foreground font-medium">
+                      {language === "id" ? "Latar Belakang Panel/Kartu" : "Card / Panel Surface"}
+                    </span>
+                  </div>
+
+                  {/* Elevated Popover */}
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={customVars.elevated || THEME_PRESETS.find(p => p.id === activePresetId)?.variables.elevated || "#1E293B"}
+                      onChange={(e) => handleCustomVarChange("elevated", e.target.value)}
+                      onInput={(e) => handleCustomVarChange("elevated", (e.target as HTMLInputElement).value)}
+                      className="h-8 w-8 rounded-lg cursor-pointer border border-border bg-transparent shrink-0"
+                    />
+                    <span className="text-xs text-foreground font-medium">
+                      {language === "id" ? "Menu Dropdown & Popover" : "Dropdown & Popover Menus"}
+                    </span>
+                  </div>
+
+                  {/* Border */}
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={customVars.border || THEME_PRESETS.find(p => p.id === activePresetId)?.variables.border || "#334155"}
+                      onChange={(e) => handleCustomVarChange("border", e.target.value)}
+                      onInput={(e) => handleCustomVarChange("border", (e.target as HTMLInputElement).value)}
+                      className="h-8 w-8 rounded-lg cursor-pointer border border-border bg-transparent shrink-0"
+                    />
+                    <span className="text-xs text-foreground font-medium">
+                      {language === "id" ? "Garis Batas & Pembatas" : "Borders & Dividers"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Reset Customizations Button */}
+                {Object.keys(customVars).length > 0 && (
+                  <div className="flex justify-end mt-4">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setCustomVars({});
+                        applyTheme(activePresetId);
+                        toast.success(
+                          language === "id"
+                            ? "Penyesuaian warna manual berhasil dikembalikan ke default preset."
+                            : "Manual color adjustments reset to preset default."
+                        );
+                      }}
+                      className="text-xs hover:bg-white/[0.05]"
+                    >
+                      {language === "id" ? "Kembalikan ke Default Preset" : "Reset to Preset Default"}
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              {/* Typography Customization */}
+              <div className="mt-8 border-t border-border/60 pt-6 space-y-4">
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  {language === "id" ? "Gaya Huruf / Tipografi" : "Typography & Font Styles"}
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                  {FONT_OPTIONS.map((option) => {
+                    const isSelected = activeFontId === option.id;
+                    return (
+                      <button
+                        key={option.id}
+                        onClick={() => handleFontChange(option.id)}
+                        className={cn(
+                          "flex flex-col items-start p-4 rounded-xl border text-left transition-all duration-300",
+                          isSelected
+                            ? "border-accent bg-accent/5 ring-1 ring-accent"
+                            : "border-border/60 bg-transparent hover:border-accent/30 hover:bg-white/[0.01]"
+                        )}
+                      >
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">
+                          {language === "id" ? option.name : option.nameEn}
+                        </span>
+                        <span 
+                          className="text-lg font-semibold tracking-tight text-foreground mt-2"
+                          style={{ fontFamily: option.value }}
+                        >
+                          Rp 12.345.678
+                        </span>
+                        <span 
+                          className="text-[10px] text-muted-foreground font-mono mt-1"
+                          style={{ fontFamily: option.value }}
+                        >
+                          {option.id === "jetbrains" ? "Tabular Mono font" : "Sans-serif tabular-nums"}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Informational Color Breakdown Guide */}
+              <div className="mt-8 border-t border-border/60 pt-6 space-y-4">
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  {language === "id" ? "Panduan Peruntukan Warna" : "Color Mapping Guide"}
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-left">
+                  <div className="p-3 bg-white/[0.01] border border-border/40 rounded-xl space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full bg-accent" />
+                      <span className="text-xs font-bold text-foreground">Accent / Brand Color</span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">
+                      {language === "id"
+                        ? "Digunakan untuk tombol utama (CTA), tautan aktif, fokus ring, dan status penanda utama di dashboard."
+                        : "Used for primary call-to-action buttons, active navigation links, focus rings, and primary highlights."}
+                    </p>
+                  </div>
+
+                  <div className="p-3 bg-white/[0.01] border border-border/40 rounded-xl space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full bg-background" />
+                      <span className="text-xs font-bold text-foreground">Background Canvas</span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">
+                      {language === "id"
+                        ? "Warna dasar latar belakang halaman utama website. Menentukan atmosfer kontras (Terang/Gelap) seluruh dashboard."
+                        : "The base background color of the main workspace canvas. Sets the contrast tone of the whole application."}
+                    </p>
+                  </div>
+
+                  <div className="p-3 bg-white/[0.01] border border-border/40 rounded-xl space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full bg-surface" />
+                      <span className="text-xs font-bold text-foreground">Card Surface Color</span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">
+                      {language === "id"
+                        ? "Digunakan sebagai latar belakang panel statistik, ringkasan saldo, tabel transaksi, dan kartu modul."
+                        : "Used as the surface color for stat cards, balance summaries, transaction tables, and panel elements."}
+                    </p>
+                  </div>
+
+                  <div className="p-3 bg-white/[0.01] border border-border/40 rounded-xl space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full bg-elevated" />
+                      <span className="text-xs font-bold text-foreground">Elevated Surface</span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">
+                      {language === "id"
+                        ? "Digunakan untuk dropdown menu, dialog modal melayang, tooltip, serta bar pencarian input."
+                        : "Used for dropdown menus, modal boxes, hover tooltips, and default input search bars."}
+                    </p>
+                  </div>
+
+                  <div className="p-3 bg-white/[0.01] border border-border/40 rounded-xl space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full bg-border" />
+                      <span className="text-xs font-bold text-foreground">Border / Dividers</span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">
+                      {language === "id"
+                        ? "Digunakan untuk seluruh garis pemisah, garis tabel, dan outline border pada input serta panel."
+                        : "Used for all horizontal dividers, grid lines, table row borders, and panel outline strokes."}
+                    </p>
+                  </div>
+
+                  <div className="p-3 bg-white/[0.01] border border-border/40 rounded-xl space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full bg-income" />
+                      <span className="text-xs font-bold text-foreground">Financial Status (Success / Expense)</span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">
+                      {language === "id"
+                        ? "Hijau digunakan untuk nominal pemasukan dan kenaikan aset; merah digunakan untuk nominal pengeluaran dan kerugian."
+                        : "Green tracks positive cashflow and asset appreciation; red tracks expenses and capital losses."}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
         )}
       </div>
 

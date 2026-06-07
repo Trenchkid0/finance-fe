@@ -1,6 +1,10 @@
 import type { Config } from "tailwindcss";
 import animate from "tailwindcss-animate";
 
+function withOpacity(variableName: string) {
+  return `color-mix(in srgb, var(${variableName}) calc(<alpha-value> * 100%), transparent)`;
+}
+
 const config: Config = {
   darkMode: "class",
   content: [
@@ -13,48 +17,48 @@ const config: Config = {
         // ═══════════════════════════════════════════════════════════
         // ENHANCED COLOR PALETTE - More Vibrant & Modern
         // ═══════════════════════════════════════════════════════════
-        background: "#0A0E1A",      // Deeper, richer dark blue
-        foreground: "#F8FAFC",      // Brighter white for better contrast
+        background: withOpacity("--background"),
+        foreground: withOpacity("--foreground"),
 
         card: {
-          DEFAULT: "#111827",       // Warmer dark with subtle blue tint
-          foreground: "#F8FAFC",
+          DEFAULT: withOpacity("--card-bg"),
+          foreground: withOpacity("--card-fg"),
         },
         popover: {
-          DEFAULT: "#1E293B",
-          foreground: "#F8FAFC",
+          DEFAULT: withOpacity("--popover"),
+          foreground: withOpacity("--popover-foreground"),
         },
 
         primary: {
-          DEFAULT: "#3B82F6",       // Brighter, more vibrant blue
-          foreground: "#FFFFFF",
+          DEFAULT: withOpacity("--accent"),
+          foreground: withOpacity("--foreground"),
         },
         secondary: {
-          DEFAULT: "#1E293B",
-          foreground: "#F8FAFC",
+          DEFAULT: withOpacity("--muted-bg"),
+          foreground: withOpacity("--foreground"),
         },
         muted: {
-          DEFAULT: "#1E293B",
-          foreground: "#94A3B8",    // Softer gray-blue
+          DEFAULT: withOpacity("--muted-bg"),
+          foreground: withOpacity("--muted-foreground"),
         },
         destructive: {
-          DEFAULT: "#EF4444",       // More vibrant red
+          DEFAULT: withOpacity("--expense"),
           foreground: "#FFFFFF",
         },
 
-        border: "#334155",          // Lighter, more visible borders
-        input: "#1E293B",
-        ring: "#3B82F6",
+        border: withOpacity("--border"),
+        input: withOpacity("--muted-bg"),
+        ring: withOpacity("--accent"),
 
-        canvas: "#0A0E1A",
-        surface: "#111827",
-        elevated: "#1E293B",
+        canvas: withOpacity("--canvas"),
+        surface: withOpacity("--surface"),
+        elevated: withOpacity("--elevated"),
         
         // Financial colors - More vibrant
-        income: "#10B981",          // Brighter emerald green
-        expense: "#EF4444",         // Vibrant red
-        warning: "#F59E0B",         // Warm amber
-        accent: "#3B82F6",          // Vibrant blue
+        income: withOpacity("--income"),
+        expense: withOpacity("--expense"),
+        warning: withOpacity("--warning"),
+        accent: withOpacity("--accent"),
         
         // Additional accent colors for variety
         purple: "#8B5CF6",
@@ -62,14 +66,14 @@ const config: Config = {
         teal: "#14B8A6",
 
         sidebar: {
-          DEFAULT: "#0F172A",
-          foreground: "#F8FAFC",
-          primary: "#3B82F6",
+          DEFAULT: withOpacity("--sidebar"),
+          foreground: withOpacity("--sidebar-foreground"),
+          primary: withOpacity("--accent"),
           "primary-foreground": "#FFFFFF",
-          accent: "#1E293B",
-          "accent-foreground": "#F8FAFC",
-          border: "#334155",
-          ring: "#3B82F6",
+          accent: withOpacity("--sidebar-accent"),
+          "accent-foreground": withOpacity("--sidebar-foreground"),
+          border: withOpacity("--sidebar-border"),
+          ring: withOpacity("--accent"),
         },
       },
       borderRadius: {

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useApp } from "@/components/layout/AppLayout";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 import { api } from "@/lib/api";
+import { cn } from "@/lib/utils/cn";
 import { formatIDR, formatDate } from "@/lib/utils/formatters";
 import { toast } from "sonner";
 import { Plus, Target, Edit2, Trash2, Calendar, PiggyBank } from "lucide-react";
@@ -187,6 +188,31 @@ export default function Goals() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {goals.map((goal) => {
             const pct = Math.min((goal.currentAmount / goal.targetAmount) * 100, 100);
+            
+            // Calculate target projections (monthly savings required)
+            const targetDateObj = new Date(goal.targetDate);
+            const today = new Date();
+            const diffYear = targetDateObj.getFullYear() - today.getFullYear();
+            const diffMonth = targetDateObj.getMonth() - today.getMonth();
+            const remainingMonths = diffYear * 12 + diffMonth;
+            const remainingAmount = Math.max(0, goal.targetAmount - goal.currentAmount);
+
+            let projectionText = "";
+            let isOverdue = false;
+            if (remainingAmount > 0) {
+              if (remainingMonths > 0) {
+                const monthlyReq = Math.ceil(remainingAmount / remainingMonths);
+                projectionText = language === "id"
+                  ? `${formatIDR(monthlyReq)} / bln lagi`
+                  : `${formatIDR(monthlyReq)} / mo left`;
+              } else {
+                isOverdue = true;
+                projectionText = language === "id" ? "Butuh segera!" : "Due now!";
+              }
+            } else {
+              projectionText = language === "id" ? "Tercapai! 🎉" : "Achieved! 🎉";
+            }
+
             return (
               <div
                 key={goal.id}
@@ -202,11 +228,23 @@ export default function Goals() {
                         <h3 className="text-sm font-bold text-text-primary leading-tight">
                           {goal.name}
                         </h3>
-                        {goal.account && (
-                          <span className="text-[10px] text-muted-foreground font-medium bg-elevated border border-border px-1.5 py-0.5 rounded mt-1 inline-block">
-                            {goal.account.name}
+                        <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                          {goal.account && (
+                            <span className="text-[9px] text-muted-foreground font-semibold bg-elevated border border-border px-1.5 py-0.5 rounded">
+                              {goal.account.name}
+                            </span>
+                          )}
+                          <span className={cn(
+                            "text-[9px] font-bold px-1.5 py-0.5 rounded border font-mono",
+                            remainingAmount === 0
+                              ? "bg-income/10 text-income border-income/20"
+                              : isOverdue
+                              ? "bg-expense/10 text-expense border-expense/20 animate-pulse"
+                              : "bg-accent/10 text-accent border-accent/20"
+                          )}>
+                            {projectionText}
                           </span>
-                        )}
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
@@ -226,25 +264,64 @@ export default function Goals() {
                   </div>
 
                   {goal.note && (
-                    <p className="text-xs text-text-muted mt-3 italic line-clamp-2">"{goal.note}"</p>
+                    <p className="text-xs text-text-muted mt-3.5 italic line-clamp-2">"{goal.note}"</p>
                   )}
                 </div>
 
                 {/* Progress Section */}
                 <div className="mt-5 space-y-2">
                   <div className="flex justify-between text-xs font-mono tabular-nums">
-                    <span className="text-text-muted">{formatIDR(goal.currentAmount)}</span>
-                    <span className="font-semibold text-text-primary">{pct.toFixed(0)}%</span>
+                    <span className="text-text-muted font-medium">{formatIDR(goal.currentAmount)}</span>
+                    <div className="flex items-center gap-2">
+                      {pct >= 25 && pct < 50 && (
+                        <span className="text-[9px] text-accent/80 font-bold uppercase tracking-wider bg-accent/5 px-1 py-0.5 rounded">
+                          {language === "id" ? "Awal Bagus" : "Nice Start"}
+                        </span>
+                      )}
+                      {pct >= 50 && pct < 75 && (
+                        <span className="text-[9px] text-indigo-400 font-bold uppercase tracking-wider bg-indigo-500/5 px-1 py-0.5 rounded">
+                          {language === "id" ? "Setengah Jalan" : "Halfway"}
+                        </span>
+                      )}
+                      {pct >= 75 && pct < 100 && (
+                        <span className="text-[9px] text-blue-400 font-bold uppercase tracking-wider bg-blue-500/5 px-1 py-0.5 rounded">
+                          {language === "id" ? "Hampir Tercapai" : "Almost Done"}
+                        </span>
+                      )}
+                      {pct >= 100 && (
+                        <span className="text-[9px] text-income font-bold uppercase tracking-wider bg-income/5 px-1 py-0.5 rounded">
+                          {language === "id" ? "Tercapai!" : "Completed!"}
+                        </span>
+                      )}
+                      <span className="font-semibold text-text-primary">{pct.toFixed(0)}%</span>
+                    </div>
                   </div>
-                  <div className="h-2 w-full bg-[#1C2128] border border-border rounded-full overflow-hidden">
+                  <div className="relative h-2.5 w-full bg-[#1C2128] border border-border rounded-full overflow-hidden p-0.5">
                     <div
                       className="h-full bg-gradient-to-r from-accent to-blue-500 rounded-full transition-all duration-500"
                       style={{ width: `${pct}%` }}
                     />
+                    {/* Milestone Ticks */}
+                    {[25, 50, 75].map((mark) => {
+                      const isReached = pct >= mark;
+                      return (
+                        <div
+                          key={mark}
+                          style={{ left: `${mark}%` }}
+                          className={cn(
+                            "absolute top-1/2 -translate-y-1/2 size-1 rounded-full -translate-x-1/2 transition-all duration-300",
+                            isReached
+                              ? "bg-white shadow-[0_0_4px_#fff]"
+                              : "bg-white/10"
+                          )}
+                          title={`${mark}%`}
+                        />
+                      );
+                    })}
                   </div>
                   <div className="flex justify-between items-center text-[10px] text-text-muted pt-1">
-                    <span className="flex items-center gap-1">
-                      <Calendar size={11} />
+                    <span className="flex items-center gap-1 font-medium">
+                      <Calendar size={11} className="opacity-70" />
                       {language === "id" ? "Target:" : "Due:"} {formatDate(goal.targetDate, language)}
                     </span>
                     <span className="font-semibold tabular-nums text-text-muted">

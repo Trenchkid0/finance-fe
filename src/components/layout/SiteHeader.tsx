@@ -28,13 +28,13 @@ export function SiteHeader() {
   const { language, setLanguage } = useLanguage();
 
   return (
-    <header className="flex h-14 shrink-0 items-center gap-2 border-b border-white/[0.04] bg-canvas/80 backdrop-blur-xl sticky top-0 z-30">
+    <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border/30 bg-canvas/80 backdrop-blur-xl sticky top-0 z-30">
       <div className="flex w-full items-center gap-3 px-4 lg:px-6">
         {/* Sidebar trigger */}
         <SidebarTrigger className="-ml-1 text-muted-foreground/50 hover:text-foreground hover:bg-white/[0.04] transition-all duration-200 rounded-lg" />
         <Separator
           orientation="vertical"
-          className="mx-0.5 h-4 bg-white/[0.06]"
+          className="mx-0.5 h-4 bg-border/30"
         />
 
         {/* Search trigger — command palette */}
@@ -87,7 +87,7 @@ export function SiteHeader() {
                 <span>{language === "id" ? "ID" : "EN"}</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[120px] rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl">
+            <DropdownMenuContent align="end" className="min-w-[120px] rounded-xl border-border/40 bg-elevated/60 backdrop-blur-xl">
               <DropdownMenuItem
                 className="text-xs font-semibold cursor-pointer"
                 onSelect={() => setLanguage("id")}
@@ -106,7 +106,7 @@ export function SiteHeader() {
           {/* Separator */}
           <Separator
             orientation="vertical"
-            className="mx-1 h-5 bg-white/[0.06] hidden sm:block"
+            className="mx-1 h-5 bg-border/30 hidden sm:block"
           />
 
           {/* Add transaction */}

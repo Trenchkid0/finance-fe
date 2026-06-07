@@ -15,6 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useLanguage } from "@/lib/contexts/LanguageContext";
 
 /**
  * Cashflow sankey — pola Maybe Finance asli.
@@ -68,23 +69,22 @@ const PERIOD_OPTIONS: { value: Props["period"]; label: string }[] = [
   { value: "5y", label: "5T" },
 ];
 
-const SUCCESS_COLOR = "#2EA043";
-const PRIMARY_BLUE = "#388BFD";
+const SUCCESS_COLOR = "var(--income)";
+const PRIMARY_BLUE = "var(--accent)";
 
 /**
- * Palette biru bertingkat untuk node sankey. Diatur dari paling terang
- * (pemasukan utama) ke paling redup (kategori kecil) supaya visual flow
- * terasa konsisten — bukan mosaik warna acak yang sulit dibaca.
+ * Palette bertingkat untuk node sankey yang dibangun secara dinamis dari warna aksen tema.
+ * Diatur dari paling terang ke paling redup supaya visual flow terasa konsisten dan reaktif.
  */
 const BLUE_PALETTE = [
-  "#388BFD",
-  "#1F6FEB",
-  "#1158C7",
-  "#0D419D",
-  "#5896FF",
-  "#79B8FF",
-  "#A2C8FF",
-  "#C8DDFF",
+  "var(--accent)",
+  "color-mix(in srgb, var(--accent) 85%, #000000)",
+  "color-mix(in srgb, var(--accent) 70%, #000000)",
+  "color-mix(in srgb, var(--accent) 55%, #000000)",
+  "color-mix(in srgb, var(--accent) 40%, #000000)",
+  "color-mix(in srgb, var(--accent) 75%, #ffffff)",
+  "color-mix(in srgb, var(--accent) 60%, #ffffff)",
+  "color-mix(in srgb, var(--accent) 45%, #ffffff)",
 ];
 
 interface SankeyNode extends SankeyExtraProperties {
@@ -201,9 +201,20 @@ function SankeyChart({
   width: number;
   height: number;
 }) {
+  const { language } = useLanguage();
+  const [hoveredLinkId, setHoveredLinkId] = useState<number | null>(null);
+  const [hoveredLink, setHoveredLink] = useState<{
+    sourceName: string;
+    targetName: string;
+    value: number;
+    percentText: string;
+    x: number;
+    y: number;
+  } | null>(null);
+
   // Susun nodes & links dengan index numerik supaya d3-sankey happy.
   // Layout:
-  //   inflow nodes (kiri) → "Cash Flow" (tengah) → outflow nodes (kanan)
+  //   inflow nodes (kiri) → "Arus Kas" (tengah) → outflow nodes (kanan)
   //   ditambah "Surplus" node di kanan kalau positif.
   //
   // Color strategy: pakai shade biru dari BLUE_PALETTE secara siklik
@@ -267,131 +278,196 @@ function SankeyChart({
   const linkPath = sankeyLinkHorizontal<SankeyNode, SankeyLink>();
 
   return (
-    <svg width="100%" height={height} viewBox={`0 0 ${Math.max(width, 600)} ${height}`}>
-      <defs>
-        {graph.links.map((link, i) => {
-          const src = link.source as SankeyNode & { x1?: number };
-          const tgt = link.target as SankeyNode & { x0?: number };
-          return (
-            <linearGradient
-              key={`grad-${i}`}
-              id={`sankey-grad-${i}`}
-              gradientUnits="userSpaceOnUse"
-              x1={src.x1 ?? 0}
-              x2={tgt.x0 ?? 0}
-            >
-              <stop
-                offset="0%"
-                stopColor={(link.source as SankeyNode).color}
-                stopOpacity={0.35}
-              />
-              <stop
-                offset="100%"
-                stopColor={(link.target as SankeyNode).color}
-                stopOpacity={0.35}
-              />
-            </linearGradient>
-          );
-        })}
-      </defs>
-
-      {/* Links */}
-      <g fill="none">
-        {graph.links.map((link, i) => (
-          <path
-            key={`link-${i}`}
-            d={linkPath(link) ?? ""}
-            stroke={`url(#sankey-grad-${i})`}
-            strokeWidth={Math.max(1, link.width ?? 1)}
-            opacity={0.65}
-            className="transition-all duration-300 hover:opacity-100 cursor-pointer"
-            style={{
-              filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.3))',
-              transition: 'all 0.3s ease'
-            }}
-          >
-            <title>
-              {(link.source as SankeyNode).name} →{" "}
-              {(link.target as SankeyNode).name}: {formatIDR(link.value)}
-            </title>
-          </path>
-        ))}
-      </g>
-
-      {/* Nodes */}
-      <g>
-        {graph.nodes.map((n, i) => {
-          const x0 = n.x0 ?? 0;
-          const x1 = n.x1 ?? 0;
-          const y0 = n.y0 ?? 0;
-          const y1 = n.y1 ?? 0;
-          const w = x1 - x0;
-          const h = y1 - y0;
-          const isLeft = x0 < width / 2;
-          const labelX = isLeft ? x1 + 8 : x0 - 8;
-          const anchor = isLeft ? "start" : "end";
-
-          return (
-            <g key={`node-${i}`} className="group/node cursor-pointer">
-              <rect
-                x={x0}
-                y={y0}
-                width={Math.max(2, w)}
-                height={Math.max(2, h)}
-                fill={n.color}
-                rx={3}
-                className="transition-all duration-300"
-                style={{
-                  filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
-                }}
+    <div className="relative w-full overflow-visible">
+      <svg width="100%" height={height} viewBox={`0 0 ${Math.max(width, 600)} ${height}`}>
+        <defs>
+          {graph.links.map((link, i) => {
+            const src = link.source as SankeyNode & { x1?: number };
+            const tgt = link.target as SankeyNode & { x0?: number };
+            return (
+              <linearGradient
+                key={`grad-${i}`}
+                id={`sankey-grad-${i}`}
+                gradientUnits="userSpaceOnUse"
+                x1={src.x1 ?? 0}
+                x2={tgt.x0 ?? 0}
               >
-                <title>
-                  {n.name}: {formatIDR(n.value ?? 0)}
-                </title>
-                <animate
-                  attributeName="opacity"
-                  values="1;0.85;1"
-                  dur="2s"
-                  repeatCount="indefinite"
+                <stop
+                  offset="0%"
+                  stopColor={(link.source as SankeyNode).color}
+                  stopOpacity={0.35}
                 />
-              </rect>
-              {/* Hover glow effect */}
-              <rect
-                x={x0 - 2}
-                y={y0 - 2}
-                width={Math.max(2, w) + 4}
-                height={Math.max(2, h) + 4}
-                fill="none"
-                stroke={n.color}
-                strokeWidth="2"
-                rx={4}
-                opacity="0"
-                className="transition-opacity duration-300 group-hover/node:opacity-50"
+                <stop
+                  offset="100%"
+                  stopColor={(link.target as SankeyNode).color}
+                  stopOpacity={0.35}
+                />
+              </linearGradient>
+            );
+          })}
+        </defs>
+
+        {/* Links */}
+        <g fill="none">
+          {graph.links.map((link, i) => {
+            const srcName = (link.source as SankeyNode).name;
+            const tgtName = (link.target as SankeyNode).name;
+            const isIncoming = srcName !== "Arus Kas";
+            const percent = data.total > 0 ? (link.value / data.total) * 100 : 0;
+            const percentText = isIncoming
+              ? (language === "id" ? `${percent.toFixed(1)}% dari Total Pemasukan` : `${percent.toFixed(1)}% of Total Income`)
+              : (language === "id" ? `${percent.toFixed(1)}% dari Total Alokasi` : `${percent.toFixed(1)}% of Total Allocation`);
+
+            const isHovered = hoveredLinkId === i;
+            const isAnyHovered = hoveredLinkId !== null;
+            const opacityVal = isHovered ? 0.95 : isAnyHovered ? 0.15 : 0.65;
+            const strokeWidthVal = isHovered ? Math.max(2, (link.width ?? 1) + 2) : Math.max(1, link.width ?? 1);
+            const glowColor = (link.target as SankeyNode).color;
+
+            return (
+              <path
+                key={`link-${i}`}
+                d={linkPath(link) ?? ""}
+                stroke={`url(#sankey-grad-${i})`}
+                strokeWidth={strokeWidthVal}
+                opacity={opacityVal}
+                className="cursor-pointer transition-all duration-300"
+                style={{
+                  filter: isHovered
+                    ? `drop-shadow(0 0 6px ${glowColor}cc)`
+                    : 'drop-shadow(0 0 1px rgba(0,0,0,0.15))',
+                }}
+                onMouseEnter={(e) => {
+                  setHoveredLinkId(i);
+                  const svgEl = e.currentTarget.ownerSVGElement;
+                  const rect = svgEl ? svgEl.getBoundingClientRect() : null;
+                  const x = rect ? e.clientX - rect.left : e.clientX;
+                  const y = rect ? e.clientY - rect.top : e.clientY;
+                  setHoveredLink({
+                    sourceName: srcName,
+                    targetName: tgtName,
+                    value: link.value,
+                    percentText,
+                    x,
+                    y,
+                  });
+                }}
+                onMouseMove={(e) => {
+                  const svgEl = e.currentTarget.ownerSVGElement;
+                  const rect = svgEl ? svgEl.getBoundingClientRect() : null;
+                  const x = rect ? e.clientX - rect.left : e.clientX;
+                  const y = rect ? e.clientY - rect.top : e.clientY;
+                  setHoveredLink((prev) =>
+                    prev ? { ...prev, x, y } : null
+                  );
+                }}
+                onMouseLeave={() => {
+                  setHoveredLinkId(null);
+                  setHoveredLink(null);
+                }}
               />
-              <text
-                x={labelX}
-                y={(y0 + y1) / 2}
-                dy="-0.2em"
-                textAnchor={anchor}
-                className="fill-foreground transition-all duration-300 group-hover/node:fill-accent group-hover/node:font-bold"
-                style={{ fontSize: 11, fontWeight: 500 }}
-              >
-                {n.name}
-              </text>
-              <text
-                x={labelX}
-                y={(y0 + y1) / 2}
-                dy="1em"
-                textAnchor={anchor}
-                className="fill-muted-foreground font-mono transition-all duration-300 group-hover/node:fill-foreground group-hover/node:font-bold"
-                style={{ fontSize: 10 }}
-              >
-                {formatIDR(n.value ?? 0)}
-              </text>
-            </g>
-          );
-        })}
-      </g>
-    </svg>
+            );
+          })}
+        </g>
+ 
+        {/* Nodes */}
+        <g>
+          {graph.nodes.map((n, i) => {
+            const x0 = n.x0 ?? 0;
+            const x1 = n.x1 ?? 0;
+            const y0 = n.y0 ?? 0;
+            const y1 = n.y1 ?? 0;
+            const w = x1 - x0;
+            const h = y1 - y0;
+            const isLeft = x0 < width / 2;
+            const labelX = isLeft ? x1 + 8 : x0 - 8;
+            const anchor = isLeft ? "start" : "end";
+ 
+            return (
+              <g key={`node-${i}`} className="group/node cursor-pointer">
+                <rect
+                  x={x0}
+                  y={y0}
+                  width={Math.max(2, w)}
+                  height={Math.max(2, h)}
+                  fill={n.color}
+                  rx={3}
+                  className="transition-all duration-300"
+                  style={{
+                    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
+                  }}
+                >
+                  <title>
+                    {n.name}: {formatIDR(n.value ?? 0)}
+                  </title>
+                  <animate
+                    attributeName="opacity"
+                    values="1;0.85;1"
+                    dur="2s"
+                    repeatCount="indefinite"
+                  />
+                </rect>
+                {/* Hover glow effect */}
+                <rect
+                  x={x0 - 2}
+                  y={y0 - 2}
+                  width={Math.max(2, w) + 4}
+                  height={Math.max(2, h) + 4}
+                  fill="none"
+                  stroke={n.color}
+                  strokeWidth="2"
+                  rx={4}
+                  opacity="0"
+                  className="transition-opacity duration-300 group-hover/node:opacity-50"
+                />
+                <text
+                  x={labelX}
+                  y={(y0 + y1) / 2}
+                  dy="-0.2em"
+                  textAnchor={anchor}
+                  className="fill-foreground transition-all duration-300 group-hover/node:fill-accent group-hover/node:font-bold"
+                  style={{ fontSize: 11, fontWeight: 500 }}
+                >
+                  {n.name}
+                </text>
+                <text
+                  x={labelX}
+                  y={(y0 + y1) / 2}
+                  dy="1em"
+                  textAnchor={anchor}
+                  className="fill-muted-foreground font-mono transition-all duration-300 group-hover/node:fill-foreground group-hover/node:font-bold"
+                  style={{ fontSize: 10 }}
+                >
+                  {formatIDR(n.value ?? 0)}
+                </text>
+              </g>
+            );
+          })}
+        </g>
+      </svg>
+ 
+      {/* Custom Floating Tooltip */}
+      {hoveredLink && (
+        <div
+          className="pointer-events-none absolute z-50 rounded-xl border border-white/[0.08] bg-[#1C2128]/95 backdrop-blur-xl p-3.5 shadow-2xl shadow-black/80 text-xs space-y-1.5 min-w-[200px]"
+          style={{
+            left: `${hoveredLink.x + 15}px`,
+            top: `${hoveredLink.y + 15}px`,
+          }}
+        >
+          <div className="flex items-center gap-1.5 text-muted-foreground/60 text-[9px] font-bold uppercase tracking-wider">
+            <span>{hoveredLink.sourceName}</span>
+            <span className="text-accent">→</span>
+            <span>{hoveredLink.targetName}</span>
+          </div>
+          <div className="font-mono font-bold text-foreground text-sm">
+            {formatIDR(hoveredLink.value)}
+          </div>
+          <div className="text-[10px] text-accent font-semibold font-mono">
+            {hoveredLink.percentText}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

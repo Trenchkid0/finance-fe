@@ -5,7 +5,11 @@ import { Link } from "react-router-dom";
 import {
 	Area,
 	AreaChart,
+	Bar,
+	BarChart,
 	CartesianGrid,
+	Line,
+	LineChart,
 	ResponsiveContainer,
 	Tooltip,
 	XAxis,
@@ -15,7 +19,7 @@ import {
 	Award,
 	Calendar,
 	Inbox,
-	LineChart,
+	LineChart as LucideLineChart,
 	TrendingDown,
 	TrendingUp,
 	ArrowRight,
@@ -71,11 +75,35 @@ const CATEGORY_COLORS = [
 	"#6366F1", // Indigo
 ];
 
-function CustomTooltip({ active, payload, label }: any) {
+function CustomTooltip({ active, payload, label, activeChartData }: any) {
 	const { language } = useLanguage();
 	if (active && payload && payload.length) {
+		const val = payload[0].value;
+		let comparisonText = "";
+		let comparisonColor = "text-muted-foreground/60";
+		
+		if (activeChartData) {
+			const idx = activeChartData.findIndex((d: any) => d.month === label);
+			if (idx > 0) {
+				const prevVal = activeChartData[idx - 1].amount;
+				if (prevVal > 0) {
+					const diff = val - prevVal;
+					const pct = (diff / prevVal) * 100;
+					if (diff > 0) {
+						comparisonText = `+${pct.toFixed(0)}% vs ${activeChartData[idx - 1].month}`;
+						comparisonColor = "text-income font-bold";
+					} else if (diff < 0) {
+						comparisonText = `${pct.toFixed(0)}% vs ${activeChartData[idx - 1].month}`;
+						comparisonColor = "text-expense font-bold";
+					} else {
+						comparisonText = `0% vs ${activeChartData[idx - 1].month}`;
+					}
+				}
+			}
+		}
+
 		return (
-			<div className="rounded-xl border border-white/[0.08] bg-popover/90 backdrop-blur-xl p-3.5 shadow-2xl shadow-black/50 text-xs space-y-1.5 min-w-[150px]">
+			<div className="rounded-xl border border-white/[0.08] bg-popover/90 backdrop-blur-xl p-3.5 shadow-2xl shadow-black/50 text-xs space-y-1.5 min-w-[170px]">
 				<p className="text-muted-foreground/60 font-bold uppercase tracking-wider text-[9px]">{label}</p>
 				<div className="flex items-center justify-between gap-4">
 					<span className="text-foreground font-semibold flex items-center gap-1.5">
@@ -83,9 +111,14 @@ function CustomTooltip({ active, payload, label }: any) {
 						{language === "id" ? "Nilai" : "Value"}
 					</span>
 					<span className="font-mono font-bold text-income tabular-nums">
-						{formatIDR(payload[0].value)}
+						{formatIDR(val)}
 					</span>
 				</div>
+				{comparisonText && (
+					<p className={`text-[10px] text-right font-mono ${comparisonColor}`}>
+						{comparisonText}
+					</p>
+				)}
 			</div>
 		);
 	}
@@ -103,6 +136,7 @@ export function IncomeClient({
 }: Props) {
 	const { language } = useLanguage();
 	const [chartType, setChartType] = useState<"trend" | "cumulative">("trend");
+	const [visType, setVisType] = useState<"area" | "line" | "bar">("area");
 	const [incomeGoal, setIncomeGoal] = useState<number>(() => {
 		// Default goal: average monthly plus 25%, or 20 million if zero
 		return averageMonthly > 0 ? Math.round(averageMonthly * 1.25) : 20000000;
@@ -155,7 +189,7 @@ export function IncomeClient({
 				</div>
 
 				{/* High-end Value Hero Display */}
-				<div className="relative overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 lg:p-6 min-w-[280px] lg:text-right flex items-center justify-between lg:block hover:border-white/[0.1] transition-all">
+				<div className="relative overflow-hidden rounded-2xl border border-border/40 bg-card/40 p-5 lg:p-6 min-w-[280px] lg:text-right flex items-center justify-between lg:block hover:border-accent/30 transition-all">
 					<div className="absolute -top-10 -right-10 h-28 w-28 rounded-full bg-income/5 blur-[30px]" />
 					<div>
 						<p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/50">
@@ -200,7 +234,7 @@ export function IncomeClient({
 				<div className="lg:col-span-2 space-y-6">
 					
 					{/* Chart Panel */}
-					<section className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 space-y-6">
+					<section className="rounded-2xl border border-border/40 bg-card/40 p-6 space-y-6">
 						<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 							<div>
 								<h3 className="text-sm font-bold text-foreground">
@@ -212,36 +246,57 @@ export function IncomeClient({
 							</div>
 
 							{/* Chart Type Toggle Switcher */}
-							<div className="flex bg-white/[0.02] p-1 border border-white/[0.06] rounded-xl self-start">
-								<button
-									onClick={() => setChartType("trend")}
-									className={cn(
-										"text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all",
-										chartType === "trend"
-											? "bg-white/[0.06] text-foreground shadow-sm"
-											: "text-muted-foreground/50 hover:text-foreground"
-									)}
-								>
-									{language === "id" ? "Tren Bulanan" : "Monthly Trend"}
-								</button>
-								<button
-									onClick={() => setChartType("cumulative")}
-									className={cn(
-										"text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all",
-										chartType === "cumulative"
-											? "bg-white/[0.06] text-foreground shadow-sm"
-											: "text-muted-foreground/50 hover:text-foreground"
-									)}
-								>
-									{language === "id" ? "Akumulasi Kumulatif" : "Cumulative Income"}
-								</button>
+							<div className="flex flex-wrap gap-2 self-start">
+								{/* Trend Mode */}
+								<div className="flex bg-white/[0.02] p-1 border border-border/30 rounded-xl">
+									<button
+										onClick={() => setChartType("trend")}
+										className={cn(
+											"text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all",
+											chartType === "trend"
+												? "bg-white/[0.06] text-foreground shadow-sm"
+												: "text-muted-foreground/50 hover:text-foreground"
+										)}
+									>
+										{language === "id" ? "Tren Bulanan" : "Monthly Trend"}
+									</button>
+									<button
+										onClick={() => setChartType("cumulative")}
+										className={cn(
+											"text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all",
+											chartType === "cumulative"
+												? "bg-white/[0.06] text-foreground shadow-sm"
+												: "text-muted-foreground/50 hover:text-foreground"
+										)}
+									>
+										{language === "id" ? "Akumulasi" : "Cumulative"}
+									</button>
+								</div>
+
+								{/* Vis Mode */}
+								<div className="flex bg-white/[0.02] p-1 border border-border/30 rounded-xl">
+									{(["area", "line", "bar"] as const).map((type) => (
+										<button
+											key={type}
+											onClick={() => setVisType(type)}
+											className={cn(
+												"text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition-all capitalize",
+												visType === type
+													? "bg-white/[0.06] text-foreground shadow-sm"
+													: "text-muted-foreground/50 hover:text-foreground"
+											)}
+										>
+											{type === "area" ? (language === "id" ? "Area" : "Area") : type === "line" ? (language === "id" ? "Garis" : "Line") : (language === "id" ? "Batang" : "Bar")}
+										</button>
+									))}
+								</div>
 							</div>
 						</div>
 
 						<div className="h-72">
 							{!hasTrend ? (
 								<EmptyState
-									icon={LineChart}
+									icon={LucideLineChart}
 									title={language === "id" ? "Data tidak mencukupi" : "Insufficient data"}
 									description={
 										language === "id"
@@ -251,49 +306,111 @@ export function IncomeClient({
 								/>
 							) : (
 								<ResponsiveContainer width="100%" height="100%">
-									<AreaChart data={activeChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-										<defs>
-											<linearGradient id="incomeAreaGlow" x1="0" y1="0" x2="0" y2="1">
-												<stop offset="0%" stopColor="#10B981" stopOpacity={0.25} />
-												<stop offset="100%" stopColor="#10B981" stopOpacity={0} />
-											</linearGradient>
-										</defs>
-										<CartesianGrid stroke="#ffffff" strokeOpacity={0.03} vertical={false} />
-										<XAxis
-											dataKey="month"
-											stroke="#9CA3AF"
-											strokeOpacity={0.4}
-											fontSize={11}
-											tickLine={false}
-											axisLine={false}
-											dy={10}
-										/>
-										<YAxis
-											stroke="#9CA3AF"
-											strokeOpacity={0.4}
-											fontSize={11}
-											tickLine={false}
-											axisLine={false}
-											width={65}
-											tickFormatter={(v: number) => formatIDR(v, { compact: true })}
-										/>
-										<Tooltip content={<CustomTooltip />} cursor={{ stroke: "rgba(16,185,129,0.15)", strokeWidth: 1.5 }} />
-										<Area
-											type="monotone"
-											dataKey="amount"
-											stroke="#10B981"
-											strokeWidth={2}
-											fill="url(#incomeAreaGlow)"
-											activeDot={{ r: 5, fill: "#10B981", stroke: "#0D1117", strokeWidth: 2.5 }}
-										/>
-									</AreaChart>
+									{visType === "area" ? (
+										<AreaChart data={activeChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+											<defs>
+												<linearGradient id="incomeAreaGlow" x1="0" y1="0" x2="0" y2="1">
+													<stop offset="0%" stopColor="var(--income)" stopOpacity={0.25} />
+													<stop offset="100%" stopColor="var(--income)" stopOpacity={0} />
+												</linearGradient>
+											</defs>
+											<CartesianGrid stroke="var(--border)" strokeOpacity={0.15} vertical={false} />
+											<XAxis
+												dataKey="month"
+												stroke="var(--foreground)"
+												strokeOpacity={0.4}
+												fontSize={11}
+												tickLine={false}
+												axisLine={false}
+												dy={10}
+											/>
+											<YAxis
+												stroke="var(--foreground)"
+												strokeOpacity={0.4}
+												fontSize={11}
+												tickLine={false}
+												axisLine={false}
+												width={65}
+												tickFormatter={(v: number) => formatIDR(v, { compact: true })}
+											/>
+											<Tooltip content={<CustomTooltip activeChartData={activeChartData} />} cursor={{ stroke: "var(--income)", strokeWidth: 1.5, opacity: 0.15 }} />
+											<Area
+												type="monotone"
+												dataKey="amount"
+												stroke="var(--income)"
+												strokeWidth={2}
+												fill="url(#incomeAreaGlow)"
+												activeDot={{ r: 5, fill: "var(--income)", stroke: "var(--card-bg)", strokeWidth: 2.5 }}
+											/>
+										</AreaChart>
+									) : visType === "line" ? (
+										<LineChart data={activeChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+											<CartesianGrid stroke="var(--border)" strokeOpacity={0.15} vertical={false} />
+											<XAxis
+												dataKey="month"
+												stroke="var(--foreground)"
+												strokeOpacity={0.4}
+												fontSize={11}
+												tickLine={false}
+												axisLine={false}
+												dy={10}
+											/>
+											<YAxis
+												stroke="var(--foreground)"
+												strokeOpacity={0.4}
+												fontSize={11}
+												tickLine={false}
+												axisLine={false}
+												width={65}
+												tickFormatter={(v: number) => formatIDR(v, { compact: true })}
+											/>
+											<Tooltip content={<CustomTooltip activeChartData={activeChartData} />} cursor={{ stroke: "var(--income)", strokeWidth: 1.5, opacity: 0.15 }} />
+											<Line
+												type="monotone"
+												dataKey="amount"
+												stroke="var(--income)"
+												strokeWidth={2.5}
+												dot={{ r: 3, fill: "var(--income)", strokeWidth: 0 }}
+												activeDot={{ r: 5, fill: "var(--income)", stroke: "var(--card-bg)", strokeWidth: 2.5 }}
+											/>
+										</LineChart>
+									) : (
+										<BarChart data={activeChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+											<CartesianGrid stroke="var(--border)" strokeOpacity={0.15} vertical={false} />
+											<XAxis
+												dataKey="month"
+												stroke="var(--foreground)"
+												strokeOpacity={0.4}
+												fontSize={11}
+												tickLine={false}
+												axisLine={false}
+												dy={10}
+											/>
+											<YAxis
+												stroke="var(--foreground)"
+												strokeOpacity={0.4}
+												fontSize={11}
+												tickLine={false}
+												axisLine={false}
+												width={65}
+												tickFormatter={(v: number) => formatIDR(v, { compact: true })}
+											/>
+											<Tooltip content={<CustomTooltip activeChartData={activeChartData} />} cursor={{ fill: "var(--income)", opacity: 0.05 }} />
+											<Bar
+												dataKey="amount"
+												fill="var(--income)"
+												radius={[4, 4, 0, 0]}
+												maxBarSize={40}
+											/>
+										</BarChart>
+									)}
 								</ResponsiveContainer>
 							)}
 						</div>
 					</section>
 
 					{/* NEW Goal Target Planner Widget */}
-					<section className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 space-y-5 relative overflow-hidden">
+					<section className="rounded-2xl border border-border/40 bg-card/40 p-6 space-y-5 relative overflow-hidden">
 						<div className="absolute -bottom-12 -left-12 h-36 w-36 rounded-full bg-income/5 blur-[40px] pointer-events-none" />
 						
 						<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

@@ -128,8 +128,8 @@ export const DropdownMenuContent = forwardRef<
     "absolute z-50",
     side === "bottom" && "top-full",
     side === "top" && "bottom-full",
-    side === "left" && "right-full top-0",
-    side === "right" && "left-full top-0",
+    side === "left" && "right-full",
+    side === "right" && "left-full",
     side === "bottom" || side === "top"
       ? align === "end"
         ? "right-0"
@@ -138,7 +138,9 @@ export const DropdownMenuContent = forwardRef<
         : "left-1/2 -translate-x-1/2"
       : align === "end"
       ? "bottom-0"
-      : "top-0",
+      : align === "start"
+      ? "top-0"
+      : "top-1/2 -translate-y-1/2",
     className
   );
 
@@ -189,6 +191,14 @@ export const DropdownMenuItem = forwardRef<
   if (asChild && React.isValidElement(children)) {
     const child = children as React.ReactElement<any>;
     return React.cloneElement(child, {
+      className: cn(
+        "w-full text-left relative flex cursor-default select-none items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm outline-none transition-colors duration-150",
+        "text-text-primary hover:bg-white/[0.06] hover:cursor-pointer focus:bg-white/[0.06] focus:text-foreground",
+        variant === "destructive" && "text-destructive hover:bg-destructive/15 focus:bg-destructive/15 focus:text-destructive",
+        inset && "pl-8",
+        className,
+        child.props.className
+      ),
       onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
         handleClick(e);
         if (child.props.onClick) child.props.onClick(e);

@@ -134,7 +134,7 @@ export function AppSidebar({ user, counts, ...props }: AppSidebarProps) {
 
       {/* ─── Separator with subtle glow ─── */}
       <div className="mx-4 mb-1">
-        <div className="h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
+        <div className="h-px bg-gradient-to-r from-transparent via-sidebar-border/40 to-transparent" />
       </div>
 
       <SidebarContent>
@@ -157,7 +157,7 @@ export function AppSidebar({ user, counts, ...props }: AppSidebarProps) {
 
       {/* ─── User Footer ─── */}
       <div className="mx-4 mb-1">
-        <div className="h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
+        <div className="h-px bg-gradient-to-r from-transparent via-sidebar-border/40 to-transparent" />
       </div>
       <SidebarFooter className="p-3">
         <NavUser user={user} />

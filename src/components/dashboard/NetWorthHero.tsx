@@ -64,11 +64,11 @@ export function NetWorthHero({ current, previous, period, series }: Props) {
     return [min - pad, max + pad];
   }, [series]);
 
-  const lineColor = "#388BFD";
+  const lineColor = "var(--accent)";
   const periodLabel = PERIOD_OPTIONS.find((o) => o.value === period)?.label ?? "";
 
   return (
-    <section className="group rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden hover:border-white/[0.12] hover:shadow-[0_8px_30px_rgba(0,0,0,0.3)] transition-all duration-300" aria-label="Grafik Total Kekayaan" role="region">
+    <section className="group rounded-2xl border border-border/40 bg-card/40 overflow-hidden hover:border-accent/30 hover:shadow-[0_8px_30px_rgba(0,0,0,0.15)] transition-all duration-300" aria-label="Grafik Total Kekayaan" role="region">
       <div className="flex items-start justify-between gap-4 p-6 pb-1">
         <div className="space-y-2">
           {/* PERUBAHAN: "Net Worth" -> "Total Kekayaan" */}
@@ -103,14 +103,14 @@ export function NetWorthHero({ current, previous, period, series }: Props) {
                   <stop offset="100%" stopColor={lineColor} stopOpacity={0.01} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" vertical={false} opacity={0.4} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} opacity={0.3} />
               <YAxis hide domain={yDomain} />
               <XAxis dataKey="date" tickLine={false} axisLine={false}
                 tickFormatter={(d) => formatDateShort(d as string)}
-                fontSize={10} stroke="#9CA3AF" interval="preserveStartEnd" />
+                fontSize={10} stroke="var(--foreground)" opacity={0.5} interval="preserveStartEnd" />
               {/* PERUBAHAN: tooltip kini TERLIHAT — tanggal + rupiah penuh */}
               <Tooltip
-                cursor={ { stroke: "rgba(56, 139, 253, 0.25)", strokeWidth: 1.5, strokeDasharray: "4 4" } }
+                cursor={ { stroke: "var(--accent)", strokeWidth: 1.5, strokeDasharray: "4 4", opacity: 0.3 } }
                 content={({ active, payload }) => {
                   if (!active || !payload?.length) return null;
                   const p = payload[0].payload as NetWorthPoint;
@@ -123,7 +123,7 @@ export function NetWorthHero({ current, previous, period, series }: Props) {
                   );
                 }}
               />
-              <Area type="monotone" dataKey="value" stroke={lineColor} strokeWidth={2.5} fill="url(#netWorthFill)" activeDot={{ r: 5, stroke: "#04060E", strokeWidth: 2, fill: lineColor }} />
+              <Area type="monotone" dataKey="value" stroke={lineColor} strokeWidth={2.5} fill="url(#netWorthFill)" activeDot={{ r: 5, stroke: "var(--card-bg)", strokeWidth: 2, fill: lineColor }} />
             </AreaChart>
           </ResponsiveContainer>
         )}
