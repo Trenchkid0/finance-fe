@@ -80,11 +80,11 @@ const DropdownMenuItem = React.forwardRef<
   <DropdownMenuPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors",
-      "focus:bg-elevated focus:text-foreground",
+      "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors duration-150",
+      "focus:bg-white/[0.08] focus:text-foreground hover:bg-white/[0.08] hover:text-foreground hover:cursor-pointer",
       "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       variant === "destructive" &&
-        "text-destructive focus:bg-destructive/10 focus:text-destructive",
+        "text-destructive focus:bg-destructive/15 focus:text-destructive hover:bg-destructive/15 hover:text-destructive hover:cursor-pointer",
       inset && "pl-8",
       className,
     )}

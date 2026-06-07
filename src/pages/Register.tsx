@@ -1,13 +1,51 @@
 import { RegisterForm } from "@/components/auth/RegisterForm";
 import { TrendingUp, Wallet, PiggyBank, BarChart3, Shield, Zap } from "lucide-react";
+import { useLanguage } from "@/lib/contexts/LanguageContext";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function Register() {
+  const { language, setLanguage } = useLanguage();
+
   return (
     <div className="grid min-h-screen w-full lg:grid-cols-[2fr_3fr] overflow-hidden bg-canvas font-sans">
       {/* ═══════════════════════════════════════════════════════════════
           LEFT COLUMN — 40% — Form
       ═══════════════════════════════════════════════════════════════ */}
       <div className="relative flex flex-col justify-center px-6 py-10 sm:px-10 lg:px-14 xl:px-20 z-10">
+        {/* Language selector floating top right */}
+        <div className="absolute top-5 right-5 z-20">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="h-8 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-text-primary hover:bg-white/[0.04] transition-all bg-elevated border border-border"
+              >
+                <span>{language === "id" ? "Bahasa Indonesia" : "English (US)"}</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-[150px] rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl">
+              <DropdownMenuItem
+                className="text-xs font-semibold cursor-pointer"
+                onSelect={() => setLanguage("id")}
+              >
+                Bahasa Indonesia
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-xs font-semibold cursor-pointer"
+                onSelect={() => setLanguage("en")}
+              >
+                English (US)
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
         {/* Subtle ambient glow */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
           <div className="absolute -top-32 -left-32 w-[400px] h-[400px] bg-accent/[0.04] rounded-full blur-[100px]" />
@@ -34,11 +72,22 @@ export default function Register() {
           {/* Heading */}
           <div className="space-y-3">
             <h1 className="text-[2rem] leading-[1.15] font-extrabold tracking-tight text-foreground">
-              Buat akun<br />
-              <span className="bg-gradient-to-r from-accent to-indigo-400 bg-clip-text text-transparent">Anda sekarang.</span>
+              {language === "id" ? (
+                <>
+                  Buat akun<br />
+                  <span className="bg-gradient-to-r from-accent to-indigo-400 bg-clip-text text-transparent">Anda sekarang.</span>
+                </>
+              ) : (
+                <>
+                  Create<br />
+                  <span className="bg-gradient-to-r from-accent to-indigo-400 bg-clip-text text-transparent">your account.</span>
+                </>
+              )}
             </h1>
             <p className="text-[13px] text-muted-foreground leading-relaxed max-w-[300px]">
-              Mulailah mengelola aset, melacak pengeluaran, dan merencanakan masa depan finansial Anda.
+              {language === "id"
+                ? "Mulailah mengelola aset, melacak pengeluaran, dan merencanakan masa depan finansial Anda."
+                : "Start managing assets, tracking expenses, and planning your financial future."}
             </p>
           </div>
 
@@ -49,11 +98,11 @@ export default function Register() {
           <div className="flex items-center gap-5 pt-2">
             <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/60">
               <Shield size={12} className="text-income/60" />
-              <span>Terenkripsi</span>
+              <span>{language === "id" ? "Terenkripsi" : "Encrypted"}</span>
             </div>
             <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/60">
               <Zap size={12} className="text-warning/60" />
-              <span>Sinkronisasi real-time</span>
+              <span>{language === "id" ? "Sinkronisasi real-time" : "Real-time sync"}</span>
             </div>
           </div>
         </div>
@@ -230,12 +279,16 @@ export default function Register() {
           </div>
 
           {/* Bottom tagline */}
-          <div className="space-y-2 max-w-md">
-            <p className="text-base font-bold text-foreground/90 leading-snug">
-              Satu dasbor terpadu untuk seluruh aset finansial Anda.
+          <div className="space-y-2 max-w-md border-t border-white/[0.04] pt-6 mt-6">
+            <p className="text-base font-bold text-text-primary leading-snug">
+              {language === "id"
+                ? "Satu dasbor terpadu untuk seluruh aset finansial Anda."
+                : "One unified dashboard for all your financial assets."}
             </p>
-            <p className="text-xs text-muted-foreground/50 leading-relaxed">
-              Rekening bank, dompet digital, portofolio saham, properti — pantau semuanya secara real-time dalam satu tempat yang aman.
+            <p className="text-xs text-text-muted leading-relaxed">
+              {language === "id"
+                ? "Rekening bank, dompet digital, portofolio saham, properti — pantau semuanya secara real-time dalam satu tempat yang aman."
+                : "Bank accounts, digital wallets, stock portfolios, real estate — track it all in real-time in one secure place."}
             </p>
           </div>
         </div>

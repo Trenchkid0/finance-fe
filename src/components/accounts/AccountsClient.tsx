@@ -15,6 +15,7 @@ import { deleteAccount, toggleAccountActive } from "@/app/actions/accounts";
 import { formatIDR } from "@/lib/utils/formatters";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/lib/contexts/LanguageContext";
 import {
   Dialog,
   DialogBody,
@@ -53,14 +54,8 @@ interface Props {
   accounts: AccountRowData[];
 }
 
-const TYPE_LABEL: Record<AccountTypeInput, string> = {
-  bank: "Bank",
-  wallet: "E-wallet",
-  cash: "Tunai",
-  investment: "Investasi",
-};
-
 export function AccountsClient({ accounts }: Props) {
+  const { language } = useLanguage();
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<AccountRowData | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<AccountRowData | null>(null);
@@ -69,21 +64,24 @@ export function AccountsClient({ accounts }: Props) {
   const inactiveAccounts = accounts.filter((a) => !a.isActive);
   const totalBalance = activeAccounts.reduce((sum, a) => sum + a.balance, 0);
 
+
   return (
     <div className="space-y-8 animate-fade-in-up">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1.5">
           <h1 className="text-2xl lg:text-[1.75rem] font-extrabold tracking-tight text-foreground">
-            Akun Keuangan
+            {language === "id" ? "Akun Keuangan" : "Financial Accounts"}
           </h1>
           <p className="text-sm text-muted-foreground/80">
-            Kelola sumber dana Anda — bank, e-wallet, tunai, dan investasi.
+            {language === "id"
+              ? "Kelola sumber dana Anda — bank, e-wallet, tunai, dan investasi."
+              : "Manage your funding sources — bank, e-wallet, cash, and investments."}
           </p>
         </div>
         <Button onClick={() => setCreating(true)} className="h-10 rounded-xl gap-2 text-xs font-semibold px-4 self-start sm:self-auto">
           <Plus size={14} strokeWidth={2.5} />
-          Tambah Akun Baru
+          {language === "id" ? "Tambah Akun Baru" : "Add New Account"}
         </Button>
       </div>
 
@@ -91,21 +89,27 @@ export function AccountsClient({ accounts }: Props) {
       {activeAccounts.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="rounded-xl border border-accent/20 bg-accent/[0.04] p-4">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">Total Saldo</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">
+              {language === "id" ? "Total Saldo" : "Total Balance"}
+            </p>
             <p className={cn("text-lg font-black font-mono tabular-nums", totalBalance >= 0 ? "text-income" : "text-expense")}>
               {formatIDR(totalBalance)}
             </p>
           </div>
           <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">Akun Aktif</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">
+              {language === "id" ? "Akun Aktif" : "Active Accounts"}
+            </p>
             <p className="text-lg font-black font-mono tabular-nums text-foreground">
-              {activeAccounts.length} <span className="text-xs text-muted-foreground/60 font-sans font-semibold ml-1">akun</span>
+              {activeAccounts.length} <span className="text-xs text-muted-foreground/60 font-sans font-semibold ml-1">{language === "id" ? "akun" : "accounts"}</span>
             </p>
           </div>
           <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">Saldo Negatif</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">
+              {language === "id" ? "Saldo Negatif" : "Negative Balance"}
+            </p>
             <p className="text-lg font-black font-mono tabular-nums text-foreground">
-              {accounts.filter((a) => a.isActive && a.balance < 0).length} <span className="text-xs text-muted-foreground/60 font-sans font-semibold ml-1">akun</span>
+              {accounts.filter((a) => a.isActive && a.balance < 0).length} <span className="text-xs text-muted-foreground/60 font-sans font-semibold ml-1">{language === "id" ? "akun" : "accounts"}</span>
             </p>
           </div>
         </div>
@@ -114,12 +118,16 @@ export function AccountsClient({ accounts }: Props) {
       {accounts.length === 0 ? (
         <EmptyState
           icon={Wallet}
-          title="Belum ada akun"
-          description="Tambahkan akun pertama Anda untuk mulai mencatat transaksi."
+          title={language === "id" ? "Belum ada akun" : "No accounts yet"}
+          description={
+            language === "id"
+              ? "Tambahkan akun pertama Anda untuk mulai mencatat transaksi."
+              : "Add your first account to start recording transactions."
+          }
           action={
             <Button onClick={() => setCreating(true)} className="rounded-xl">
               <Plus size={16} className="mr-1.5" />
-              Tambah akun
+              {language === "id" ? "Tambah akun" : "Add account"}
             </Button>
           }
         />
@@ -130,7 +138,7 @@ export function AccountsClient({ accounts }: Props) {
             <section className="space-y-4">
               <h2 className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-[0.12em] flex items-center gap-2">
                 <span className="size-1.5 rounded-full bg-income" />
-                Akun Aktif
+                {language === "id" ? "Akun Aktif" : "Active Accounts"}
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {activeAccounts.map((account) => (
@@ -150,7 +158,7 @@ export function AccountsClient({ accounts }: Props) {
             <section className="space-y-4">
               <h2 className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-[0.12em] flex items-center gap-2">
                 <span className="size-1.5 rounded-full bg-white/[0.2]" />
-                Nonaktif
+                {language === "id" ? "Nonaktif" : "Inactive"}
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {inactiveAccounts.map((account) => (
@@ -171,9 +179,11 @@ export function AccountsClient({ accounts }: Props) {
       <Dialog open={creating} onOpenChange={setCreating}>
         <DialogContent className="rounded-2xl border-white/[0.08] bg-popover/95 backdrop-blur-xl">
           <DialogHeader>
-            <DialogTitle>Tambah akun</DialogTitle>
+            <DialogTitle>{language === "id" ? "Tambah akun" : "Add Account"}</DialogTitle>
             <DialogDescription>
-              Buat akun baru untuk melacak keuangan Anda
+              {language === "id"
+                ? "Buat akun baru untuk melacak keuangan Anda"
+                : "Create a new account to track your finances"}
             </DialogDescription>
           </DialogHeader>
           <DialogBody>
@@ -196,7 +206,7 @@ export function AccountsClient({ accounts }: Props) {
       <Dialog open={editing !== null} onOpenChange={(open) => !open && setEditing(null)}>
         <DialogContent className="rounded-2xl border-white/[0.08] bg-popover/95 backdrop-blur-xl">
           <DialogHeader>
-            <DialogTitle>Ubah akun</DialogTitle>
+            <DialogTitle>{language === "id" ? "Ubah akun" : "Edit Account"}</DialogTitle>
           </DialogHeader>
           <DialogBody>
             {editing && (
@@ -230,6 +240,7 @@ function AccountCard({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const { language } = useLanguage();
   const [pending, startTransition] = useTransition();
 
   function handleToggle() {
@@ -241,6 +252,13 @@ function AccountCard({
   const swatch = account.color ?? "#388BFD";
   const isNegative = account.balance < 0;
   const maskedNumber = `•••• •••• •••• ${account.id.slice(-4)}`;
+
+  const typeLabel: Record<AccountTypeInput, string> = {
+    bank: language === "id" ? "Bank" : "Bank",
+    wallet: language === "id" ? "E-wallet" : "E-wallet",
+    cash: language === "id" ? "Tunai" : "Cash",
+    investment: language === "id" ? "Investasi" : "Investment",
+  };
 
   return (
     <div className="relative group">
@@ -291,12 +309,12 @@ function AccountCard({
                 borderColor: `${swatch}30`
               }}
             >
-              {TYPE_LABEL[account.type]}
+              {typeLabel[account.type]}
             </span>
             {!account.isActive && (
               <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/40 flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40" />
-                Nonaktif
+                {language === "id" ? "Nonaktif" : "Inactive"}
               </span>
             )}
           </div>
@@ -305,7 +323,7 @@ function AccountCard({
         {/* Card Body: Balance & Card Number */}
         <div className="space-y-2 relative z-10 mb-6">
           <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/50">
-            Saldo Tersedia
+            {language === "id" ? "Saldo Tersedia" : "Available Balance"}
           </p>
           <p className={cn(
             "text-3xl font-black font-mono tracking-tight tabular-nums transition-colors duration-300",
@@ -322,7 +340,7 @@ function AccountCard({
         <div className="flex items-end justify-between border-t border-white/[0.06] pt-4 relative z-10">
           <div className="min-w-0 flex-1 pr-3">
             <p className="text-[9px] uppercase tracking-wider text-muted-foreground/50 font-bold mb-1">
-              Pemegang Akun
+              {language === "id" ? "Pemegang Akun" : "Account Holder"}
             </p>
             <p className="text-sm font-bold text-foreground truncate tracking-wide transition-colors duration-300 group-hover:text-white">
               {account.name}
@@ -356,7 +374,7 @@ function AccountCard({
               <Button
                 variant="ghost"
                 size="icon"
-                aria-label="Aksi akun"
+                aria-label={language === "id" ? "Aksi akun" : "Account actions"}
                 className="h-8 w-8 rounded-lg hover:bg-white/[0.12] bg-white/[0.04] border border-white/[0.08] text-muted-foreground/60 hover:text-foreground hover:border-white/[0.15] shrink-0 transition-all duration-200 backdrop-blur-md shadow-lg"
                 disabled={pending}
                 onClick={(e) => e.stopPropagation()}
@@ -370,7 +388,7 @@ function AccountCard({
                 className="rounded-lg text-xs px-3 py-2 gap-2.5 cursor-pointer transition-all duration-200 hover:bg-accent/10 hover:text-accent focus:bg-accent/10 focus:text-accent active:scale-95"
               >
                 <Pencil size={13} className="transition-transform duration-200 group-hover:scale-110" />
-                <span className="font-medium">Ubah</span>
+                <span className="font-medium">{language === "id" ? "Ubah" : "Edit"}</span>
               </DropdownMenuItem>
               <DropdownMenuItem
                 onSelect={handleToggle}
@@ -379,12 +397,12 @@ function AccountCard({
                 {account.isActive ? (
                   <>
                     <PowerOff size={13} className="transition-transform duration-200 group-hover:scale-110" />
-                    <span className="font-medium">Nonaktifkan</span>
+                    <span className="font-medium">{language === "id" ? "Nonaktifkan" : "Deactivate"}</span>
                   </>
                 ) : (
                   <>
                     <Power size={13} className="transition-transform duration-200 group-hover:scale-110" />
-                    <span className="font-medium">Aktifkan</span>
+                    <span className="font-medium">{language === "id" ? "Aktifkan" : "Activate"}</span>
                   </>
                 )}
               </DropdownMenuItem>
@@ -395,7 +413,7 @@ function AccountCard({
                 className="rounded-lg text-xs px-3 py-2 gap-2.5 cursor-pointer transition-all duration-200 hover:bg-expense/10 hover:text-expense focus:bg-expense/10 focus:text-expense active:scale-95"
               >
                 <Trash2 size={13} className="transition-transform duration-200 group-hover:scale-110" />
-                <span className="font-medium">Hapus</span>
+                <span className="font-medium">{language === "id" ? "Hapus" : "Delete"}</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -414,6 +432,7 @@ function ConfirmDelete({
   target: AccountRowData | null;
   onClose: () => void;
 }) {
+  const { language } = useLanguage();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -434,9 +453,9 @@ function ConfirmDelete({
     <Dialog open={target !== null} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="rounded-2xl border-white/[0.08] bg-popover/95 backdrop-blur-xl">
         <DialogHeader>
-          <DialogTitle>Hapus Akun</DialogTitle>
+          <DialogTitle>{language === "id" ? "Hapus Akun" : "Delete Account"}</DialogTitle>
           <DialogDescription>
-            Tindakan ini tidak dapat dibatalkan.
+            {language === "id" ? "Tindakan ini tidak dapat dibatalkan." : "This action cannot be undone."}
           </DialogDescription>
         </DialogHeader>
         <DialogBody className="space-y-4">
@@ -447,13 +466,15 @@ function ConfirmDelete({
                   {target.name}
                 </p>
                 <p className="text-xs text-muted-foreground/60 mt-1 font-mono tabular-nums">
-                  {formatIDR(target.balance)} · {target.transactionCount} transaksi
+                  {formatIDR(target.balance)} · {target.transactionCount} {language === "id" ? "transaksi" : "transactions"}
                 </p>
               </div>
 
               {target.transactionCount > 0 && (
                 <p className="text-xs text-warning/80">
-                  Akun ini memiliki {target.transactionCount} transaksi. Anda mungkin lebih baik menonaktifkannya saja.
+                  {language === "id"
+                    ? `Akun ini memiliki ${target.transactionCount} transaksi. Anda mungkin lebih baik menonaktifkannya saja.`
+                    : `This account has ${target.transactionCount} transactions. You might want to deactivate it instead.`}
                 </p>
               )}
 
@@ -463,10 +484,12 @@ function ConfirmDelete({
         </DialogBody>
         <DialogFooter>
           <Button variant="secondary" onClick={onClose} disabled={pending} className="rounded-xl">
-            Batal
+            {language === "id" ? "Batal" : "Cancel"}
           </Button>
           <Button variant="destructive" onClick={handleConfirm} disabled={pending} className="rounded-xl">
-            {pending ? "Menghapus..." : "Hapus"}
+            {pending
+              ? (language === "id" ? "Menghapus..." : "Deleting...")
+              : (language === "id" ? "Hapus" : "Delete")}
           </Button>
         </DialogFooter>
       </DialogContent>

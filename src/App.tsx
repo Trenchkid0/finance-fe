@@ -15,9 +15,12 @@ import Budget from "@/pages/Budget";
 import Settings from "@/pages/Settings";
 import Profile from "@/pages/Profile";
 
+import { LanguageProvider } from "@/lib/contexts/LanguageContext";
+
 export default function App() {
   return (
-    <BrowserRouter>
+    <LanguageProvider>
+      <BrowserRouter>
       <Routes>
         {/* Auth routes */}
         <Route path="/login" element={<Login />} />
@@ -102,5 +105,6 @@ export default function App() {
       </Routes>
       <Toaster theme="dark" position="top-right" />
     </BrowserRouter>
+    </LanguageProvider>
   );
 }

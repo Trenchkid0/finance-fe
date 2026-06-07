@@ -4,6 +4,13 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowDown, ArrowUp, Minus } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from "recharts";
 import { formatDateShort, formatIDR } from "@/lib/utils/formatters";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export interface NetWorthPoint { date: string; value: number; }
 export type NetWorthPeriod = "1d" | "7d" | "30d" | "90d" | "ytd" | "365d" | "5y";
@@ -148,13 +155,29 @@ function DeltaLine({ dir, delta, ratio, hoveredLabel, periodLabel }: {
 function PeriodSelect({ value, onChange, disabled }: {
   value: NetWorthPeriod; onChange: (v: NetWorthPeriod) => void; disabled?: boolean;
 }) {
+  const selectedLabel = PERIOD_OPTIONS.find((o) => o.value === value)?.label ?? value;
   return (
-    <select value={value} onChange={(e) => onChange(e.target.value as NetWorthPeriod)} disabled={disabled}
-      className="bg-white/[0.03] border border-white/[0.08] text-foreground text-xs font-medium rounded-xl px-3 py-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent/30 hover:border-white/[0.15] hover:bg-white/[0.05] transition-all duration-300 disabled:opacity-50"
-      aria-label="Pilih periode">
-      {PERIOD_OPTIONS.map((o) => (
-        <option key={o.value} value={o.value}>{o.label}</option>
-      ))}
-    </select>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          disabled={disabled}
+          className="h-8 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-text-primary hover:bg-white/[0.04] bg-white/[0.03] border border-white/[0.08] transition-all"
+        >
+          <span>{selectedLabel}</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-[120px] rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl">
+        {PERIOD_OPTIONS.map((o) => (
+          <DropdownMenuItem
+            key={o.value}
+            className="text-xs font-semibold cursor-pointer"
+            onSelect={() => onChange(o.value)}
+          >
+            {o.label}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

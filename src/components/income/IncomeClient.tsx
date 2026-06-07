@@ -26,6 +26,7 @@ import {
 import { formatDateShort, formatIDR } from "@/lib/utils/formatters";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils/cn";
+import { useLanguage } from "@/lib/contexts/LanguageContext";
 
 interface IncomeTransaction {
 	id: string;
@@ -71,6 +72,7 @@ const CATEGORY_COLORS = [
 ];
 
 function CustomTooltip({ active, payload, label }: any) {
+	const { language } = useLanguage();
 	if (active && payload && payload.length) {
 		return (
 			<div className="rounded-xl border border-white/[0.08] bg-popover/90 backdrop-blur-xl p-3.5 shadow-2xl shadow-black/50 text-xs space-y-1.5 min-w-[150px]">
@@ -78,7 +80,7 @@ function CustomTooltip({ active, payload, label }: any) {
 				<div className="flex items-center justify-between gap-4">
 					<span className="text-foreground font-semibold flex items-center gap-1.5">
 						<span className="h-2 w-2 rounded-full bg-income shrink-0" />
-						Nilai
+						{language === "id" ? "Nilai" : "Value"}
 					</span>
 					<span className="font-mono font-bold text-income tabular-nums">
 						{formatIDR(payload[0].value)}
@@ -99,6 +101,7 @@ export function IncomeClient({
 	averageMonthly,
 	maxIncome,
 }: Props) {
+	const { language } = useLanguage();
 	const [chartType, setChartType] = useState<"trend" | "cumulative">("trend");
 	const [incomeGoal, setIncomeGoal] = useState<number>(() => {
 		// Default goal: average monthly plus 25%, or 20 million if zero
@@ -139,13 +142,15 @@ export function IncomeClient({
 				<div className="space-y-2">
 					<div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black tracking-widest text-income bg-income/10 border border-income/20 uppercase">
 						<Sparkles size={10} />
-						Analisis Pendapatan Premium
+						{language === "id" ? "Analisis Pendapatan Premium" : "Premium Income Analysis"}
 					</div>
 					<h1 className="text-2xl lg:text-[2rem] font-black tracking-tight text-foreground">
-						Income Analytics
+						{language === "id" ? "Analisis Pendapatan" : "Income Analytics"}
 					</h1>
 					<p className="text-xs lg:text-sm text-muted-foreground/60 max-w-xl">
-						Analisa pertumbuhan dana masuk Anda secara kumulatif, atur target bulanan dinamis, dan tinjau proyeksi pendapatan tahunan.
+						{language === "id"
+							? "Analisa pertumbuhan dana masuk Anda secara kumulatif, atur target bulanan dinamis, dan tinjau proyeksi pendapatan tahunan."
+							: "Analyze your cumulative incoming funds growth, set dynamic monthly goals, and review annual projections."}
 					</p>
 				</div>
 
@@ -154,7 +159,7 @@ export function IncomeClient({
 					<div className="absolute -top-10 -right-10 h-28 w-28 rounded-full bg-income/5 blur-[30px]" />
 					<div>
 						<p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/50">
-							Pemasukan Bulan Ini
+							{language === "id" ? "Pemasukan Bulan Ini" : "This Month's Income"}
 						</p>
 						<p className="font-mono tabular-nums text-2xl lg:text-3xl font-black text-foreground mt-1">
 							{formatIDR(currentMonthTotal)}
@@ -169,22 +174,22 @@ export function IncomeClient({
 			{/* ──────────────── KPI Grid Section ──────────────── */}
 			<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 				<KPIStatCard
-					title="Rata-Rata Bulanan"
+					title={language === "id" ? "Rata-Rata Bulanan" : "Monthly Average"}
 					value={formatIDR(averageMonthly)}
-					subText={`Rata-rata pemasukan per bulan`}
+					subText={language === "id" ? "Rata-rata pemasukan per bulan" : "Average income per month"}
 					icon={<Calendar size={18} />}
 					colorClass="text-blue-400"
 					bgClass="bg-blue-500/10 border-blue-500/20"
-					description="Tolak ukur performa bulanan aktif"
+					description={language === "id" ? "Tolak ukur performa bulanan aktif" : "Benchmark of active monthly performance"}
 				/>
 				<KPIStatCard
-					title="Sumber Terbesar"
+					title={language === "id" ? "Sumber Terbesar" : "Top Source"}
 					value={maxIncome ? formatIDR(maxIncome.amount) : "Rp 0"}
 					subText={maxIncome?.description}
 					icon={<Award size={18} />}
 					colorClass="text-amber-400"
 					bgClass="bg-amber-500/10 border-amber-500/20"
-					description="Nilai transaksi masuk tertinggi"
+					description={language === "id" ? "Nilai transaksi masuk tertinggi" : "Highest incoming transaction value"}
 				/>
 			</div>
 
@@ -198,8 +203,12 @@ export function IncomeClient({
 					<section className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 space-y-6">
 						<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 							<div>
-								<h3 className="text-sm font-bold text-foreground">Tren & Akumulasi Pemasukan</h3>
-								<p className="text-[11px] text-muted-foreground/50 mt-0.5">Analisis performa riil vs kurva pertumbuhan kumulatif</p>
+								<h3 className="text-sm font-bold text-foreground">
+									{language === "id" ? "Tren & Akumulasi Pemasukan" : "Income Trends & Accumulation"}
+								</h3>
+								<p className="text-[11px] text-muted-foreground/50 mt-0.5">
+									{language === "id" ? "Analisis performa riil vs kurva pertumbuhan kumulatif" : "Performance analysis of real vs cumulative growth curves"}
+								</p>
 							</div>
 
 							{/* Chart Type Toggle Switcher */}
@@ -213,7 +222,7 @@ export function IncomeClient({
 											: "text-muted-foreground/50 hover:text-foreground"
 									)}
 								>
-									Tren Bulanan
+									{language === "id" ? "Tren Bulanan" : "Monthly Trend"}
 								</button>
 								<button
 									onClick={() => setChartType("cumulative")}
@@ -224,7 +233,7 @@ export function IncomeClient({
 											: "text-muted-foreground/50 hover:text-foreground"
 									)}
 								>
-									Akumulasi Kumulatif
+									{language === "id" ? "Akumulasi Kumulatif" : "Cumulative Income"}
 								</button>
 							</div>
 						</div>
@@ -233,8 +242,12 @@ export function IncomeClient({
 							{!hasTrend ? (
 								<EmptyState
 									icon={LineChart}
-									title="Data tidak mencukupi"
-									description="Tambahkan transaksi pemasukan untuk melihat visualisasi tren."
+									title={language === "id" ? "Data tidak mencukupi" : "Insufficient data"}
+									description={
+										language === "id"
+											? "Tambahkan transaksi pemasukan untuk melihat visualisasi tren."
+											: "Add income transactions to see the trend visualization."
+									}
 								/>
 							) : (
 								<ResponsiveContainer width="100%" height="100%">
@@ -289,14 +302,20 @@ export function IncomeClient({
 									<Target size={16} />
 								</div>
 								<div>
-									<h3 className="text-sm font-bold text-foreground">Target Planner Bulanan</h3>
-									<p className="text-[11px] text-muted-foreground/50">Atur & pantau pencapaian gol pemasukan Anda</p>
+									<h3 className="text-sm font-bold text-foreground">
+										{language === "id" ? "Target Planner Bulanan" : "Monthly Goal Planner"}
+									</h3>
+									<p className="text-[11px] text-muted-foreground/50">
+										{language === "id" ? "Atur & pantau pencapaian gol pemasukan Anda" : "Set & monitor your income goal achievement"}
+									</p>
 								</div>
 							</div>
 
 							{/* Goal Slider / Input Group */}
 							<div className="flex items-center gap-2 bg-white/[0.02] border border-white/[0.06] rounded-xl px-3 py-1.5 self-start">
-								<span className="text-[10px] font-bold text-muted-foreground/50 uppercase">TARGET:</span>
+								<span className="text-[10px] font-bold text-muted-foreground/50 uppercase">
+									{language === "id" ? "TARGET:" : "GOAL:"}
+								</span>
 								<input
 									type="number"
 									value={incomeGoal}
@@ -309,7 +328,9 @@ export function IncomeClient({
 						{/* Progress Bar & Status */}
 						<div className="space-y-3">
 							<div className="flex items-center justify-between text-xs font-mono">
-								<span className="text-muted-foreground/50">Pencapaian Gol</span>
+								<span className="text-muted-foreground/50">
+									{language === "id" ? "Pencapaian Gol" : "Goal Progress"}
+								</span>
 								<span className="text-income font-bold">{goalProgressPercent.toFixed(1)}%</span>
 							</div>
 							
@@ -327,14 +348,16 @@ export function IncomeClient({
 								<span className="text-muted-foreground/60 font-medium">
 									{isGoalMet ? (
 										<span className="text-income font-semibold flex items-center gap-1">
-											<Sparkles size={11} /> Target Terlampaui! Luar biasa perkembangan Anda bulan ini.
+											<Sparkles size={11} /> {language === "id" ? "Target Terlampaui! Luar biasa perkembangan Anda bulan ini." : "Goal Exceeded! Outstanding progress this month."}
 										</span>
 									) : (
-										`Dibutuhkan ${formatIDR(remainingToGoal)} lagi untuk mencapai gol`
+										language === "id"
+											? `Dibutuhkan ${formatIDR(remainingToGoal)} lagi untuk mencapai gol`
+											: `Need another ${formatIDR(remainingToGoal)} to reach goal`
 									)}
 								</span>
 								<span className="text-muted-foreground/40 font-mono text-[10px] uppercase">
-									Target: {formatIDR(incomeGoal)}
+									{language === "id" ? "Target:" : "Goal:"} {formatIDR(incomeGoal)}
 								</span>
 							</div>
 						</div>
@@ -345,15 +368,23 @@ export function IncomeClient({
 				{/* RIGHT: Top Source Categories breakdown */}
 				<section className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 flex flex-col space-y-6">
 					<div>
-						<h3 className="text-sm font-bold text-foreground">Distribusi Kategori</h3>
-						<p className="text-[11px] text-muted-foreground/50 mt-0.5">Proporsi pembagian sumber dana masuk</p>
+						<h3 className="text-sm font-bold text-foreground">
+							{language === "id" ? "Distribusi Kategori" : "Category Distribution"}
+						</h3>
+						<p className="text-[11px] text-muted-foreground/50 mt-0.5">
+							{language === "id" ? "Proporsi pembagian sumber dana masuk" : "Proportion of incoming fund sources"}
+						</p>
 					</div>
 
 					{categoryBreakdown.length === 0 ? (
 						<EmptyState
 							icon={Inbox}
-							title="Belum ada data"
-							description="Breakdown kategori akan tampil setelah Anda mencatat transaksi."
+							title={language === "id" ? "Belum ada data" : "No data available"}
+							description={
+								language === "id"
+									? "Breakdown kategori akan tampil setelah Anda mencatat transaksi."
+									: "Category breakdown will appear after you record transactions."
+							}
 							size="sm"
 						/>
 					) : (
@@ -399,7 +430,7 @@ export function IncomeClient({
 								to="/transactions?type=income"
 								className="group flex items-center justify-center gap-1.5 text-xs text-accent hover:underline font-semibold w-full text-center"
 							>
-								Lihat Seluruh Transaksi Pemasukan
+								{language === "id" ? "Lihat Seluruh Transaksi Pemasukan" : "View All Income Transactions"}
 								<ArrowRight size={12} className="transition-transform duration-200 group-hover:translate-x-0.5" />
 							</Link>
 						</div>
@@ -412,14 +443,18 @@ export function IncomeClient({
 				<section className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 space-y-4">
 					<div className="flex items-center justify-between">
 						<div>
-							<h3 className="text-sm font-bold text-foreground">Riwayat Pemasukan Terbaru</h3>
-							<p className="text-[11px] text-muted-foreground/50 mt-0.5">Catatan transaksi pemasukan terakhir</p>
+							<h3 className="text-sm font-bold text-foreground">
+								{language === "id" ? "Riwayat Pemasukan Terbaru" : "Recent Income"}
+							</h3>
+							<p className="text-[11px] text-muted-foreground/50 mt-0.5">
+								{language === "id" ? "Catatan transaksi pemasukan terakhir" : "Latest incoming transactions"}
+							</p>
 						</div>
 						<Link
 							to="/transactions?type=income"
 							className="text-xs font-semibold text-accent hover:underline"
 						>
-							Lihat Semua
+							{language === "id" ? "Lihat Semua" : "View All"}
 						</Link>
 					</div>
 
@@ -435,17 +470,17 @@ export function IncomeClient({
 									</div>
 									<div className="min-w-0 flex-1">
 										<p className="text-[13px] text-foreground font-semibold truncate">
-											{tx.description || tx.categoryName || "Pemasukan"}
+											{tx.description || tx.categoryName || (language === "id" ? "Pemasukan" : "Income")}
 										</p>
 										<p className="text-[11px] text-muted-foreground/50 mt-0.5 font-medium">
-											{formatDateShort(tx.date)} · {tx.accountName}
+											{formatDateShort(tx.date, language)} · {tx.accountName}
 										</p>
 									</div>
 								</div>
 								
 								<div className="shrink-0 flex items-center gap-3">
 									<span className="hidden sm:inline-flex px-2 py-0.5 rounded text-[10px] font-bold border bg-white/[0.03] border-white/[0.08] text-muted-foreground/60">
-										{tx.categoryName || "Tanpa Kategori"}
+										{tx.categoryName || (language === "id" ? "Tanpa Kategori" : "Uncategorized")}
 									</span>
 									<span className="text-[13px] font-bold font-mono tabular-nums text-income bg-income/10 border border-income/20 px-2.5 py-1 rounded-lg">
 										+{formatIDR(tx.amount)}

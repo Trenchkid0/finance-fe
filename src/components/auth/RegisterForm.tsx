@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { Link } from "react-router-dom";
-import { AlertCircle, Eye, EyeOff, Loader2, User, Mail, Lock, ArrowRight, Github } from "lucide-react";
+import { AlertCircle, Eye, EyeOff, Loader2, User, Mail, Lock, ArrowRight } from "lucide-react";
 import { register } from "@/app/actions/auth";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
@@ -40,7 +40,10 @@ const STRENGTH_META: Record<
   4: { label: "Sangat kuat", tone: "text-income", color: "bg-income" },
 };
 
+import { useLanguage } from "@/lib/contexts/LanguageContext";
+
 export function RegisterForm() {
+  const { t, language } = useLanguage();
   const [state, formAction, pending] = useActionState(register, undefined);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -53,14 +56,14 @@ export function RegisterForm() {
       <form action={formAction} className="space-y-5" noValidate>
         {/* Name */}
         <div className="space-y-2.5">
-          <Label htmlFor="name">Nama Lengkap</Label>
+          <Label htmlFor="name">{t("fullNameLabel")}</Label>
           <div className="relative group">
             <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40 group-focus-within:text-accent/70 transition-colors duration-300 pointer-events-none" />
             <Input
               id="name"
               name="name"
               autoComplete="name"
-              placeholder="Mis. Caesa Putra"
+              placeholder={t("fullNamePlaceholder")}
               required
               className="pl-11"
               aria-invalid={!!state?.fieldErrors?.name?.[0]}
@@ -76,7 +79,7 @@ export function RegisterForm() {
 
         {/* Email */}
         <div className="space-y-2.5">
-          <Label htmlFor="email">Alamat Email</Label>
+          <Label htmlFor="email">{t("emailLabel")}</Label>
           <div className="relative group">
             <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40 group-focus-within:text-accent/70 transition-colors duration-300 pointer-events-none" />
             <Input
@@ -100,7 +103,7 @@ export function RegisterForm() {
 
         {/* Password */}
         <div className="space-y-2.5">
-          <Label htmlFor="password">Kata Sandi</Label>
+          <Label htmlFor="password">{t("passwordLabel")}</Label>
           <div className="relative group">
             <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40 group-focus-within:text-accent/70 transition-colors duration-300 pointer-events-none" />
             <Input
@@ -112,7 +115,7 @@ export function RegisterForm() {
               minLength={8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Minimal 8 karakter"
+              placeholder={language === "id" ? "Minimal 8 karakter" : "Minimum 8 characters"}
               className="pl-11 pr-12"
               aria-invalid={!!state?.fieldErrors?.password?.[0]}
               aria-describedby="password-strength"
@@ -147,11 +150,24 @@ export function RegisterForm() {
               <span
                 className={cn("text-[11px] font-medium", password ? meta.tone : "text-muted-foreground/40")}
               >
-                {password ? meta.label : "Minimal 8 karakter"}
+                {password ? (
+                  (() => {
+                    const labels: Record<number, Record<"id" | "en", string>> = {
+                      0: { id: "Terlalu pendek", en: "Too short" },
+                      1: { id: "Lemah", en: "Weak" },
+                      2: { id: "Cukup", en: "Fair" },
+                      3: { id: "Kuat", en: "Strong" },
+                      4: { id: "Sangat kuat", en: "Very strong" }
+                    };
+                    return labels[score]?.[language] || labels[score]?.["id"] || "";
+                  })()
+                ) : (
+                  language === "id" ? "Minimal 8 karakter" : "Minimum 8 characters"
+                )}
               </span>
               {password && score < 3 ? (
                 <span className="text-[10px] text-muted-foreground/40">
-                  Tambah huruf besar / angka / simbol
+                  {language === "id" ? "Tambah huruf besar / angka / simbol" : "Add uppercase / number / symbol"}
                 </span>
               ) : null}
             </div>
@@ -179,34 +195,20 @@ export function RegisterForm() {
             <Loader2 size={18} className="animate-spin" />
           ) : (
             <>
-              Buat Akun Saya
+              {t("registerButton")}
               <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
             </>
           )}
         </Button>
       </form>
 
-      {/* Divider */}
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-white/[0.06]" />
-        </div>
-        <div className="relative flex justify-center">
-          <span className="bg-canvas px-4 text-[10px] uppercase tracking-[0.15em] text-muted-foreground/40 font-semibold">atau</span>
-        </div>
-      </div>
 
-      {/* Social login placeholder */}
-      <Button variant="outline" className="w-full h-11 gap-2.5 text-[13px]" type="button" disabled>
-        <Github size={16} />
-        Lanjutkan dengan GitHub
-      </Button>
 
       {/* Login link */}
       <p className="text-[13px] text-muted-foreground text-center pt-1">
-        Sudah punya akun?{" "}
+        {t("alreadyHaveAccount")}{" "}
         <Link to="/login" className="text-accent hover:text-accent/80 font-semibold transition-colors">
-          Masuk
+          {t("loginHere")}
         </Link>
       </p>
     </div>

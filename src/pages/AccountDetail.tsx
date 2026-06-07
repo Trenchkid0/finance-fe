@@ -8,18 +8,21 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
 
-const ACCOUNT_TYPE_LABEL: Record<string, string> = {
-  bank: "Bank",
-  wallet: "E-wallet",
-  cash: "Tunai",
-  investment: "Investasi",
-};
+import { useLanguage } from "@/lib/contexts/LanguageContext";
 
 export default function AccountDetail() {
+  const { language } = useLanguage();
   const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(true);
   const [account, setAccount] = useState<any>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
+
+  const accountTypeLabel: Record<string, string> = {
+    bank: language === "id" ? "Bank" : "Bank",
+    wallet: language === "id" ? "E-wallet" : "E-wallet",
+    cash: language === "id" ? "Tunai" : "Cash",
+    investment: language === "id" ? "Investasi" : "Investment",
+  };
 
   const fetchData = async () => {
     if (!id) return;
@@ -62,9 +65,13 @@ export default function AccountDetail() {
   if (!account) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-xl font-medium text-foreground mb-2">Akun tidak ditemukan</h2>
+        <h2 className="text-xl font-medium text-foreground mb-2">
+          {language === "id" ? "Akun tidak ditemukan" : "Account not found"}
+        </h2>
         <Button asChild variant="ghost" size="sm">
-          <Link to="/accounts">Kembali ke daftar akun</Link>
+          <Link to="/accounts">
+            {language === "id" ? "Kembali ke daftar akun" : "Back to accounts list"}
+          </Link>
         </Button>
       </div>
     );
@@ -77,22 +84,24 @@ export default function AccountDetail() {
         <Button asChild variant="ghost" size="sm" className="h-8 rounded-lg gap-1.5 px-3 -ml-2 text-muted-foreground/80 hover:text-foreground hover:bg-white/[0.04]">
           <Link to="/accounts">
             <ArrowLeft size={14} />
-            Kembali ke daftar akun
+            {language === "id" ? "Kembali ke daftar akun" : "Back to accounts list"}
           </Link>
         </Button>
         <div>
           <div className="flex items-center gap-2.5">
             <h1 className="text-2xl lg:text-[1.75rem] font-extrabold tracking-tight text-foreground">
-              Detail Akun
+              {language === "id" ? "Detail Akun" : "Account Details"}
             </h1>
             {!account.isActive && (
               <Badge variant="outline" className="bg-white/[0.02] border-white/[0.08] text-muted-foreground/60 text-[10px] font-bold font-mono">
-                NONAKTIF
+                {language === "id" ? "NONAKTIF" : "INACTIVE"}
               </Badge>
             )}
           </div>
           <p className="text-sm text-muted-foreground/85 mt-1">
-            Lihat riwayat transaksi dan rincian alokasi saldo dari akun Anda.
+            {language === "id"
+              ? "Lihat riwayat transaksi dan rincian alokasi saldo dari akun Anda."
+              : "View transaction history and balance allocation details of your account."}
           </p>
         </div>
       </header>
@@ -122,14 +131,14 @@ export default function AccountDetail() {
                 {account.name}
               </h2>
               <p className="text-xs text-muted-foreground/70 mt-0.5">
-                Kategori: {ACCOUNT_TYPE_LABEL[account.type] ?? account.type}
+                {language === "id" ? "Kategori" : "Category"}: {accountTypeLabel[account.type] ?? account.type}
               </p>
             </div>
           </div>
           
           <div className="sm:text-right">
             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/65">
-              Saldo saat ini
+              {language === "id" ? "Saldo saat ini" : "Current balance"}
             </p>
             <p className="text-3xl font-black font-mono tracking-tight text-foreground mt-1 tabular-nums">
               {formatIDR(Number(account.balance))}
@@ -143,10 +152,12 @@ export default function AccountDetail() {
         <div className="flex items-center justify-between pb-3 border-b border-white/[0.04]">
           <div>
             <h3 className="text-base font-bold text-foreground">
-              Transaksi Terkait
+              {language === "id" ? "Transaksi Terkait" : "Related Transactions"}
             </h3>
             <p className="text-xs text-muted-foreground/60 mt-0.5">
-              Menampilkan hingga 50 aktivitas keuangan terbaru
+              {language === "id"
+                ? "Menampilkan hingga 50 aktivitas keuangan terbaru"
+                : "Showing up to 50 latest financial activities"}
             </p>
           </div>
           {transactions.length > 0 ? (
@@ -154,7 +165,7 @@ export default function AccountDetail() {
               to={`/transactions?accountId=${id}`}
               className="text-xs font-semibold text-accent hover:underline"
             >
-              Lihat semua
+              {language === "id" ? "Lihat semua" : "View all"}
             </Link>
           ) : null}
         </div>
@@ -162,17 +173,21 @@ export default function AccountDetail() {
         {transactions.length === 0 ? (
           <EmptyState
             icon={Inbox}
-            title="Belum ada transaksi"
-            description="Transaksi yang melibatkan akun ini akan tampil di sini."
+            title={language === "id" ? "Belum ada transaksi" : "No transactions yet"}
+            description={
+              language === "id"
+                ? "Transaksi yang melibatkan akun ini akan tampil di sini."
+                : "Transactions involving this account will appear here."
+            }
             size="sm"
           />
         ) : (
           <div className="space-y-1">
             {/* Header kolom (desktop saja) */}
             <div className="hidden md:grid grid-cols-12 px-4 py-2 text-[10px] font-bold text-muted-foreground/45 uppercase tracking-wider">
-              <span className="col-span-2">Tanggal</span>
-              <span className="col-span-8">Deskripsi & Kategori</span>
-              <span className="col-span-2 text-right">Jumlah</span>
+              <span className="col-span-2">{language === "id" ? "Tanggal" : "Date"}</span>
+              <span className="col-span-8">{language === "id" ? "Deskripsi & Kategori" : "Description & Category"}</span>
+              <span className="col-span-2 text-right">{language === "id" ? "Jumlah" : "Amount"}</span>
             </div>
 
             {/* List item */}
@@ -196,7 +211,7 @@ export default function AccountDetail() {
                   ? tx.accountId === id
                     ? `Transfer → ${tx.transferTo?.name ?? "?"}`
                     : `Transfer ← ${tx.account?.name ?? "?"}`
-                  : tx.category?.name ?? "Tanpa kategori";
+                  : tx.category?.name ?? (language === "id" ? "Tanpa kategori" : "No category");
 
               return (
                 <div
@@ -217,7 +232,9 @@ export default function AccountDetail() {
                       {tx.type === "transfer" ? (
                         <Badge variant="outline" className="bg-white/[0.02] border-white/[0.08] text-[9px] font-bold py-0.5 px-1.5 rounded-md text-muted-foreground/75 flex items-center gap-1 font-mono">
                           <ArrowLeftRight size={9} />
-                          {tx.accountId === id ? "KELUAR" : "MASUK"}
+                          {tx.accountId === id
+                            ? (language === "id" ? "KELUAR" : "OUTGOING")
+                            : (language === "id" ? "MASUK" : "INCOMING")}
                         </Badge>
                       ) : null}
                     </div>

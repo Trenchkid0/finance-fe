@@ -43,23 +43,26 @@ export function formatPercent(ratio: number, fractionDigits = 1): string {
   }).format(ratio);
 }
 
-export function formatDate(date: Date | string): string {
-  return new Intl.DateTimeFormat("id-ID", {
+export function formatDate(date: Date | string, language?: string): string {
+  const locale = language === "en" ? "en-US" : "id-ID";
+  return new Intl.DateTimeFormat(locale, {
     day: "numeric",
     month: "short",
     year: "numeric",
   }).format(new Date(date));
 }
 
-export function formatDateShort(date: Date | string): string {
-  return new Intl.DateTimeFormat("id-ID", {
+export function formatDateShort(date: Date | string, language?: string): string {
+  const locale = language === "en" ? "en-US" : "id-ID";
+  return new Intl.DateTimeFormat(locale, {
     day: "numeric",
     month: "short",
   }).format(new Date(date));
 }
 
-export function formatMonthLabel(date: Date | string): string {
-  return new Intl.DateTimeFormat("id-ID", { month: "short" }).format(
+export function formatMonthLabel(date: Date | string, language?: string): string {
+  const locale = language === "en" ? "en-US" : "id-ID";
+  return new Intl.DateTimeFormat(locale, { month: "short" }).format(
     new Date(date),
   );
 }

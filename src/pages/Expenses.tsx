@@ -4,8 +4,10 @@ import { api } from "@/lib/api";
 import { formatMonthLabel } from "@/lib/utils/formatters";
 import { ExpensesClient } from "@/components/expenses/ExpensesClient";
 import { Loader2 } from "lucide-react";
+import { useLanguage } from "@/lib/contexts/LanguageContext";
 
 export default function Expenses() {
+  const { language } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [expenseData, setExpenseData] = useState<any>(null);
 
@@ -44,13 +46,13 @@ export default function Expenses() {
       const monthlyMap = new Map<string, number>();
       for (let i = 5; i >= 0; i--) {
         const d = subMonths(now, i);
-        monthlyMap.set(formatMonthLabel(d), 0);
+        monthlyMap.set(formatMonthLabel(d, language), 0);
       }
 
       for (const tx of allExpenses) {
         const txDate = new Date(tx.date);
         if (txDate >= sixMonthsAgo) {
-          const key = formatMonthLabel(txDate);
+          const key = formatMonthLabel(txDate, language);
           if (monthlyMap.has(key)) {
             monthlyMap.set(key, monthlyMap.get(key)! + Number(tx.amount));
           }
@@ -76,7 +78,7 @@ export default function Expenses() {
       for (const tx of allExpenses) {
         const amt = Number(tx.amount);
         totalExpenseAmount += amt;
-        const catName = tx.category?.name || "Tanpa Kategori";
+        const catName = tx.category?.name || (language === "id" ? "Tanpa Kategori" : "Uncategorized");
         const catIcon = tx.category?.icon || "📂";
 
         if (!categoryMap.has(catName)) {
@@ -109,7 +111,7 @@ export default function Expenses() {
         amount: Number(tx.amount),
         date: tx.date,
         description: tx.description,
-        accountName: tx.account?.name || "Akun Utama",
+        accountName: tx.account?.name || (language === "id" ? "Akun Utama" : "Main Account"),
         categoryName: tx.category?.name ?? null,
         categoryIcon: tx.category?.icon ?? null,
       }));

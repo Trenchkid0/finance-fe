@@ -298,7 +298,7 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
                     value={selectedEmoji}
                     onChange={(e) => setSelectedEmoji(e.target.value)}
                     maxLength={2}
-                    className="w-12 text-center text-lg"
+                    className="w-12 h-12 text-center text-lg px-0"
                   />
                   <span className="text-xs text-muted-foreground self-center">
                     Pilih preset di bawah atau ketik emoji.

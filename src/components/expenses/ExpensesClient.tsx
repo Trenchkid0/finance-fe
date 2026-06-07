@@ -27,6 +27,7 @@ import {
 import { formatDateShort, formatIDR } from "@/lib/utils/formatters";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils/cn";
+import { useLanguage } from "@/lib/contexts/LanguageContext";
 
 interface ExpenseTransaction {
 	id: string;
@@ -72,6 +73,7 @@ const CATEGORY_COLORS = [
 ];
 
 function CustomTooltip({ active, payload, label }: any) {
+	const { language } = useLanguage();
 	if (active && payload && payload.length) {
 		return (
 			<div className="rounded-xl border border-white/[0.08] bg-popover/90 backdrop-blur-xl p-3.5 shadow-2xl shadow-black/50 text-xs space-y-1.5 min-w-[150px]">
@@ -79,7 +81,7 @@ function CustomTooltip({ active, payload, label }: any) {
 				<div className="flex items-center justify-between gap-4">
 					<span className="text-foreground font-semibold flex items-center gap-1.5">
 						<span className="h-2 w-2 rounded-full bg-expense shrink-0" />
-						Pengeluaran
+						{language === "id" ? "Pengeluaran" : "Expenses"}
 					</span>
 					<span className="font-mono font-bold text-expense tabular-nums">
 						{formatIDR(payload[0].value)}
@@ -100,6 +102,7 @@ export function ExpensesClient({
 	averageMonthly,
 	maxExpenseCategory,
 }: Props) {
+	const { language } = useLanguage();
 	const [chartType, setChartType] = useState<"trend" | "cumulative">("trend");
 	const [expenseGoal, setExpenseGoal] = useState<number>(() => {
 		// Default goal/budget: average monthly or 15 million if zero
@@ -138,13 +141,15 @@ export function ExpensesClient({
 				<div className="space-y-2">
 					<div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black tracking-widest text-expense bg-expense/10 border border-expense/20 uppercase">
 						<Sparkles size={10} />
-						Analisis Pengeluaran Premium
+						{language === "id" ? "Analisis Pengeluaran Premium" : "Premium Expenses Analysis"}
 					</div>
 					<h1 className="text-2xl lg:text-[2rem] font-black tracking-tight text-foreground">
-						Expenses Analysis
+						{language === "id" ? "Analisis Pengeluaran" : "Expenses Analysis"}
 					</h1>
 					<p className="text-xs lg:text-sm text-muted-foreground/60 max-w-xl">
-						Analisa grafik pengeluaran bulanan secara kumulatif, pantau batas anggaran belanja, dan awasi distribusi kategori pengeluaran Anda.
+						{language === "id"
+							? "Analisa grafik pengeluaran bulanan secara kumulatif, pantau batas anggaran belanja, dan awasi distribusi kategori pengeluaran Anda."
+							: "Analyze monthly cumulative expenses, monitor budget limits, and track spending category distributions."}
 					</p>
 				</div>
 
@@ -153,7 +158,7 @@ export function ExpensesClient({
 					<div className="absolute -top-10 -right-10 h-28 w-28 rounded-full bg-expense/5 blur-[30px]" />
 					<div>
 						<p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/50">
-							Pengeluaran Bulan Ini
+							{language === "id" ? "Pengeluaran Bulan Ini" : "This Month's Expenses"}
 						</p>
 						<p className="font-mono tabular-nums text-2xl lg:text-3xl font-black text-foreground mt-1">
 							{formatIDR(currentMonthTotal)}
@@ -168,22 +173,22 @@ export function ExpensesClient({
 			{/* ──────────────── KPI Grid Section ──────────────── */}
 			<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 				<KPIStatCard
-					title="Rata-Rata Bulanan"
+					title={language === "id" ? "Rata-Rata Bulanan" : "Monthly Average"}
 					value={formatIDR(averageMonthly)}
-					subText={`Rata-rata belanja per bulan`}
+					subText={language === "id" ? "Rata-rata belanja per bulan" : "Average spending per month"}
 					icon={<Calendar size={18} />}
 					colorClass="text-blue-400"
 					bgClass="bg-blue-500/10 border-blue-500/20"
-					description="Tolak ukur pengeluaran bulanan aktif"
+					description={language === "id" ? "Tolak ukur pengeluaran bulanan aktif" : "Benchmark of active monthly spending"}
 				/>
 				<KPIStatCard
-					title="Kategori Tertinggi"
+					title={language === "id" ? "Kategori Tertinggi" : "Top Category"}
 					value={maxExpenseCategory ? formatIDR(maxExpenseCategory.amount) : "Rp 0"}
 					subText={maxExpenseCategory?.name}
 					icon={<Award size={18} />}
 					colorClass="text-amber-400"
 					bgClass="bg-amber-500/10 border-amber-500/20"
-					description="Kategori pengeluaran terbesar dicatat"
+					description={language === "id" ? "Kategori pengeluaran terbesar dicatat" : "Highest spending category recorded"}
 				/>
 			</div>
 
@@ -197,8 +202,12 @@ export function ExpensesClient({
 					<section className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 space-y-6">
 						<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 							<div>
-								<h3 className="text-sm font-bold text-foreground">Tren & Akumulasi Pengeluaran</h3>
-								<p className="text-[11px] text-muted-foreground/50 mt-0.5">Analisis performa riil vs kurva pengeluaran kumulatif</p>
+								<h3 className="text-sm font-bold text-foreground">
+									{language === "id" ? "Tren & Akumulasi Pengeluaran" : "Expense Trends & Accumulation"}
+								</h3>
+								<p className="text-[11px] text-muted-foreground/50 mt-0.5">
+									{language === "id" ? "Analisis performa riil vs kurva pengeluaran kumulatif" : "Performance analysis of real vs cumulative spending curves"}
+								</p>
 							</div>
 
 							{/* Chart Type Toggle Switcher */}
@@ -212,7 +221,7 @@ export function ExpensesClient({
 											: "text-muted-foreground/50 hover:text-foreground"
 									)}
 								>
-									Tren Bulanan
+									{language === "id" ? "Tren Bulanan" : "Monthly Trend"}
 								</button>
 								<button
 									onClick={() => setChartType("cumulative")}
@@ -223,7 +232,7 @@ export function ExpensesClient({
 											: "text-muted-foreground/50 hover:text-foreground"
 									)}
 								>
-									Akumulasi Kumulatif
+									{language === "id" ? "Akumulasi Kumulatif" : "Cumulative Spending"}
 								</button>
 							</div>
 						</div>
@@ -232,8 +241,12 @@ export function ExpensesClient({
 							{!hasTrend ? (
 								<EmptyState
 									icon={LineChart}
-									title="Data tidak mencukupi"
-									description="Tambahkan transaksi pengeluaran untuk melihat visualisasi tren."
+									title={language === "id" ? "Data tidak mencukupi" : "Insufficient data"}
+									description={
+										language === "id"
+											? "Tambahkan transaksi pengeluaran untuk melihat visualisasi tren."
+											: "Add expense transactions to see the trend visualization."
+									}
 								/>
 							) : (
 								<ResponsiveContainer width="100%" height="100%">
@@ -288,14 +301,20 @@ export function ExpensesClient({
 									<Target size={16} />
 								</div>
 								<div>
-									<h3 className="text-sm font-bold text-foreground">Batas Anggaran Bulanan</h3>
-									<p className="text-[11px] text-muted-foreground/50">Atur & awasi batas maksimal belanja bulanan Anda</p>
+									<h3 className="text-sm font-bold text-foreground">
+										{language === "id" ? "Batas Anggaran Bulanan" : "Monthly Budget Limit"}
+									</h3>
+									<p className="text-[11px] text-muted-foreground/50">
+										{language === "id" ? "Atur & awasi batas maksimal belanja bulanan Anda" : "Set & monitor your maximum monthly spending"}
+									</p>
 								</div>
 							</div>
 
 							{/* Goal Slider / Input Group */}
 							<div className="flex items-center gap-2 bg-white/[0.02] border border-white/[0.06] rounded-xl px-3 py-1.5 self-start">
-								<span className="text-[10px] font-bold text-muted-foreground/50 uppercase">BATAS:</span>
+								<span className="text-[10px] font-bold text-muted-foreground/50 uppercase">
+									{language === "id" ? "BATAS:" : "LIMIT:"}
+								</span>
 								<input
 									type="number"
 									value={expenseGoal}
@@ -308,7 +327,9 @@ export function ExpensesClient({
 						{/* Progress Bar & Status */}
 						<div className="space-y-3">
 							<div className="flex items-center justify-between text-xs font-mono">
-								<span className="text-muted-foreground/50">Penggunaan Anggaran</span>
+								<span className="text-muted-foreground/50">
+									{language === "id" ? "Penggunaan Anggaran" : "Budget Usage"}
+								</span>
 								<span className={cn("font-bold", isGoalExceeded ? "text-expense" : "text-amber-400")}>{goalProgressPercent.toFixed(1)}%</span>
 							</div>
 							
@@ -329,14 +350,16 @@ export function ExpensesClient({
 								<span className="text-muted-foreground/60 font-medium">
 									{isGoalExceeded ? (
 										<span className="text-expense font-semibold flex items-center gap-1">
-											<AlertCircle size={11} /> Anggaran terlampaui! Kurangi pengeluaran non-esensial untuk menjaga arus kas.
+											<AlertCircle size={11} /> {language === "id" ? "Anggaran terlampaui! Kurangi pengeluaran non-esensial untuk menjaga arus kas." : "Budget exceeded! Reduce non-essential spending to maintain cash flow."}
 										</span>
 									) : (
-										`Tersisa sisa batas anggaran sebesar ${formatIDR(remainingToGoal)}`
+										language === "id"
+											? `Tersisa sisa batas anggaran sebesar ${formatIDR(remainingToGoal)}`
+											: `Remaining budget limit is ${formatIDR(remainingToGoal)}`
 									)}
 								</span>
 								<span className="text-muted-foreground/40 font-mono text-[10px] uppercase">
-									Batas: {formatIDR(expenseGoal)}
+									{language === "id" ? "Batas:" : "Limit:"} {formatIDR(expenseGoal)}
 								</span>
 							</div>
 						</div>
@@ -347,15 +370,23 @@ export function ExpensesClient({
 				{/* RIGHT: Top Source Categories breakdown */}
 				<section className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 flex flex-col space-y-6">
 					<div>
-						<h3 className="text-sm font-bold text-foreground">Distribusi Kategori</h3>
-						<p className="text-[11px] text-muted-foreground/50 mt-0.5">Proporsi pembagian alokasi belanja Anda</p>
+						<h3 className="text-sm font-bold text-foreground">
+							{language === "id" ? "Distribusi Kategori" : "Category Distribution"}
+						</h3>
+						<p className="text-[11px] text-muted-foreground/50 mt-0.5">
+							{language === "id" ? "Proporsi pembagian alokasi belanja Anda" : "Proportion of your spending allocation"}
+						</p>
 					</div>
 
 					{categoryBreakdown.length === 0 ? (
 						<EmptyState
 							icon={Inbox}
-							title="Belum ada data"
-							description="Breakdown kategori akan tampil setelah Anda mencatat transaksi."
+							title={language === "id" ? "Belum ada data" : "No data available"}
+							description={
+								language === "id"
+									? "Breakdown kategori akan tampil setelah Anda mencatat transaksi."
+									: "Category breakdown will appear after you record transactions."
+							}
 							size="sm"
 						/>
 					) : (
@@ -401,7 +432,7 @@ export function ExpensesClient({
 								to="/transactions?type=expense"
 								className="group flex items-center justify-center gap-1.5 text-xs text-accent hover:underline font-semibold w-full text-center"
 							>
-								Lihat Seluruh Transaksi Pengeluaran
+								{language === "id" ? "Lihat Seluruh Transaksi Pengeluaran" : "View All Expense Transactions"}
 								<ArrowRight size={12} className="transition-transform duration-200 group-hover:translate-x-0.5" />
 							</Link>
 						</div>
@@ -414,14 +445,18 @@ export function ExpensesClient({
 				<section className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 space-y-4">
 					<div className="flex items-center justify-between">
 						<div>
-							<h3 className="text-sm font-bold text-foreground">Riwayat Pengeluaran Terbaru</h3>
-							<p className="text-[11px] text-muted-foreground/50 mt-0.5">Catatan transaksi belanja terakhir</p>
+							<h3 className="text-sm font-bold text-foreground">
+								{language === "id" ? "Riwayat Pengeluaran Terbaru" : "Recent Expenses"}
+							</h3>
+							<p className="text-[11px] text-muted-foreground/50 mt-0.5">
+								{language === "id" ? "Catatan transaksi belanja terakhir" : "Latest spending transactions"}
+							</p>
 						</div>
 						<Link
 							to="/transactions?type=expense"
 							className="text-xs font-semibold text-accent hover:underline"
 						>
-							Lihat Semua
+							{language === "id" ? "Lihat Semua" : "View All"}
 						</Link>
 					</div>
 
@@ -437,17 +472,17 @@ export function ExpensesClient({
 									</div>
 									<div className="min-w-0 flex-1">
 										<p className="text-[13px] text-foreground font-semibold truncate">
-											{tx.description || tx.categoryName || "Pengeluaran"}
+											{tx.description || tx.categoryName || (language === "id" ? "Pengeluaran" : "Expenses")}
 										</p>
 										<p className="text-[11px] text-muted-foreground/50 mt-0.5 font-medium">
-											{formatDateShort(tx.date)} · {tx.accountName}
+											{formatDateShort(tx.date, language)} · {tx.accountName}
 										</p>
 									</div>
 								</div>
 								
 								<div className="shrink-0 flex items-center gap-3">
 									<span className="hidden sm:inline-flex px-2 py-0.5 rounded text-[10px] font-bold border bg-white/[0.03] border-white/[0.08] text-muted-foreground/60">
-										{tx.categoryName || "Tanpa Kategori"}
+										{tx.categoryName || (language === "id" ? "Tanpa Kategori" : "Uncategorized")}
 									</span>
 									<span className="text-[13px] font-bold font-mono tabular-nums text-expense bg-expense/10 border border-expense/20 px-2.5 py-1 rounded-lg">
 										-{formatIDR(tx.amount)}

@@ -81,5 +81,5 @@ export const api = {
   get: <T>(path: string, headers?: HeadersInit) => request<T>("GET", path, undefined, headers),
   post: <T>(path: string, body: any, headers?: HeadersInit) => request<T>("POST", path, body, headers),
   put: <T>(path: string, body: any, headers?: HeadersInit) => request<T>("PUT", path, body, headers),
-  delete: <T>(path: string, headers?: HeadersInit) => request<T>("DELETE", path, undefined, headers),
+  delete: <T>(path: string, body?: any, headers?: HeadersInit) => request<T>("DELETE", path, body, headers),
 };

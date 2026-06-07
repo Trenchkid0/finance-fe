@@ -10,6 +10,7 @@ import {
   ChevronsRight,
   Copy,
   Download,
+  Loader2,
   MoreHorizontal,
   Pencil,
   Plus,
@@ -19,7 +20,9 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils/cn";
+import { useLanguage } from "@/lib/contexts/LanguageContext";
 
+import { api } from "@/lib/api";
 import { deleteTransaction } from "@/app/actions/transactions";
 import { formatDateShort, formatIDR } from "@/lib/utils/formatters";
 import { Button } from "@/components/ui/button";
@@ -120,12 +123,64 @@ export function TransactionsClient({
   summary,
   aiScanEnabled,
 }: Props) {
+  const { t, language } = useLanguage();
   const [editing, setEditing] = useState<TransactionRowData | null>(null);
   const [creating, setCreating] = useState<TransactionFormInitial | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<TransactionRowData | null>(null);
   const [searchParams] = useSearchParams();
 
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+  const [pendingBulk, startTransitionBulk] = useTransition();
+
   const canCreate = accounts.length > 0;
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const allIdsOnPage = transactions.map((t) => t.id);
+  const isAllSelected =
+    allIdsOnPage.length > 0 && allIdsOnPage.every((id) => selectedIds.has(id));
+
+  const toggleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        allIdsOnPage.forEach((id) => next.delete(id));
+        return next;
+      });
+    } else {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        allIdsOnPage.forEach((id) => next.add(id));
+        return next;
+      });
+    }
+  };
+
+  const handleBulkDelete = () => {
+    startTransitionBulk(async () => {
+      try {
+        const ids = Array.from(selectedIds);
+        await api.delete<any>("/api/transactions", { ids });
+        toast.success(`${ids.length} transaksi berhasil dihapus`);
+        setSelectedIds(new Set());
+        setConfirmBulkDelete(false);
+        window.dispatchEvent(new CustomEvent("refresh-app-data"));
+      } catch (err: any) {
+        toast.error(err.message || "Gagal menghapus transaksi.");
+      }
+    });
+  };
 
   function startCreate() {
     setCreating(blankInitial(accounts[0]?.id ?? ""));
@@ -156,46 +211,46 @@ export function TransactionsClient({
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl lg:text-[1.75rem] font-extrabold tracking-tight text-foreground">
-            Transaksi
+            {t("transactionsTitle")}
           </h1>
           <p className="text-sm text-muted-foreground/80 mt-1.5">
-            Kelola dan telusuri pemasukan, pengeluaran, dan transfer.
+            {t("transactionsSubtitle")}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button asChild variant="outline" className="h-9 rounded-xl gap-2 text-xs font-semibold px-4" title="Unduh CSV">
+          <Button asChild variant="outline" className="h-9 rounded-xl gap-2 text-xs font-semibold px-4" title={language === "id" ? "Unduh CSV" : "Download CSV"}>
             <a href={exportHref()} download>
               <Download size={14} />
-              Export
+              {t("export")}
             </a>
           </Button>
           <Button
             onClick={startCreate}
             disabled={!canCreate}
             className="h-9 rounded-xl gap-2 text-xs font-semibold px-4"
-            title={canCreate ? undefined : "Tambahkan akun terlebih dahulu"}
+            title={canCreate ? undefined : (language === "id" ? "Tambahkan akun terlebih dahulu" : "Add an account first")}
           >
             <Plus size={14} strokeWidth={2.5} />
-            Tambah Transaksi
+            {t("addTransaction")}
           </Button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">Total Transaksi</p>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">{t("totalTransactions")}</p>
           <p className="text-lg font-black font-mono tabular-nums text-foreground">
-            {summary.total} <span className="text-xs text-muted-foreground/60 font-sans font-semibold ml-1">transaksi</span>
+            {summary.total} <span className="text-xs text-muted-foreground/60 font-sans font-semibold ml-1">{language === "id" ? "transaksi" : "transactions"}</span>
           </p>
         </div>
         <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">Pemasukan</p>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">{t("incomeLabel")}</p>
           <p className="text-lg font-black font-mono tabular-nums text-income">
             {formatIDR(summary.income)}
           </p>
         </div>
         <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">Pengeluaran</p>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">{t("expenseLabel")}</p>
           <p className="text-lg font-black font-mono tabular-nums text-expense">
             {formatIDR(summary.expense)}
           </p>
@@ -208,34 +263,67 @@ export function TransactionsClient({
         categories={categories}
       />
 
+      {selectedIds.size > 0 && (
+        <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-expense/10 border border-expense/20 animate-fade-in text-sm">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-expense">
+              {selectedIds.size} {t("selectedCount")}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSelectedIds(new Set())}
+              className="text-xs text-text-muted hover:text-text-primary"
+            >
+              {t("cancelButton")}
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setConfirmBulkDelete(true)}
+              className="bg-expense hover:bg-red-600 text-white text-xs font-semibold gap-1.5 h-8 px-3 rounded-lg"
+            >
+              <Trash2 size={13} />
+              {t("deleteSelected")}
+            </Button>
+          </div>
+        </div>
+      )}
+
       <TransactionsList
         transactions={transactions}
         categories={categories}
         onEdit={setEditing}
         onDelete={setConfirmDelete}
         onDuplicate={startDuplicate}
+        selectedIds={selectedIds}
+        toggleSelect={toggleSelect}
+        isAllSelected={isAllSelected}
+        toggleSelectAll={toggleSelectAll}
         emptyState={
           isFilterActive(filters) ? (
             <EmptyState
               icon={Search}
-              title="Tidak ada transaksi cocok"
-              description="Coba ubah kata kunci atau reset filter."
+              title={language === "id" ? "Tidak ada transaksi cocok" : "No matching transactions"}
+              description={language === "id" ? "Coba ubah kata kunci atau reset filter." : "Try changing keyword or resetting filters."}
               size="sm"
             />
           ) : (
             <EmptyState
               icon={Wallet}
-              title="Belum ada transaksi"
+              title={language === "id" ? "Belum ada transaksi" : "No transactions yet"}
               description={
                 canCreate
-                  ? "Catat transaksi pertama Anda untuk mulai melacak arus kas."
-                  : "Tambahkan akun terlebih dahulu untuk mencatat transaksi."
+                  ? (language === "id" ? "Catat transaksi pertama Anda untuk mulai melacak arus kas." : "Record your first transaction to start tracking cash flow.")
+                  : (language === "id" ? "Tambahkan akun terlebih dahulu untuk mencatat transaksi." : "Add an account first to record transactions.")
               }
               action={
                 canCreate ? (
                   <Button size="sm" onClick={startCreate}>
                     <Plus size={12} />
-                    Tambah transaksi
+                    {t("addTransaction")}
                   </Button>
                 ) : null
               }
@@ -254,7 +342,7 @@ export function TransactionsClient({
       >
         <DialogContent className="rounded-2xl border-white/[0.08] bg-popover/95 backdrop-blur-xl">
           <DialogHeader>
-            <DialogTitle>Tambah transaksi</DialogTitle>
+            <DialogTitle>{language === "id" ? "Tambah transaksi" : "Add transaction"}</DialogTitle>
           </DialogHeader>
           <DialogBody>
             {creating ? (
@@ -279,7 +367,7 @@ export function TransactionsClient({
       >
         <DialogContent className="rounded-2xl border-white/[0.08] bg-popover/95 backdrop-blur-xl">
           <DialogHeader>
-            <DialogTitle>Ubah transaksi</DialogTitle>
+            <DialogTitle>{language === "id" ? "Ubah transaksi" : "Edit transaction"}</DialogTitle>
           </DialogHeader>
           <DialogBody>
             {editing ? (
@@ -300,6 +388,45 @@ export function TransactionsClient({
         target={confirmDelete}
         onClose={() => setConfirmDelete(null)}
       />
+
+      {/* Confirm Bulk Delete */}
+      <Dialog
+        open={confirmBulkDelete}
+        onOpenChange={(open) => !open && setConfirmBulkDelete(false)}
+      >
+        <DialogContent className="rounded-2xl border-white/[0.08] bg-popover/95 backdrop-blur-xl max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-text-primary text-base font-bold">{t("confirmBulkTitle")}</DialogTitle>
+          </DialogHeader>
+          <DialogBody className="space-y-4">
+            <p className="text-sm text-text-muted">
+              {language === "id"
+                ? `Apakah Anda yakin ingin menghapus ${selectedIds.size} transaksi terpilih? Tindakan ini tidak dapat dibatalkan dan saldo akun terkait akan disesuaikan kembali secara otomatis.`
+                : `Are you sure you want to delete ${selectedIds.size} selected transactions? This action cannot be undone and corresponding account balances will be adjusted automatically.`}
+            </p>
+            <div className="flex justify-end gap-2.5">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setConfirmBulkDelete(false)}
+                className="text-xs h-9 px-4 rounded-xl"
+              >
+                {t("cancelButton")}
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                disabled={pendingBulk}
+                onClick={handleBulkDelete}
+                className="bg-expense hover:bg-red-600 text-white text-xs font-semibold h-9 px-4 rounded-xl gap-1.5"
+              >
+                {pendingBulk && <Loader2 className="h-3 w-3 animate-spin" />}
+                {language === "id" ? "Hapus" : "Delete"}
+              </Button>
+            </div>
+          </DialogBody>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -601,6 +728,10 @@ function TransactionsList({
   onDelete,
   onDuplicate,
   emptyState,
+  selectedIds,
+  toggleSelect,
+  isAllSelected,
+  toggleSelectAll,
 }: {
   transactions: TransactionRowData[];
   categories: CategoryOption[];
@@ -608,6 +739,10 @@ function TransactionsList({
   onDelete: (row: TransactionRowData) => void;
   onDuplicate: (row: TransactionRowData) => void;
   emptyState: React.ReactNode;
+  selectedIds: Set<string>;
+  toggleSelect: (id: string) => void;
+  isAllSelected: boolean;
+  toggleSelectAll: () => void;
 }) {
   if (transactions.length === 0) {
     return (
@@ -622,8 +757,16 @@ function TransactionsList({
   return (
     <div className="space-y-4">
       {/* Column header — desktop only */}
-      <div className="hidden md:grid grid-cols-12 px-5 py-1 text-[10px] uppercase font-semibold text-text-muted tracking-wider">
-        <span className="col-span-7">Rincian Transaksi</span>
+      <div className="hidden md:grid grid-cols-12 px-5 py-1 text-[10px] uppercase font-semibold text-text-muted tracking-wider items-center gap-3">
+        <div className="col-span-7 flex items-center gap-3">
+          <input
+            type="checkbox"
+            checked={isAllSelected}
+            onChange={toggleSelectAll}
+            className="rounded border-white/20 bg-white/[0.04] text-accent focus:ring-accent/50 focus:ring-offset-canvas h-3.5 w-3.5 transition-all duration-200 cursor-pointer"
+          />
+          <span>Rincian Transaksi</span>
+        </div>
         <span className="col-span-3">Kategori</span>
         <span className="col-span-2 text-right">Jumlah</span>
       </div>
@@ -637,6 +780,8 @@ function TransactionsList({
             onEdit={onEdit}
             onDelete={onDelete}
             onDuplicate={onDuplicate}
+            selectedIds={selectedIds}
+            toggleSelect={toggleSelect}
           />
         ))}
       </div>
@@ -698,12 +843,16 @@ function DateGroup({
   onEdit,
   onDelete,
   onDuplicate,
+  selectedIds,
+  toggleSelect,
 }: {
   group: TransactionGroup;
   categories: CategoryOption[];
   onEdit: (row: TransactionRowData) => void;
   onDelete: (row: TransactionRowData) => void;
   onDuplicate: (row: TransactionRowData) => void;
+  selectedIds: Set<string>;
+  toggleSelect: (id: string) => void;
 }) {
   const totalColor =
     group.total > 0
@@ -712,10 +861,33 @@ function DateGroup({
         ? "text-expense font-bold"
         : "text-foreground";
 
+  const isGroupAllSelected = group.items.every((item) => selectedIds.has(item.id));
+  const toggleGroupSelect = () => {
+    if (isGroupAllSelected) {
+      group.items.forEach((item) => {
+        if (selectedIds.has(item.id)) {
+          toggleSelect(item.id);
+        }
+      });
+    } else {
+      group.items.forEach((item) => {
+        if (!selectedIds.has(item.id)) {
+          toggleSelect(item.id);
+        }
+      });
+    }
+  };
+
   return (
     <section className="space-y-2">
       <header className="flex items-center justify-between px-2 text-xs font-semibold text-text-muted">
         <div className="flex items-center gap-2 uppercase tracking-wider text-[10px]">
+          <input
+            type="checkbox"
+            checked={isGroupAllSelected}
+            onChange={toggleGroupSelect}
+            className="rounded border-white/20 bg-white/[0.04] text-accent focus:ring-accent/50 focus:ring-offset-canvas h-3 w-3 transition-all duration-200 cursor-pointer mr-1"
+          />
           <span>{group.label}</span>
           <span className="text-text-muted/30">·</span>
           <span className="font-mono tabular-nums bg-elevated border border-border/85 px-1.5 py-0.2 rounded text-[9px] text-text-muted font-medium">
@@ -737,6 +909,8 @@ function DateGroup({
             onEdit={onEdit}
             onDelete={onDelete}
             onDuplicate={onDuplicate}
+            isSelected={selectedIds.has(tx.id)}
+            onToggleSelect={() => toggleSelect(tx.id)}
           />
         ))}
       </div>
@@ -750,13 +924,18 @@ function TransactionRow({
   onEdit,
   onDelete,
   onDuplicate,
+  isSelected,
+  onToggleSelect,
 }: {
   tx: TransactionRowData;
   categories: CategoryOption[];
   onEdit: (row: TransactionRowData) => void;
   onDelete: (row: TransactionRowData) => void;
   onDuplicate: (row: TransactionRowData) => void;
+  isSelected: boolean;
+  onToggleSelect: () => void;
 }) {
+  const { language } = useLanguage();
   const initial =
     (tx.description ?? tx.categoryName ?? "T").trim().charAt(0).toUpperCase() ||
     "T";
@@ -773,9 +952,18 @@ function TransactionRow({
   };
 
   return (
-    <div className="grid grid-cols-12 items-center gap-3 px-4 py-2.5 text-sm hover:bg-elevated/30 transition-colors duration-150 group">
-      {/* Avatar + description + account (col-span 7) */}
+    <div className={cn(
+      "grid grid-cols-12 items-center gap-3 px-4 py-2.5 text-sm transition-colors duration-150 group",
+      isSelected ? "bg-accent/5" : "hover:bg-elevated/30"
+    )}>
+      {/* Avatar + checkbox + description + account (col-span 7) */}
       <div className="col-span-12 md:col-span-7 flex items-center gap-3 min-w-0">
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={onToggleSelect}
+          className="rounded border-white/20 bg-white/[0.04] text-accent focus:ring-accent/50 focus:ring-offset-canvas h-3.5 w-3.5 transition-all duration-200 cursor-pointer shrink-0"
+        />
         <span className={cn(
           "size-8 rounded-lg border flex items-center justify-center text-[10px] font-bold uppercase shrink-0 font-mono transition-colors",
           getRowTypeInfo(tx.type)
@@ -829,7 +1017,7 @@ function TransactionRow({
               variant="ghost"
               size="icon"
               aria-label="Opsi transaksi"
-              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100 duration-150 data-[state=open]:opacity-100"
+              className="h-7 w-7 opacity-0 group-hover:opacity-100 hover:bg-white/[0.12] active:bg-white/[0.18] text-text-muted hover:text-text-primary transition-all duration-150 focus:opacity-100 data-[state=open]:opacity-100 data-[state=open]:bg-white/[0.08] data-[state=open]:text-text-primary data-[state=open]:hover:bg-white/[0.12]"
             >
               <MoreHorizontal size={14} />
             </Button>
@@ -837,19 +1025,19 @@ function TransactionRow({
           <DropdownMenuContent align="end" className="w-44">
             <DropdownMenuItem onSelect={() => onEdit(tx)}>
               <Pencil size={12} />
-              Ubah
+              {language === "id" ? "Ubah" : "Edit"}
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={() => onDuplicate(tx)}>
               <Copy size={12} />
-              Duplikasi
+              {language === "id" ? "Duplikasi" : "Duplicate"}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onSelect={() => onDelete(tx)}
-              className="text-destructive focus:text-destructive"
+              variant="destructive"
             >
               <Trash2 size={12} />
-              Hapus
+              {language === "id" ? "Hapus" : "Delete"}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -994,6 +1182,7 @@ function ConfirmDelete({
   target: TransactionRowData | null;
   onClose: () => void;
 }) {
+  const { t, language } = useLanguage();
   const [pending, startTransition] = useTransition();
 
   function handleConfirm() {
@@ -1001,10 +1190,10 @@ function ConfirmDelete({
     startTransition(async () => {
       const result = await deleteTransaction(target.id);
       if (result.ok) {
-        toast.success("Transaksi berhasil dihapus");
+        toast.success(language === "id" ? "Transaksi berhasil dihapus" : "Transaction deleted successfully");
         onClose();
       } else {
-        toast.error(result.error ?? "Gagal menghapus transaksi");
+        toast.error(result.error ?? (language === "id" ? "Gagal menghapus transaksi" : "Failed to delete transaction"));
       }
     });
   }
@@ -1013,18 +1202,18 @@ function ConfirmDelete({
     <Dialog open={target !== null} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="rounded-2xl border-white/[0.08] bg-popover/95 backdrop-blur-xl">
         <DialogHeader>
-          <DialogTitle>Hapus transaksi</DialogTitle>
+          <DialogTitle>{language === "id" ? "Hapus transaksi" : "Delete transaction"}</DialogTitle>
           <DialogDescription>
             {target?.type === "transfer"
-              ? "Saldo akun sumber dan akun tujuan akan dikoreksi otomatis."
-              : "Saldo akun akan disesuaikan otomatis."}
+              ? (language === "id" ? "Saldo akun sumber dan akun tujuan akan dikoreksi otomatis." : "Source and target account balances will be corrected automatically.")
+              : (language === "id" ? "Saldo akun akan disesuaikan otomatis." : "Account balance will be adjusted automatically.")}
           </DialogDescription>
         </DialogHeader>
         <DialogBody>
           {target ? (
             <div className="px-4 py-3 bg-white/[0.02] border border-white/[0.06] rounded-xl">
               <p className="text-sm text-foreground">
-                {target.description ?? target.categoryName ?? "Transaksi"}
+                {target.description ?? target.categoryName ?? (language === "id" ? "Transaksi" : "Transaction")}
               </p>
               <p className="text-xs text-muted-foreground font-mono tabular-nums">
                 {formatIDR(target.amount)} · {formatDateShort(target.date)}
@@ -1034,7 +1223,7 @@ function ConfirmDelete({
         </DialogBody>
         <DialogFooter>
           <Button variant="secondary" onClick={onClose} disabled={pending} className="rounded-xl">
-            Batal
+            {t("cancelButton")}
           </Button>
           <Button
             variant="destructive"
@@ -1042,7 +1231,7 @@ function ConfirmDelete({
             disabled={pending}
             className="rounded-xl"
           >
-            {pending ? "Menghapus..." : "Hapus"}
+            {pending ? (language === "id" ? "Menghapus..." : "Deleting...") : (language === "id" ? "Hapus" : "Delete")}
           </Button>
         </DialogFooter>
       </DialogContent>

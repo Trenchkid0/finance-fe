@@ -4,6 +4,7 @@ import { formatDateShort, formatIDR } from "@/lib/utils/formatters";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils/cn";
+import { useLanguage } from "@/lib/contexts/LanguageContext";
 
 export interface RecentTransactionItem {
   id: string;
@@ -22,23 +23,27 @@ interface Props {
 }
 
 export function RecentTransactions({ transactions }: Props) {
+  const { language } = useLanguage();
+
   return (
     <section className="rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden flex flex-col transition-all duration-300 hover:border-white/[0.1] hover:shadow-[0_8px_30px_rgba(0,0,0,0.3)]">
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-6 border-b border-white/[0.04] shrink-0">
         <div className="space-y-1.5">
           <h2 className="text-sm font-bold text-foreground">
-            Transaksi Terakhir
+            {language === "id" ? "Transaksi Terakhir" : "Recent Transactions"}
           </h2>
           <p className="text-[11px] text-muted-foreground/50">
-            Aktivitas keuangan terbaru dari seluruh akun
+            {language === "id"
+              ? "Aktivitas keuangan terbaru dari seluruh akun"
+              : "Latest financial activity across all accounts"}
           </p>
         </div>
         <Link
           to="/transactions"
           className="group flex items-center gap-1 text-xs font-semibold text-accent hover:text-accent/80 transition-all duration-200"
         >
-          Lihat Semua
+          {language === "id" ? "Lihat Semua" : "View All"}
           <ArrowRight size={12} className="transition-transform duration-200 group-hover:translate-x-0.5" />
         </Link>
       </header>
@@ -46,13 +51,17 @@ export function RecentTransactions({ transactions }: Props) {
       {transactions.length === 0 ? (
         <EmptyState
           icon={Wallet}
-          title="Belum ada transaksi"
-          description="Catat transaksi pertama Anda untuk mulai melacak."
+          title={language === "id" ? "Belum ada transaksi" : "No transactions yet"}
+          description={
+            language === "id"
+              ? "Catat transaksi pertama Anda untuk mulai melacak."
+              : "Record your first transaction to start tracking."
+          }
           action={
             <Button size="sm" asChild className="rounded-xl">
               <Link to="/transactions">
                 <Plus size={12} className="mr-1" />
-                Tambah transaksi
+                {language === "id" ? "Tambah transaksi" : "Add transaction"}
               </Link>
             </Button>
           }
@@ -61,10 +70,10 @@ export function RecentTransactions({ transactions }: Props) {
         <>
           {/* Column header (desktop only) */}
           <div className="hidden md:grid grid-cols-12 px-6 py-2.5 bg-white/[0.01] border-b border-white/[0.04] shrink-0 text-[10px] font-bold text-muted-foreground/45 uppercase tracking-wider">
-            <span className="col-span-2">Tanggal</span>
-            <span className="col-span-5">Deskripsi</span>
-            <span className="col-span-3">Akun</span>
-            <span className="col-span-2 text-right">Jumlah</span>
+            <span className="col-span-2">{language === "id" ? "Tanggal" : "Date"}</span>
+            <span className="col-span-5">{language === "id" ? "Deskripsi" : "Description"}</span>
+            <span className="col-span-3">{language === "id" ? "Akun" : "Account"}</span>
+            <span className="col-span-2 text-right">{language === "id" ? "Jumlah" : "Amount"}</span>
           </div>
 
           {/* Scrollable body */}
@@ -104,7 +113,7 @@ export function RecentTransactions({ transactions }: Props) {
                     {tx.type === "transfer" ? (
                       <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold border bg-accent/10 border-accent/20 text-accent">
                         <ArrowLeftRight size={8} />
-                        Transfer
+                        {language === "id" ? "Transfer" : "Transfer"}
                       </span>
                     ) : tx.categoryName ? (
                       <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold border bg-white/[0.04] border-white/[0.08] text-muted-foreground/70">
@@ -161,7 +170,7 @@ export function RecentTransactions({ transactions }: Props) {
                       {new Date(tx.date).getDate()}
                     </span>
                     <span className="text-[8px] text-muted-foreground/50 uppercase font-black leading-none mt-0.5 font-mono">
-                      {new Date(tx.date).toLocaleDateString('id-ID', { month: 'short' })}
+                      {new Date(tx.date).toLocaleDateString(language === 'id' ? 'id-ID' : 'en-US', { month: 'short' })}
                     </span>
                   </div>
 
@@ -174,12 +183,12 @@ export function RecentTransactions({ transactions }: Props) {
                       {tx.type === "transfer" ? (
                         <>
                           <ArrowLeftRight size={10} className="text-accent" />
-                          <span className="truncate">Transfer → {tx.transferToName ?? "?"}</span>
+                          <span className="truncate">{language === "id" ? "Transfer" : "Transfer"} → {tx.transferToName ?? "?"}</span>
                         </>
                       ) : (
                         <>
                           {tx.categoryIcon && <span>{tx.categoryIcon}</span>}
-                          <span className="truncate">{tx.categoryName ?? "Tanpa kategori"}</span>
+                          <span className="truncate">{tx.categoryName ?? (language === "id" ? "Tanpa kategori" : "Uncategorized")}</span>
                         </>
                       )}
                       <span>·</span>
@@ -213,7 +222,9 @@ export function RecentTransactions({ transactions }: Props) {
                 to="/transactions"
                 className="group inline-flex items-center gap-1 text-xs font-semibold text-accent hover:text-accent/80 transition-all duration-200"
               >
-                Lihat semua {transactions.length} transaksi
+                {language === "id"
+                  ? `Lihat semua ${transactions.length} transaksi`
+                  : `View all ${transactions.length} transactions`}
                 <ArrowRight size={12} className="transition-transform duration-200 group-hover:translate-x-0.5" />
               </Link>
             </div>

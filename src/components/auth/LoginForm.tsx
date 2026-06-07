@@ -2,15 +2,18 @@
 
 import { useActionState, useState } from "react";
 import { Link } from "react-router-dom";
-import { AlertCircle, Eye, EyeOff, Info, Loader2, Mail, Lock, ArrowRight, Github } from "lucide-react";
+import { AlertCircle, Eye, EyeOff, Info, Loader2, Mail, Lock, ArrowRight } from "lucide-react";
 import { login } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+import { useLanguage } from "@/lib/contexts/LanguageContext";
+
 const isDev = import.meta.env.DEV;
 
 export function LoginForm() {
+  const { t } = useLanguage();
   const [state, formAction, pending] = useActionState(login, undefined);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -32,7 +35,7 @@ export function LoginForm() {
       <form action={formAction} className="space-y-5" noValidate>
         {/* Email */}
         <div className="space-y-2.5">
-          <Label htmlFor="email">Alamat Email</Label>
+          <Label htmlFor="email">{t("emailLabel")}</Label>
           <div className="relative group">
             <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40 group-focus-within:text-accent/70 transition-colors duration-300 pointer-events-none" />
             <Input
@@ -58,14 +61,14 @@ export function LoginForm() {
         {/* Password */}
         <div className="space-y-2.5">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password">Kata Sandi</Label>
+            <Label htmlFor="password">{t("passwordLabel")}</Label>
             <Link
               to="#"
               tabIndex={-1}
               className="text-[11px] text-accent/60 hover:text-accent transition-colors pointer-events-none"
               aria-disabled
             >
-              Lupa kata sandi?
+              {t("forgotPassword")}
             </Link>
           </div>
           <div className="relative group">
@@ -115,37 +118,22 @@ export function LoginForm() {
             <Loader2 size={18} className="animate-spin" />
           ) : (
             <>
-              Masuk ke Akun
+              {t("loginButton")}
               <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
             </>
           )}
         </Button>
       </form>
 
-      {/* Divider */}
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-white/[0.06]" />
-        </div>
-        <div className="relative flex justify-center">
-          <span className="bg-canvas px-4 text-[10px] uppercase tracking-[0.15em] text-muted-foreground/40 font-semibold">atau</span>
-        </div>
-      </div>
-
-      {/* Social login placeholder */}
-      <Button variant="outline" className="w-full h-11 gap-2.5 text-[13px]" type="button" disabled>
-        <Github size={16} />
-        Lanjutkan dengan GitHub
-      </Button>
 
       {/* Register link */}
       <p className="text-[13px] text-muted-foreground text-center pt-1">
-        Belum punya akun?{" "}
+        {t("noAccount")}{" "}
         <Link
           to="/register"
           className="text-accent hover:text-accent/80 font-semibold transition-colors"
         >
-          Daftar gratis
+          {t("registerFree")}
         </Link>
       </p>
     </div>

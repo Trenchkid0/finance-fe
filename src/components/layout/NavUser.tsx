@@ -24,6 +24,8 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
+import { useLanguage } from "@/lib/contexts/LanguageContext";
+
 interface NavUserProps {
   user: {
     name?: string | null;
@@ -38,6 +40,7 @@ interface NavUserProps {
  */
 export function NavUser({ user }: NavUserProps) {
   const { isMobile } = useSidebar();
+  const { t } = useLanguage();
 
   const initials = user.name
     ? user.name
@@ -107,13 +110,13 @@ export function NavUser({ user }: NavUserProps) {
               <DropdownMenuItem asChild className="rounded-lg mx-1 px-3 py-2 text-[13px]">
                 <Link to="/profile" className="cursor-pointer">
                   <UserCircle size={14} className="text-muted-foreground/60" />
-                  Profil
+                  {t("profile")}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild className="rounded-lg mx-1 px-3 py-2 text-[13px]">
                 <Link to="/settings" className="cursor-pointer">
                   <Settings size={14} className="text-muted-foreground/60" />
-                  Pengaturan
+                  {t("settings")}
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
@@ -132,7 +135,7 @@ export function NavUser({ user }: NavUserProps) {
               }}
             >
               <LogOut size={14} />
-              Keluar
+              {t("logout")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

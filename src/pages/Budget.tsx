@@ -5,8 +5,10 @@ import { BudgetClient, type BudgetCategoryData } from "@/components/budget/Budge
 import { api } from "@/lib/api";
 import { Loader2 } from "lucide-react";
 import { startOfMonth, endOfMonth, format } from "date-fns";
+import { useLanguage } from "@/lib/contexts/LanguageContext";
 
 export default function Budget() {
+  const { language } = useLanguage();
   const { categories: globalCategories } = useApp();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
@@ -30,7 +32,7 @@ export default function Budget() {
   const startDateStr = format(startOfMonth(monthDate), "yyyy-MM-dd");
   const endDateStr = format(endOfMonth(monthDate), "yyyy-MM-dd");
 
-  const monthLabel = monthDate.toLocaleDateString("id-ID", {
+  const monthLabel = monthDate.toLocaleDateString(language === "id" ? "id-ID" : "en-US", {
     month: "long",
     year: "numeric",
   });

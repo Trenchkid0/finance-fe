@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { ChevronRight, Plus } from "lucide-react";
 import { formatIDR } from "@/lib/utils/formatters";
 import { cn } from "@/lib/utils/cn";
+import { useLanguage } from "@/lib/contexts/LanguageContext";
 
 /**
  * Balance sheet — pola Maybe Finance asli.
@@ -69,12 +70,15 @@ export function BalanceSheet({ assets, liabilities, hideEmptyLiabilities }: Prop
 }
 
 function BalanceSide({ title, total, groups }: SideProps) {
-  const indoTitle = title === "Assets" ? "Aset" : "Liabilitas";
+  const { language } = useLanguage();
+  const sideTitle = language === "id"
+    ? (title === "Assets" ? "Aset" : "Liabilitas")
+    : title;
 
   return (
     <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 space-y-5">
       <div className="flex items-baseline gap-2.5">
-        <h2 className="text-sm font-semibold text-foreground">{indoTitle}</h2>
+        <h2 className="text-sm font-semibold text-foreground">{sideTitle}</h2>
         <span className="text-muted-foreground/30">·</span>
         <p className="text-sm font-semibold font-mono tabular-nums text-muted-foreground/70">
           {formatIDR(total)}
@@ -122,10 +126,10 @@ function BalanceSide({ title, total, groups }: SideProps) {
           {/* Group list */}
           <div className="rounded-xl bg-white/[0.02] overflow-hidden border border-white/[0.04]">
             <header className="px-4 py-2.5 flex items-center text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-widest">
-              <span className="w-32">Nama</span>
+              <span className="w-32">{language === "id" ? "Nama" : "Name"}</span>
               <span className="ml-auto flex items-center gap-6">
-                <span className="w-24 text-right">Bobot</span>
-                <span className="w-32 text-right">Nilai</span>
+                <span className="w-24 text-right">{language === "id" ? "Bobot" : "Weight"}</span>
+                <span className="w-32 text-right">{language === "id" ? "Nilai" : "Value"}</span>
               </span>
             </header>
             <div className="bg-card rounded-md m-1 mt-0">
@@ -145,6 +149,7 @@ function BalanceSide({ title, total, groups }: SideProps) {
 }
 
 function EmptySide({ title }: { title: "Assets" | "Liabilities" }) {
+  const { language } = useLanguage();
   const isAssets = title === "Assets";
   return (
     <div className="py-10 flex flex-col items-center text-center">
@@ -152,19 +157,25 @@ function EmptySide({ title }: { title: "Assets" | "Liabilities" }) {
         <Plus size={16} />
       </span>
       <p className="text-sm font-medium text-foreground mb-1">
-        {isAssets ? "Belum ada aset" : "Belum ada liabilitas"}
+        {isAssets
+          ? (language === "id" ? "Belum ada aset" : "No assets yet")
+          : (language === "id" ? "Belum ada liabilitas" : "No liabilities yet")}
       </p>
       <p className="text-xs text-muted-foreground max-w-xs">
         {isAssets
-          ? "Tambahkan akun pertama untuk melihat distribusi aset Anda."
-          : "Tambahkan kartu kredit atau pinjaman untuk melacak liabilitas."}
+          ? (language === "id"
+              ? "Tambahkan akun pertama untuk melihat distribusi aset Anda."
+              : "Add your first account to view your asset distribution.")
+          : (language === "id"
+              ? "Tambahkan kartu kredit atau pinjaman untuk melacak liabilitas."
+              : "Add a credit card or loan to track liabilities.")}
       </p>
       {isAssets ? (
         <Link
           to="/accounts"
           className="mt-3 text-xs text-primary hover:underline font-medium"
         >
-          Tambah akun →
+          {language === "id" ? "Tambah akun" : "Add account"} →
         </Link>
       ) : null}
     </div>

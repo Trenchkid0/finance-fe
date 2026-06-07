@@ -148,7 +148,7 @@ export default function Profile() {
                 Portofolio Aktif
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 pb-8">
               <div className="space-y-1">
                 <p className="text-2xl font-bold font-mono tabular-nums text-text-primary">
                   {formatIDR(totalBalance)}

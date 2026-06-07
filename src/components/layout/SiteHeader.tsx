@@ -6,6 +6,13 @@ import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useQuickAdd } from "@/components/transactions/QuickAddProvider";
 import { openCommandPalette } from "@/components/command-palette/CommandPalette";
+import { useLanguage } from "@/lib/contexts/LanguageContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 /**
  * Sticky top bar — sidebar trigger + global actions.
@@ -18,6 +25,7 @@ import { openCommandPalette } from "@/components/command-palette/CommandPalette"
  */
 export function SiteHeader() {
   const { open: openQuickAdd, canCreate } = useQuickAdd();
+  const { language, setLanguage } = useLanguage();
 
   return (
     <header className="flex h-14 shrink-0 items-center gap-2 border-b border-white/[0.04] bg-canvas/80 backdrop-blur-xl sticky top-0 z-30">
@@ -68,6 +76,32 @@ export function SiteHeader() {
             {/* Badge dot */}
             <span className="absolute top-2 right-2 size-1.5 rounded-full bg-accent" />
           </Button>
+
+          {/* Language selector */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="h-8 gap-1.5 rounded-lg px-2 text-xs font-semibold text-text-primary hover:bg-white/[0.04] transition-all ml-1"
+              >
+                <span>{language === "id" ? "ID" : "EN"}</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-[120px] rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl">
+              <DropdownMenuItem
+                className="text-xs font-semibold cursor-pointer"
+                onSelect={() => setLanguage("id")}
+              >
+                Bahasa Indonesia
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-xs font-semibold cursor-pointer"
+                onSelect={() => setLanguage("en")}
+              >
+                English (US)
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {/* Separator */}
           <Separator

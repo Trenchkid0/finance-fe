@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/sidebar";
 import { NavUser } from "./NavUser";
 import { cn } from "@/lib/utils/cn";
+import { useLanguage } from "@/lib/contexts/LanguageContext";
 
 interface NavItem {
   href: string;
@@ -53,18 +54,19 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 
 export function AppSidebar({ user, counts, ...props }: AppSidebarProps) {
   const { pathname } = useLocation();
+  const { t, language } = useLanguage();
 
   const navMain: NavItem[] = [
-    { href: "/", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/", label: t("dashboard"), icon: LayoutDashboard },
     {
       href: "/accounts",
-      label: "Akun",
+      label: language === "id" ? "Rekening" : t("accounts"),
       icon: Wallet,
       badge: counts?.accounts && counts.accounts > 0 ? counts.accounts : undefined,
     },
     {
       href: "/transactions",
-      label: "Transaksi",
+      label: t("transactions"),
       icon: ArrowLeftRight,
       badge:
         counts?.transactions && counts.transactions > 0
@@ -74,14 +76,14 @@ export function AppSidebar({ user, counts, ...props }: AppSidebarProps) {
   ];
 
   const navAnalytics: NavItem[] = [
-    { href: "/income", label: "Pemasukan", icon: TrendingUp },
-    { href: "/expenses", label: "Pengeluaran", icon: TrendingDown },
-    { href: "/budget", label: "Anggaran", icon: PiggyBank },
+    { href: "/income", label: t("income"), icon: TrendingUp },
+    { href: "/expenses", label: t("expenses"), icon: TrendingDown },
+    { href: "/budget", label: t("budget"), icon: PiggyBank },
   ];
 
   const navPrefs: NavItem[] = [
-    { href: "/settings", label: "Pengaturan", icon: Settings },
-    { href: "/profile", label: "Profil", icon: User },
+    { href: "/settings", label: t("settings"), icon: Settings },
+    { href: "/profile", label: t("profile"), icon: User },
   ];
 
   return (
@@ -126,9 +128,9 @@ export function AppSidebar({ user, counts, ...props }: AppSidebarProps) {
       </div>
 
       <SidebarContent>
-        <NavGroup label="Menu Utama" items={navMain} pathname={pathname} />
+        <NavGroup label={language === "id" ? "Menu Utama" : "Main Menu"} items={navMain} pathname={pathname} />
         <NavGroup
-          label="Analisis & Anggaran"
+          label={language === "id" ? "Analisis & Anggaran" : "Analytics & Budget"}
           items={navAnalytics}
           pathname={pathname}
         />
@@ -136,7 +138,7 @@ export function AppSidebar({ user, counts, ...props }: AppSidebarProps) {
 
 
         <NavGroup
-          label="Preferensi"
+          label={language === "id" ? "Preferensi" : "Preferences"}
           items={navPrefs}
           pathname={pathname}
           className="mt-auto"

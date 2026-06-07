@@ -23,6 +23,7 @@ import { cleanMoneyString, formatIDR, formatInputRupiah } from "@/lib/utils/form
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useLanguage } from "@/lib/contexts/LanguageContext";
 
 export interface BudgetCategoryData {
   id: string;
@@ -68,6 +69,7 @@ export function BudgetClient({
   uncategorizedSpent,
   monthlyIncome,
 }: Props) {
+  const { language } = useLanguage();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [pending, startTransition] = useTransition();
@@ -135,7 +137,9 @@ export function BudgetClient({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 rounded-2xl border border-white/[0.06] bg-white/[0.02]">
         <div className="flex items-center gap-2.5">
           <Calendar size={16} className="text-accent shrink-0" />
-          <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">Periode Anggaran</span>
+          <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">
+            {language === "id" ? "Periode Anggaran" : "Budget Period"}
+          </span>
         </div>
         <MonthPicker
           monthLabel={monthLabel}
@@ -178,14 +182,16 @@ export function BudgetClient({
           <div className="flex items-center justify-between pb-4 border-b border-white/[0.04]">
             <div>
               <h2 className="text-base font-bold text-foreground">
-                Batas Pengeluaran Kategori
+                {language === "id" ? "Batas Pengeluaran Kategori" : "Category Spending Limits"}
               </h2>
               <p className="text-xs text-muted-foreground/60 mt-1">
-                Atur batas maksimal pengeluaran bulanan Anda per kategori
+                {language === "id"
+                  ? "Atur batas maksimal pengeluaran bulanan Anda per kategori"
+                  : "Set maximum monthly spending limits per category"}
               </p>
             </div>
             <Badge className="bg-accent/10 text-accent border border-accent/20 text-[10px] font-bold font-mono">
-              {categoriesWithColor.length} KATEGORI
+              {categoriesWithColor.length} {language === "id" ? "KATEGORI" : "CATEGORIES"}
             </Badge>
           </div>
 
@@ -223,6 +229,7 @@ function MonthPicker({
   onJumpToday: () => void;
   pending: boolean;
 }) {
+  const { language } = useLanguage();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickedYear, setPickedYear] = useState(year);
 
@@ -239,7 +246,7 @@ function MonthPicker({
         size="icon"
         className="h-8 w-8 hover:bg-white/[0.04] transition-colors rounded-lg text-muted-foreground/60 hover:text-foreground"
         onClick={onPrev}
-        aria-label="Bulan sebelumnya"
+        aria-label={language === "id" ? "Bulan sebelumnya" : "Previous month"}
         disabled={pending}
       >
         <ChevronLeft size={16} />
@@ -285,7 +292,7 @@ function MonthPicker({
         size="icon"
         className="h-8 w-8 hover:bg-white/[0.04] transition-colors rounded-lg text-muted-foreground/60 hover:text-foreground"
         onClick={onNext}
-        aria-label="Bulan berikutnya"
+        aria-label={language === "id" ? "Bulan berikutnya" : "Next month"}
         disabled={pending || !canGoNext}
       >
         <ChevronRight size={16} />
@@ -299,27 +306,14 @@ function MonthPicker({
           onClick={onJumpToday}
           disabled={pending}
         >
-          Hari ini
+          {language === "id" ? "Hari ini" : "Today"}
         </Button>
       ) : null}
     </div>
   );
 }
 
-const MONTH_LABELS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "Mei",
-  "Jun",
-  "Jul",
-  "Agu",
-  "Sep",
-  "Okt",
-  "Nov",
-  "Des",
-];
+
 
 function YearMonthPanel({
   pickedYear,
@@ -340,8 +334,13 @@ function YearMonthPanel({
   selectedMonth: number;
   onPick: (y: number, m: number) => void;
 }) {
+  const { language } = useLanguage();
   const minYear = Math.min(...yearOptions);
   const maxYear = Math.max(currentYear, ...yearOptions);
+
+  const monthLabels = language === "id"
+    ? ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"]
+    : ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
   return (
     <div className="absolute z-50 right-0 mt-2 w-[260px] rounded-2xl border border-white/[0.08] bg-popover/95 backdrop-blur-xl shadow-2xl shadow-black/40 p-4 space-y-3 animate-in fade-in-50 slide-in-from-top-2 duration-150">
@@ -353,7 +352,7 @@ function YearMonthPanel({
           className="h-7 w-7"
           onClick={() => onPickedYearChange(pickedYear - 1)}
           disabled={pickedYear <= minYear}
-          aria-label="Tahun sebelumnya"
+          aria-label={language === "id" ? "Tahun sebelumnya" : "Previous year"}
         >
           <ChevronLeft size={14} />
         </Button>
@@ -367,14 +366,14 @@ function YearMonthPanel({
           className="h-7 w-7"
           onClick={() => onPickedYearChange(pickedYear + 1)}
           disabled={pickedYear >= maxYear}
-          aria-label="Tahun berikutnya"
+          aria-label={language === "id" ? "Tahun berikutnya" : "Next year"}
         >
           <ChevronRight size={14} />
         </Button>
       </div>
 
       <div className="grid grid-cols-3 gap-1.5">
-        {MONTH_LABELS.map((label, idx) => {
+        {monthLabels.map((label, idx) => {
           const m = idx + 1;
           const isFuture =
             pickedYear > currentYear ||
@@ -416,6 +415,7 @@ function BudgetDonut({
   budget: number;
   categories: (BudgetCategoryData & { color: string })[];
 }) {
+  const { language } = useLanguage();
   const hasBudget = budget > 0;
   const hasSpending = spent > 0;
 
@@ -441,14 +441,14 @@ function BudgetDonut({
         id: "unused",
         value: budget - spent,
         color: "#1C2128",
-        label: "Sisa",
+        label: language === "id" ? "Sisa" : "Remaining",
       });
     } else if (spent > budget) {
       segments.push({
         id: "overage",
         value: spent - budget,
         color: "#F85149",
-        label: "Lebih",
+        label: language === "id" ? "Lebih" : "Over",
       });
     }
   } else {
@@ -456,17 +456,19 @@ function BudgetDonut({
       id: "unused",
       value: 1,
       color: "#161B22",
-      label: "Belum diatur",
+      label: language === "id" ? "Belum diatur" : "Unset",
     });
   }
 
   return (
     <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 space-y-4 transition-colors duration-200">
       <div className="flex justify-between items-center">
-        <h3 className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-[0.12em]">Ringkasan Alokasi</h3>
+        <h3 className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-[0.12em]">
+          {language === "id" ? "Ringkasan Alokasi" : "Allocation Summary"}
+        </h3>
         {hasBudget && (
           <span className="text-[10px] text-text-muted font-mono font-medium">
-            {Math.round((spent / budget) * 100)}% terpakai
+            {Math.round((spent / budget) * 100)}% {language === "id" ? "terpakai" : "used"}
           </span>
         )}
       </div>
@@ -476,18 +478,22 @@ function BudgetDonut({
 
           {/* Center content overlay */}
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
-            <p className="text-[10px] text-text-muted uppercase tracking-wider font-semibold mb-0.5">Terpakai</p>
+            <p className="text-[10px] text-text-muted uppercase tracking-wider font-semibold mb-0.5">
+              {language === "id" ? "Terpakai" : "Spent"}
+            </p>
             <p className="text-xl font-bold font-mono tabular-nums text-text-primary">
               {formatIDR(spent)}
             </p>
             {hasBudget ? (
               <p className="text-[10px] text-text-muted font-mono mt-0.5">
-                dari {formatIDR(budget)}
+                {language === "id" ? "dari" : "of"} {formatIDR(budget)}
               </p>
             ) : (
               <div className="flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded-full bg-warning/5 border border-warning/20">
                 <Sparkles size={9} className="text-warning" />
-                <span className="text-[9px] text-warning font-medium">Atur batas kategori</span>
+                <span className="text-[9px] text-warning font-medium">
+                  {language === "id" ? "Atur batas kategori" : "Set category limit"}
+                </span>
               </div>
             )}
           </div>
@@ -582,6 +588,7 @@ function BudgetSummaryTabs({
   categories: (BudgetCategoryData & { color: string })[];
   uncategorizedSpent: number;
 }) {
+  const { language } = useLanguage();
   const expectedIncome = budget;
   const incomeUtilization =
     expectedIncome > 0 ? Math.min((income / expectedIncome) * 100, 100) : 0;
@@ -601,7 +608,7 @@ function BudgetSummaryTabs({
 
   if (uncategorizedSpent > 0) {
     expenseBreakdown.push({
-      name: "Tanpa kategori",
+      name: language === "id" ? "Tanpa kategori" : "Uncategorized",
       color: "#8B949E",
       amount: uncategorizedSpent,
       percent: Math.round((uncategorizedSpent / totalSpentAll) * 100),
@@ -611,8 +618,12 @@ function BudgetSummaryTabs({
   return (
     <Tabs defaultValue="budgeted" className="w-full">
       <TabsList className="grid w-full grid-cols-2 bg-white/[0.02] p-1 border border-white/[0.06] rounded-xl">
-        <TabsTrigger value="budgeted" className="text-xs py-1.5 rounded-lg data-[state=active]:bg-white/[0.06] data-[state=active]:text-foreground">Anggaran</TabsTrigger>
-        <TabsTrigger value="actuals" className="text-xs py-1.5 rounded-lg data-[state=active]:bg-white/[0.06] data-[state=active]:text-foreground">Realisasi</TabsTrigger>
+        <TabsTrigger value="budgeted" className="text-xs py-1.5 rounded-lg data-[state=active]:bg-white/[0.06] data-[state=active]:text-foreground">
+          {language === "id" ? "Anggaran" : "Budget"}
+        </TabsTrigger>
+        <TabsTrigger value="actuals" className="text-xs py-1.5 rounded-lg data-[state=active]:bg-white/[0.06] data-[state=active]:text-foreground">
+          {language === "id" ? "Realisasi" : "Actuals"}
+        </TabsTrigger>
       </TabsList>
 
       <TabsContent value="budgeted" className="mt-3">
@@ -621,7 +632,7 @@ function BudgetSummaryTabs({
           <div className="p-4 border-b border-border space-y-2">
             <div className="flex justify-between items-center">
               <span className="text-xs text-text-muted flex items-center gap-1.5">
-                <TrendingUp size={14} className="text-income" /> Target Pemasukan
+                <TrendingUp size={14} className="text-income" /> {language === "id" ? "Target Pemasukan" : "Target Income"}
               </span>
               <span className="text-[10px] text-text-muted font-mono tabular-nums">
                 {Math.round(incomeUtilization)}%
@@ -636,9 +647,9 @@ function BudgetSummaryTabs({
               trackClass="bg-elevated"
             />
             <div className="flex justify-between text-xs text-text-muted">
-              <span>{formatIDR(income)} diterima</span>
+              <span>{formatIDR(income)} {language === "id" ? "diterima" : "received"}</span>
               <span className="text-text-primary font-medium">
-                {formatIDR(Math.max(0, expectedIncome - income))} sisa
+                {formatIDR(Math.max(0, expectedIncome - income))} {language === "id" ? "sisa" : "remaining"}
               </span>
             </div>
           </div>
@@ -647,7 +658,7 @@ function BudgetSummaryTabs({
           <div className="p-4 space-y-2">
             <div className="flex justify-between items-center">
               <span className="text-xs text-text-muted flex items-center gap-1.5">
-                <PiggyBank size={14} className="text-accent" /> Dianggarkan
+                <PiggyBank size={14} className="text-accent" /> {language === "id" ? "Dianggarkan" : "Budgeted"}
               </span>
               <span className="text-[10px] text-text-muted font-mono tabular-nums">
                 {Math.round(utilization)}%
@@ -662,7 +673,7 @@ function BudgetSummaryTabs({
               trackClass="bg-elevated"
             />
             <div className="flex justify-between text-xs text-text-muted">
-              <span>{formatIDR(spent)} terpakai</span>
+              <span>{formatIDR(spent)} {language === "id" ? "terpakai" : "spent"}</span>
               <span
                 className={cn(
                   "font-medium",
@@ -670,8 +681,8 @@ function BudgetSummaryTabs({
                 )}
               >
                 {remaining < 0
-                  ? `${formatIDR(Math.abs(remaining))} lebih`
-                  : `${formatIDR(remaining)} sisa`}
+                  ? `${formatIDR(Math.abs(remaining))} ${language === "id" ? "lebih" : "over"}`
+                  : `${formatIDR(remaining)} ${language === "id" ? "sisa" : "remaining"}`}
               </span>
             </div>
           </div>
@@ -683,7 +694,7 @@ function BudgetSummaryTabs({
           {/* Income */}
           <div className="p-4 border-b border-border space-y-2">
             <h3 className="text-xs text-text-muted flex items-center gap-1.5">
-              <TrendingUp size={14} className="text-income" /> Pemasukan Riil
+              <TrendingUp size={14} className="text-income" /> {language === "id" ? "Pemasukan Riil" : "Actual Income"}
             </h3>
             <p className="text-xl font-bold font-mono tabular-nums text-text-primary">
               {formatIDR(income)}
@@ -693,7 +704,7 @@ function BudgetSummaryTabs({
             ) : (
               <div className="flex items-center gap-1 text-xs text-text-muted">
                 <Info size={12} />
-                <span>Belum ada pemasukan bulan ini.</span>
+                <span>{language === "id" ? "Belum ada pemasukan bulan ini." : "No income this month."}</span>
               </div>
             )}
           </div>
@@ -701,7 +712,7 @@ function BudgetSummaryTabs({
           {/* Expenses breakdown */}
           <div className="p-4 space-y-3">
             <h3 className="text-xs text-text-muted flex items-center gap-1.5">
-              <Percent size={14} className="text-accent" /> Distribusi Pengeluaran
+              <Percent size={14} className="text-accent" /> {language === "id" ? "Distribusi Pengeluaran" : "Expense Distribution"}
             </h3>
             <p className="text-xl font-bold font-mono tabular-nums text-text-primary">
               {formatIDR(totalSpentAll)}
@@ -743,7 +754,7 @@ function BudgetSummaryTabs({
             ) : (
               <div className="flex items-center gap-1 text-xs text-text-muted">
                 <Info size={12} />
-                <span>Belum ada pengeluaran bulan ini.</span>
+                <span>{language === "id" ? "Belum ada pengeluaran bulan ini." : "No expenses this month."}</span>
               </div>
             )}
           </div>
@@ -779,14 +790,17 @@ function CategoriesList({
 }: {
   categories: (BudgetCategoryData & { color: string })[];
 }) {
+  const { language } = useLanguage();
   if (categories.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-border bg-elevated p-8 text-center">
         <p className="text-sm font-semibold text-text-primary mb-1">
-          Belum ada kategori pengeluaran
+          {language === "id" ? "Belum ada kategori pengeluaran" : "No expense categories yet"}
         </p>
         <p className="text-xs text-text-muted">
-          Tambahkan kategori dari halaman pengaturan untuk mulai mengatur anggaran.
+          {language === "id"
+            ? "Tambahkan kategori dari halaman pengaturan untuk mulai mengatur anggaran."
+            : "Add categories from settings page to start budgeting."}
         </p>
       </div>
     );
@@ -809,6 +823,7 @@ function BudgetCategoryRow({
 }: {
   category: BudgetCategoryData & { color: string };
 }) {
+  const { language } = useLanguage();
   const [editing, setEditing] = useState(false);
   const [draftLimit, setDraftLimit] = useState<string>(
     category.limit !== null ? formatInputRupiah(String(category.limit)) : "",
@@ -825,7 +840,11 @@ function BudgetCategoryRow({
   function handleSave() {
     const num = Number(cleanMoneyString(draftLimit));
     if (!Number.isFinite(num) || num < 0) {
-      toast.error("Masukkan angka yang valid (≥ 0).");
+      toast.error(
+        language === "id"
+          ? "Masukkan angka yang valid (≥ 0)."
+          : "Please enter a valid number (≥ 0)."
+      );
       return;
     }
     startTransition(async () => {
@@ -833,12 +852,15 @@ function BudgetCategoryRow({
       if (result.ok) {
         toast.success(
           num > 0
-            ? "Batas anggaran tersimpan."
-            : "Batas anggaran dihapus.",
+            ? (language === "id" ? "Batas anggaran tersimpan." : "Budget limit saved.")
+            : (language === "id" ? "Batas anggaran dihapus." : "Budget limit removed."),
         );
         setEditing(false);
       } else {
-        toast.error(result.error ?? "Gagal menyimpan batas anggaran.");
+        toast.error(
+          result.error ??
+            (language === "id" ? "Gagal menyimpan batas anggaran." : "Failed to save budget limit.")
+        );
       }
     });
   }
@@ -884,12 +906,14 @@ function BudgetCategoryRow({
                 "text-xs font-mono",
                 isOver ? "text-expense" : remaining < 0 ? "text-expense" : "text-text-muted"
               )}>
-                {isOver ? `Lebih ${formatIDR(overage)}` : `${formatIDR(remaining)} sisa`}
+                {isOver
+                  ? (language === "id" ? `Lebih ${formatIDR(overage)}` : `Over by ${formatIDR(overage)}`)
+                  : (language === "id" ? `${formatIDR(remaining)} sisa` : `${formatIDR(remaining)} remaining`)}
               </span>
             </div>
           ) : (
             <span className="text-xs text-text-muted/60">
-              Belum ada batas anggaran
+              {language === "id" ? "Belum ada batas anggaran" : "No budget limit"}
             </span>
           )}
         </div>
@@ -905,7 +929,7 @@ function BudgetCategoryRow({
               onChange={(e) => setDraftLimit(formatInputRupiah(e.target.value))}
               placeholder="Limit"
               className="h-7 w-20 text-xs font-mono border-0 focus-visible:ring-0 bg-transparent p-1 text-text-primary"
-              aria-label={`Batas anggaran ${category.name}`}
+              aria-label={language === "id" ? `Batas anggaran ${category.name}` : `Budget limit ${category.name}`}
               autoFocus
               disabled={pending}
             />
@@ -915,7 +939,7 @@ function BudgetCategoryRow({
               className="h-6 w-6 text-income hover:bg-income/10 hover:text-income"
               onClick={handleSave}
               disabled={pending}
-              aria-label="Simpan"
+              aria-label={language === "id" ? "Simpan" : "Save"}
             >
               <Check size={12} />
             </Button>
@@ -930,7 +954,7 @@ function BudgetCategoryRow({
                 );
               }}
               disabled={pending}
-              aria-label="Batal"
+              aria-label={language === "id" ? "Batal" : "Cancel"}
             >
               <X size={12} />
             </Button>
@@ -942,7 +966,7 @@ function BudgetCategoryRow({
                 {formatIDR(category.spent)}
               </p>
               <p className="text-[10px] text-text-muted font-mono">
-                dari {hasLimit ? formatIDR(category.limit ?? 0) : "—"}
+                {language === "id" ? "dari" : "of"} {hasLimit ? formatIDR(category.limit ?? 0) : "—"}
               </p>
             </div>
             <Button
@@ -950,7 +974,7 @@ function BudgetCategoryRow({
               variant="ghost"
               className="h-7 w-7 text-text-muted opacity-0 group-hover:opacity-100 focus:opacity-100 hover:text-text-primary hover:bg-elevated transition-all"
               onClick={() => setEditing(true)}
-              aria-label={`Atur batas ${category.name}`}
+              aria-label={language === "id" ? `Atur batas ${category.name}` : `Set limit for ${category.name}`}
             >
               <Pencil size={12} />
             </Button>

@@ -4,8 +4,10 @@ import { api } from "@/lib/api";
 import { formatMonthLabel } from "@/lib/utils/formatters";
 import { IncomeClient } from "@/components/income/IncomeClient";
 import { Loader2 } from "lucide-react";
+import { useLanguage } from "@/lib/contexts/LanguageContext";
 
 export default function Income() {
+  const { language } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [incomeData, setIncomeData] = useState<any>(null);
 
@@ -45,7 +47,7 @@ export default function Income() {
         const amt = Number(tx.amount);
         if (!max || amt > max.amount) {
           return {
-            description: tx.description || tx.category?.name || "Pemasukan",
+            description: tx.description || tx.category?.name || (language === "id" ? "Pemasukan" : "Income"),
             amount: amt,
           };
         }
@@ -56,13 +58,13 @@ export default function Income() {
       const monthlyMap = new Map<string, number>();
       for (let i = 5; i >= 0; i--) {
         const d = subMonths(now, i);
-        monthlyMap.set(formatMonthLabel(d), 0);
+        monthlyMap.set(formatMonthLabel(d, language), 0);
       }
 
       for (const tx of allIncome) {
         const txDate = new Date(tx.date);
         if (txDate >= sixMonthsAgo) {
-          const key = formatMonthLabel(txDate);
+          const key = formatMonthLabel(txDate, language);
           if (monthlyMap.has(key)) {
             monthlyMap.set(key, monthlyMap.get(key)! + Number(tx.amount));
           }
@@ -88,7 +90,7 @@ export default function Income() {
       for (const tx of allIncome) {
         const amt = Number(tx.amount);
         totalIncomeAmount += amt;
-        const catName = tx.category?.name || "Tanpa Kategori";
+        const catName = tx.category?.name || (language === "id" ? "Tanpa Kategori" : "Uncategorized");
         const catIcon = tx.category?.icon || "📂";
 
         if (!categoryMap.has(catName)) {
@@ -112,7 +114,7 @@ export default function Income() {
         amount: Number(tx.amount),
         date: tx.date,
         description: tx.description,
-        accountName: tx.account?.name || "Akun Utama",
+        accountName: tx.account?.name || (language === "id" ? "Akun Utama" : "Main Account"),
         categoryName: tx.category?.name ?? null,
         categoryIcon: tx.category?.icon ?? null,
       }));

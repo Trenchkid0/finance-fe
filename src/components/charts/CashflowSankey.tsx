@@ -8,6 +8,13 @@ import {
   type SankeyExtraProperties,
 } from "d3-sankey";
 import { formatIDR } from "@/lib/utils/formatters";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 /**
  * Cashflow sankey — pola Maybe Finance asli.
@@ -133,19 +140,28 @@ export function CashflowSankey({ data, period }: Props) {
     >
       <div className="flex items-center justify-between">
         <h2 className="text-base font-medium text-foreground transition-colors duration-300 group-hover:text-accent">Arus kas</h2>
-        <select
-          value={period}
-          onChange={(e) => setPeriod(e.target.value as Props["period"])}
-          disabled={pending}
-          className="bg-elevated border border-border text-foreground text-xs font-medium rounded-md px-2.5 py-1.5 cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring/50 hover:border-[#444C56] hover:bg-elevated/80 transition-all duration-200 disabled:opacity-50"
-          aria-label="Periode arus kas"
-        >
-          {PERIOD_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              disabled={pending}
+              className="h-8 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-text-primary hover:bg-white/[0.04] bg-white/[0.03] border border-white/[0.08] transition-all"
+            >
+              <span>{PERIOD_OPTIONS.find((o) => o.value === period)?.label ?? period}</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="min-w-[120px] rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl">
+            {PERIOD_OPTIONS.map((o) => (
+              <DropdownMenuItem
+                key={o.value}
+                className="text-xs font-semibold cursor-pointer"
+                onSelect={() => setPeriod(o.value)}
+              >
+                {o.label}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <div

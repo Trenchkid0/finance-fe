@@ -11,6 +11,7 @@ import { SkeletonDashboard } from "@/components/ui/skeleton-loader";
 import { useApp } from "@/components/layout/AppLayout";
 import { formatIDR } from "@/lib/utils/formatters";
 import { cn } from "@/lib/utils/cn";
+import { useLanguage } from "@/lib/contexts/LanguageContext";
 
 const ASSET_GROUP_COLOR: Record<string, string> = {
   cash: "#79B8FF",
@@ -19,19 +20,20 @@ const ASSET_GROUP_COLOR: Record<string, string> = {
   investment: "#1F6FEB",
 };
 
-const ASSET_GROUP_LABEL: Record<string, string> = {
-  cash: "Tunai",
-  wallet: "E-wallet",
-  bank: "Bank",
-  investment: "Investasi",
-};
-
 function buildAssetGroups(
   rows: { id: string; name: string; type: string; balance: number }[],
-  totalNet: number
+  totalNet: number,
+  language: string
 ) {
   const buckets = new Map<string, any[]>();
   const totals = new Map<string, number>();
+
+  const assetGroupLabels: Record<string, string> = {
+    cash: language === "id" ? "Tunai" : "Cash",
+    wallet: language === "id" ? "E-wallet" : "E-wallet",
+    bank: language === "id" ? "Bank" : "Bank",
+    investment: language === "id" ? "Investasi" : "Investments",
+  };
 
   for (const r of rows) {
     if (r.balance === 0) continue;
@@ -55,7 +57,7 @@ function buildAssetGroups(
     const total = totals.get(key) ?? 0;
     accounts.sort((a, b) => b.value - a.value);
     groups.push({
-      name: ASSET_GROUP_LABEL[key] ?? key.charAt(0).toUpperCase() + key.slice(1),
+      name: assetGroupLabels[key] ?? key.charAt(0).toUpperCase() + key.slice(1),
       color: ASSET_GROUP_COLOR[key] ?? "#8B949E",
       total,
       percent: totalNet > 0 ? (total / totalNet) * 100 : 0,
@@ -72,8 +74,14 @@ function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-function getGreeting(): string {
+function getGreeting(language: string): string {
   const h = new Date().getHours();
+  if (language === "en") {
+    if (h < 12) return "Good morning";
+    if (h < 17) return "Good afternoon";
+    if (h < 20) return "Good evening";
+    return "Good night";
+  }
   if (h < 12) return "Selamat pagi";
   if (h < 17) return "Selamat siang";
   if (h < 20) return "Selamat sore";
@@ -81,6 +89,7 @@ function getGreeting(): string {
 }
 
 export default function Dashboard() {
+  const { language } = useLanguage();
   const { user, accounts, refresh, loading: appLoading } = useApp();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
@@ -142,15 +151,16 @@ export default function Dashboard() {
       type: a.type,
       balance: Number(a.balance),
     })),
-    netWorthCurrent
+    netWorthCurrent,
+    language
   );
 
   const mappedRecent = (summaryData?.recent || []).map((tx: any) => ({
     id: tx.id,
-    description: tx.description || tx.category?.name || "Transaksi",
+    description: tx.description || tx.category?.name || (language === "id" ? "Transaksi" : "Transaction"),
     categoryName: tx.category?.name ?? null,
     categoryIcon: tx.category?.icon ?? null,
-    accountName: tx.account?.name || "Akun Utama",
+    accountName: tx.account?.name || (language === "id" ? "Akun Utama" : "Main Account"),
     transferToName: tx.transferTo?.name ?? null,
     date: tx.date,
     amount: Number(tx.amount),
@@ -175,7 +185,7 @@ export default function Dashboard() {
         <div className="flex items-center gap-2.5">
           <div className="flex items-center gap-2 text-body-sm text-muted-foreground">
             <Clock size={15} className="text-accent/70" />
-            <span>{getGreeting()}</span>
+            <span>{getGreeting(language)}</span>
           </div>
           <div className="h-1 w-1 rounded-full bg-border" />
           <h1 className="text-heading-lg text-foreground font-semibold">
@@ -215,37 +225,37 @@ export default function Dashboard() {
         <div className="flex items-center gap-2 mb-4">
           <div className="h-1 w-1 rounded-full bg-accent" />
           <h2 className="text-heading-sm text-foreground font-semibold">
-            Ringkasan Bulan Ini
+            {language === "id" ? "Ringkasan Bulan Ini" : "This Month's Summary"}
           </h2>
         </div>
         
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <QuickStatCard
-            label="Total Pemasukan"
+            label={language === "id" ? "Total Pemasukan" : "Total Income"}
             value={formatIDR(totalIncome)}
             prefix="+"
             colorClass="text-income"
             trend={{ value: 12.5, isPositive: true }}
             quickAction={{
-              label: "Tambah Income",
+              label: language === "id" ? "Tambah Income" : "Add Income",
               icon: <Plus size={12} />,
               href: "/transactions?type=income"
             }}
           />
           <QuickStatCard
-            label="Total Pengeluaran"
+            label={language === "id" ? "Total Pengeluaran" : "Total Expenses"}
             value={formatIDR(totalExpense)}
             prefix="-"
             colorClass="text-expense"
             trend={{ value: 8.3, isPositive: false }}
             quickAction={{
-              label: "Tambah Expense",
+              label: language === "id" ? "Tambah Expense" : "Add Expense",
               icon: <Plus size={12} />,
               href: "/transactions?type=expense"
             }}
           />
           <QuickStatCard
-            label="Selisih Bersih"
+            label={language === "id" ? "Selisih Bersih" : "Net Surplus"}
             value={formatIDR(totalIncome - totalExpense)}
             colorClass={totalIncome - totalExpense >= 0 ? "text-income" : "text-expense"}
             trend={{
@@ -253,17 +263,17 @@ export default function Dashboard() {
               isPositive: totalIncome - totalExpense >= 0
             }}
             quickAction={{
-              label: "Lihat Detail",
+              label: language === "id" ? "Lihat Detail" : "View Details",
               icon: <ArrowUpRight size={12} />,
               href: "/transactions"
             }}
           />
           <QuickStatCard
-            label="Akun Aktif"
+            label={language === "id" ? "Akun Aktif" : "Active Accounts"}
             value={String(activeAccounts.length)}
-            suffix=" akun"
+            suffix={language === "id" ? " akun" : " accounts"}
             quickAction={{
-              label: "Kelola Akun",
+              label: language === "id" ? "Kelola Akun" : "Manage Accounts",
               icon: <Wallet size={12} />,
               href: "/accounts"
             }}
@@ -281,7 +291,7 @@ export default function Dashboard() {
             <div className="flex items-center gap-2">
               <div className="h-1 w-1 rounded-full bg-teal" />
               <h2 className="text-heading-sm text-foreground font-semibold">
-                Analisis Arus Kas
+                {language === "id" ? "Analisis Arus Kas" : "Cash Flow Analysis"}
               </h2>
             </div>
             <CashflowSankey
@@ -295,10 +305,10 @@ export default function Dashboard() {
             <div className="flex items-center gap-2">
               <div className="h-1 w-1 rounded-full bg-purple" />
               <h2 className="text-heading-sm text-foreground font-semibold">
-                Distribusi Aset
+                {language === "id" ? "Distribusi Aset" : "Asset Distribution"}
               </h2>
             </div>
-            <BalanceSheet
+             <BalanceSheet
               assets={{
                 title: "Assets",
                 total: netWorthCurrent,
@@ -318,7 +328,7 @@ export default function Dashboard() {
             <div className="flex items-center gap-2">
               <div className="h-1 w-1 rounded-full bg-pink" />
               <h2 className="text-heading-sm text-foreground font-semibold">
-                Transaksi Terbaru
+                {language === "id" ? "Transaksi Terbaru" : "Recent Transactions"}
               </h2>
             </div>
             <RecentTransactions transactions={mappedRecent} />
