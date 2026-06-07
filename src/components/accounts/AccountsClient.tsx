@@ -79,7 +79,7 @@ export function AccountsClient({ accounts }: Props) {
               : "Manage your funding sources — bank, e-wallet, cash, and investments."}
           </p>
         </div>
-        <Button onClick={() => setCreating(true)} className="h-10 rounded-xl gap-2 text-xs font-semibold px-4 self-start sm:self-auto">
+        <Button onClick={() => setCreating(true)} className="h-9 rounded-xl gap-2 text-xs font-semibold px-4 self-start sm:self-auto">
           <Plus size={14} strokeWidth={2.5} />
           {language === "id" ? "Tambah Akun Baru" : "Add New Account"}
         </Button>
@@ -125,8 +125,8 @@ export function AccountsClient({ accounts }: Props) {
               : "Add your first account to start recording transactions."
           }
           action={
-            <Button onClick={() => setCreating(true)} className="rounded-xl">
-              <Plus size={16} className="mr-1.5" />
+            <Button onClick={() => setCreating(true)} className="h-9 rounded-xl gap-2 text-xs font-semibold px-4">
+              <Plus size={14} strokeWidth={2.5} />
               {language === "id" ? "Tambah akun" : "Add account"}
             </Button>
           }
@@ -175,51 +175,32 @@ export function AccountsClient({ accounts }: Props) {
         </div>
       )}
 
-      {/* Dialogs */}
-      <Dialog open={creating} onOpenChange={setCreating}>
-        <DialogContent className="rounded-2xl border-white/[0.08] bg-popover/95 backdrop-blur-xl">
-          <DialogHeader>
-            <DialogTitle>{language === "id" ? "Tambah akun" : "Add Account"}</DialogTitle>
-            <DialogDescription>
-              {language === "id"
-                ? "Buat akun baru untuk melacak keuangan Anda"
-                : "Create a new account to track your finances"}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogBody>
-            <AccountForm
-              mode="create"
-              initial={{
-                name: "",
-                type: "bank",
-                color: "#388BFD",
-                icon: "",
-                isActive: true,
-              }}
-              onSuccess={() => setCreating(false)}
-              onCancel={() => setCreating(false)}
-            />
-          </DialogBody>
-        </DialogContent>
-      </Dialog>
+      {/* Modals */}
+      {creating && (
+        <AccountForm
+          open={creating}
+          onClose={() => setCreating(false)}
+          mode="create"
+          initial={{
+            name: "",
+            type: "bank",
+            color: "#388BFD",
+            icon: "",
+            isActive: true,
+          }}
+          onSuccess={() => setCreating(false)}
+        />
+      )}
 
-      <Dialog open={editing !== null} onOpenChange={(open) => !open && setEditing(null)}>
-        <DialogContent className="rounded-2xl border-white/[0.08] bg-popover/95 backdrop-blur-xl">
-          <DialogHeader>
-            <DialogTitle>{language === "id" ? "Ubah akun" : "Edit Account"}</DialogTitle>
-          </DialogHeader>
-          <DialogBody>
-            {editing && (
-              <AccountForm
-                mode="edit"
-                initial={toFormInitial(editing)}
-                onSuccess={() => setEditing(null)}
-                onCancel={() => setEditing(null)}
-              />
-            )}
-          </DialogBody>
-        </DialogContent>
-      </Dialog>
+      {editing && (
+        <AccountForm
+          open={editing !== null}
+          onClose={() => setEditing(null)}
+          mode="edit"
+          initial={toFormInitial(editing)}
+          onSuccess={() => setEditing(null)}
+        />
+      )}
 
       <ConfirmDelete
         target={confirmDelete}

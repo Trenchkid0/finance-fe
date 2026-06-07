@@ -11,6 +11,8 @@ import {
   TrendingUp,
   User,
   Wallet,
+  CalendarRange,
+  Target,
   type LucideIcon,
 } from "lucide-react";
 
@@ -73,12 +75,22 @@ export function AppSidebar({ user, counts, ...props }: AppSidebarProps) {
           ? counts.transactions
           : undefined,
     },
+    {
+      href: "/goals",
+      label: language === "id" ? "Target Tabungan" : "Savings Goals",
+      icon: Target,
+    },
   ];
 
   const navAnalytics: NavItem[] = [
     { href: "/income", label: t("income"), icon: TrendingUp },
     { href: "/expenses", label: t("expenses"), icon: TrendingDown },
     { href: "/budget", label: t("budget"), icon: PiggyBank },
+    {
+      href: "/recurring",
+      label: language === "id" ? "Tagihan Berulang" : "Recurring Bills",
+      icon: CalendarRange,
+    },
   ];
 
   const navPrefs: NavItem[] = [

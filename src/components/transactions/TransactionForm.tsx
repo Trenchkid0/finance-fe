@@ -1,806 +1,607 @@
 "use client";
 
-import { useActionState, useEffect, useState, useTransition } from "react";
-import { Camera, Loader2, Sparkles, WandSparkles, TrendingDown, TrendingUp, ArrowLeftRight } from "lucide-react";
-import { cn } from "@/lib/utils/cn";
-import { toast } from "sonner";
+import { useActionState, useEffect, useRef, useState, useMemo } from "react";
+import { createPortal } from "react-dom";
 import {
-  createTransaction,
-  updateTransaction,
-} from "@/app/actions/transactions";
-import { scanTransactionText } from "@/app/actions/ai";
-import type { ActionResult } from "@/types";
-import { formatIDR, formatInputRupiah } from "@/lib/utils/formatters";
-import type { TransactionTypeInput } from "@/lib/utils/validators";
-import { Badge } from "@/components/ui/badge";
+	ArrowLeftRight,
+	Check,
+	Loader2,
+	ScanLine,
+	Sparkles,
+	TrendingDown,
+	TrendingUp,
+	Upload,
+	X,
+} from "lucide-react";
+import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
 } from "@/components/ui/select";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+
+import { cn } from "@/lib/utils/cn";
+import { formatInputRupiah } from "@/lib/utils/formatters";
+import { useLanguage } from "@/lib/contexts/LanguageContext";
+
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import {
-  ToggleGroup,
-  ToggleGroupItem,
-} from "@/components/ui/toggle-group";
+	createTransaction,
+	updateTransaction,
+} from "@/app/actions/transactions";
+import { scanTransactionText } from "@/app/actions/ai";
+import type { ActionResult } from "@/types";
+import type { TransactionTypeInput } from "@/lib/utils/validators";
 
-const LAST_USED_STORAGE_KEY = "maybe_finance_last_used_categories";
+const TESSERACT_CDN = "https://unpkg.com/tesseract.js@5.1.0/dist/tesseract.min.js";
+const FORM_ID = "transaction-modal-form";
 
-type LastUsedMap = Partial<Record<"income" | "expense", string>>;
+export type AccountOption = { id: string; name: string };
+export type CategoryOption = {
+	id: string;
+	name: string;
+	type: "income" | "expense";
+	icon: string | null;
+};
 
-function readLastUsed(): LastUsedMap {
-  if (typeof window === "undefined") return {};
-  try {
-    const raw = localStorage.getItem(LAST_USED_STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as LastUsedMap) : {};
-  } catch {
-    return {};
-  }
-}
+export type TransactionFormInitial = {
+	id?: string;
+	type: TransactionTypeInput;
+	accountId: string;
+	categoryId: string | null;
+	transferToId: string | null;
+	amount: number;
+	date: string; // YYYY-MM-DD
+	description: string;
+	note: string;
+};
 
-function writeLastUsed(type: "income" | "expense", categoryId: string) {
-  if (typeof window === "undefined") return;
-  try {
-    const next = { ...readLastUsed(), [type]: categoryId };
-    localStorage.setItem(LAST_USED_STORAGE_KEY, JSON.stringify(next));
-  } catch {
-    // Quota exceeded or storage disabled — silently ignore.
-  }
-}
-
-/**
- * Shared transaction form — used by Add and Edit modals.
- *
- * Saat `aiScanEnabled=true` dan mode=create, header form berubah jadi
- * dua tab: "Manual" (default) dan "Scan AI" untuk parse teks struk
- * lewat DeepSeek. Hasil scan auto-fill state field, user tetap
- * memvalidasi dan klik "Tambah transaksi" sendiri.
- *
- * Type segmented control toggles which fields are shown:
- *  - income / expense: category dropdown
- *  - transfer: destination account dropdown (no category)
- */
-export interface AccountOption {
-  id: string;
-  name: string;
-}
-
-export interface CategoryOption {
-  id: string;
-  name: string;
-  type: "income" | "expense";
-  icon: string | null;
-}
-
-export interface TransactionFormInitial {
-  id?: string;
-  type: TransactionTypeInput;
-  accountId: string;
-  categoryId: string | null;
-  transferToId: string | null;
-  amount: number;
-  date: string; // YYYY-MM-DD
-  description: string;
-  note: string;
-}
-
-interface Props {
-  mode: "create" | "edit";
-  initial: TransactionFormInitial;
-  accounts: AccountOption[];
-  categories: CategoryOption[];
-  /** True kalau DEEPSEEK_API_KEY ter-set di server. Hanya relevan untuk create. */
-  aiScanEnabled?: boolean;
-  onSuccess: () => void;
-  onCancel: () => void;
-}
+export type TransactionModalProps = {
+	open: boolean;
+	onClose: () => void;
+	mode: "create" | "edit";
+	initial: TransactionFormInitial;
+	accounts: AccountOption[];
+	categories: CategoryOption[];
+	aiScanEnabled?: boolean;
+	onSuccess?: () => void;
+};
 
 export function TransactionForm({
-  mode,
-  initial,
-  accounts,
-  categories,
-  aiScanEnabled = false,
-  onSuccess,
-  onCancel,
-}: Props) {
-  const [type, setType] = useState<TransactionTypeInput>(initial.type);
-  const [accountId, setAccountId] = useState(initial.accountId);
-  const [categoryId, setCategoryId] = useState<string>(initial.categoryId ?? "");
-  const [transferToId, setTransferToId] = useState<string>(initial.transferToId ?? "");
-  const [amount, setAmount] = useState<string>(
-    initial.amount > 0 ? formatInputRupiah(String(initial.amount)) : "",
-  );
-  const [date, setDate] = useState<string>(initial.date);
-  const [description, setDescription] = useState<string>(initial.description);
-  const [note, setNote] = useState<string>(initial.note);
-  const [activeTab, setActiveTab] = useState<"manual" | "ai">("manual");
+	open,
+	onClose,
+	mode,
+	initial,
+	accounts,
+	categories,
+	aiScanEnabled = false,
+	onSuccess,
+}: TransactionModalProps) {
+	const { language } = useLanguage();
+	const isId = language === "id";
 
-  // Smart default: pre-fill the category for create-mode by reading the
-  // last-used category for the current type from localStorage. Also
-  // clears stale categoryId when toggling between expense/income so the
-  // Select doesn't keep an id from the wrong type.
-  useEffect(() => {
-    if (mode !== "create") return;
-    if (type === "transfer") return;
+	// ---- state field ----
+	const [type, setType] = useState<TransactionTypeInput>(initial.type);
+	const [amount, setAmount] = useState(
+		initial.amount ? formatInputRupiah(String(initial.amount)) : "",
+	);
+	const [date, setDate] = useState(initial.date);
+	const [accountId, setAccountId] = useState(initial.accountId);
+	const [categoryId, setCategoryId] = useState<string | null>(initial.categoryId);
+	const [transferToId, setTransferToId] = useState<string | null>(
+		initial.transferToId,
+	);
+	const [description, setDescription] = useState(initial.description);
+	const [note, setNote] = useState(initial.note);
 
-    const matchesType = categories.some(
-      (c) => c.id === categoryId && c.type === type,
-    );
-    if (categoryId && !matchesType) {
-      setCategoryId("");
-    }
+	const [tab, setTab] = useState<"manual" | "scan">("manual");
+	const [scanning, setScanning] = useState(false);
+	const fileInputRef = useRef<HTMLInputElement>(null);
 
-    if (categoryId && matchesType) return;
-    const last = readLastUsed()[type];
-    if (last && categories.some((c) => c.id === last && c.type === type)) {
-      setCategoryId(last);
-    }
-    // We intentionally rerun whenever `type` changes so switching the
-    // segmented control surfaces the right pre-fill.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [type, mode]);
+	// ---- server action (signature asli) ----
+	// create: (prev, formData) ; update: (id, prev, formData) → bind id
+	const boundAction = useMemo(
+		() =>
+			mode === "edit" && initial.id
+				? updateTransaction.bind(null, initial.id)
+				: createTransaction,
+		[mode, initial.id],
+	);
 
-  const action =
-    mode === "edit" && initial.id
-      ? updateTransaction.bind(null, initial.id)
-      : createTransaction;
+	const [state, formAction, pending] = useActionState<
+		ActionResult<null> | undefined,
+		FormData
+	>(boundAction, undefined);
 
-  const [state, formAction, pending] = useActionState<
-    ActionResult<null> | undefined,
-    FormData
-  >(async (prev, formData) => {
-    const result = await action(prev, formData);
-    if (result.ok) {
-      // Persist the last-used category so the next create-mode form
-      // pre-fills it automatically.
-      if (type !== "transfer" && categoryId) {
-        writeLastUsed(type, categoryId);
-      }
-      onSuccess();
-    }
-    return result;
-  }, undefined);
+	// reset tiap modal dibuka (pola GoalModal)
+	useEffect(() => {
+		if (!open) return;
+		setType(initial.type);
+		setAmount(initial.amount ? formatInputRupiah(String(initial.amount)) : "");
+		setDate(initial.date);
+		setAccountId(initial.accountId);
+		setCategoryId(initial.categoryId);
+		setTransferToId(initial.transferToId);
+		setDescription(initial.description);
+		setNote(initial.note);
+		setTab("manual");
+		setScanning(false);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [open]);
 
-  const filteredCategories = categories.filter((c) => c.type === type);
+	// sukses → toast + tutup
+	useEffect(() => {
+		if (!state?.ok) return;
+		toast.success(
+			mode === "create"
+				? isId
+					? "Transaksi ditambahkan"
+					: "Transaction added"
+				: isId
+					? "Transaksi diperbarui"
+					: "Transaction updated",
+		);
+		onSuccess?.();
+		onClose();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [state]);
 
-  /**
-   * Apply AI scan candidate to the form state. Only fills slots that
-   * the AI is confident about — empty/null answers leave existing
-   * values alone so user input is never silently overwritten.
-   */
-  function applyAICandidate(candidate: {
-    type: TransactionTypeInput;
-    amount: number;
-    date: string | null;
-    description: string | null;
-    accountId: string | null;
-    transferToId: string | null;
-    categoryId: string | null;
-  }) {
-    setType(candidate.type);
-    setAmount(String(candidate.amount));
-    if (candidate.date) setDate(candidate.date);
-    if (candidate.description) setDescription(candidate.description);
-    if (candidate.accountId) setAccountId(candidate.accountId);
-    setTransferToId(candidate.transferToId ?? "");
-    setCategoryId(candidate.categoryId ?? "");
-    setActiveTab("manual");
-  }
+	// Esc + lock scroll (pola GoalModal)
+	useEffect(() => {
+		if (!open) return;
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key === "Escape") onClose();
+		};
+		document.addEventListener("keydown", onKey);
+		const prev = document.body.style.overflow;
+		document.body.style.overflow = "hidden";
+		return () => {
+			document.removeEventListener("keydown", onKey);
+			document.body.style.overflow = prev;
+		};
+	}, [open, onClose]);
 
-  const showTabs = mode === "create";
+	const filteredCategories = useMemo(
+		() =>
+			categories.filter((c) =>
+				type === "income" ? c.type === "income" : c.type === "expense",
+			),
+		[categories, type],
+	);
 
-  const formContent = (
-    <form action={formAction} className="space-y-4" noValidate>
-      {/* Type segmented control */}
-      <div className="space-y-2">
-        <Label className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">Tipe Transaksi</Label>
-        <ToggleGroup
-          type="single"
-          value={type}
-          onValueChange={(v) => v && setType(v as TransactionTypeInput)}
-          className="grid grid-cols-3 w-full bg-white/[0.01] border border-white/[0.06] rounded-xl p-1 gap-1"
-          aria-label="Tipe transaksi"
-        >
-          <ToggleGroupItem 
-            value="expense"
-            className={cn(
-              "rounded-lg py-2.5 text-xs font-bold transition-all duration-300 outline-none flex items-center justify-center gap-1.5",
-              "data-[state=on]:bg-expense/10 data-[state=on]:text-expense data-[state=on]:border-expense/20"
-            )}
-          >
-            <TrendingDown size={14} />
-            <span>Pengeluaran</span>
-          </ToggleGroupItem>
-          <ToggleGroupItem 
-            value="income"
-            className={cn(
-              "rounded-lg py-2.5 text-xs font-bold transition-all duration-300 outline-none flex items-center justify-center gap-1.5",
-              "data-[state=on]:bg-income/10 data-[state=on]:text-income data-[state=on]:border-income/20"
-            )}
-          >
-            <TrendingUp size={14} />
-            <span>Pemasukan</span>
-          </ToggleGroupItem>
-          <ToggleGroupItem 
-            value="transfer"
-            className={cn(
-              "rounded-lg py-2.5 text-xs font-bold transition-all duration-300 outline-none flex items-center justify-center gap-1.5",
-              "data-[state=on]:bg-accent/10 data-[state=on]:text-accent data-[state=on]:border-accent/20"
-            )}
-          >
-            <ArrowLeftRight size={14} />
-            <span>Transfer</span>
-          </ToggleGroupItem>
-        </ToggleGroup>
-        <input type="hidden" name="type" value={type} />
-      </div>
+	const fieldErrors = (state?.fieldErrors ?? {}) as Record<string, string[]>;
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Jumlah */}
-        <div className="space-y-2">
-          <Label htmlFor="amount" className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">Jumlah</Label>
-          <div className="relative group">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground/45 select-none transition-colors duration-300 group-focus-within:text-foreground">
-              Rp
-            </span>
-            <Input
-              id="amount"
-              name="amount"
-              type="text"
-              inputMode="numeric"
-              required
-              value={amount}
-              onChange={(e) => setAmount(formatInputRupiah(e.target.value))}
-              className="pl-10 font-mono font-semibold"
-              aria-invalid={!!state?.fieldErrors?.amount}
-            />
-          </div>
-          {state?.fieldErrors?.amount?.[0] ? (
-            <p className="text-xs text-destructive mt-1 flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
-              {state.fieldErrors.amount[0]}
-            </p>
-          ) : null}
-        </div>
-
-        {/* Tanggal */}
-        <div className="space-y-2">
-          <Label htmlFor="date" className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">Tanggal</Label>
-          <Input
-            id="date"
-            name="date"
-            type="date"
-            required
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            aria-invalid={!!state?.fieldErrors?.date}
-          />
-          {state?.fieldErrors?.date?.[0] ? (
-            <p className="text-xs text-destructive mt-1 flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
-              {state.fieldErrors.date[0]}
-            </p>
-          ) : null}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Akun */}
-        <div className="space-y-2">
-          <Label htmlFor="accountId" className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">
-            {type === "transfer" ? "Dari akun" : "Akun"}
-          </Label>
-          <Select value={accountId} onValueChange={setAccountId} name="accountId" required>
-            <SelectTrigger id="accountId" aria-invalid={!!state?.fieldErrors?.accountId}>
-              <SelectValue placeholder="Pilih akun" />
-            </SelectTrigger>
-            <SelectContent>
-              {accounts.map((a) => (
-                <SelectItem key={a.id} value={a.id}>
-                  {a.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {state?.fieldErrors?.accountId?.[0] ? (
-            <p className="text-xs text-destructive mt-1 flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
-              {state.fieldErrors.accountId[0]}
-            </p>
-          ) : null}
-        </div>
-
-        {/* Dynamic field: Kategori or Ke akun */}
-        {type === "transfer" ? (
-          <div className="space-y-2">
-            <Label htmlFor="transferToId" className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">Ke akun</Label>
-            <Select
-              value={transferToId}
-              onValueChange={setTransferToId}
-              name="transferToId"
-              required
-            >
-              <SelectTrigger id="transferToId" aria-invalid={!!state?.fieldErrors?.transferToId}>
-                <SelectValue placeholder="Pilih akun tujuan" />
-              </SelectTrigger>
-              <SelectContent>
-                {accounts.map((a) => (
-                  <SelectItem key={a.id} value={a.id}>
-                    {a.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {state?.fieldErrors?.transferToId?.[0] ? (
-              <p className="text-xs text-destructive mt-1 flex items-center gap-1.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
-                {state.fieldErrors.transferToId[0]}
-              </p>
-            ) : null}
-          </div>
-        ) : (
-          <div className="space-y-2">
-            <Label htmlFor="categoryId" className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">Kategori</Label>
-            <Select
-              value={categoryId}
-              onValueChange={setCategoryId}
-              name="categoryId"
-              required
-            >
-              <SelectTrigger id="categoryId" aria-invalid={!!state?.fieldErrors?.categoryId}>
-                <SelectValue placeholder="Pilih kategori" />
-              </SelectTrigger>
-              <SelectContent>
-                {filteredCategories.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.icon ? `${c.icon} ` : ""}
-                    {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {state?.fieldErrors?.categoryId?.[0] ? (
-              <p className="text-xs text-destructive mt-1 flex items-center gap-1.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
-                {state.fieldErrors.categoryId[0]}
-              </p>
-            ) : null}
-          </div>
-        )}
-      </div>
-
-      {/* Deskripsi */}
-      <div className="space-y-2">
-        <Label htmlFor="description" className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">Deskripsi</Label>
-        <Input
-          id="description"
-          name="description"
-          maxLength={200}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Mis. Kopi pagi"
-        />
-      </div>
-
-      {/* Catatan */}
-      <div className="space-y-2">
-        <Label htmlFor="note" className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">Catatan (opsional)</Label>
-        <Textarea
-          id="note"
-          name="note"
-          maxLength={2000}
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          rows={2}
-          className="rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-3 text-sm hover:border-white/[0.12] hover:bg-white/[0.05] focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50 focus:bg-white/[0.04] transition-all duration-300 ease-out min-h-[70px]"
-        />
-      </div>
-
-      {state?.error ? (
-        <p className="text-xs text-destructive mt-1 flex items-center gap-1.5">
-          <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
-          {state.error}
-        </p>
-      ) : null}
-
-      {/* Action Buttons */}
-      <div className="flex items-center gap-2.5 pt-3 border-t border-white/[0.04] mt-2">
-        <Button type="submit" disabled={pending} className="flex-1 h-10 text-[13px] font-bold">
-          {pending && <Loader2 size={14} className="animate-spin mr-1.5" />}
-          {mode === "edit" ? "Simpan Perubahan" : "Tambah Transaksi"}
-        </Button>
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={onCancel}
-          disabled={pending}
-          className="h-10 text-[13px] px-5 bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08]"
-        >
-          Batal
-        </Button>
-      </div>
-    </form>
-  );
-
-  if (!showTabs) return formContent;
-
-  return (
-    <Tabs
-      value={activeTab}
-      onValueChange={(v) => setActiveTab(v as "manual" | "ai")}
-    >
-      <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="manual">Manual</TabsTrigger>
-        <TabsTrigger value="ai">
-          <Sparkles size={12} />
-          Scan AI
-        </TabsTrigger>
-      </TabsList>
-
-      <TabsContent value="manual">{formContent}</TabsContent>
-
-      <TabsContent value="ai">
-        <AIScanPanel
-          enabled={aiScanEnabled}
-          onApply={applyAICandidate}
-          accounts={accounts}
-          categories={categories}
-        />
-      </TabsContent>
-    </Tabs>
-  );
-}
-
-// --- AI Scan Panel -------------------------------------------------------
-
-interface AIPanelProps {
-  enabled: boolean;
-  onApply: (candidate: {
-    type: TransactionTypeInput;
-    amount: number;
-    date: string | null;
-    description: string | null;
-    accountId: string | null;
-    transferToId: string | null;
-    categoryId: string | null;
-  }) => void;
-  accounts: AccountOption[];
-  categories: CategoryOption[];
-}
-
-// --- Helper to load Tesseract.js dynamically ----------------------------
-
-function loadTesseract(): Promise<any> {
-  return new Promise((resolve, reject) => {
-    if ((window as any).Tesseract) {
-      resolve((window as any).Tesseract);
-      return;
-    }
-    const script = document.createElement("script");
-    script.src = "https://unpkg.com/tesseract.js@5.1.0/dist/tesseract.min.js";
-    script.onload = () => {
-      resolve((window as any).Tesseract);
-    };
-    script.onerror = () => {
-      reject(
-        new Error("Gagal memuat library OCR. Silakan periksa koneksi internet Anda.")
-      );
-    };
-    document.body.appendChild(script);
-  });
-}
-
-function AIScanPanel({ enabled, onApply, accounts, categories }: AIPanelProps) {
-  const [text, setText] = useState("");
-  const [pending, startTransition] = useTransition();
-  const [ocrPending, setOcrPending] = useState(false);
-  const [ocrProgress, setOcrProgress] = useState("");
-  const [preview, setPreview] = useState<null | {
-    type: TransactionTypeInput;
-    amount: number;
-    date: string | null;
-    description: string | null;
-    accountId: string | null;
-    transferToId: string | null;
-    categoryId: string | null;
-    confidence: number;
-    reasoning: string | null;
-  }>(null);
-
-  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setOcrPending(true);
-    setOcrProgress("Memuat library OCR...");
-
+	// ---- Scan AI (OCR + parse) ----
+	const handleScanFile = async (file: File) => {
+    setScanning(true);
     try {
-      const Tesseract = await loadTesseract();
-      setOcrProgress("Membaca teks dari struk...");
-
-      const result = await Tesseract.recognize(file, "ind+eng", {
-        logger: (m: any) => {
-          if (m.status === "recognizing text") {
-            setOcrProgress(`Mengekstrak teks (${Math.round(m.progress * 100)}%)`);
-          }
-        },
-      });
-
-      const extractedText = result.data.text;
-      if (!extractedText.trim()) {
-        toast.error("Tidak ada teks yang terdeteksi dari gambar tersebut.");
-      } else {
-        setText(extractedText);
-        toast.success("Teks berhasil diekstrak! Silakan klik 'Scan dengan AI' di bawah.");
+      // @ts-expect-error - dimuat dari CDN
+      if (!window.Tesseract) {
+        await new Promise<void>((resolve, reject) => {
+          const s = document.createElement("script");
+          s.src = TESSERACT_CDN;
+          s.onload = () => resolve();
+          s.onerror = () => reject(new Error("Tesseract load failed"));
+          document.body.appendChild(s);
+        });
       }
-    } catch (err: any) {
-      console.error(err);
-      toast.error(err.message || "Gagal melakukan OCR pada gambar.");
-    } finally {
-      setOcrPending(false);
-      setOcrProgress("");
-      e.target.value = "";
-    }
-  }
+      // @ts-expect-error - global Tesseract dari CDN
+      const { data } = await window.Tesseract.recognize(file, "ind+eng");
+      const text: string = data?.text ?? "";
 
-  function handleScan() {
-    if (!text.trim()) {
-      toast.error("Tempel atau ekstrak teks transaksi terlebih dahulu.");
-      return;
-    }
-    startTransition(async () => {
       const result = await scanTransactionText(text);
-      if (!result.ok) {
-        toast.error((result as any).error || "Gagal memproses AI scan.");
-        return;
+
+      if (result.ok) {
+        // result menyempit ke { ok: true; candidate: AIScanCandidate }
+        const c = result.candidate;
+        setType(c.type);
+        if (typeof c.amount === "number") setAmount(formatInputRupiah(String(c.amount)));
+        if (c.date) setDate(c.date);
+        if (c.description) setDescription(c.description);
+        if (c.accountId && accounts.some((a) => a.id === c.accountId)) setAccountId(c.accountId);
+        if (c.transferToId) setTransferToId(c.transferToId);
+        if (c.categoryId) setCategoryId(c.categoryId);
+        setTab("manual");
+        toast.success(isId ? "Struk berhasil dibaca" : "Receipt scanned");
+      } else if ("error" in result) {
+        toast.error(result.error || (isId ? "Gagal membaca struk" : "Couldn't read the receipt"));
+      } else {
+        toast.error(isId ? "Gagal membaca struk" : "Couldn't read the receipt");
       }
-      setPreview(result.candidate);
-    });
-  }
+    } catch {
+      toast.error(isId ? "Pemindaian gagal" : "Scan failed");
+    } finally {
+      setScanning(false);
+    }
+  };
 
-  function handleApply() {
-    if (!preview) return;
-    onApply(preview);
-    toast.success("Form berhasil diisi dari hasil scan AI.");
-    setPreview(null);
-    setText("");
-  }
+	if (!open) return null;
 
-  if (!enabled) {
-    return (
-      <div className="rounded-md border border-dashed border-border bg-elevated p-5 space-y-3">
-        <div className="flex items-center gap-2">
-          <Sparkles size={14} className="text-primary" />
-          <p className="text-sm font-medium text-foreground">
-            Scan AI belum aktif
-          </p>
-        </div>
-        <p className="text-xs text-muted-foreground leading-relaxed">
-          Untuk mengaktifkan, tambahkan kunci API DeepSeek ke file{" "}
-          <code className="bg-card px-1.5 py-0.5 rounded text-foreground font-mono">
-            .env
-          </code>
-          :
-        </p>
-        <pre className="bg-card border border-border rounded p-2 text-[11px] font-mono text-foreground overflow-x-auto">
-          DEEPSEEK_API_KEY=&quot;sk-xxxxxxxxxxxxxxxx&quot;
-        </pre>
-        <p className="text-xs text-muted-foreground leading-relaxed">
-          Dapatkan kunci di{" "}
-          <a
-            href="https://platform.deepseek.com/api_keys"
-            target="_blank"
-            rel="noreferrer"
-            className="text-primary hover:underline"
-          >
-            platform.deepseek.com/api_keys
-          </a>
-          , lalu restart dev server agar variabel terbaca.
-        </p>
-      </div>
-    );
-  }
+	const typeOptions: {
+		value: TransactionTypeInput;
+		label: string;
+		icon: typeof TrendingUp;
+		activeClass: string;
+	}[] = [
+		{
+			value: "expense" as TransactionTypeInput,
+			label: isId ? "Pengeluaran" : "Expense",
+			icon: TrendingDown,
+			activeClass: "data-[state=on]:bg-expense/15 data-[state=on]:text-expense",
+		},
+		{
+			value: "income" as TransactionTypeInput,
+			label: isId ? "Pemasukan" : "Income",
+			icon: TrendingUp,
+			activeClass: "data-[state=on]:bg-income/15 data-[state=on]:text-income",
+		},
+		{
+			value: "transfer" as TransactionTypeInput,
+			label: "Transfer",
+			icon: ArrowLeftRight,
+			activeClass: "data-[state=on]:bg-accent/15 data-[state=on]:text-accent",
+		},
+	];
 
-  const accountName = (id: string | null) =>
-    accounts.find((a) => a.id === id)?.name ?? null;
-  const categoryName = (id: string | null) =>
-    categories.find((c) => c.id === id)?.name ?? null;
+	const labelCls =
+		"text-xs font-bold text-muted-foreground/70 uppercase tracking-wider";
 
-  return (
-    <div className="space-y-4">
-      {/* Photo OCR Upload Zone */}
-      <div className="border border-dashed border-border rounded-lg p-4 bg-elevated/30 flex flex-col items-center justify-center text-center space-y-2 hover:bg-elevated/50 transition-colors relative overflow-hidden group">
-        <input
-          type="file"
-          accept="image/*"
-          className="absolute inset-0 opacity-0 cursor-pointer z-10"
-          onChange={handleImageUpload}
-          disabled={ocrPending}
-        />
-        {ocrPending ? (
-          <div className="flex flex-col items-center gap-2 py-2">
-            <Loader2 className="h-6 w-6 animate-spin text-accent" />
-            <p className="text-xs font-medium text-foreground">
-              {ocrProgress}
-            </p>
-          </div>
-        ) : (
-          <>
-            <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent group-hover:scale-110 transition-transform">
-              <Camera size={16} />
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-foreground">Unggah Foto Struk / Bukti Transaksi</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">Klik atau seret file gambar ke sini untuk mengekstrak teks otomatis</p>
-            </div>
-          </>
-        )}
-      </div>
+	const fields = (
+		<div className="space-y-[18px]">
+			{/* Tipe */}
+			<div className="space-y-2.5">
+				<Label className={labelCls}>{isId ? "Tipe" : "Type"}</Label>
+				<ToggleGroup
+					type="single"
+					value={type}
+					onValueChange={(v) => v && setType(v as TransactionTypeInput)}
+					className="grid grid-cols-3 gap-1 bg-white/[0.02] border border-white/[0.06] rounded-xl p-1 h-11"
+				>
+					{typeOptions.map((opt) => {
+						const Icon = opt.icon;
+						return (
+							<ToggleGroupItem
+								key={opt.value}
+								value={opt.value}
+								className={cn(
+									"rounded-lg text-xs font-bold transition-all duration-200 h-9 text-muted-foreground hover:text-foreground flex items-center justify-center gap-1.5 data-[state=on]:border data-[state=on]:font-extrabold",
+									opt.value === "expense" && "data-[state=on]:border-expense/20",
+									opt.value === "income" && "data-[state=on]:border-income/20",
+									opt.value === "transfer" && "data-[state=on]:border-accent/20",
+									opt.activeClass,
+								)}
+							>
+								<Icon className="h-3.5 w-3.5" />
+								{opt.label}
+							</ToggleGroupItem>
+						);
+					})}
+				</ToggleGroup>
+			</div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="ai-text">Teks Transaksi</Label>
-        <Textarea
-          id="ai-text"
-          rows={5}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder={[
-            "Atau edit teks hasil scan di sini:",
-            "BCA m-BCA 23/05 Tarik Tunai Rp250.000 di ATM Kuningan",
-            "atau:",
-            "Bayar Gojek GoFood Rp 87.500 - Burger King",
-          ].join("\n")}
-        />
-        <p className="text-xs text-muted-foreground">
-          Anda juga dapat langsung menempel SMS bank, notifikasi e-wallet, atau ringkasan struk secara manual.
-        </p>
-      </div>
+			{/* Jumlah + Tanggal */}
+			<div className="grid grid-cols-2 gap-4">
+				<div className="space-y-2.5">
+					<Label className={labelCls}>{isId ? "Jumlah" : "Amount"}</Label>
+					<div className="relative">
+						<span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-muted-foreground/70">
+							Rp
+						</span>
+						<Input
+							inputMode="numeric"
+							value={amount}
+							onChange={(e) => setAmount(formatInputRupiah(e.target.value))}
+							placeholder="0"
+							className="h-11 pl-10 font-mono font-semibold"
+						/>
+					</div>
+					{fieldErrors.amount?.[0] ? <ErrText msg={fieldErrors.amount[0]} /> : null}
+				</div>
+				<div className="space-y-2.5">
+					<Label className={labelCls}>{isId ? "Tanggal" : "Date"}</Label>
+					<Input
+						type="date"
+						value={date}
+						onChange={(e) => setDate(e.target.value)}
+						className="h-11"
+					/>
+				</div>
+			</div>
 
-      <Button
-        type="button"
-        onClick={handleScan}
-        disabled={pending || text.trim().length < 10}
-        className="w-full"
-      >
-        {pending ? (
-          <Loader2 size={14} className="animate-spin" />
-        ) : (
-          <WandSparkles size={14} />
-        )}
-        {pending ? "Memproses…" : "Scan dengan AI"}
-      </Button>
+			{/* Akun + (Kategori / Transfer ke) */}
+			<div className="grid grid-cols-2 gap-4">
+				<div className="space-y-2.5">
+					<Label className={labelCls}>
+						{type === "transfer"
+							? isId
+								? "Dari Akun"
+								: "From Account"
+							: isId
+								? "Akun"
+								: "Account"}
+					</Label>
+					<Select value={accountId} onValueChange={setAccountId}>
+						<SelectTrigger className="h-11">
+							<SelectValue placeholder={isId ? "Pilih akun" : "Select account"} />
+						</SelectTrigger>
+						<SelectContent>
+							{accounts.map((a) => (
+								<SelectItem key={a.id} value={a.id}>
+									{a.name}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
+				</div>
 
-      {preview ? (
-        <div className="rounded-md border border-border bg-elevated p-3 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-foreground inline-flex items-center gap-1.5">
-              <Sparkles size={12} className="text-primary" />
-              Hasil deteksi AI
-            </span>
-            <Badge
-              variant={preview.confidence >= 0.7 ? "income" : "outline"}
-              className="font-mono"
-            >
-              {Math.round(preview.confidence * 100)}% yakin
-            </Badge>
-          </div>
+				{type === "transfer" ? (
+					<div className="space-y-2.5">
+						<Label className={labelCls}>{isId ? "Ke Akun" : "To Account"}</Label>
+						<Select
+							value={transferToId ?? ""}
+							onValueChange={(v) => setTransferToId(v)}
+						>
+							<SelectTrigger className="h-11">
+								<SelectValue placeholder={isId ? "Pilih akun" : "Select account"} />
+							</SelectTrigger>
+							<SelectContent>
+								{accounts
+									.filter((a) => a.id !== accountId)
+									.map((a) => (
+										<SelectItem key={a.id} value={a.id}>
+											{a.name}
+										</SelectItem>
+									))}
+							</SelectContent>
+						</Select>
+					</div>
+				) : (
+					<div className="space-y-2.5">
+						<Label className={labelCls}>{isId ? "Kategori" : "Category"}</Label>
+						<Select
+							value={categoryId ?? ""}
+							onValueChange={(v) => setCategoryId(v)}
+						>
+							<SelectTrigger className="h-11">
+								<SelectValue placeholder={isId ? "Pilih kategori" : "Select category"} />
+							</SelectTrigger>
+							<SelectContent>
+								{filteredCategories.map((c) => (
+									<SelectItem key={c.id} value={c.id}>
+										{c.icon ? `${c.icon} ` : ""}
+										{c.name}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					</div>
+				)}
+			</div>
 
-          <dl className="grid grid-cols-3 gap-x-3 gap-y-1.5 text-xs">
-            <PreviewRow label="Tipe" value={typeLabel(preview.type)} />
-            <PreviewRow
-              label="Jumlah"
-              value={
-                <span className="font-mono tabular-nums">
-                  {formatIDR(preview.amount)}
-                </span>
-              }
-            />
-            <PreviewRow
-              label="Tanggal"
-              value={
-                preview.date ? (
-                  <span className="font-mono">{preview.date}</span>
-                ) : (
-                  <span className="text-muted-foreground">—</span>
-                )
-              }
-            />
-            <PreviewRow
-              label={preview.type === "transfer" ? "Dari" : "Akun"}
-              value={
-                accountName(preview.accountId) ?? (
-                  <span className="text-muted-foreground">Tidak terdeteksi</span>
-                )
-              }
-            />
-            {preview.type === "transfer" ? (
-              <PreviewRow
-                label="Ke"
-                value={
-                  accountName(preview.transferToId) ?? (
-                    <span className="text-muted-foreground">Tidak terdeteksi</span>
-                  )
-                }
-              />
-            ) : (
-              <PreviewRow
-                label="Kategori"
-                value={
-                  categoryName(preview.categoryId) ?? (
-                    <span className="text-muted-foreground">Tidak terdeteksi</span>
-                  )
-                }
-              />
-            )}
-            <PreviewRow
-              label="Deskripsi"
-              value={
-                preview.description ?? (
-                  <span className="text-muted-foreground">—</span>
-                )
-              }
-            />
-          </dl>
+			{/* Deskripsi */}
+			<div className="space-y-2.5">
+				<Label className={labelCls}>{isId ? "Deskripsi" : "Description"}</Label>
+				<Input
+					value={description}
+					onChange={(e) => setDescription(e.target.value)}
+					placeholder={isId ? "mis. Makan siang" : "e.g. Lunch"}
+					className="h-11"
+				/>
+			</div>
 
-          {preview.reasoning ? (
-            <p className="text-[10px] text-muted-foreground border-t border-border pt-2">
-              <span className="font-medium">AI:</span> {preview.reasoning}
-            </p>
-          ) : null}
+			{/* Catatan */}
+			<div className="space-y-2.5">
+				<Label className={labelCls}>
+					{isId ? "Catatan (opsional)" : "Note (optional)"}
+				</Label>
+				<Textarea
+					value={note}
+					onChange={(e) => setNote(e.target.value)}
+					placeholder={isId ? "Tambahkan catatan…" : "Add a note…"}
+					className="min-h-[70px] rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-3"
+				/>
+			</div>
+		</div>
+	);
 
-          <div className="flex items-center gap-2 pt-1">
-            <Button
-              type="button"
-              size="sm"
-              onClick={handleApply}
-              className="flex-1"
-            >
-              Pakai hasil ini
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => setPreview(null)}
-            >
-              Buang
-            </Button>
-          </div>
-        </div>
-      ) : null}
-    </div>
-  );
+	return createPortal(
+		<div
+			className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6 backdrop-blur-sm"
+			onMouseDown={(e) => {
+				if (e.target === e.currentTarget) onClose();
+			}}
+		>
+			<div
+				className="flex max-h-[calc(100dvh-48px)] w-full max-w-[520px] flex-col overflow-hidden rounded-[22px] border border-border bg-surface shadow-2xl"
+				role="dialog"
+				aria-modal="true"
+			>
+				{/* ===== STICKY HEADER ===== */}
+				<div className="flex items-start gap-4 border-b border-border px-7 py-5">
+					<div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-accent to-accent/60 text-white shadow-lg">
+						<Sparkles className="h-5 w-5" />
+					</div>
+					<div className="min-w-0 flex-1">
+						<h2 className="text-[17px] font-semibold leading-tight text-foreground">
+							{mode === "create"
+								? isId
+									? "Tambah Transaksi"
+									: "Add Transaction"
+								: isId
+									? "Edit Transaksi"
+									: "Edit Transaction"}
+						</h2>
+						<p className="mt-0.5 text-[13px] text-muted-foreground/70">
+							{isId
+								? "Catat pemasukan, pengeluaran, atau transfer."
+								: "Record an income, expense, or transfer."}
+						</p>
+					</div>
+					<button
+						type="button"
+						onClick={onClose}
+						className="-mr-1.5 -mt-1 flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground/60 transition hover:bg-white/[0.06] hover:text-foreground"
+						aria-label={isId ? "Tutup" : "Close"}
+					>
+						<X className="h-[18px] w-[18px]" />
+					</button>
+				</div>
+
+				{/* ===== SCROLLABLE BODY ===== */}
+				<div className="flex-1 overflow-y-auto px-7 py-6">
+					{mode === "create" && aiScanEnabled ? (
+						<Tabs
+							value={tab}
+							onValueChange={(v) => setTab(v as "manual" | "scan")}
+							className="w-full"
+						>
+							<TabsList className="mb-5 grid w-full grid-cols-2 bg-white/[0.02] border border-white/[0.06] rounded-xl p-1 h-11">
+								<TabsTrigger
+									value="manual"
+									className="rounded-lg text-xs font-bold transition-all duration-200 h-9 data-[state=active]:bg-accent/10 data-[state=active]:text-accent data-[state=active]:border data-[state=active]:border-accent/20 data-[state=active]:font-extrabold text-muted-foreground hover:text-foreground"
+								>
+									Manual
+								</TabsTrigger>
+								<TabsTrigger
+									value="scan"
+									className="rounded-lg text-xs font-bold transition-all duration-200 h-9 data-[state=active]:bg-accent/10 data-[state=active]:text-accent data-[state=active]:border data-[state=active]:border-accent/20 data-[state=active]:font-extrabold text-muted-foreground hover:text-foreground gap-1.5"
+								>
+									<ScanLine className="h-3.5 w-3.5" />
+									{isId ? "Scan AI" : "AI Scan"}
+								</TabsTrigger>
+							</TabsList>
+
+							<TabsContent value="manual" className="mt-0">
+								{fields}
+							</TabsContent>
+
+							<TabsContent value="scan" className="mt-0">
+								<div
+									className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/[0.12] bg-white/[0.02] px-6 py-10 text-center"
+									onClick={() => !scanning && fileInputRef.current?.click()}
+									role="button"
+								>
+									{scanning ? (
+										<>
+											<Loader2 className="mb-3 h-7 w-7 animate-spin text-accent" />
+											<p className="text-sm text-muted-foreground">
+												{isId ? "Membaca struk…" : "Reading receipt…"}
+											</p>
+										</>
+									) : (
+										<>
+											<div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-accent/15 text-accent">
+												<Upload className="h-6 w-6" />
+											</div>
+											<p className="text-sm font-medium text-foreground">
+												{isId ? "Unggah foto struk" : "Upload a receipt photo"}
+											</p>
+											<p className="mt-1 text-xs text-muted-foreground/70">
+												{isId
+													? "AI akan mengisi form otomatis"
+													: "AI will fill the form for you"}
+											</p>
+											<Badge variant="secondary" className="mt-3 gap-1">
+												<Sparkles className="h-3 w-3" /> AI
+											</Badge>
+										</>
+									)}
+									<input
+										ref={fileInputRef}
+										type="file"
+										accept="image/*"
+										className="hidden"
+										onChange={(e) => {
+											const f = e.target.files?.[0];
+											if (f) handleScanFile(f);
+											e.target.value = "";
+										}}
+									/>
+								</div>
+							</TabsContent>
+						</Tabs>
+					) : (
+						fields
+					)}
+
+					{/* form asli yang di-submit; tombolnya di footer via form="" */}
+					<form id={FORM_ID} action={formAction} className="hidden">
+						<input type="hidden" name="type" value={type} />
+						<input type="hidden" name="amount" value={amount} />
+						<input type="hidden" name="date" value={date} />
+						<input type="hidden" name="accountId" value={accountId} />
+						<input
+							type="hidden"
+							name="categoryId"
+							value={type === "transfer" ? "" : categoryId ?? ""}
+						/>
+						<input
+							type="hidden"
+							name="transferToId"
+							value={type === "transfer" ? transferToId ?? "" : ""}
+						/>
+						<input type="hidden" name="description" value={description} />
+						<input type="hidden" name="note" value={note} />
+					</form>
+
+					{state && !state.ok && state.error ? (
+						<div className="mt-4">
+							<ErrText msg={state.error} />
+						</div>
+					) : null}
+				</div>
+
+				{/* ===== STICKY FOOTER ===== */}
+				<div className="flex items-center justify-end gap-3 border-t border-border px-7 py-5">
+					<Button
+						type="button"
+						variant="ghost"
+						onClick={onClose}
+						className="h-10 text-[13px]"
+						disabled={pending}
+					>
+						{isId ? "Batal" : "Cancel"}
+					</Button>
+					<Button
+						type="submit"
+						form={FORM_ID}
+						className="h-10 gap-1.5 text-[13px]"
+						disabled={pending || scanning}
+					>
+						{pending ? (
+							<Loader2 className="h-4 w-4 animate-spin" />
+						) : (
+							<Check className="h-4 w-4" />
+						)}
+						{mode === "create"
+							? isId
+								? "Simpan"
+								: "Save"
+							: isId
+								? "Perbarui"
+								: "Update"}
+					</Button>
+				</div>
+			</div>
+		</div>,
+		document.body,
+	);
 }
 
-function PreviewRow({
-  label,
-  value,
-}: {
-  label: string;
-  value: React.ReactNode;
-}) {
-  return (
-    <>
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="col-span-2 text-foreground truncate">{value}</dd>
-    </>
-  );
-}
-
-function typeLabel(t: TransactionTypeInput): string {
-  if (t === "income") return "Pemasukan";
-  if (t === "expense") return "Pengeluaran";
-  return "Transfer";
+function ErrText({ msg }: { msg: string }) {
+	return (
+		<p className="flex items-center gap-1.5 text-xs text-destructive">
+			<span className="h-1.5 w-1.5 rounded-full bg-destructive" />
+			{msg}
+		</p>
+	);
 }

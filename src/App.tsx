@@ -14,6 +14,8 @@ import Expenses from "@/pages/Expenses";
 import Budget from "@/pages/Budget";
 import Settings from "@/pages/Settings";
 import Profile from "@/pages/Profile";
+import Goals from "@/pages/Goals";
+import Recurring from "@/pages/Recurring";
 
 import { LanguageProvider } from "@/lib/contexts/LanguageContext";
 
@@ -99,6 +101,23 @@ export default function App() {
             </AppLayout>
           }
         />
+        <Route
+          path="/goals"
+          element={
+            <AppLayout>
+              <Goals />
+            </AppLayout>
+          }
+        />
+        <Route
+          path="/recurring"
+          element={
+            <AppLayout>
+              <Recurring />
+            </AppLayout>
+          }
+        />
+
 
         {/* Catch-all fallback redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />

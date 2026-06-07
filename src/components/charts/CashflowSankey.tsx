@@ -303,8 +303,8 @@ function SankeyChart({
             d={linkPath(link) ?? ""}
             stroke={`url(#sankey-grad-${i})`}
             strokeWidth={Math.max(1, link.width ?? 1)}
-            opacity={0.8}
-            className="transition-all duration-300 hover:opacity-100 hover:stroke-[3] cursor-pointer"
+            opacity={0.65}
+            className="transition-all duration-300 hover:opacity-100 cursor-pointer"
             style={{
               filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.3))',
               transition: 'all 0.3s ease'

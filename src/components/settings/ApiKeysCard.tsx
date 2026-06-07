@@ -23,6 +23,7 @@ import { formatDate } from "@/lib/utils/formatters";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useLanguage } from "@/lib/contexts/LanguageContext";
 import {
   Dialog,
   DialogBody,
@@ -48,6 +49,7 @@ interface Props {
  * tidak bisa dilihat lagi — user wajib salin dulu.
  */
 export function ApiKeysCard({ apiKeys }: Props) {
+  const { language } = useLanguage();
   const [creating, setCreating] = useState(false);
   const [newKey, setNewKey] = useState<{
     plain: string;
@@ -61,28 +63,36 @@ export function ApiKeysCard({ apiKeys }: Props) {
       <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-medium text-foreground flex items-center gap-2">
-            <KeyRound size={14} /> Kunci API
+            <KeyRound size={14} /> {language === "id" ? "Kunci API" : "API Keys"}
           </h2>
           <Button size="sm" onClick={() => setCreating(true)}>
-            <Plus size={12} /> Buat kunci
+            <Plus size={12} /> {language === "id" ? "Buat kunci" : "Create key"}
           </Button>
         </div>
 
         <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
-          Kunci API dipakai untuk akses programatik (mis. bot Telegram,
-          script otomasi). Kirim header{" "}
+          {language === "id"
+            ? "Kunci API dipakai untuk akses programatik (mis. bot Telegram, script otomasi). Kirim header "
+            : "API keys are used for programmatic access (e.g. Telegram bots, automation scripts). Send the header "}
           <code className="bg-elevated px-1.5 py-0.5 rounded text-foreground font-mono">
-            Authorization: Bearer &lt;kunci&gt;
+            Authorization: Bearer &lt;key&gt;
           </code>{" "}
-          ke <code className="font-mono">/api/v1/*</code>. Kunci hanya
-          ditampilkan sekali — simpan baik-baik setelah dibuat.
+          {language === "id" ? "ke " : "to "}
+          <code className="font-mono">/api/v1/*</code>.{" "}
+          {language === "id"
+            ? "Kunci hanya ditampilkan sekali — simpan baik-baik setelah dibuat."
+            : "The key is only shown once — save it carefully after creation."}
         </p>
 
         {apiKeys.length === 0 ? (
           <EmptyState
             icon={Inbox}
-            title="Belum ada kunci"
-            description="Buat kunci pertama untuk mulai mengintegrasikan bot atau otomasi."
+            title={language === "id" ? "Belum ada kunci" : "No keys yet"}
+            description={
+              language === "id"
+                ? "Buat kunci pertama untuk mulai mengintegrasikan bot atau otomasi."
+                : "Create your first key to start integrating bots or automation."
+            }
             size="sm"
             className="rounded-md border border-dashed border-border bg-elevated"
           />
@@ -96,8 +106,9 @@ export function ApiKeysCard({ apiKeys }: Props) {
 
         {activeCount >= 10 ? (
           <p className="text-xs text-warning mt-3">
-            Sudah ada 10 kunci aktif (batas maksimal). Cabut yang tidak dipakai
-            untuk membuat kunci baru.
+            {language === "id"
+              ? "Sudah ada 10 kunci aktif (batas maksimal). Cabut yang tidak dipakai untuk membuat kunci baru."
+              : "There are already 10 active keys (maximum limit). Revoke unused keys to create a new one."}
           </p>
         ) : null}
       </Card>
@@ -122,6 +133,7 @@ export function ApiKeysCard({ apiKeys }: Props) {
 // --- Single row ----------------------------------------------------------
 
 function ApiKeyRow({ item }: { item: ApiKeyListItem }) {
+  const { language } = useLanguage();
   const [pending, startTransition] = useTransition();
   const [confirmAction, setConfirmAction] =
     useState<"revoke" | "delete" | null>(null);
@@ -137,11 +149,15 @@ function ApiKeyRow({ item }: { item: ApiKeyListItem }) {
           : await revokeApiKey(item.id);
       if (result.ok) {
         toast.success(
-          confirmAction === "delete" ? "Kunci dihapus" : "Kunci dicabut",
+          confirmAction === "delete"
+            ? (language === "id" ? "Kunci dihapus" : "Key deleted")
+            : (language === "id" ? "Kunci dicabut" : "Key revoked")
         );
         setConfirmAction(null);
       } else {
-        toast.error(result.error ?? "Gagal memproses permintaan.");
+        toast.error(
+          result.error ?? (language === "id" ? "Gagal memproses permintaan." : "Failed to process request.")
+        );
       }
     });
   }
@@ -155,11 +171,11 @@ function ApiKeyRow({ item }: { item: ApiKeyListItem }) {
           </p>
           {isRevoked ? (
             <Badge variant="outline" className="font-normal">
-              Dicabut
+              {language === "id" ? "Dicabut" : "Revoked"}
             </Badge>
           ) : (
             <Badge variant="income" className="font-normal">
-              Aktif
+              {language === "id" ? "Aktif" : "Active"}
             </Badge>
           )}
         </div>
@@ -167,10 +183,10 @@ function ApiKeyRow({ item }: { item: ApiKeyListItem }) {
           {item.prefix}…••••••••
         </p>
         <p className="text-[10px] text-muted-foreground mt-0.5">
-          Dibuat {formatDate(item.createdAt)}
+          {language === "id" ? "Dibuat" : "Created"} {formatDate(item.createdAt)}
           {item.lastUsedAt
-            ? ` · Terakhir dipakai ${formatDate(item.lastUsedAt)}`
-            : " · Belum pernah dipakai"}
+            ? ` · ${language === "id" ? "Terakhir dipakai" : "Last used"} ${formatDate(item.lastUsedAt)}`
+            : ` · ${language === "id" ? "Belum pernah dipakai" : "Never used"}`}
         </p>
       </div>
 
@@ -181,8 +197,8 @@ function ApiKeyRow({ item }: { item: ApiKeyListItem }) {
             variant="ghost"
             className="h-7 w-7"
             onClick={() => setConfirmAction("revoke")}
-            aria-label="Cabut kunci"
-            title="Cabut kunci"
+            aria-label={language === "id" ? "Cabut kunci" : "Revoke key"}
+            title={language === "id" ? "Cabut kunci" : "Revoke key"}
           >
             <XCircle size={14} />
           </Button>
@@ -192,8 +208,8 @@ function ApiKeyRow({ item }: { item: ApiKeyListItem }) {
           variant="ghost"
           className="h-7 w-7 hover:text-destructive"
           onClick={() => setConfirmAction("delete")}
-          aria-label="Hapus kunci"
-          title="Hapus permanen"
+          aria-label={language === "id" ? "Hapus kunci" : "Delete key"}
+          title={language === "id" ? "Hapus permanen" : "Delete permanently"}
         >
           <Trash2 size={14} />
         </Button>
@@ -206,12 +222,18 @@ function ApiKeyRow({ item }: { item: ApiKeyListItem }) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {confirmAction === "delete" ? "Hapus kunci" : "Cabut kunci"}
+              {confirmAction === "delete"
+                ? (language === "id" ? "Hapus kunci" : "Delete key")
+                : (language === "id" ? "Cabut kunci" : "Revoke key")}
             </DialogTitle>
             <DialogDescription>
               {confirmAction === "delete"
-                ? "Kunci akan dihapus permanen dari sistem. Aksi ini tidak bisa dibatalkan."
-                : "Kunci akan langsung tidak valid. Anda bisa menghapusnya sepenuhnya nanti."}
+                ? (language === "id"
+                  ? "Kunci akan dihapus permanen dari sistem. Aksi ini tidak bisa dibatalkan."
+                  : "The key will be permanently deleted from the system. This action cannot be undone.")
+                : (language === "id"
+                  ? "Kunci akan langsung tidak valid. Anda bisa menghapusnya sepenuhnya nanti."
+                  : "The key will immediately become invalid. You can delete it fully later.")}
             </DialogDescription>
           </DialogHeader>
           <DialogBody>
@@ -228,7 +250,7 @@ function ApiKeyRow({ item }: { item: ApiKeyListItem }) {
               onClick={() => setConfirmAction(null)}
               disabled={pending}
             >
-              Batal
+              {language === "id" ? "Batal" : "Cancel"}
             </Button>
             <Button
               variant="destructive"
@@ -236,10 +258,10 @@ function ApiKeyRow({ item }: { item: ApiKeyListItem }) {
               disabled={pending}
             >
               {pending
-                ? "Memproses…"
+                ? (language === "id" ? "Memproses…" : "Processing...")
                 : confirmAction === "delete"
-                  ? "Hapus"
-                  : "Cabut"}
+                  ? (language === "id" ? "Hapus" : "Delete")
+                  : (language === "id" ? "Cabut" : "Revoke")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -259,6 +281,7 @@ function CreateKeyDialog({
   onClose: () => void;
   onCreated: (name: string, plain: string) => void;
 }) {
+  const { language } = useLanguage();
   const [name, setName] = useState("");
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -274,12 +297,14 @@ function CreateKeyDialog({
     startTransition(async () => {
       const result = await createApiKey(name);
       if (!result.ok) {
-        setError(result.fieldErrors?.name?.[0] ?? result.error ?? "Gagal membuat kunci.");
+        setError(result.fieldErrors?.name?.[0] ?? result.error ?? (language === "id" ? "Gagal membuat kunci." : "Failed to create key."));
         return;
       }
       const created = result.data;
       if (created) {
-        toast.success("Kunci API berhasil dibuat");
+        toast.success(
+          language === "id" ? "Kunci API berhasil dibuat" : "API key created successfully"
+        );
         onCreated(name, created.plain);
         reset();
       }
@@ -288,7 +313,7 @@ function CreateKeyDialog({
 
   function handleGenerateName() {
     const randomHex = Math.random().toString(16).substring(2, 6);
-    setName(`bot-keuangan-${randomHex}`);
+    setName(language === "id" ? `bot-keuangan-${randomHex}` : `finance-bot-${randomHex}`);
   }
 
   return (
@@ -303,21 +328,27 @@ function CreateKeyDialog({
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Buat kunci API baru</DialogTitle>
+          <DialogTitle>
+            {language === "id" ? "Buat kunci API baru" : "Create new API key"}
+          </DialogTitle>
           <DialogDescription>
-            Beri nama yang membantu Anda mengingat di mana kunci ini dipakai.
+            {language === "id"
+              ? "Beri nama yang membantu Anda mengingat di mana kunci ini dipakai."
+              : "Give it a name that helps you remember where this key is used."}
           </DialogDescription>
         </DialogHeader>
         <DialogBody>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="key-name">Nama kunci</Label>
+              <Label htmlFor="key-name">
+                {language === "id" ? "Nama kunci" : "Key name"}
+              </Label>
               <div className="flex gap-2">
                 <Input
                   id="key-name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Mis. Telegram bot personal"
+                  placeholder={language === "id" ? "Mis. Telegram bot personal" : "e.g. Personal Telegram bot"}
                   maxLength={64}
                   autoFocus
                   aria-invalid={!!error}
@@ -342,7 +373,7 @@ function CreateKeyDialog({
                 {pending ? (
                   <Loader2 size={14} className="animate-spin" />
                 ) : null}
-                Buat kunci
+                {language === "id" ? "Buat kunci" : "Create key"}
               </Button>
               <Button
                 type="button"
@@ -353,7 +384,7 @@ function CreateKeyDialog({
                 }}
                 disabled={pending}
               >
-                Batal
+                {language === "id" ? "Batal" : "Cancel"}
               </Button>
             </div>
           </form>
@@ -372,6 +403,7 @@ function PlainKeyDialog({
   target: { name: string; plain: string } | null;
   onClose: () => void;
 }) {
+  const { language } = useLanguage();
   const [copied, setCopied] = useState(false);
 
   async function handleCopy() {
@@ -379,10 +411,16 @@ function PlainKeyDialog({
     try {
       await navigator.clipboard.writeText(target.plain);
       setCopied(true);
-      toast.success("Kunci disalin ke clipboard");
+      toast.success(
+        language === "id" ? "Kunci disalin ke clipboard" : "Key copied to clipboard"
+      );
       setTimeout(() => setCopied(false), 2_000);
     } catch {
-      toast.error("Gagal menyalin. Salin manual dari kotak teks.");
+      toast.error(
+        language === "id"
+          ? "Gagal menyalin. Salin manual dari kotak teks."
+          : "Failed to copy. Copy manually from the text box."
+      );
     }
   }
 
@@ -398,17 +436,20 @@ function PlainKeyDialog({
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Salin kunci sekarang</DialogTitle>
+          <DialogTitle>
+            {language === "id" ? "Salin kunci sekarang" : "Copy key now"}
+          </DialogTitle>
           <DialogDescription>
-            Ini satu-satunya kesempatan untuk menyalin kunci. Setelah dialog
-            ditutup, kunci tidak bisa dilihat lagi.
+            {language === "id"
+              ? "Ini satu-satunya kesempatan untuk menyalin kunci. Setelah dialog ditutup, kunci tidak bisa dilihat lagi."
+              : "This is the only opportunity to copy the key. Once closed, you will not be able to see it again."}
           </DialogDescription>
         </DialogHeader>
         <DialogBody>
           {target ? (
             <div className="space-y-3">
               <p className="text-xs text-muted-foreground">
-                Untuk kunci{" "}
+                {language === "id" ? "Untuk kunci" : "For key"}{" "}
                 <span className="text-foreground font-medium">
                   {target.name}
                 </span>
@@ -423,7 +464,7 @@ function PlainKeyDialog({
                   variant="ghost"
                   className="h-7 w-7 shrink-0"
                   onClick={handleCopy}
-                  aria-label="Salin kunci"
+                  aria-label={language === "id" ? "Salin kunci" : "Copy key"}
                 >
                   {copied ? (
                     <Check size={14} className="text-income" />
@@ -433,7 +474,7 @@ function PlainKeyDialog({
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Pakai sebagai header{" "}
+                {language === "id" ? "Pakai sebagai header" : "Use as header"}{" "}
                 <code className="bg-elevated px-1.5 py-0.5 rounded text-foreground font-mono">
                   Authorization: Bearer {target.plain.slice(0, 12)}…
                 </code>
@@ -442,7 +483,9 @@ function PlainKeyDialog({
           ) : null}
         </DialogBody>
         <DialogFooter>
-          <Button onClick={onClose}>Saya sudah menyalin</Button>
+          <Button onClick={onClose}>
+            {language === "id" ? "Saya sudah menyalin" : "I have copied it"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

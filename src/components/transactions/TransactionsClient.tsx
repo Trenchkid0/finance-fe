@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeftRight,
+  Calendar,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
@@ -129,6 +130,71 @@ export function TransactionsClient({
   const [confirmDelete, setConfirmDelete] = useState<TransactionRowData | null>(null);
   const [searchParams] = useSearchParams();
 
+  const [viewMode, setViewMode] = useState<"table" | "calendar">("table");
+  const [currentDate, setCurrentDate] = useState(() => new Date());
+  const [calendarTransactions, setCalendarTransactions] = useState<TransactionRowData[]>([]);
+  const [calendarLoading, setCalendarLoading] = useState(false);
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (viewMode !== "calendar") return;
+
+    const fetchCalendarData = async () => {
+      try {
+        setCalendarLoading(true);
+        const y = currentDate.getFullYear();
+        const m = currentDate.getMonth();
+        const start = `${y}-${String(m + 1).padStart(2, "0")}-01`;
+        const lastDay = new Date(y, m + 1, 0).getDate();
+        const end = `${y}-${String(m + 1).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+
+        const params = new URLSearchParams();
+        if (filters.q) params.set("search", filters.q);
+        if (filters.type && filters.type !== "all") params.set("type", filters.type);
+        if (filters.accountId && filters.accountId !== "all") params.set("accountId", filters.accountId);
+        if (filters.categoryId && filters.categoryId !== "all") params.set("categoryId", filters.categoryId);
+        params.set("startDate", start);
+        params.set("endDate", end);
+        params.set("limit", "1000");
+
+        const res = await api.get<any>(`/api/transactions?${params.toString()}`);
+        const mapped = (res.transactions || []).map((tx: any) => ({
+          id: tx.id,
+          type: tx.type,
+          accountId: tx.accountId,
+          accountName: tx.account?.name || "Akun Utama",
+          categoryId: tx.categoryId,
+          categoryName: tx.category?.name ?? null,
+          categoryIcon: tx.category?.icon ?? null,
+          transferToId: tx.transferToId,
+          transferToName: tx.transferTo?.name ?? null,
+          amount: Number(tx.amount),
+          date: tx.date,
+          description: tx.description,
+          note: tx.note,
+        }));
+        setCalendarTransactions(mapped);
+      } catch (err) {
+        console.error("Failed to fetch calendar transactions:", err);
+      } finally {
+        setCalendarLoading(false);
+      }
+    };
+
+    fetchCalendarData();
+  }, [viewMode, currentDate, filters]);
+
+  useEffect(() => {
+    if (viewMode !== "calendar") return;
+    const handleRefresh = () => {
+      setCurrentDate((d) => new Date(d.getTime()));
+    };
+    window.addEventListener("refresh-app-data", handleRefresh);
+    return () => {
+      window.removeEventListener("refresh-app-data", handleRefresh);
+    };
+  }, [viewMode]);
+
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
   const [pendingBulk, startTransitionBulk] = useTransition();
@@ -203,7 +269,50 @@ export function TransactionsClient({
 
   function exportHref(): string {
     const qs = searchParams.toString();
-    return qs ? `/api/transactions/export?${qs}` : "/api/transactions/export";
+    const base = "/api/transactions/export";
+    return qs ? `${base}?${qs}` : base;
+  }
+
+  function downloadJSON() {
+    try {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(transactions, null, 2));
+      const downloadAnchor = document.createElement("a");
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", "transactions.json");
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      toast.success(language === "id" ? "Berhasil mengekspor JSON" : "Successfully exported JSON");
+    } catch {
+      toast.error(language === "id" ? "Gagal mengekspor data" : "Failed to export data");
+    }
+  }
+
+  const monthNamesID = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+  const monthNamesEN = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const months = language === "id" ? monthNamesID : monthNamesEN;
+  const dayNamesID = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
+  const dayNamesEN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const daysOfWeek = language === "id" ? dayNamesID : dayNamesEN;
+
+  const y = currentDate.getFullYear();
+  const m = currentDate.getMonth();
+
+  const handlePrevMonth = () => {
+    setCurrentDate(new Date(y, m - 1, 1));
+    setSelectedDay(null);
+  };
+  const handleNextMonth = () => {
+    setCurrentDate(new Date(y, m + 1, 1));
+    setSelectedDay(null);
+  };
+
+  function formatCompactIDR(amount: number): string {
+    const abs = Math.abs(amount);
+    if (abs >= 1_000_000_000) return `Rp ${(amount / 1_000_000_000).toFixed(1)} M`;
+    if (abs >= 1_000_000) return `Rp ${(amount / 1_000_000).toFixed(1)} jt`;
+    if (abs >= 1_000) return `Rp ${(amount / 1_000).toFixed(0)} rb`;
+    return `Rp ${amount}`;
   }
 
   return (
@@ -218,12 +327,51 @@ export function TransactionsClient({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button asChild variant="outline" className="h-9 rounded-xl gap-2 text-xs font-semibold px-4" title={language === "id" ? "Unduh CSV" : "Download CSV"}>
-            <a href={exportHref()} download>
-              <Download size={14} />
-              {t("export")}
-            </a>
-          </Button>
+          {/* View Mode Toggle */}
+          <div className="flex bg-white/[0.02] border border-white/[0.06] rounded-xl p-0.5 gap-0.5 mr-2">
+            <button
+              type="button"
+              onClick={() => setViewMode("table")}
+              className={cn(
+                "px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 flex items-center gap-1.5",
+                viewMode === "table"
+                  ? "bg-accent/10 text-accent font-extrabold border border-accent/20"
+                  : "text-text-muted hover:text-text-primary border border-transparent"
+              )}
+            >
+              <span>{language === "id" ? "Tabel" : "Table"}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("calendar")}
+              className={cn(
+                "px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 flex items-center gap-1.5",
+                viewMode === "calendar"
+                  ? "bg-accent/10 text-accent font-extrabold border border-accent/20"
+                  : "text-text-muted hover:text-text-primary border border-transparent"
+              )}
+            >
+              <span>{language === "id" ? "Kalender" : "Calendar"}</span>
+            </button>
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="h-9 rounded-xl gap-2 text-xs font-semibold px-4">
+                <Download size={14} />
+                {t("export")}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-surface border-border">
+              <DropdownMenuItem asChild>
+                <a href={exportHref()} download className="cursor-pointer w-full flex items-center gap-2">
+                  <span>CSV Format</span>
+                </a>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={downloadJSON} className="cursor-pointer flex items-center gap-2">
+                <span>JSON Format</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button
             onClick={startCreate}
             disabled={!canCreate}
@@ -292,97 +440,382 @@ export function TransactionsClient({
         </div>
       )}
 
-      <TransactionsList
-        transactions={transactions}
-        categories={categories}
-        onEdit={setEditing}
-        onDelete={setConfirmDelete}
-        onDuplicate={startDuplicate}
-        selectedIds={selectedIds}
-        toggleSelect={toggleSelect}
-        isAllSelected={isAllSelected}
-        toggleSelectAll={toggleSelectAll}
-        emptyState={
-          isFilterActive(filters) ? (
-            <EmptyState
-              icon={Search}
-              title={language === "id" ? "Tidak ada transaksi cocok" : "No matching transactions"}
-              description={language === "id" ? "Coba ubah kata kunci atau reset filter." : "Try changing keyword or resetting filters."}
-              size="sm"
-            />
-          ) : (
-            <EmptyState
-              icon={Wallet}
-              title={language === "id" ? "Belum ada transaksi" : "No transactions yet"}
-              description={
-                canCreate
-                  ? (language === "id" ? "Catat transaksi pertama Anda untuk mulai melacak arus kas." : "Record your first transaction to start tracking cash flow.")
-                  : (language === "id" ? "Tambahkan akun terlebih dahulu untuk mencatat transaksi." : "Add an account first to record transactions.")
-              }
-              action={
-                canCreate ? (
-                  <Button size="sm" onClick={startCreate}>
-                    <Plus size={12} />
-                    {t("addTransaction")}
-                  </Button>
-                ) : null
-              }
-              size="sm"
-            />
-          )
-        }
-      />
+      {viewMode === "table" ? (
+        <>
+          <TransactionsList
+            transactions={transactions}
+            categories={categories}
+            onEdit={setEditing}
+            onDelete={setConfirmDelete}
+            onDuplicate={startDuplicate}
+            selectedIds={selectedIds}
+            toggleSelect={toggleSelect}
+            isAllSelected={isAllSelected}
+            toggleSelectAll={toggleSelectAll}
+            emptyState={
+              isFilterActive(filters) ? (
+                <EmptyState
+                  icon={Search}
+                  title={language === "id" ? "Tidak ada transaksi cocok" : "No matching transactions"}
+                  description={language === "id" ? "Coba ubah kata kunci atau reset filter." : "Try changing keyword or resetting filters."}
+                  size="sm"
+                />
+              ) : (
+                <EmptyState
+                  icon={Wallet}
+                  title={language === "id" ? "Belum ada transaksi" : "No transactions yet"}
+                  description={
+                    canCreate
+                      ? (language === "id" ? "Catat transaksi pertama Anda untuk mulai melacak arus kas." : "Record your first transaction to start tracking cash flow.")
+                      : (language === "id" ? "Tambahkan akun terlebih dahulu untuk mencatat transaksi." : "Add an account first to record transactions.")
+                  }
+                  action={
+                    canCreate ? (
+                      <Button size="sm" onClick={startCreate}>
+                        <Plus size={12} />
+                        {t("addTransaction")}
+                      </Button>
+                    ) : null
+                  }
+                  size="sm"
+                />
+              )
+            }
+          />
+          <PaginationBar pagination={pagination} />
+        </>
+      ) : (
+        <div className="space-y-6">
+          {/* Calendar Card */}
+          <div className="bg-surface border border-border rounded-xl p-5">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <Calendar className="text-accent h-5 w-5" />
+                <h3 className="text-base font-bold text-text-primary">
+                  {language === "id" ? "Kalender Arus Kas" : "Cash Flow Calendar"}
+                </h3>
+              </div>
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8 rounded-lg border-border bg-elevated hover:bg-[#2D333B]"
+                  onClick={handlePrevMonth}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-sm font-bold min-w-[120px] text-center font-mono">
+                  {months[m]} {y}
+                </span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8 rounded-lg border-border bg-elevated hover:bg-[#2D333B]"
+                  onClick={handleNextMonth}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
 
-      <PaginationBar pagination={pagination} />
+            {/* Grid */}
+            {calendarLoading ? (
+              <div className="flex h-[300px] items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-accent" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-7 gap-1 border-t border-l border-border rounded-lg overflow-hidden bg-border/40">
+                {/* Day of Week Headers */}
+                {daysOfWeek.map((dayName) => (
+                  <div
+                    key={dayName}
+                    className="bg-surface/90 py-2.5 text-center text-xs font-bold text-text-muted uppercase tracking-wider border-b border-r border-border"
+                  >
+                    {dayName}
+                  </div>
+                ))}
+
+                {/* Day Cells */}
+                {(() => {
+                  const firstDayIndex = new Date(y, m, 1).getDay();
+                  const totalDays = new Date(y, m + 1, 0).getDate();
+                  const prevMonthTotalDays = new Date(y, m, 0).getDate();
+
+                  const prevMonthCells = [];
+                  for (let i = firstDayIndex - 1; i >= 0; i--) {
+                    const dayNum = prevMonthTotalDays - i;
+                    const prevM = m === 0 ? 11 : m - 1;
+                    const prevY = m === 0 ? y - 1 : y;
+                    const dateStr = `${prevY}-${String(prevM + 1).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}`;
+                    prevMonthCells.push({ dayNum, dateStr, currentMonth: false });
+                  }
+
+                  const currentMonthCells = [];
+                  for (let i = 1; i <= totalDays; i++) {
+                    const dateStr = `${y}-${String(m + 1).padStart(2, "0")}-${String(i).padStart(2, "0")}`;
+                    currentMonthCells.push({ dayNum: i, dateStr, currentMonth: true });
+                  }
+
+                  const allCells = [...prevMonthCells, ...currentMonthCells];
+                  const remaining = 42 - allCells.length;
+                  for (let i = 1; i <= remaining; i++) {
+                    const nextM = m === 11 ? 0 : m + 1;
+                    const nextY = m === 11 ? y + 1 : y;
+                    const dateStr = `${nextY}-${String(nextM + 1).padStart(2, "0")}-${String(i).padStart(2, "0")}`;
+                    allCells.push({ dayNum: i, dateStr, currentMonth: false });
+                  }
+
+                  const calendarMap = calendarTransactions.reduce((acc, tx) => {
+                    // Normalize date to YYYY-MM-DD format
+                    let dStr = tx.date;
+                    if (dStr.includes('T')) {
+                      dStr = dStr.split('T')[0];
+                    }
+                    if (!acc[dStr]) acc[dStr] = { income: 0, expense: 0, count: 0, hasTransfer: false };
+                    if (tx.type === "income") acc[dStr].income += tx.amount;
+                    else if (tx.type === "expense") acc[dStr].expense += tx.amount;
+                    else if (tx.type === "transfer") acc[dStr].hasTransfer = true;
+                    acc[dStr].count += 1;
+                    return acc;
+                  }, {} as Record<string, { income: number; expense: number; count: number; hasTransfer: boolean }>);
+
+                  // Debug: log calendar data
+                  console.log('Calendar transactions:', calendarTransactions.length);
+                  console.log('Calendar map:', calendarMap);
+                  console.log('Sample dates:', Object.keys(calendarMap).slice(0, 5));
+
+                  const todayStr = new Date().toLocaleDateString("sv-SE");
+
+                  return allCells.map((cell, idx) => {
+                    const data = calendarMap[cell.dateStr];
+                    const isSelected = selectedDay === cell.dateStr;
+                    const isToday = cell.dateStr === todayStr;
+
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setSelectedDay(cell.dateStr)}
+                        className={cn(
+                          "bg-surface min-h-[75px] p-2 flex flex-col justify-between items-stretch text-left border-b border-r border-border hover:bg-elevated/40 transition-all duration-150 relative group",
+                          !cell.currentMonth && "opacity-30 bg-surface/30",
+                          isSelected && "ring-2 ring-accent z-10 border-accent bg-accent/[0.05]",
+                          data && data.count > 0 && !isSelected && "bg-elevated/20"
+                        )}
+                      >
+                        {/* Left indicator bar - more prominent */}
+                        {data && data.count > 0 && (
+                          <div className={cn(
+                            "absolute left-0 top-0 bottom-0 w-1 rounded-r transition-all",
+                            data.income > data.expense ? "bg-income" :
+                            data.expense > data.income ? "bg-expense" :
+                            "bg-accent"
+                          )} />
+                        )}
+                        
+                        <div className="flex justify-between items-start z-10">
+                          <span
+                            className={cn(
+                              "text-xs font-mono font-bold leading-none",
+                              isToday
+                                ? "text-white bg-accent px-2 py-1 rounded-md shadow-sm"
+                                : cell.currentMonth
+                                ? "text-text-primary"
+                                : "text-text-muted"
+                            )}
+                          >
+                            {cell.dayNum}
+                          </span>
+                          
+                          {/* Transaction count badge */}
+                          {data && data.count > 0 && (
+                            <span className={cn(
+                              "text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none",
+                              "bg-accent/20 text-accent border border-accent/30"
+                            )}>
+                              {data.count}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Transaction indicators */}
+                        {data && data.count > 0 && (
+                          <div className="space-y-1 mt-auto">
+                            {data.income > 0 && (
+                              <div className="flex items-center gap-1">
+                                <div className="size-1.5 rounded-full bg-income flex-shrink-0" />
+                                <div className="text-[9px] font-mono tabular-nums text-income font-bold truncate">
+                                  +{formatCompactIDR(data.income)}
+                                </div>
+                              </div>
+                            )}
+                            {data.expense > 0 && (
+                              <div className="flex items-center gap-1">
+                                <div className="size-1.5 rounded-full bg-expense flex-shrink-0" />
+                                <div className="text-[9px] font-mono tabular-nums text-expense font-bold truncate">
+                                  -{formatCompactIDR(data.expense)}
+                                </div>
+                              </div>
+                            )}
+                            {data.hasTransfer && !data.income && !data.expense && (
+                              <div className="flex items-center gap-1">
+                                <div className="size-1.5 rounded-full bg-accent flex-shrink-0" />
+                                <div className="text-[9px] font-mono text-accent font-bold">
+                                  Transfer
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </button>
+                    );
+                  });
+                })()}
+              </div>
+            )}
+          </div>
+
+          {/* Daily Detail Card */}
+          {selectedDay && (() => {
+            const dayTxs = calendarTransactions.filter((tx) => tx.date.slice(0, 10) === selectedDay);
+            const dateParts = selectedDay.split("-");
+            const dateObj = new Date(Number(dateParts[0]), Number(dateParts[1]) - 1, Number(dateParts[2]));
+            const formattedDate = language === "id"
+              ? `${dateObj.getDate()} ${months[dateObj.getMonth()]} ${dateObj.getFullYear()}`
+              : `${months[dateObj.getMonth()]} ${dateObj.getDate()}, ${dateObj.getFullYear()}`;
+
+            return (
+              <div className="bg-surface border border-border rounded-xl p-5 space-y-4 animate-fade-in">
+                <div className="flex items-center justify-between border-b border-border pb-3">
+                  <h4 className="text-sm font-bold text-text-primary">
+                    {language === "id" ? `Transaksi Pada ${formattedDate}` : `Transactions on ${formattedDate}`}
+                  </h4>
+                  <span className="text-xs font-mono bg-elevated border border-border px-2.5 py-0.5 rounded-lg text-text-muted">
+                    {dayTxs.length} {language === "id" ? "Transaksi" : "Transactions"}
+                  </span>
+                </div>
+
+                {dayTxs.length === 0 ? (
+                  <div className="text-center py-6 text-xs text-text-muted">
+                    {language === "id"
+                      ? "Tidak ada transaksi tercatat pada tanggal ini."
+                      : "No transactions recorded on this day."}
+                  </div>
+                ) : (
+                  <div className="divide-y divide-border/60">
+                    {dayTxs.map((tx) => (
+                      <div
+                        key={tx.id}
+                        className="py-3 flex items-center justify-between gap-4 first:pt-0 last:pb-0 hover:bg-elevated/20 px-2 rounded-lg transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={cn(
+                            "w-8 h-8 rounded-lg flex items-center justify-center text-sm font-medium",
+                            tx.type === "income"
+                              ? "bg-income/10 text-income border border-income/20"
+                              : tx.type === "expense"
+                              ? "bg-expense/10 text-expense border border-expense/20"
+                              : "bg-accent/10 text-accent border border-accent/20"
+                          )}>
+                            {tx.type === "transfer" ? <ArrowLeftRight size={14} /> : (tx.categoryIcon || "💰")}
+                          </div>
+                          <div>
+                            <p className="text-xs font-bold text-text-primary leading-tight">
+                              {tx.description || (tx.type === "transfer" ? "Transfer Dana" : "Tanpa Deskripsi")}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-[10px] text-text-muted">
+                                {tx.accountName}
+                              </span>
+                              {tx.type !== "transfer" && tx.categoryName && (
+                                <>
+                                  <span className="text-[9px] text-text-muted/40">•</span>
+                                  <span className="text-[10px] text-text-muted">
+                                    {tx.categoryName}
+                                  </span>
+                                </>
+                              )}
+                              {tx.type === "transfer" && tx.transferToName && (
+                                <>
+                                  <span className="text-[9px] text-text-muted/40">➔</span>
+                                  <span className="text-[10px] text-text-muted">
+                                    {tx.transferToName}
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <span className={cn(
+                            "text-xs font-bold font-mono tabular-nums",
+                            tx.type === "income"
+                              ? "text-income"
+                              : tx.type === "expense"
+                              ? "text-expense"
+                              : "text-text-primary"
+                          )}>
+                            {tx.type === "income" ? "+" : tx.type === "expense" ? "-" : ""}
+                            {formatIDR(tx.amount)}
+                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => setEditing(tx)}
+                              className="p-1 rounded hover:bg-elevated text-text-muted hover:text-text-primary transition-colors"
+                              title={language === "id" ? "Ubah" : "Edit"}
+                            >
+                              <Pencil size={12} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setConfirmDelete(tx)}
+                              className="p-1 rounded hover:bg-expense/10 text-text-muted hover:text-expense transition-colors"
+                              title={language === "id" ? "Hapus" : "Delete"}
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+        </div>
+      )}
 
       {/* Create / Duplicate */}
-      <Dialog
-        open={creating !== null}
-        onOpenChange={(open) => !open && setCreating(null)}
-      >
-        <DialogContent className="rounded-2xl border-white/[0.08] bg-popover/95 backdrop-blur-xl">
-          <DialogHeader>
-            <DialogTitle>{language === "id" ? "Tambah transaksi" : "Add transaction"}</DialogTitle>
-          </DialogHeader>
-          <DialogBody>
-            {creating ? (
-              <TransactionForm
-                mode="create"
-                initial={creating}
-                accounts={accounts}
-                categories={categories}
-                aiScanEnabled={aiScanEnabled}
-                onSuccess={() => setCreating(null)}
-                onCancel={() => setCreating(null)}
-              />
-            ) : null}
-          </DialogBody>
-        </DialogContent>
-      </Dialog>
+      {creating && (
+        <TransactionForm
+          open={creating !== null}
+          onClose={() => setCreating(null)}
+          mode="create"
+          initial={creating}
+          accounts={accounts}
+          categories={categories}
+          aiScanEnabled={aiScanEnabled}
+          onSuccess={() => setCreating(null)}
+        />
+      )}
 
       {/* Edit */}
-      <Dialog
-        open={editing !== null}
-        onOpenChange={(open) => !open && setEditing(null)}
-      >
-        <DialogContent className="rounded-2xl border-white/[0.08] bg-popover/95 backdrop-blur-xl">
-          <DialogHeader>
-            <DialogTitle>{language === "id" ? "Ubah transaksi" : "Edit transaction"}</DialogTitle>
-          </DialogHeader>
-          <DialogBody>
-            {editing ? (
-              <TransactionForm
-                mode="edit"
-                initial={toFormInitial(editing)}
-                accounts={accounts}
-                categories={categories}
-                onSuccess={() => setEditing(null)}
-                onCancel={() => setEditing(null)}
-              />
-            ) : null}
-          </DialogBody>
-        </DialogContent>
-      </Dialog>
+      {editing && (
+        <TransactionForm
+          open={editing !== null}
+          onClose={() => setEditing(null)}
+          mode="edit"
+          initial={toFormInitial(editing)}
+          accounts={accounts}
+          categories={categories}
+          aiScanEnabled={aiScanEnabled}
+          onSuccess={() => setEditing(null)}
+        />
+      )}
 
       <ConfirmDelete
         target={confirmDelete}
