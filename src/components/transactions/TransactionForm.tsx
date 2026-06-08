@@ -47,6 +47,9 @@ import { scanTransactionText } from "@/app/actions/ai";
 import type { ActionResult } from "@/types";
 import type { TransactionTypeInput } from "@/lib/utils/validators";
 
+// ✅ Import cache invalidation
+import { invalidateCache } from "@/lib/cache";
+
 const TESSERACT_CDN = "https://unpkg.com/tesseract.js@5.1.0/dist/tesseract.min.js";
 const FORM_ID = "transaction-modal-form";
 
@@ -143,9 +146,13 @@ export function TransactionForm({
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [open]);
 
-	// sukses → toast + tutup
+	// sukses → toast + tutup + invalidate cache
 	useEffect(() => {
 		if (!state?.ok) return;
+		
+		// ✅ Invalidate related caches
+		invalidateCache.afterTransactionChange();
+		
 		toast.success(
 			mode === "create"
 				? isId

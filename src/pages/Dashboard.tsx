@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { TrendingUp, ArrowUpRight, Clock, Wallet, Plus, Sparkles } from "lucide-react";
-import { api } from "@/lib/api";
 import { NetWorthHero } from "@/components/dashboard/NetWorthHero";
 import { OnboardingHero } from "@/components/dashboard/OnboardingHero";
 import { BalanceSheet } from "@/components/dashboard/BalanceSheet";
@@ -13,6 +12,9 @@ import { formatIDR } from "@/lib/utils/formatters";
 import { cn } from "@/lib/utils/cn";
 import { Card } from "@/components/ui/card";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
+import { useCachedApi } from "@/hooks/use-cached-api";
+import { CacheKeys, CacheTTL } from "@/lib/cache";
+import { api } from "@/lib/api";
 
 const ASSET_GROUP_COLOR: Record<string, string> = {
   cash: "var(--income)",
@@ -93,41 +95,40 @@ export default function Dashboard() {
   const { language } = useLanguage();
   const { user, accounts, refresh, loading: appLoading } = useApp();
   const [searchParams] = useSearchParams();
-  const [loading, setLoading] = useState(true);
-  const [summaryData, setSummaryData] = useState<any>(null);
 
   const period = searchParams.get("period") || "30d";
   const cashflowPeriod = searchParams.get("cashflow_period") || "30d";
 
-  const fetchSummary = async () => {
-    try {
-      setLoading(true);
-      const data = await api.get<any>(
-        `/api/summary?period=${period}&cashflow_period=${cashflowPeriod}`
-      );
-      setSummaryData(data);
-    } catch (err) {
-      console.error("Failed to fetch dashboard summary:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchSummary();
-  }, [period, cashflowPeriod]);
+  // ✅ CACHED API CALL - Dashboard Summary
+  const { 
+    data: summaryData, 
+    isLoading: loading, 
+    refetch,
+    isCached 
+  } = useCachedApi({
+    cacheKey: CacheKeys.summary() + `:${period}:${cashflowPeriod}`,
+    fetcher: () => api.get<any>(`/api/summary?period=${period}&cashflow_period=${cashflowPeriod}`),
+    ttl: CacheTTL.SHORT, // 2 minutes for financial data
+  });
 
   // Listen to refresh events
   useEffect(() => {
     const handleRefresh = () => {
-      fetchSummary();
+      refetch(); // ✅ Use cached refetch
       refresh();
     };
     window.addEventListener("refresh-app-data", handleRefresh);
     return () => {
       window.removeEventListener("refresh-app-data", handleRefresh);
     };
-  }, [period, cashflowPeriod]);
+  }, [refetch, refresh]);
+
+  // Debug cache status in development
+  useEffect(() => {
+    if (import.meta.env.DEV && isCached) {
+      console.log('📦 Dashboard: Cache HIT - instant load!');
+    }
+  }, [isCached]);
 
   if ((loading || appLoading) && !summaryData) {
     return <SkeletonDashboard />;
@@ -178,6 +179,14 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6 pb-8">
+      {/* Cache indicator (dev only) */}
+      {import.meta.env.DEV && isCached && (
+        <div className="fixed top-20 right-4 z-50 px-3 py-1.5 rounded-full bg-income/10 border border-income/30 text-income text-xs font-bold flex items-center gap-1.5 animate-fade-in">
+          <div className="h-2 w-2 rounded-full bg-income animate-pulse" />
+          Cached
+        </div>
+      )}
+
       {/* ═══════════════════════════════════════════════════════════════════
           LEVEL 1: HERO SECTION - Most Important (Net Worth at a Glance)
           ═══════════════════════════════════════════════════════════════════ */}
@@ -429,4 +438,3 @@ function QuickStatCard({
     </Card>
   );
 }
-
