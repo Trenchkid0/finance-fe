@@ -83,3 +83,72 @@ export const api = {
   put: <T>(path: string, body: any, headers?: HeadersInit) => request<T>("PUT", path, body, headers),
   delete: <T>(path: string, body?: any, headers?: HeadersInit) => request<T>("DELETE", path, body, headers),
 };
+
+/**
+ * Cached API helpers
+ * Automatically handles caching for GET requests
+ */
+import { cache, CacheKeys, CacheTTL, invalidateCache } from './cache';
+
+export const cachedApi = {
+  /**
+   * Get with automatic caching
+   * @param cacheKey - Cache key
+   * @param path - API path
+   * @param ttl - Cache TTL (default: 5 minutes)
+   */
+  async get<T>(cacheKey: string, path: string, ttl: number = CacheTTL.MEDIUM): Promise<T> {
+    // Try cache first
+    const cached = cache.get<T>(cacheKey);
+    if (cached !== null) {
+      return cached;
+    }
+
+    // Fetch from API
+    const data = await api.get<T>(path);
+    
+    // Store in cache
+    cache.set(cacheKey, data, ttl);
+    
+    return data;
+  },
+
+  /**
+   * POST with automatic cache invalidation
+   */
+  async post<T>(path: string, body: any, invalidatePatterns: string[] = []): Promise<T> {
+    const result = await api.post<T>(path, body);
+    
+    // Invalidate related caches
+    invalidatePatterns.forEach(pattern => cache.deletePattern(pattern));
+    
+    return result;
+  },
+
+  /**
+   * PUT with automatic cache invalidation
+   */
+  async put<T>(path: string, body: any, invalidatePatterns: string[] = []): Promise<T> {
+    const result = await api.put<T>(path, body);
+    
+    // Invalidate related caches
+    invalidatePatterns.forEach(pattern => cache.deletePattern(pattern));
+    
+    return result;
+  },
+
+  /**
+   * DELETE with automatic cache invalidation
+   */
+  async delete<T>(path: string, invalidatePatterns: string[] = []): Promise<T> {
+    const result = await api.delete<T>(path);
+    
+    // Invalidate related caches
+    invalidatePatterns.forEach(pattern => cache.deletePattern(pattern));
+    
+    return result;
+  },
+};
+
+// Export cache utilities for manual usage
+export { cache, CacheKeys, CacheTTL, invalidateCache };

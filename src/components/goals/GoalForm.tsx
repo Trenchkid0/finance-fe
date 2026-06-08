@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { createPortal } from "react-dom";
-import { Target, Check, X, Loader2 } from "lucide-react";
+import { Target, Check, X, Loader2, Calendar, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { formatIDR, formatInputRupiah, cleanMoneyString } from "@/lib/utils/formatters";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils/cn";
 import {
   Select,
   SelectContent,
@@ -251,13 +252,7 @@ export function GoalForm({ open, onClose, goal, accounts, onSubmit }: GoalModalP
               <Label htmlFor="targetDate" className={labelCls}>
                 {isId ? "Tanggal Target" : "Target Date"}
               </Label>
-              <Input
-                id="targetDate"
-                type="date"
-                value={targetDate}
-                onChange={(e) => setTargetDate(e.target.value)}
-                className="h-11 border-border bg-elevated"
-              />
+              <CustomSingleDatePicker value={targetDate} onChange={setTargetDate} />
             </div>
             <div className="space-y-2.5">
               <Label htmlFor="accountId" className={labelCls}>
@@ -331,5 +326,326 @@ export function GoalForm({ open, onClose, goal, accounts, onSubmit }: GoalModalP
       </div>
     </div>,
     document.body,
+  );
+}
+
+
+function CustomSingleDatePicker({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (val: string) => void;
+}) {
+  const { language } = useLanguage();
+  const [isOpen, setIsOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  const [viewDate, setViewDate] = useState(() => {
+    const d = value ? new Date(value) : new Date();
+    return isNaN(d.getTime()) ? new Date() : d;
+  });
+
+  const [viewMode, setViewMode] = useState<'days' | 'months' | 'years'>('days');
+  const [yearPageStart, setYearPageStart] = useState(() => {
+    const currentYear = value ? new Date(value).getFullYear() : new Date().getFullYear();
+    return Math.floor(currentYear / 16) * 16;
+  });
+
+  const updatePosition = () => {
+    if (triggerRef.current && containerRef.current) {
+      const triggerRect = triggerRef.current.getBoundingClientRect();
+      const popupHeight = 460;
+      
+      let top = triggerRect.bottom + window.scrollY + 8;
+      let left = triggerRect.left + window.scrollX;
+      
+      if (top + popupHeight > window.scrollY + window.innerHeight && triggerRect.top - popupHeight > 0) {
+        top = triggerRect.top + window.scrollY - popupHeight - 8;
+      }
+      
+      if (left + 280 > window.innerWidth) {
+        left = Math.max(10, window.innerWidth - 290);
+      }
+      
+      if (left < 10) {
+        left = 10;
+      }
+      
+      containerRef.current.style.top = `${top}px`;
+      containerRef.current.style.left = `${left}px`;
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      updatePosition();
+      const timer = requestAnimationFrame(updatePosition);
+      window.addEventListener("scroll", updatePosition, true);
+      window.addEventListener("resize", updatePosition);
+      return () => {
+        cancelAnimationFrame(timer);
+        window.removeEventListener("scroll", updatePosition, true);
+        window.removeEventListener("resize", updatePosition);
+      };
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClose = (e: MouseEvent) => {
+      if (triggerRef.current && triggerRef.current.contains(e.target as Node)) {
+        return;
+      }
+      const contentEl = document.getElementById("goal-date-picker-content");
+      if (contentEl && contentEl.contains(e.target as Node)) {
+        return;
+      }
+      setIsOpen(false);
+    };
+    document.addEventListener("click", handleClose, true);
+    return () => document.removeEventListener("click", handleClose, true);
+  }, [isOpen]);
+
+  useEffect(() => {
+    const vYear = viewDate.getFullYear();
+    setYearPageStart(Math.floor(vYear / 16) * 16);
+  }, [viewDate]);
+
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+
+  const totalDays = new Date(year, month + 1, 0).getDate();
+  let startOffset = new Date(year, month, 1).getDay();
+  startOffset = startOffset === 0 ? 6 : startOffset - 1;
+
+  const calendarDays: (number | null)[] = [];
+  for (let i = 0; i < startOffset; i++) {
+    calendarDays.push(null);
+  }
+  for (let d = 1; d <= totalDays; d++) {
+    calendarDays.push(d);
+  }
+
+  const handlePrevMonth = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (viewMode === "years") {
+      setYearPageStart((prev) => prev - 16);
+    } else {
+      setViewDate(new Date(year, month - 1, 1));
+    }
+  };
+
+  const handleNextMonth = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (viewMode === "years") {
+      setYearPageStart((prev) => prev + 16);
+    } else {
+      setViewDate(new Date(year, month + 1, 1));
+    }
+  };
+
+  const handleDayClick = (day: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    onChange(dateStr);
+    setIsOpen(false);
+  };
+
+  const formatFriendlyDate = (iso: string): string => {
+    if (!iso) return "";
+    const d = new Date(`${iso}T00:00:00`);
+    if (isNaN(d.getTime())) return iso;
+    return d.toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  const label = value ? formatFriendlyDate(value) : (language === "id" ? "Pilih Tanggal" : "Select Date");
+
+  return (
+    <>
+      <Button
+        ref={triggerRef}
+        type="button"
+        variant="outline"
+        onClick={() => setIsOpen(!isOpen)}
+        className="h-11 w-full justify-between px-3.5 text-sm text-text-primary bg-white/[0.03] border-white/[0.08] hover:border-white/[0.15] hover:bg-white/[0.06] active:bg-white/[0.08] rounded-lg transition-all font-mono"
+      >
+        <span className="flex items-center gap-2.5">
+          <Calendar size={16} className="text-accent opacity-70" />
+          <span className="font-medium">{label}</span>
+        </span>
+        <ChevronDown size={16} className={cn("text-text-muted opacity-50 transition-transform duration-200", isOpen && "rotate-180")} />
+      </Button>
+
+      {isOpen &&
+        createPortal(
+          <div
+            ref={containerRef}
+            id="goal-date-picker-content"
+            style={{
+              position: "fixed",
+              top: "0",
+              left: "0",
+            }}
+            className="p-4 w-[280px] rounded-xl border border-white/[0.08] bg-popover/95 backdrop-blur-xl flex flex-col gap-3.5 text-text-primary shadow-2xl z-[99999]"
+          >
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-1">
+                {viewMode === "years" ? (
+                  <span className="px-1.5 py-0.5 text-xs font-bold text-text-primary font-mono">
+                    {yearPageStart} — {yearPageStart + 15}
+                  </span>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setViewMode(viewMode === "months" ? "days" : "months");
+                      }}
+                      className={cn(
+                        "px-1.5 py-0.5 rounded-lg text-xs font-bold text-text-primary uppercase tracking-wide hover:bg-white/[0.06] hover:text-accent transition-colors",
+                        viewMode === "months" && "bg-white/[0.08] text-accent hover:text-accent"
+                      )}
+                    >
+                      {[
+                        "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+                        "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+                      ][month].substring(0, 3)}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setViewMode("years");
+                      }}
+                      className="px-1.5 py-0.5 rounded-lg text-xs font-bold text-text-primary uppercase tracking-wide hover:bg-white/[0.06] hover:text-accent transition-colors font-mono"
+                    >
+                      {year}
+                    </button>
+                  </>
+                )}
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={handlePrevMonth}
+                  disabled={viewMode === "months"}
+                  className="p-1 rounded-lg hover:bg-white/[0.06] text-text-muted hover:text-text-primary transition-all disabled:opacity-30 disabled:pointer-events-none"
+                >
+                  <ChevronLeft size={14} />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleNextMonth}
+                  disabled={viewMode === "months"}
+                  className="p-1 rounded-lg hover:bg-white/[0.06] text-text-muted hover:text-text-primary transition-all disabled:opacity-30 disabled:pointer-events-none"
+                >
+                  <ChevronRight size={14} />
+                </button>
+              </div>
+            </div>
+
+            {viewMode === "days" && (
+              <>
+                <div className="grid grid-cols-7 text-center">
+                  {["Sn", "Sl", "Rb", "Km", "Jm", "Sb", "Mg"].map((day, idx) => (
+                    <span key={idx} className="text-[9px] font-bold text-text-muted uppercase">
+                      {day}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-7 gap-1 text-center font-mono">
+                  {calendarDays.map((day, idx) => {
+                    if (day === null) {
+                      return <div key={`empty-${idx}`} className="h-7 w-7" />;
+                    }
+
+                    const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+                    const isSelected = value === dateStr;
+                    const isToday = dateStr === new Date().toISOString().split('T')[0];
+
+                    return (
+                      <button
+                        key={`day-${day}`}
+                        type="button"
+                        onClick={(e) => handleDayClick(day, e)}
+                        className={cn(
+                          "h-8 w-8 text-xs rounded-lg flex items-center justify-center font-semibold transition-all cursor-pointer",
+                          isSelected 
+                            ? "bg-accent text-white font-bold shadow-lg shadow-accent/30" 
+                            : isToday
+                            ? "border border-accent/50 text-accent font-bold"
+                            : "text-text-primary hover:bg-white/[0.08] active:bg-white/[0.12]"
+                        )}
+                      >
+                        {day}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            {viewMode === "months" && (
+              <div className="grid grid-cols-3 gap-2 py-1">
+                {[
+                  "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+                  "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+                ].map((m, mIdx) => (
+                  <button
+                    key={mIdx}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setViewDate(new Date(year, mIdx, 1));
+                      setViewMode("days");
+                    }}
+                    className={cn(
+                      "h-10 text-xs rounded-lg font-semibold transition-all cursor-pointer text-center",
+                      mIdx === month 
+                        ? "bg-accent text-white font-bold shadow-lg shadow-accent/30" 
+                        : "text-text-primary hover:bg-white/[0.08] active:bg-white/[0.12]"
+                    )}
+                  >
+                    {m.substring(0, 3)}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {viewMode === "years" && (
+              <div className="grid grid-cols-4 gap-2 py-1">
+                {Array.from({ length: 16 }, (_, i) => yearPageStart + i).map((y) => (
+                  <button
+                    key={y}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setViewDate(new Date(y, month, 1));
+                      setViewMode("days");
+                    }}
+                    className={cn(
+                      "h-10 text-xs rounded-lg font-semibold transition-all cursor-pointer text-center font-mono",
+                      y === year 
+                        ? "bg-accent text-white font-bold shadow-lg shadow-accent/30" 
+                        : "text-text-primary hover:bg-white/[0.08] active:bg-white/[0.12]"
+                    )}
+                  >
+                    {y}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>,
+          document.body,
+        )}
+    </>
   );
 }
