@@ -1,15 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { Target, Check, X, Loader2, Calendar, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { Target, Check, X, Loader2 } from "lucide-react";
 import { formatIDR, formatInputRupiah, cleanMoneyString } from "@/lib/utils/formatters";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils/cn";
 import {
   Select,
   SelectContent,
@@ -252,7 +251,13 @@ export function GoalForm({ open, onClose, goal, accounts, onSubmit }: GoalModalP
               <Label htmlFor="targetDate" className={labelCls}>
                 {isId ? "Tanggal Target" : "Target Date"}
               </Label>
-              <CustomSingleDatePicker value={targetDate} onChange={setTargetDate} />
+              <Input
+                id="targetDate"
+                type="date"
+                value={targetDate}
+                onChange={(e) => setTargetDate(e.target.value)}
+                className="h-11 border-border bg-elevated"
+              />
             </div>
             <div className="space-y-2.5">
               <Label htmlFor="accountId" className={labelCls}>
