@@ -454,10 +454,10 @@ export function IncomeClient({
 							
 							<div className="h-2.5 bg-white/[0.04] rounded-full overflow-hidden p-0.5 border border-white/[0.02]">
 								<div
-									className="h-full rounded-full bg-gradient-to-r from-income to-emerald-400 transition-all duration-500 ease-out"
+									className="h-full bg-progress rounded-full transition-all duration-500 ease-out shadow-lg"
 									style={{
 										width: `${goalProgressPercent}%`,
-										boxShadow: "0 0 10px rgba(16,185,129,0.3)",
+										boxShadow: `0 0 10px ${getComputedStyle(document.documentElement).getPropertyValue('--progress')}66`,
 									}}
 								/>
 							</div>
@@ -528,11 +528,10 @@ export function IncomeClient({
 										</div>
 										<div className="h-1 bg-white/[0.04] rounded-full overflow-hidden">
 											<div
-												className="h-full rounded-full transition-all duration-500 ease-out"
+												className="h-full bg-progress rounded-full transition-all duration-500 ease-out shadow-md"
 												style={{
 													width: `${cat.percent}%`,
-													backgroundColor: color,
-													boxShadow: `0 0 8px ${color}44`,
+													boxShadow: `0 0 8px ${getComputedStyle(document.documentElement).getPropertyValue('--progress')}44`,
 												}}
 											/>
 										</div>

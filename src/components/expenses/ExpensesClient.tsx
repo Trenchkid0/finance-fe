@@ -453,13 +453,10 @@ export function ExpensesClient({
 							
 							<div className="h-2.5 bg-white/[0.04] rounded-full overflow-hidden p-0.5 border border-white/[0.02]">
 								<div
-									className={cn(
-										"h-full rounded-full transition-all duration-500 ease-out",
-										isGoalExceeded ? "bg-gradient-to-r from-expense to-red-400" : "bg-gradient-to-r from-amber-500 to-yellow-400"
-									)}
+									className="h-full bg-progress rounded-full transition-all duration-500 ease-out shadow-lg"
 									style={{
 										width: `${goalProgressPercent}%`,
-										boxShadow: isGoalExceeded ? "0 0 10px rgba(239,68,68,0.3)" : "0 0 10px rgba(245,158,11,0.2)",
+										boxShadow: `0 0 10px ${getComputedStyle(document.documentElement).getPropertyValue('--progress')}66`,
 									}}
 								/>
 							</div>
@@ -530,11 +527,10 @@ export function ExpensesClient({
 										</div>
 										<div className="h-1 bg-white/[0.04] rounded-full overflow-hidden">
 											<div
-												className="h-full rounded-full transition-all duration-500 ease-out"
+												className="h-full bg-progress rounded-full transition-all duration-500 ease-out shadow-md"
 												style={{
 													width: `${cat.percent}%`,
-													backgroundColor: color,
-													boxShadow: `0 0 8px ${color}44`,
+													boxShadow: `0 0 8px ${getComputedStyle(document.documentElement).getPropertyValue('--progress')}44`,
 												}}
 											/>
 										</div>

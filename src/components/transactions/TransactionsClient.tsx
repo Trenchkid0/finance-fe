@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition, useRef } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { createPortal } from "react-dom";
 import {
   ArrowLeftRight,
   Calendar,
@@ -311,7 +312,7 @@ export function TransactionsClient({
   }
 
   return (
-    <div className="space-y-6 animate-fade-in-up">
+    <div className="space-y-6 animate-fade-in-up overflow-visible">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl lg:text-[1.75rem] font-extrabold tracking-tight text-foreground">
@@ -356,7 +357,7 @@ export function TransactionsClient({
                 {t("export")}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-surface border-border">
+            <DropdownMenuContent align="end" className="bg-surface border-border z-[99999]">
               <DropdownMenuItem asChild>
                 <a href={exportHref()} download className="cursor-pointer w-full flex items-center gap-2">
                   <span>CSV Format</span>
@@ -406,6 +407,8 @@ export function TransactionsClient({
         categories={categories}
       />
 
+      <FilterStatusIndicator filters={filters} />
+
       {selectedIds.size > 0 && (
         <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-expense/10 border border-expense/20 animate-fade-in text-sm">
           <div className="flex items-center gap-2">
@@ -447,6 +450,7 @@ export function TransactionsClient({
             toggleSelect={toggleSelect}
             isAllSelected={isAllSelected}
             toggleSelectAll={toggleSelectAll}
+            filters={filters}
             emptyState={
               isFilterActive(filters) ? (
                 <EmptyState
@@ -926,7 +930,7 @@ function FilterBar({
   const active = isFilterActive(filters);
 
   return (
-    <Card className="p-0">
+    <Card className="p-0 overflow-visible">
       <form
         ref={formRef}
         action=""
@@ -939,7 +943,7 @@ function FilterBar({
             endDate: (fd.get("endDate") as string) || null,
           });
         }}
-        className="flex flex-col gap-4 p-5"
+        className="flex flex-col gap-4 p-5 overflow-visible"
       >
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
         {/* Search */}
@@ -1112,6 +1116,10 @@ function CustomDateRangePicker({
   endDate: string;
   onPick: (range: { start: string; end: string }) => void;
 }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  
   const [viewDate, setViewDate] = useState(() => {
     const d = startDate ? new Date(startDate) : new Date();
     return isNaN(d.getTime()) ? new Date() : d;
@@ -1124,6 +1132,65 @@ function CustomDateRangePicker({
     const currentYear = startDate ? new Date(startDate).getFullYear() : new Date().getFullYear();
     return Math.floor(currentYear / 16) * 16;
   });
+
+  // Position management
+  const updatePosition = () => {
+    if (triggerRef.current && containerRef.current) {
+      const triggerRect = triggerRef.current.getBoundingClientRect();
+      const popupHeight = 500;
+      
+      let top = triggerRect.bottom + window.scrollY + 8;
+      let left = triggerRect.left + window.scrollX;
+      
+      // Check if popup would go below viewport, position above instead
+      if (top + popupHeight > window.scrollY + window.innerHeight && triggerRect.top - popupHeight > 0) {
+        top = triggerRect.top + window.scrollY - popupHeight - 8;
+      }
+      
+      // Check if popup would overflow right
+      if (left + 280 > window.innerWidth) {
+        left = Math.max(10, window.innerWidth - 290);
+      }
+      
+      if (left < 10) {
+        left = 10;
+      }
+      
+      containerRef.current.style.top = `${top}px`;
+      containerRef.current.style.left = `${left}px`;
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      updatePosition();
+      const timer = requestAnimationFrame(updatePosition);
+      window.addEventListener("scroll", updatePosition, true);
+      window.addEventListener("resize", updatePosition);
+      return () => {
+        cancelAnimationFrame(timer);
+        window.removeEventListener("scroll", updatePosition, true);
+        window.removeEventListener("resize", updatePosition);
+      };
+    }
+  }, [isOpen]);
+
+  // Close on click outside
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClose = (e: MouseEvent) => {
+      if (triggerRef.current && triggerRef.current.contains(e.target as Node)) {
+        return;
+      }
+      const contentEl = document.getElementById("date-range-picker-content");
+      if (contentEl && contentEl.contains(e.target as Node)) {
+        return;
+      }
+      setIsOpen(false);
+    };
+    document.addEventListener("click", handleClose, true);
+    return () => document.removeEventListener("click", handleClose, true);
+  }, [isOpen]);
 
   useEffect(() => {
     const vYear = viewDate.getFullYear();
@@ -1190,11 +1257,13 @@ function CustomDateRangePicker({
     setTempStart(range.start);
     setTempEnd(range.end);
     onPick(range);
+    setIsOpen(false);
   };
 
   const handleApply = (e: React.MouseEvent) => {
     e.stopPropagation();
     onPick({ start: tempStart, end: tempEnd });
+    setIsOpen(false);
   };
 
   const handleReset = (e: React.MouseEvent) => {
@@ -1202,6 +1271,7 @@ function CustomDateRangePicker({
     setTempStart("");
     setTempEnd("");
     onPick({ start: "", end: "" });
+    setIsOpen(false);
   };
 
   let label = "Pilih Tanggal";
@@ -1221,22 +1291,30 @@ function CustomDateRangePicker({
 
 
   return (
-    <DropdownMenu modal={false}>
-      <DropdownMenuTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          className="h-8 gap-2 px-3 text-xs font-semibold text-text-primary bg-white/[0.03] border-white/[0.08] hover:border-white/[0.15] hover:bg-white/[0.05] rounded-lg transition-all"
-        >
-          <Calendar size={12} className="text-text-muted pointer-events-none" />
-          <span>{label}</span>
-          <ChevronDown size={12} className="text-text-muted opacity-60 ml-0.5" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="start"
-        className="p-4 w-[280px] rounded-xl border border-white/[0.08] bg-popover/95 backdrop-blur-xl flex flex-col gap-3.5 text-text-primary shadow-2xl"
+    <div className="relative z-50">
+      <Button
+        ref={triggerRef}
+        type="button"
+        variant="outline"
+        onClick={() => setIsOpen(!isOpen)}
+        className="h-8 gap-2 px-3 text-xs font-semibold text-text-primary bg-white/[0.03] border-white/[0.08] hover:border-white/[0.15] hover:bg-white/[0.05] rounded-lg transition-all"
       >
+        <Calendar size={12} className="text-text-muted pointer-events-none" />
+        <span>{label}</span>
+        <ChevronDown size={12} className="text-text-muted opacity-60 ml-0.5" />
+      </Button>
+      
+      {isOpen && createPortal(
+        <div
+          ref={containerRef}
+          id="date-range-picker-content"
+          style={{
+            position: "fixed",
+            top: "0",
+            left: "0",
+          }}
+          className="p-4 w-[280px] rounded-xl border border-white/[0.08] bg-popover/95 backdrop-blur-xl flex flex-col gap-3.5 text-text-primary shadow-2xl z-[100000] max-h-[500px] overflow-y-auto"
+        >
         {/* Presets Grid */}
         <div className="grid grid-cols-3 gap-1">
           {["1d", "7d", "30d", "ytd", "365d", "all"].map((p) => {
@@ -1349,16 +1427,22 @@ function CustomDateRangePicker({
                   new Date(dateStr) > new Date(tempStart) &&
                   new Date(dateStr) < new Date(tempEnd);
 
+                const isToday = dateStr === new Date().toLocaleDateString("sv-SE");
+                
                 return (
                   <button
-                    key={`day-${day}`}
+                    key={idx}
                     type="button"
                     onClick={(e) => handleDayClick(day, e)}
                     className={cn(
-                      "h-7 w-7 text-xs rounded-lg flex items-center justify-center font-semibold transition-all hover:bg-white/[0.08] hover:text-text-primary",
-                      isSelectedStart && "bg-accent text-white font-bold hover:bg-accent",
-                      isSelectedEnd && "bg-accent text-white font-bold hover:bg-accent",
-                      isInRange && "bg-accent/15 text-accent font-medium rounded-none"
+                      "h-7 w-7 rounded text-[11px] font-medium transition-all duration-150",
+                      isSelectedStart || isSelectedEnd
+                        ? "bg-accent text-white"
+                        : isInRange
+                        ? "bg-accent/15 text-accent font-medium"
+                        : isToday
+                        ? "bg-accent/10 text-accent border border-accent/25"
+                        : "hover:bg-white/[0.06] hover:text-text-primary text-text-muted"
                     )}
                   >
                     {day}
@@ -1370,11 +1454,8 @@ function CustomDateRangePicker({
         )}
 
         {viewMode === "months" && (
-          <div className="grid grid-cols-3 gap-2 py-1 text-center">
-            {[
-              "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-              "Juli", "Agustus", "September", "Oktober", "November", "Desember"
-            ].map((m, mIdx) => (
+          <div className="grid grid-cols-3 gap-1.5">
+            {Array.from({ length: 12 }).map((_, mIdx) => (
               <button
                 key={mIdx}
                 type="button"
@@ -1383,79 +1464,97 @@ function CustomDateRangePicker({
                   setViewDate(new Date(year, mIdx, 1));
                   setViewMode("days");
                 }}
-                className={cn(
-                  "h-10 text-xs rounded-lg font-semibold transition-all hover:bg-white/[0.08] hover:text-text-primary",
-                  mIdx === month && "bg-accent text-white font-bold hover:bg-accent"
-                )}
+                className="py-2 text-[11px] font-medium rounded hover:bg-white/[0.06] hover:text-text-primary text-text-muted transition-colors"
               >
-                {m.substring(0, 3)}
+                {["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"][mIdx]}
               </button>
             ))}
           </div>
         )}
 
         {viewMode === "years" && (
-          <div className="grid grid-cols-4 gap-2 py-1 text-center font-mono">
-            {Array.from({ length: 16 }, (_, i) => yearPageStart + i).map((y) => (
-              <button
-                key={y}
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setViewDate(new Date(y, month, 1));
-                  setViewMode("months");
-                }}
-                className={cn(
-                  "h-10 text-xs rounded-lg font-semibold transition-all hover:bg-white/[0.08] hover:text-text-primary",
-                  y === year && "bg-accent text-white font-bold hover:bg-accent"
-                )}
-              >
-                {y}
-              </button>
-            ))}
+          <div className="grid grid-cols-4 gap-1.5">
+            {Array.from({ length: 16 }).map((_, idx) => {
+              const y = yearPageStart + idx;
+              return (
+                <button
+                  key={y}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setViewDate(new Date(y, 0, 1));
+                    setViewMode("months");
+                  }}
+                  className={cn(
+                    "py-2 text-[11px] font-medium rounded transition-colors font-mono",
+                    y === year
+                      ? "bg-accent text-white"
+                      : "hover:bg-white/[0.06] hover:text-text-primary text-text-muted"
+                  )}
+                >
+                  {y}
+                </button>
+              );
+            })}
           </div>
         )}
 
-        <div className="border-t border-white/[0.06]" />
-
-        {/* Custom Input Form fields */}
-        <div className="flex items-center justify-between gap-1.5">
-          <input
-            type="text"
-            placeholder="YYYY-MM-DD"
-            value={tempStart}
-            onChange={(e) => setTempStart(e.target.value)}
-            className="w-[105px] h-7 text-[10px] text-center font-mono px-1.5 rounded-lg bg-white/[0.02] border border-white/[0.06] text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent"
-          />
-          <span className="text-text-muted text-[10px]">→</span>
-          <input
-            type="text"
-            placeholder="YYYY-MM-DD"
-            value={tempEnd}
-            onChange={(e) => setTempEnd(e.target.value)}
-            className="w-[105px] h-7 text-[10px] text-center font-mono px-1.5 rounded-lg bg-white/[0.02] border border-white/[0.06] text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent"
-          />
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={handleReset}
-            className="w-1/2 h-7.5 py-1 text-[11px] font-bold rounded-lg border border-white/[0.06] hover:bg-white/[0.06] text-text-muted hover:text-text-primary transition-all"
-          >
-            Hapus
-          </button>
-          <button
-            type="button"
-            onClick={handleApply}
-            className="w-1/2 h-7.5 py-1 text-[11px] font-bold rounded-lg bg-accent text-white hover:bg-accent/80 transition-all"
-          >
-            Terapkan
-          </button>
-        </div>
-      </DropdownMenuContent>
-    </DropdownMenu>
+        {/* Selected Range Display & Actions */}
+        {(tempStart || tempEnd) && (
+          <div className="pt-2 border-t border-white/[0.06]">
+            <div className="text-[10px] font-medium text-text-muted mb-2">Rentang Dipilih:</div>
+            <div className="flex items-center justify-between bg-elevated/40 border border-border/50 rounded-lg px-3 py-2 mb-2">
+              <div className="flex items-center gap-2">
+                <Calendar size={10} className="text-text-muted" />
+                <span className="text-xs font-mono tabular-nums">
+                  {tempStart ? formatFriendlyDate(tempStart) : "..."}
+                </span>
+                <span className="text-text-muted/50 text-[10px]">→</span>
+                <span className="text-xs font-mono tabular-nums">
+                  {tempEnd ? formatFriendlyDate(tempEnd) : "..."}
+                </span>
+              </div>
+              {(tempStart || tempEnd) && (
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="text-[10px] text-expense hover:text-red-400 transition-colors"
+                >
+                  Reset
+                </button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleApply}
+                className="flex-1 h-7 text-xs bg-accent hover:bg-accent/90 text-white"
+              >
+                Terapkan
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const modal = document.activeElement as HTMLElement;
+                  if (modal && modal.contains(e.currentTarget)) {
+                    modal.click();
+                  }
+                }}
+                className="h-7 text-xs"
+              >
+                Tutup
+              </Button>
+            </div>
+          </div>
+        )}
+        </div>,
+        document.body
+      )}
+    </div>
   );
 }
 
@@ -1498,7 +1597,7 @@ function FilterSelect({
             <ChevronDown size={14} className="opacity-60 shrink-0 ml-2" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="min-w-[150px] rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl">
+        <DropdownMenuContent align="start" className="min-w-[150px] rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl z-[99999]">
           {options.map((opt) => (
             <DropdownMenuItem
               key={opt.value}
@@ -1543,6 +1642,7 @@ function TransactionsList({
   toggleSelect,
   isAllSelected,
   toggleSelectAll,
+  filters,
 }: {
   transactions: TransactionRowData[];
   categories: CategoryOption[];
@@ -1554,6 +1654,7 @@ function TransactionsList({
   toggleSelect: (id: string) => void;
   isAllSelected: boolean;
   toggleSelectAll: () => void;
+  filters?: TransactionFiltersState;
 }) {
   if (transactions.length === 0) {
     return (
@@ -1593,6 +1694,7 @@ function TransactionsList({
             onDuplicate={onDuplicate}
             selectedIds={selectedIds}
             toggleSelect={toggleSelect}
+            filters={filters}
           />
         ))}
       </div>
@@ -1656,6 +1758,7 @@ function DateGroup({
   onDuplicate,
   selectedIds,
   toggleSelect,
+  filters,
 }: {
   group: TransactionGroup;
   categories: CategoryOption[];
@@ -1664,6 +1767,7 @@ function DateGroup({
   onDuplicate: (row: TransactionRowData) => void;
   selectedIds: Set<string>;
   toggleSelect: (id: string) => void;
+  filters?: TransactionFiltersState;
 }) {
   const totalColor =
     group.total > 0
@@ -1689,6 +1793,26 @@ function DateGroup({
     }
   };
 
+  // Check if this date group is within the filtered date range
+  const isWithinFilterRange = () => {
+    if (!filters?.startDate && !filters?.endDate) return false;
+    
+    const groupDate = new Date(group.date);
+    const startDate = filters.startDate ? new Date(filters.startDate) : null;
+    const endDate = filters.endDate ? new Date(filters.endDate) : null;
+    
+    if (startDate && endDate) {
+      return groupDate >= startDate && groupDate <= endDate;
+    } else if (startDate) {
+      return groupDate >= startDate;
+    } else if (endDate) {
+      return groupDate <= endDate;
+    }
+    return false;
+  };
+
+  const isInFilterRange = isWithinFilterRange();
+
   return (
     <section className="space-y-2">
       <header className="flex items-center justify-between px-2 text-xs font-semibold text-text-muted">
@@ -1699,7 +1823,12 @@ function DateGroup({
             onChange={toggleGroupSelect}
             className="rounded border-white/20 bg-white/[0.04] text-accent focus:ring-accent/50 focus:ring-offset-canvas h-3 w-3 transition-all duration-200 cursor-pointer mr-1"
           />
-          <span>{group.label}</span>
+          <span className={cn(isInFilterRange && "text-accent font-bold")}>{group.label}</span>
+          {isInFilterRange && (
+            <span className="bg-accent/15 text-accent px-1.5 py-0.2 rounded text-[9px] font-medium border border-accent/25">
+              Filter Aktif
+            </span>
+          )}
           <span className="text-text-muted/30">·</span>
           <span className="font-mono tabular-nums bg-elevated border border-border/85 px-1.5 py-0.2 rounded text-[9px] text-text-muted font-medium">
             {group.items.length} transaksi
@@ -1711,7 +1840,10 @@ function DateGroup({
         </p>
       </header>
 
-      <Card className="divide-y divide-white/[0.04] overflow-hidden gap-0">
+      <Card className={cn(
+        "divide-y divide-white/[0.04] overflow-hidden gap-0 transition-all duration-200",
+        isInFilterRange && "border border-accent/20 bg-accent/5"
+      )}>
         {group.items.map((tx) => (
           <TransactionRow
             key={tx.id}
@@ -1833,7 +1965,7 @@ function TransactionRow({
               <MoreHorizontal size={14} />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-44">
+          <DropdownMenuContent align="end" className="w-44 z-[99999]">
             <DropdownMenuItem onSelect={() => onEdit(tx)}>
               <Pencil size={12} />
               {language === "id" ? "Ubah" : "Edit"}
@@ -1924,7 +2056,7 @@ function PaginationBar({
                 <ChevronDown size={12} className="opacity-60 shrink-0 ml-1" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[80px] rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl">
+            <DropdownMenuContent align="end" className="min-w-[80px] rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl z-[99999]">
               {pageSizeOptions.map((size) => (
                 <DropdownMenuItem
                   key={size}
@@ -2107,4 +2239,60 @@ function todayLocalISO(): string {
   const mm = String(now.getMonth() + 1).padStart(2, "0");
   const dd = String(now.getDate()).padStart(2, "0");
   return `${yyyy}-${mm}-${dd}`;
+}
+
+
+// --- Filter Status Indicator -------------------------------------------------
+
+function FilterStatusIndicator({ filters }: { filters: TransactionFiltersState }) {
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const [searchParams] = useSearchParams();
+
+  if (!isFilterActive(filters)) return null;
+
+  const handleRemoveFilter = () => {
+    const newParams = new URLSearchParams(searchParams);
+    // Remove date filters but keep other filters
+    newParams.delete('startDate');
+    newParams.delete('endDate');
+    // Reset page to 1 when removing filters
+    newParams.delete('page');
+    
+    navigate(newParams.toString() ? `${pathname}?${newParams.toString()}` : pathname);
+  };
+
+  return (
+    <div className="sticky top-0 z-50 flex items-center justify-between px-4 py-2.5 rounded-xl bg-accent/10 border border-accent/20 animate-fade-in text-sm mb-4">
+      <div className="flex items-center gap-2">
+        <Calendar size={14} className="text-accent" />
+        <div className="flex flex-col gap-0.5">
+          <span className="text-xs font-semibold text-accent">Filter Tanggal Aktif</span>
+          <div className="flex items-center gap-2 text-xs text-text-muted font-mono tabular-nums">
+            {filters.startDate && (
+              <span className="bg-elevated/60 px-1.5 py-0.5 rounded border border-border/50">
+                Mulai: {formatFriendlyDate(filters.startDate)}
+              </span>
+            )}
+            {filters.endDate && (
+              <span className="bg-elevated/60 px-1.5 py-0.5 rounded border border-border/50">
+                Sampai: {formatFriendlyDate(filters.endDate)}
+              </span>
+            )}
+            {!filters.startDate && !filters.endDate && (
+              <span>Semua tanggal</span>
+            )}
+          </div>
+        </div>
+      </div>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={handleRemoveFilter}
+        className="text-xs text-text-muted hover:text-text-primary h-7 px-2.5"
+      >
+        Hapus Filter
+      </Button>
+    </div>
+  );
 }

@@ -125,7 +125,7 @@ export const DropdownMenuContent = forwardRef<
   };
 
   const sideAlignClasses = cn(
-    "absolute z-50",
+    "absolute z-[99999]",
     side === "bottom" && "top-full",
     side === "top" && "bottom-full",
     side === "left" && "right-full",

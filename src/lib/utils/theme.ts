@@ -368,6 +368,12 @@ export interface CardStyles {
   opacity: string;     // "1" | "0.75" | "0.5"
 }
 
+export interface ButtonStyles {
+  radius: string;      // "0px" | "8px" | "12px" | "16px"
+  size: string;        // "default" | "compact" | "large"
+  weight: string;      // "normal" | "medium" | "semibold" | "bold"
+}
+
 export function applyCardStyles(styles: CardStyles) {
   if (typeof window === "undefined") return;
   const root = document.documentElement;
@@ -376,6 +382,15 @@ export function applyCardStyles(styles: CardStyles) {
   root.style.setProperty("--card-backdrop-blur", styles.blur);
   root.style.setProperty("--card-opacity", styles.opacity);
   localStorage.setItem("racks-card-styles", JSON.stringify(styles));
+}
+
+export function applyButtonStyles(styles: ButtonStyles) {
+  if (typeof window === "undefined") return;
+  const root = document.documentElement;
+  root.style.setProperty("--button-radius", styles.radius);
+  root.style.setProperty("--button-height", styles.size === "compact" ? "36px" : styles.size === "large" ? "48px" : "44px");
+  root.style.setProperty("--button-font-weight", styles.weight === "normal" ? "500" : styles.weight === "medium" ? "600" : styles.weight === "bold" ? "700" : "600");
+  localStorage.setItem("racks-button-styles", JSON.stringify(styles));
 }
 
 export function loadSavedCardStyles() {
@@ -398,10 +413,30 @@ export function loadSavedCardStyles() {
   applyCardStyles(styles);
 }
 
+export function loadSavedButtonStyles() {
+  if (typeof window === "undefined") return;
+  const defaults: ButtonStyles = {
+    radius: "12px",
+    size: "default",
+    weight: "semibold"
+  };
+  const savedStr = localStorage.getItem("racks-button-styles");
+  let styles = defaults;
+  if (savedStr) {
+    try {
+      styles = { ...defaults, ...JSON.parse(savedStr) };
+    } catch (e) {
+      // Ignore
+    }
+  }
+  applyButtonStyles(styles);
+}
+
 export function loadSavedTheme() {
   if (typeof window === "undefined") return;
   loadSavedFont();
   loadSavedCardStyles();
+  loadSavedButtonStyles();
   const themeId = localStorage.getItem("racks-theme-id") || "nordic-midnight";
   const customVarsStr = localStorage.getItem("racks-custom-theme-vars");
   let customVars = undefined;

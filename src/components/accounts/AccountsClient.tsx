@@ -319,7 +319,7 @@ function AccountCard({
             </p>
             <p className={cn(
               "text-2xl font-black font-mono tracking-tight tabular-nums transition-colors duration-300",
-              isNegative ? "text-expense" : "text-foreground group-hover:text-white"
+              isNegative ? "text-expense" : "text-income"
             )}>
               {formatIDR(account.balance)}
             </p>
@@ -334,7 +334,7 @@ function AccountCard({
               <p className="text-[8px] uppercase tracking-wider text-muted-foreground/50 font-bold mb-0.5">
                 {language === "id" ? "Nama Akun" : "Account Name"}
               </p>
-              <p className="text-xs font-bold text-foreground truncate tracking-wide transition-colors duration-300 group-hover:text-white">
+              <p className="text-xs font-bold text-foreground truncate tracking-wide transition-colors duration-300">
                 {account.name}
               </p>
             </div>

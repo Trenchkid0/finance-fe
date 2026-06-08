@@ -2,8 +2,8 @@
 
 import { useActionState, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
-import { ChevronDown, Inbox, Key, Loader2, Palette, Plus, Shapes, Shield, Trash2, User, X } from "lucide-react";
-import { applyTheme, THEME_PRESETS, FONT_OPTIONS, applyFont, type ThemeVariables, type CardStyles, applyCardStyles } from "@/lib/utils/theme";
+import { ChevronDown, Inbox, Key, Loader2, Palette, Plus, Shapes, Shield, Trash2, User, X, Settings } from "lucide-react";
+import { applyTheme, THEME_PRESETS, FONT_OPTIONS, applyFont, type ThemeVariables, type CardStyles, applyCardStyles, type ButtonStyles, applyButtonStyles } from "@/lib/utils/theme";
 import { toast } from "sonner";
 import { createCategory, deleteCategory } from "@/app/actions/categories";
 import type { ActionResult } from "@/types";
@@ -32,6 +32,12 @@ import { ApiKeysCard } from "./ApiKeysCard";
 import type { ApiKeyListItem } from "@/app/actions/api-keys";
 import { cn } from "@/lib/utils/cn";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface CategoryItem {
   id: string;
@@ -108,10 +114,37 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
     }
   });
 
+  const [buttonStyles, setButtonStyles] = useState<ButtonStyles>(() => {
+    if (typeof window === "undefined") {
+      return {
+        radius: "12px",
+        size: "default",
+        weight: "semibold",
+      };
+    }
+    const defaults: ButtonStyles = {
+      radius: "12px",
+      size: "default",
+      weight: "semibold",
+    };
+    const stored = localStorage.getItem("racks-button-styles");
+    try {
+      return stored ? { ...defaults, ...JSON.parse(stored) } : defaults;
+    } catch {
+      return defaults;
+    }
+  });
+
   const handleCardStyleChange = (key: keyof CardStyles, value: string) => {
     const updated = { ...cardStyles, [key]: value };
     setCardStyles(updated);
     applyCardStyles(updated);
+  };
+
+  const handleButtonStyleChange = (key: keyof ButtonStyles, value: string) => {
+    const updated = { ...buttonStyles, [key]: value };
+    setButtonStyles(updated);
+    applyButtonStyles(updated);
   };
 
   const handleFontChange = (id: string) => {
@@ -181,9 +214,9 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
         </p>
       </div>
 
-      {/* Profile Section — always visible */}
-      <Card className="p-5">
-        <h2 className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
+      {/* Profile Section */}
+      <div className="p-6 border rounded-xl space-y-3" style={{ borderRadius: 'var(--card-radius)', borderWidth: 'var(--card-border-width)', borderColor: 'var(--border)', backgroundColor: 'color-mix(in srgb, var(--card-bg) calc(var(--card-opacity) * 100%), transparent)' }}>
+        <h2 className="text-sm font-medium text-foreground flex items-center gap-2">
           <User size={14} className="text-muted-foreground" />
           {language === "id" ? "Profil pengguna" : "User profile"}
         </h2>
@@ -204,7 +237,7 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
             {language === "id" ? "Gagal memuat profil pengguna." : "Failed to load user profile."}
           </p>
         )}
-      </Card>
+      </div>
 
       {/* Tab navigation */}
       <div>
@@ -385,7 +418,9 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
                         style={{
                           backgroundColor: preset.variables.background,
                           color: preset.variables.foreground,
-                          borderColor: isSelected ? preset.variables.accent : undefined
+                          borderColor: isSelected ? preset.variables.accent : undefined,
+                          borderRadius: 'var(--card-radius)',
+                          borderWidth: 'var(--card-border-width)'
                         }}
                       >
                         {/* Selected Indicator Badge */}
@@ -507,6 +542,76 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
                       {language === "id" ? "Warna Progress Bar" : "Progress Bar Color"}
                     </span>
                   </div>
+
+                  {/* Primary Text Color */}
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={customVars.foreground || THEME_PRESETS.find(p => p.id === activePresetId)?.variables.foreground || "#F8FAFC"}
+                      onChange={(e) => handleCustomVarChange("foreground", e.target.value)}
+                      onInput={(e) => handleCustomVarChange("foreground", (e.target as HTMLInputElement).value)}
+                      className="h-8 w-8 rounded-lg cursor-pointer border border-border bg-transparent shrink-0"
+                    />
+                    <span className="text-xs text-foreground font-medium">
+                      {language === "id" ? "Warna Teks Utama" : "Primary Text Color"}
+                    </span>
+                  </div>
+
+                  {/* Muted Text Color */}
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={customVars["muted-foreground"] || THEME_PRESETS.find(p => p.id === activePresetId)?.variables["muted-foreground"] || "#94A3B8"}
+                      onChange={(e) => handleCustomVarChange("muted-foreground", e.target.value)}
+                      onInput={(e) => handleCustomVarChange("muted-foreground", (e.target as HTMLInputElement).value)}
+                      className="h-8 w-8 rounded-lg cursor-pointer border border-border bg-transparent shrink-0"
+                    />
+                    <span className="text-xs text-foreground font-medium">
+                      {language === "id" ? "Warna Teks Sekunder" : "Secondary Text Color"}
+                    </span>
+                  </div>
+
+                  {/* Income Color */}
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={customVars.income || THEME_PRESETS.find(p => p.id === activePresetId)?.variables.income || "#10B981"}
+                      onChange={(e) => handleCustomVarChange("income", e.target.value)}
+                      onInput={(e) => handleCustomVarChange("income", (e.target as HTMLInputElement).value)}
+                      className="h-8 w-8 rounded-lg cursor-pointer border border-border bg-transparent shrink-0"
+                    />
+                    <span className="text-xs text-foreground font-medium">
+                      {language === "id" ? "Warna Uang Masuk / Sukses" : "Income / Success Color"}
+                    </span>
+                  </div>
+
+                  {/* Expense Color */}
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={customVars.expense || THEME_PRESETS.find(p => p.id === activePresetId)?.variables.expense || "#EF4444"}
+                      onChange={(e) => handleCustomVarChange("expense", e.target.value)}
+                      onInput={(e) => handleCustomVarChange("expense", (e.target as HTMLInputElement).value)}
+                      className="h-8 w-8 rounded-lg cursor-pointer border border-border bg-transparent shrink-0"
+                    />
+                    <span className="text-xs text-foreground font-medium">
+                      {language === "id" ? "Warna Uang Keluar / Bahaya" : "Expense / Danger Color"}
+                    </span>
+                  </div>
+
+                  {/* Warning Color */}
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={customVars.warning || THEME_PRESETS.find(p => p.id === activePresetId)?.variables.warning || "#F59E0B"}
+                      onChange={(e) => handleCustomVarChange("warning", e.target.value)}
+                      onInput={(e) => handleCustomVarChange("warning", (e.target as HTMLInputElement).value)}
+                      className="h-8 w-8 rounded-lg cursor-pointer border border-border bg-transparent shrink-0"
+                    />
+                    <span className="text-xs text-foreground font-medium">
+                      {language === "id" ? "Warna Uang Pending / Peringatan" : "Warning / Pending Color"}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Reset Customizations Button */}
@@ -532,15 +637,15 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
                 )}
               </div>
 
-              {/* Informational Color Breakdown Guide */}
-              <div className="mt-8 border-t border-border/60 pt-6 space-y-4">
+                {/* Informational Color Breakdown Guide */}
+              <div className="mt-8 pt-6 space-y-4">
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                   {language === "id" ? "Panduan Peruntukan Warna" : "Color Mapping Guide"}
                 </h3>
                 
                 <div className="flex flex-col lg:flex-row gap-6 items-stretch">
                   {/* Visual UI Mapping Demo Widget */}
-                  <div className="w-full lg:w-80 p-5 rounded-2xl border border-border bg-card/60 backdrop-blur-md space-y-4 text-left flex flex-col justify-between shrink-0">
+                  <div className="w-full lg:w-80 p-5 border border-border bg-card/60 backdrop-blur-md space-y-4 text-left flex flex-col justify-between shrink-0" style={{ borderRadius: 'var(--card-radius)' }}>
                     <div>
                       <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-3">
                         {language === "id" ? "Skema Variabel Elemen UI" : "UI Element Variable Mapping"}
@@ -607,7 +712,7 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
 
                   {/* Descriptions Grid */}
                   <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
-                    <div className="p-3.5 bg-white/[0.01] border border-border/40 rounded-xl space-y-1.5">
+                    <div className="p-3.5 border transition-all duration-300 space-y-1.5" style={{ borderRadius: 'var(--card-radius)', borderWidth: 'var(--card-border-width)', borderColor: 'var(--border)', backgroundColor: 'color-mix(in srgb, var(--card-bg) calc(var(--card-opacity) * 100%), transparent)' }}>
                       <div className="flex items-center gap-2">
                         <span className="w-3 h-3 rounded-full bg-accent" />
                         <span className="text-xs font-bold text-foreground">Accent / Brand Color</span>
@@ -619,7 +724,7 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
                       </p>
                     </div>
 
-                    <div className="p-3.5 bg-white/[0.01] border border-border/40 rounded-xl space-y-1.5">
+                    <div className="p-3.5 border transition-all duration-300 space-y-1.5" style={{ borderRadius: 'var(--card-radius)', borderWidth: 'var(--card-border-width)', borderColor: 'var(--border)', backgroundColor: 'color-mix(in srgb, var(--card-bg) calc(var(--card-opacity) * 100%), transparent)' }}>
                       <div className="flex items-center gap-2">
                         <span className="w-3 h-3 rounded-full bg-background" />
                         <span className="text-xs font-bold text-foreground">Background Canvas</span>
@@ -631,7 +736,7 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
                       </p>
                     </div>
 
-                    <div className="p-3.5 bg-white/[0.01] border border-border/40 rounded-xl space-y-1.5">
+                    <div className="p-3.5 border transition-all duration-300 space-y-1.5" style={{ borderRadius: 'var(--card-radius)', borderWidth: 'var(--card-border-width)', borderColor: 'var(--border)', backgroundColor: 'color-mix(in srgb, var(--card-bg) calc(var(--card-opacity) * 100%), transparent)' }}>
                       <div className="flex items-center gap-2">
                         <span className="w-3 h-3 rounded-full bg-surface" />
                         <span className="text-xs font-bold text-foreground">Card Surface Color</span>
@@ -643,7 +748,7 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
                       </p>
                     </div>
 
-                    <div className="p-3.5 bg-white/[0.01] border border-border/40 rounded-xl space-y-1.5">
+                    <div className="p-3.5 border transition-all duration-300 space-y-1.5" style={{ borderRadius: 'var(--card-radius)', borderWidth: 'var(--card-border-width)', borderColor: 'var(--border)', backgroundColor: 'color-mix(in srgb, var(--card-bg) calc(var(--card-opacity) * 100%), transparent)' }}>
                       <div className="flex items-center gap-2">
                         <span className="w-3 h-3 rounded-full bg-elevated" />
                         <span className="text-xs font-bold text-foreground">Elevated Surface</span>
@@ -655,7 +760,7 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
                       </p>
                     </div>
 
-                    <div className="p-3.5 bg-white/[0.01] border border-border/40 rounded-xl space-y-1.5">
+                    <div className="p-3.5 border transition-all duration-300 space-y-1.5" style={{ borderRadius: 'var(--card-radius)', borderWidth: 'var(--card-border-width)', borderColor: 'var(--border)', backgroundColor: 'color-mix(in srgb, var(--card-bg) calc(var(--card-opacity) * 100%), transparent)' }}>
                       <div className="flex items-center gap-2">
                         <span className="w-3 h-3 rounded-full bg-border" />
                         <span className="text-xs font-bold text-foreground">Border / Dividers</span>
@@ -667,7 +772,7 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
                       </p>
                     </div>
 
-                    <div className="p-3.5 bg-white/[0.01] border border-border/40 rounded-xl space-y-1.5">
+                    <div className="p-3.5 border transition-all duration-300 space-y-1.5" style={{ borderRadius: 'var(--card-radius)', borderWidth: 'var(--card-border-width)', borderColor: 'var(--border)', backgroundColor: 'color-mix(in srgb, var(--card-bg) calc(var(--card-opacity) * 100%), transparent)' }}>
                       <div className="flex items-center gap-2">
                         <span className="w-3.5 h-3.5 flex items-center justify-center rounded-full bg-income/20 border border-income/30">
                           <span className="w-1.5 h-1.5 rounded-full bg-income" />
@@ -685,8 +790,7 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
               </div>
 
               {/* Typography Customization */}
-              <div className="mt-8 border-t border-border/60 pt-6 space-y-4">
-                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+              <div className="mt-6 pt-6 space-y-4 border-t border-border/60">                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                   {language === "id" ? "Gaya Huruf / Tipografi" : "Typography & Font Styles"}
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
@@ -702,6 +806,10 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
                             ? "border-accent bg-accent/5 ring-1 ring-accent"
                             : "border-border/60 bg-transparent hover:border-accent/30 hover:bg-white/[0.01]"
                         )}
+                        style={{
+                          borderRadius: 'var(--card-radius)',
+                          borderWidth: 'var(--card-border-width)'
+                        }}
                       >
                         <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">
                           {language === "id" ? option.name : option.nameEn}
@@ -725,80 +833,163 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
               </div>
 
               {/* Card Style Customization */}
-              <div className="mt-8 border-t border-border/60 pt-6 space-y-6">
-                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+              <div className="mt-6 pt-6 space-y-6 border-t border-border/60">                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                   {language === "id" ? "Gaya & Tampilan Kartu" : "Card Styles & Appearance"}
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                  {/* Card Roundedness */}
-                  <div className="space-y-2 flex flex-col">
-                    <label className="text-xs font-semibold text-foreground">
-                      {language === "id" ? "Sudut Kelengkungan" : "Corner Radius"}
-                    </label>
-                    <select
-                      value={cardStyles.radius}
-                      onChange={(e) => handleCardStyleChange("radius", e.target.value)}
-                      className="bg-elevated border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-accent w-full cursor-pointer h-9"
-                    >
-                      <option value="0px">{language === "id" ? "Tajam (0px)" : "Sharp (0px)"}</option>
-                      <option value="8px">{language === "id" ? "Kompak (8px)" : "Compact (8px)"}</option>
-                      <option value="16px">{language === "id" ? "Sedang (16px)" : "Medium (16px)"}</option>
-                      <option value="24px">{language === "id" ? "Sangat Bulat (24px)" : "Extra Rounded (24px)"}</option>
-                    </select>
-                  </div>
+                  {(() => {
+                    const radiusOptions = [
+                      { value: "0px", label: language === "id" ? "Tajam (0px)" : "Sharp (0px)" },
+                      { value: "8px", label: language === "id" ? "Kompak (8px)" : "Compact (8px)" },
+                      { value: "16px", label: language === "id" ? "Sedang (16px)" : "Medium (16px)" },
+                      { value: "24px", label: language === "id" ? "Sangat Bulat (24px)" : "Extra Rounded (24px)" },
+                    ];
+                    const borderOptions = [
+                      { value: "0px", label: language === "id" ? "Tanpa Garis (0px)" : "None (0px)" },
+                      { value: "1px", label: language === "id" ? "Tipis (1px)" : "Thin (1px)" },
+                      { value: "2px", label: language === "id" ? "Sedang (2px)" : "Medium (2px)" },
+                      { value: "3px", label: language === "id" ? "Tebal (3px)" : "Thick (3px)" },
+                    ];
+                    const blurOptions = [
+                      { value: "0px", label: language === "id" ? "Tanpa Blur (0px)" : "None (0px)" },
+                      { value: "12px", label: language === "id" ? "Sedang (12px)" : "Medium (12px)" },
+                      { value: "24px", label: language === "id" ? "Tebal (24px)" : "Heavy Frost (24px)" },
+                    ];
+                    const opacityOptions = [
+                      { value: "1", label: language === "id" ? "Padat (100%)" : "Solid (100%)" },
+                      { value: "0.75", label: language === "id" ? "Sedang (75%)" : "Medium (75%)" },
+                      { value: "0.5", label: language === "id" ? "Transparan (50%)" : "Clear (50%)" },
+                    ];
 
-                  {/* Card Border Thickness */}
-                  <div className="space-y-2 flex flex-col">
-                    <label className="text-xs font-semibold text-foreground">
-                      {language === "id" ? "Ketebalan Garis Batas" : "Border Thickness"}
-                    </label>
-                    <select
-                      value={cardStyles.borderWidth}
-                      onChange={(e) => handleCardStyleChange("borderWidth", e.target.value)}
-                      className="bg-elevated border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-accent w-full cursor-pointer h-9"
-                    >
-                      <option value="0px">{language === "id" ? "Tanpa Garis (0px)" : "None (0px)"}</option>
-                      <option value="1px">{language === "id" ? "Tipis (1px)" : "Thin (1px)"}</option>
-                      <option value="2px">{language === "id" ? "Sedang (2px)" : "Medium (2px)"}</option>
-                      <option value="3px">{language === "id" ? "Tebal (3px)" : "Thick (3px)"}</option>
-                    </select>
-                  </div>
+                    const selectedRadiusLabel = radiusOptions.find(o => o.value === cardStyles.radius)?.label ?? cardStyles.radius;
+                    const selectedBorderLabel = borderOptions.find(o => o.value === cardStyles.borderWidth)?.label ?? cardStyles.borderWidth;
+                    const selectedBlurLabel = blurOptions.find(o => o.value === cardStyles.blur)?.label ?? cardStyles.blur;
+                    const selectedOpacityLabel = opacityOptions.find(o => o.value === cardStyles.opacity)?.label ?? cardStyles.opacity;
 
-                  {/* Card Glassmorphism Backdrop Blur */}
-                  <div className="space-y-2 flex flex-col">
-                    <label className="text-xs font-semibold text-foreground">
-                      {language === "id" ? "Kekaburan Latar (Blur)" : "Backdrop Blur"}
-                    </label>
-                    <select
-                      value={cardStyles.blur}
-                      onChange={(e) => handleCardStyleChange("blur", e.target.value)}
-                      className="bg-elevated border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-accent w-full cursor-pointer h-9"
-                    >
-                      <option value="0px">{language === "id" ? "Tanpa Blur (0px)" : "None (0px)"}</option>
-                      <option value="12px">{language === "id" ? "Sedang (12px)" : "Medium (12px)"}</option>
-                      <option value="24px">{language === "id" ? "Tebal (24px)" : "Heavy Frost (24px)"}</option>
-                    </select>
-                  </div>
+                    return (
+                      <>
+                        {/* Card Roundedness */}
+                        <div className="space-y-2 flex flex-col">
+                          <label className="text-xs font-semibold text-foreground">
+                            {language === "id" ? "Sudut Kelengkungan" : "Corner Radius"}
+                          </label>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                type="button"
+                                className="flex h-9 w-full items-center justify-between rounded-lg border border-border bg-elevated px-3 text-xs text-foreground hover:bg-white/[0.04] transition-all outline-none"
+                              >
+                                <span>{selectedRadiusLabel}</span>
+                                <ChevronDown size={14} className="opacity-60 shrink-0 ml-2" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start" className="min-w-[150px] max-h-[250px] overflow-y-auto rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl z-[1000]">
+                              {radiusOptions.map((o) => (
+                                <DropdownMenuItem
+                                  key={o.value}
+                                  className="text-xs font-semibold cursor-pointer"
+                                  onClick={() => handleCardStyleChange("radius", o.value)}
+                                >
+                                  {o.label}
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
 
-                  {/* Card Background Opacity */}
-                  <div className="space-y-2 flex flex-col">
-                    <label className="text-xs font-semibold text-foreground">
-                      {language === "id" ? "Tingkat Transparansi" : "Card Transparency"}
-                    </label>
-                    <select
-                      value={cardStyles.opacity}
-                      onChange={(e) => handleCardStyleChange("opacity", e.target.value)}
-                      className="bg-elevated border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-accent w-full cursor-pointer h-9"
-                    >
-                      <option value="1">{language === "id" ? "Padat (100%)" : "Solid (100%)"}</option>
-                      <option value="0.75">{language === "id" ? "Sedang (75%)" : "Medium (75%)"}</option>
-                      <option value="0.5">{language === "id" ? "Transparan (50%)" : "Clear (50%)"}</option>
-                    </select>
-                  </div>
+                        {/* Card Border Thickness */}
+                        <div className="space-y-2 flex flex-col">
+                          <label className="text-xs font-semibold text-foreground">
+                            {language === "id" ? "Ketebalan Garis Batas" : "Border Thickness"}
+                          </label>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                type="button"
+                                className="flex h-9 w-full items-center justify-between rounded-lg border border-border bg-elevated px-3 text-xs text-foreground hover:bg-white/[0.04] transition-all outline-none"
+                              >
+                                <span>{selectedBorderLabel}</span>
+                                <ChevronDown size={14} className="opacity-60 shrink-0 ml-2" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start" className="min-w-[150px] max-h-[250px] overflow-y-auto rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl z-[1000]">
+                              {borderOptions.map((o) => (
+                                <DropdownMenuItem
+                                  key={o.value}
+                                  className="text-xs font-semibold cursor-pointer"
+                                  onClick={() => handleCardStyleChange("borderWidth", o.value)}
+                                >
+                                  {o.label}
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+
+                        {/* Card Glassmorphism Backdrop Blur */}
+                        <div className="space-y-2 flex flex-col">
+                          <label className="text-xs font-semibold text-foreground">
+                            {language === "id" ? "Kekaburan Latar (Blur)" : "Backdrop Blur"}
+                          </label>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                type="button"
+                                className="flex h-9 w-full items-center justify-between rounded-lg border border-border bg-elevated px-3 text-xs text-foreground hover:bg-white/[0.04] transition-all outline-none"
+                              >
+                                <span>{selectedBlurLabel}</span>
+                                <ChevronDown size={14} className="opacity-60 shrink-0 ml-2" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start" className="min-w-[150px] max-h-[250px] overflow-y-auto rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl z-[1000]">
+                              {blurOptions.map((o) => (
+                                <DropdownMenuItem
+                                  key={o.value}
+                                  className="text-xs font-semibold cursor-pointer"
+                                  onClick={() => handleCardStyleChange("blur", o.value)}
+                                >
+                                  {o.label}
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+
+                        {/* Card Background Opacity */}
+                        <div className="space-y-2 flex flex-col">
+                          <label className="text-xs font-semibold text-foreground">
+                            {language === "id" ? "Tingkat Transparansi" : "Card Transparency"}
+                          </label>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                type="button"
+                                className="flex h-9 w-full items-center justify-between rounded-lg border border-border bg-elevated px-3 text-xs text-foreground hover:bg-white/[0.04] transition-all outline-none"
+                              >
+                                <span>{selectedOpacityLabel}</span>
+                                <ChevronDown size={14} className="opacity-60 shrink-0 ml-2" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start" className="min-w-[150px] max-h-[250px] overflow-y-auto rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl z-[1000]">
+                              {opacityOptions.map((o) => (
+                                <DropdownMenuItem
+                                  key={o.value}
+                                  className="text-xs font-semibold cursor-pointer"
+                                  onClick={() => handleCardStyleChange("opacity", o.value)}
+                                >
+                                  {o.label}
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
 
                 {/* Real-time Preview */}
-                <div className="mt-6 p-5 rounded-2xl border border-border/30 bg-white/[0.01]">
+                <div className="mt-6 p-5 rounded-2xl border border-border/30 bg-white/[0.01]" style={{ borderRadius: 'var(--card-radius)', borderWidth: 'var(--card-border-width)', backgroundColor: 'color-mix(in srgb, var(--card-bg) calc(var(--card-opacity) * 100%), transparent)' }}>
                   <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">
                     {language === "id" ? "Pratinjau Kartu Terkustomisasi" : "Customized Card Preview"}
                   </p>
@@ -846,17 +1037,17 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
 
                       {/* Card Footer Action */}
                       <div className="flex justify-end gap-2 pt-3 border-t border-border/20">
-                        <button type="button" className="px-2.5 py-1.5 rounded-lg border border-border text-[10px] font-semibold text-muted-foreground hover:text-foreground hover:bg-white/[0.03] transition-all">
+                        <button type="button" className="px-2.5 py-1.5 border border-border text-[10px] font-semibold text-muted-foreground hover:text-foreground hover:bg-white/[0.03] transition-all" style={{ borderRadius: 'var(--button-radius)' }}>
                           {language === "id" ? "Batal" : "Cancel"}
                         </button>
-                        <button type="button" className="px-2.5 py-1.5 rounded-lg bg-accent text-white text-[10px] font-semibold hover:bg-accent/80 transition-all">
+                        <button type="button" className="px-2.5 py-1.5 bg-accent text-white text-[10px] font-semibold hover:bg-accent/80 transition-all" style={{ borderRadius: 'var(--button-radius)' }}>
                           {language === "id" ? "Terapkan" : "Apply"}
                         </button>
                       </div>
                     </div>
 
                     {/* Explanatory notes */}
-                    <div className="flex-1 p-5 rounded-xl bg-white/[0.01] border border-border/20 flex flex-col justify-center text-left text-xs text-muted-foreground space-y-2.5">
+                    <div className="flex-1 p-5 border flex flex-col justify-center text-left text-xs text-muted-foreground space-y-2.5" style={{ borderRadius: 'var(--card-radius)', borderWidth: 'var(--card-border-width)', borderColor: 'var(--border)', backgroundColor: 'color-mix(in srgb, var(--card-bg) calc(var(--card-opacity) * 100%), transparent)' }}>
                       <p className="font-semibold text-foreground text-sm">
                         {language === "id" ? "Detail Penerapan Gaya Kartu:" : "Card Styling Properties Applied:"}
                       </p>
@@ -872,6 +1063,187 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
                         </li>
                         <li>
                           <strong>{language === "id" ? "Tingkat Transparansi" : "Card Transparency"}:</strong> {language === "id" ? `Kepadatan latar kartu diatur ke ${Math.round(parseFloat(cardStyles.opacity) * 100)}%` : `Card surface color opacity is ${Math.round(parseFloat(cardStyles.opacity) * 100)}%`}.
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Button Customization */}
+              <div className="mt-6 pt-6 space-y-6 border-t border-border/60">                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  {language === "id" ? "Gaya & Tampilan Tombol" : "Button Styles & Appearance"}
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {(() => {
+                    const radiusOptions = [
+                      { value: "0px", label: language === "id" ? "Tajam (0px)" : "Sharp (0px)" },
+                      { value: "8px", label: language === "id" ? "Sedikit (8px)" : "Slight (8px)" },
+                      { value: "12px", label: language === "id" ? "Sedang (12px)" : "Medium (12px)" },
+                      { value: "16px", label: language === "id" ? "Bulat (16px)" : "Rounded (16px)" },
+                    ];
+                    const sizeOptions = [
+                      { value: "compact", label: language === "id" ? "Kompak (36px)" : "Compact (36px)" },
+                      { value: "default", label: language === "id" ? "Standar (44px)" : "Default (44px)" },
+                      { value: "large", label: language === "id" ? "Besar (48px)" : "Large (48px)" },
+                    ];
+                    const weightOptions = [
+                      { value: "normal", label: language === "id" ? "Normal (500)" : "Normal (500)" },
+                      { value: "medium", label: language === "id" ? "Sedang (600)" : "Medium (600)" },
+                      { value: "semibold", label: language === "id" ? "Semi Tebal (600)" : "Semibold (600)" },
+                      { value: "bold", label: language === "id" ? "Tebal (700)" : "Bold (700)" },
+                    ];
+
+                    const selectedRadiusLabel = radiusOptions.find(o => o.value === buttonStyles.radius)?.label ?? buttonStyles.radius;
+                    const selectedSizeLabel = sizeOptions.find(o => o.value === buttonStyles.size)?.label ?? buttonStyles.size;
+                    const selectedWeightLabel = weightOptions.find(o => o.value === buttonStyles.weight)?.label ?? buttonStyles.weight;
+
+                    return (
+                      <>
+                        {/* Button Corner Radius */}
+                        <div className="space-y-2 flex flex-col">
+                          <label className="text-xs font-semibold text-foreground">
+                            {language === "id" ? "Sudut Kelengkungan" : "Corner Radius"}
+                          </label>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                type="button"
+                                className="flex h-9 w-full items-center justify-between rounded-lg border border-border bg-elevated px-3 text-xs text-foreground hover:bg-white/[0.04] transition-all outline-none"
+                              >
+                                <span>{selectedRadiusLabel}</span>
+                                <ChevronDown size={14} className="opacity-60 shrink-0 ml-2" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start" className="min-w-[150px] max-h-[250px] overflow-y-auto rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl z-[1000]">
+                              {radiusOptions.map((o) => (
+                                <DropdownMenuItem
+                                  key={o.value}
+                                  className="text-xs font-semibold cursor-pointer"
+                                  onClick={() => handleButtonStyleChange("radius", o.value)}
+                                >
+                                  {o.label}
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+
+                        {/* Button Height Size */}
+                        <div className="space-y-2 flex flex-col">
+                          <label className="text-xs font-semibold text-foreground">
+                            {language === "id" ? "Tinggi Tombol" : "Button Height"}
+                          </label>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                type="button"
+                                className="flex h-9 w-full items-center justify-between rounded-lg border border-border bg-elevated px-3 text-xs text-foreground hover:bg-white/[0.04] transition-all outline-none"
+                              >
+                                <span>{selectedSizeLabel}</span>
+                                <ChevronDown size={14} className="opacity-60 shrink-0 ml-2" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start" className="min-w-[150px] max-h-[250px] overflow-y-auto rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl z-[1000]">
+                              {sizeOptions.map((o) => (
+                                <DropdownMenuItem
+                                  key={o.value}
+                                  className="text-xs font-semibold cursor-pointer"
+                                  onClick={() => handleButtonStyleChange("size", o.value)}
+                                >
+                                  {o.label}
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+
+                        {/* Button Font Weight */}
+                        <div className="space-y-2 flex flex-col">
+                          <label className="text-xs font-semibold text-foreground">
+                            {language === "id" ? "Ketebalan Font" : "Font Weight"}
+                          </label>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                type="button"
+                                className="flex h-9 w-full items-center justify-between rounded-lg border border-border bg-elevated px-3 text-xs text-foreground hover:bg-white/[0.04] transition-all outline-none"
+                              >
+                                <span>{selectedWeightLabel}</span>
+                                <ChevronDown size={14} className="opacity-60 shrink-0 ml-2" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start" className="min-w-[150px] max-h-[250px] overflow-y-auto rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl z-[1000]">
+                              {weightOptions.map((o) => (
+                                <DropdownMenuItem
+                                  key={o.value}
+                                  className="text-xs font-semibold cursor-pointer"
+                                  onClick={() => handleButtonStyleChange("weight", o.value)}
+                                >
+                                  {o.label}
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+
+                {/* Button Preview */}
+                <div className="mt-6 p-5 rounded-2xl border border-border/30 bg-white/[0.01]" style={{ borderRadius: 'var(--card-radius)', borderWidth: 'var(--card-border-width)', backgroundColor: 'color-mix(in srgb, var(--card-bg) calc(var(--card-opacity) * 100%), transparent)' }}>
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">
+                    {language === "id" ? "Pratinjau Tombol Terkustomisasi" : "Customized Button Preview"}
+                  </p>
+                  
+                  <div className="flex flex-col lg:flex-row gap-6 items-start">
+                    {/* Button Variants Preview */}
+                    <div className="flex-1 space-y-4">
+                      <div className="space-y-2">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">
+                          {language === "id" ? "Varian Tombol" : "Button Variants"}
+                        </p>
+                        <div className="flex flex-wrap gap-3">
+                          <Button>{language === "id" ? "Tombol Utama" : "Primary Button"}</Button>
+                          <Button variant="secondary">{language === "id" ? "Sekunder" : "Secondary"}</Button>
+                          <Button variant="outline">{language === "id" ? "Outline" : "Outline"}</Button>
+                          <Button variant="ghost">{language === "id" ? "Ghost" : "Ghost"}</Button>
+                          <Button variant="destructive">{language === "id" ? "Hapus" : "Delete"}</Button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">
+                          {language === "id" ? "Dengan Ikon" : "With Icons"}
+                        </p>
+                        <div className="flex flex-wrap gap-3">
+                          <Button>
+                            <Plus size={16} />
+                            {language === "id" ? "Tambah Transaksi" : "Add Transaction"}
+                          </Button>
+                          <Button variant="secondary">
+                            <Settings size={16} />
+                            {language === "id" ? "Pengaturan" : "Settings"}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Explanatory notes */}
+                    <div className="flex-1 p-5 border flex flex-col justify-center text-left text-xs text-muted-foreground space-y-2.5" style={{ borderRadius: 'var(--card-radius)', borderWidth: 'var(--card-border-width)', borderColor: 'var(--border)', backgroundColor: 'color-mix(in srgb, var(--card-bg) calc(var(--card-opacity) * 100%), transparent)' }}>
+                      <p className="font-semibold text-foreground text-sm">
+                        {language === "id" ? "Detail Penerapan Gaya Tombol:" : "Button Styling Properties Applied:"}
+                      </p>
+                      <ul className="list-disc pl-4 space-y-1.5">
+                        <li>
+                          <strong>{language === "id" ? "Sudut Kelengkungan" : "Corner Radius"}:</strong> {language === "id" ? `Sudut tombol melengkung sebesar ${buttonStyles.radius}` : `Button corners rounded to ${buttonStyles.radius}`}.
+                        </li>
+                        <li>
+                          <strong>{language === "id" ? "Tinggi Tombol" : "Button Height"}:</strong> {language === "id" ? `Tinggi tombol diatur ke ${buttonStyles.size === "compact" ? "36px (kompak)" : buttonStyles.size === "large" ? "48px (besar)" : "44px (standar)"}` : `Button height set to ${buttonStyles.size === "compact" ? "36px (compact)" : buttonStyles.size === "large" ? "48px (large)" : "44px (default)"}`}.
+                        </li>
+                        <li>
+                          <strong>{language === "id" ? "Ketebalan Font" : "Font Weight"}:</strong> {language === "id" ? `Ketebalan teks tombol diatur ke ${buttonStyles.weight === "normal" ? "500 (normal)" : buttonStyles.weight === "bold" ? "700 (tebal)" : "600 (sedang)"}` : `Button text weight set to ${buttonStyles.weight === "normal" ? "500 (normal)" : buttonStyles.weight === "bold" ? "700 (bold)" : "600 (medium)"}`}.
                         </li>
                       </ul>
                     </div>

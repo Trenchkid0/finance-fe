@@ -299,7 +299,7 @@ export default function Goals() {
                   </div>
                   <div className="relative h-2.5 w-full bg-muted/40 border border-border rounded-full overflow-hidden p-0.5">
                     <div
-                      className="h-full bg-progress rounded-full transition-all duration-500"
+                      className="h-full bg-gradient-to-r from-income to-accent rounded-full transition-all duration-500"
                       style={{ width: `${pct}%` }}
                     />
                     {/* Milestone Ticks */}

@@ -104,9 +104,14 @@ export function AppSidebar({ user, counts, ...props }: AppSidebarProps) {
       <SidebarHeader className="p-4 pb-5 flex flex-row items-center justify-start group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:py-4 transition-all duration-300">
         <Link to="/" className="flex items-center gap-3 group/brand">
           <div className="relative">
-            {/* Main Logo Container */}
+            {/* Main Logo Container with dynamic accent color */}
             <span
-              className="relative flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-accent via-blue-500 to-indigo-600 text-white font-black text-base border border-white/10 shadow-[0_4px_12px_rgba(56,139,253,0.25)]"
+              className="relative flex size-9 shrink-0 items-center justify-center rounded-xl text-white font-black text-base border shadow-lg transition-all duration-300 group-hover/brand:scale-105"
+              style={{
+                background: `linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 80%, #000) 100%)`,
+                borderColor: 'color-mix(in srgb, var(--accent) 30%, transparent)',
+                boxShadow: '0 4px 12px color-mix(in srgb, var(--accent) 25%, transparent)'
+              }}
               aria-hidden
             >
               R

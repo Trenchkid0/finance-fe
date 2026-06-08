@@ -616,7 +616,7 @@ function CustomSingleDatePicker({
   const { language } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
-  const [coords, setCoords] = useState({ top: 0, left: 0 });
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   const [viewDate, setViewDate] = useState(() => {
     const d = value ? new Date(value) : new Date();
@@ -630,32 +630,44 @@ function CustomSingleDatePicker({
   });
 
   const updatePosition = () => {
-    if (triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
-      let top = rect.bottom + window.scrollY;
-      let left = rect.left + window.scrollX;
+    if (triggerRef.current && containerRef.current) {
+      const triggerRect = triggerRef.current.getBoundingClientRect();
+      const popupHeight = 460;
       
-      if (left + 280 > window.innerWidth) {
-        left = window.innerWidth - 290;
+      let top = triggerRect.bottom + window.scrollY + 8;
+      let left = triggerRect.left + window.scrollX;
+      
+      // Check if popup would go below viewport, position above instead
+      if (top + popupHeight > window.scrollY + window.innerHeight && triggerRect.top - popupHeight > 0) {
+        top = triggerRect.top + window.scrollY - popupHeight - 8;
       }
+      
+      // Check if popup would overflow right
+      if (left + 280 > window.innerWidth) {
+        left = Math.max(10, window.innerWidth - 290);
+      }
+      
       if (left < 10) {
         left = 10;
       }
       
-      setCoords({ top, left });
+      containerRef.current.style.top = `${top}px`;
+      containerRef.current.style.left = `${left}px`;
     }
   };
 
   useEffect(() => {
     if (isOpen) {
       updatePosition();
+      const timer = requestAnimationFrame(updatePosition);
       window.addEventListener("scroll", updatePosition, true);
       window.addEventListener("resize", updatePosition);
+      return () => {
+        cancelAnimationFrame(timer);
+        window.removeEventListener("scroll", updatePosition, true);
+        window.removeEventListener("resize", updatePosition);
+      };
     }
-    return () => {
-      window.removeEventListener("scroll", updatePosition, true);
-      window.removeEventListener("resize", updatePosition);
-    };
   }, [isOpen]);
 
   useEffect(() => {
@@ -739,23 +751,24 @@ function CustomSingleDatePicker({
         type="button"
         variant="outline"
         onClick={() => setIsOpen(!isOpen)}
-        className="h-11 w-full justify-between px-3.5 text-sm text-text-primary bg-white/[0.03] border-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.05] rounded-xl transition-all font-mono"
+        className="h-11 w-full justify-between px-3.5 text-sm text-text-primary bg-white/[0.03] border-white/[0.08] hover:border-white/[0.15] hover:bg-white/[0.06] active:bg-white/[0.08] rounded-lg transition-all font-mono"
       >
-        <span className="flex items-center gap-2">
-          <Calendar size={16} className="text-text-muted opacity-60" />
-          <span>{label}</span>
+        <span className="flex items-center gap-2.5">
+          <Calendar size={16} className="text-accent opacity-70" />
+          <span className="font-medium">{label}</span>
         </span>
-        <ChevronDown size={16} className="text-text-muted opacity-40" />
+        <ChevronDown size={16} className={cn("text-text-muted opacity-50 transition-transform duration-200", isOpen && "rotate-180")} />
       </Button>
 
       {isOpen &&
         createPortal(
           <div
+            ref={containerRef}
             id="single-date-picker-content"
             style={{
-              position: "absolute",
-              top: `${coords.top}px`,
-              left: `${coords.left}px`,
+              position: "fixed",
+              top: "0",
+              left: "0",
             }}
             className="p-4 w-[280px] rounded-xl border border-white/[0.08] bg-popover/95 backdrop-blur-xl flex flex-col gap-3.5 text-text-primary shadow-2xl z-[99999]"
           >
@@ -838,6 +851,7 @@ function CustomSingleDatePicker({
 
                     const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
                     const isSelected = value === dateStr;
+                    const isToday = dateStr === new Date().toISOString().split('T')[0];
 
                     return (
                       <button
@@ -845,8 +859,12 @@ function CustomSingleDatePicker({
                         type="button"
                         onClick={(e) => handleDayClick(day, e)}
                         className={cn(
-                          "h-7 w-7 text-xs rounded-lg flex items-center justify-center font-semibold transition-all hover:bg-white/[0.08] hover:text-text-primary",
-                          isSelected && "bg-accent text-white font-bold hover:bg-accent"
+                          "h-8 w-8 text-xs rounded-lg flex items-center justify-center font-semibold transition-all cursor-pointer",
+                          isSelected 
+                            ? "bg-accent text-white font-bold shadow-lg shadow-accent/30" 
+                            : isToday
+                            ? "border border-accent/50 text-accent font-bold"
+                            : "text-text-primary hover:bg-white/[0.08] active:bg-white/[0.12]"
                         )}
                       >
                         {day}
@@ -858,7 +876,7 @@ function CustomSingleDatePicker({
             )}
 
             {viewMode === "months" && (
-              <div className="grid grid-cols-3 gap-2 py-1 text-center">
+              <div className="grid grid-cols-3 gap-2 py-1">
                 {[
                   "Januari", "Februari", "Maret", "April", "Mei", "Juni",
                   "Juli", "Agustus", "September", "Oktober", "November", "Desember"
@@ -872,8 +890,10 @@ function CustomSingleDatePicker({
                       setViewMode("days");
                     }}
                     className={cn(
-                      "h-10 text-xs rounded-lg font-semibold transition-all hover:bg-white/[0.08] hover:text-text-primary",
-                      mIdx === month && "bg-accent text-white font-bold hover:bg-accent"
+                      "h-10 text-xs rounded-lg font-semibold transition-all cursor-pointer text-center",
+                      mIdx === month 
+                        ? "bg-accent text-white font-bold shadow-lg shadow-accent/30" 
+                        : "text-text-primary hover:bg-white/[0.08] active:bg-white/[0.12]"
                     )}
                   >
                     {m.substring(0, 3)}
@@ -883,7 +903,7 @@ function CustomSingleDatePicker({
             )}
 
             {viewMode === "years" && (
-              <div className="grid grid-cols-4 gap-2 py-1 text-center font-mono">
+              <div className="grid grid-cols-4 gap-2 py-1">
                 {Array.from({ length: 16 }, (_, i) => yearPageStart + i).map((y) => (
                   <button
                     key={y}
@@ -894,8 +914,10 @@ function CustomSingleDatePicker({
                       setViewMode("months");
                     }}
                     className={cn(
-                      "h-10 text-xs rounded-lg font-semibold transition-all hover:bg-white/[0.08] hover:text-text-primary",
-                      y === year && "bg-accent text-white font-bold hover:bg-accent"
+                      "h-10 text-xs rounded-lg font-semibold transition-all cursor-pointer text-center font-mono",
+                      y === year 
+                        ? "bg-accent text-white font-bold shadow-lg shadow-accent/30" 
+                        : "text-text-primary hover:bg-white/[0.08] active:bg-white/[0.12]"
                     )}
                   >
                     {y}

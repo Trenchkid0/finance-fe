@@ -95,6 +95,38 @@ body,
   font-family: 'JetBrains Mono', 'Plus Jakarta Sans', monospace;
 }
 
+@layer utilities {
+  /* --- Standard Text (Teks Biasa) --- */
+  .text-regular-primary {
+    @apply font-sans text-foreground;
+  }
+  
+  .text-regular-secondary {
+    @apply font-sans text-muted-foreground;
+  }
+
+  /* --- Money & Numbers (Duit & Angka) --- */
+  .text-money-primary {
+    @apply font-mono tabular-nums text-foreground;
+  }
+
+  .text-money-secondary {
+    @apply font-mono tabular-nums text-muted-foreground;
+  }
+
+  .text-money-income {
+    @apply font-mono tabular-nums text-income;
+  }
+
+  .text-money-expense {
+    @apply font-mono tabular-nums text-expense;
+  }
+
+  .text-money-warning {
+    @apply font-mono tabular-nums text-warning;
+  }
+}
+
 /* Subtle scrollbar — same neutral as borders */
 ::-webkit-scrollbar {
   width: 6px;
