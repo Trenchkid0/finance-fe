@@ -20,6 +20,11 @@ export interface ThemeVariables {
   "sidebar-border": string;
   "muted-foreground": string;
   "muted-bg": string;
+  // Hover states
+  "hover-surface": string;
+  "hover-elevated": string;
+  "hover-accent": string;
+  "hover-border": string;
 }
 
 export interface ThemePreset {
@@ -62,6 +67,10 @@ export const THEME_PRESETS: ThemePreset[] = [
       "sidebar-border": "#334155",
       "muted-foreground": "#94A3B8",
       "muted-bg": "#1E293B",
+      "hover-surface": "#1E293B",
+      "hover-elevated": "#334155",
+      "hover-accent": "#60A5FA",
+      "hover-border": "#475569",
     },
   },
   {
@@ -93,6 +102,10 @@ export const THEME_PRESETS: ThemePreset[] = [
       "sidebar-border": "#30363D",
       "muted-foreground": "#8B949E",
       "muted-bg": "#161B22",
+      "hover-surface": "#1C2128",
+      "hover-elevated": "#2D333B",
+      "hover-accent": "#58A6FF",
+      "hover-border": "#444C56",
     },
   },
   {
@@ -124,6 +137,10 @@ export const THEME_PRESETS: ThemePreset[] = [
       "sidebar-border": "#262626",
       "muted-foreground": "#A3A3A3",
       "muted-bg": "#121212",
+      "hover-surface": "#171717",
+      "hover-elevated": "#1F1F1F",
+      "hover-accent": "#FB7185",
+      "hover-border": "#404040",
     },
   },
   {
@@ -155,6 +172,10 @@ export const THEME_PRESETS: ThemePreset[] = [
       "sidebar-accent": "#E2E8F0",
       "muted-foreground": "#64748B",
       "muted-bg": "#F1F5F9",
+      "hover-surface": "#F1F5F9",
+      "hover-elevated": "#E2E8F0",
+      "hover-accent": "#334155",
+      "hover-border": "#CBD5E1",
     },
   },
   {
@@ -186,6 +207,10 @@ export const THEME_PRESETS: ThemePreset[] = [
       "sidebar-accent": "#EADEC9",
       "muted-foreground": "#8A735E",
       "muted-bg": "#EADEC9",
+      "hover-surface": "#EADEC9",
+      "hover-elevated": "#DFD0B8",
+      "hover-accent": "#C2410C",
+      "hover-border": "#D4C4AF",
     },
   },
   {
@@ -217,6 +242,10 @@ export const THEME_PRESETS: ThemePreset[] = [
       "sidebar-border": "#1F3F35",
       "muted-foreground": "#6EE7B7",
       "muted-bg": "#0D1F1A",
+      "hover-surface": "#132E27",
+      "hover-elevated": "#1F3F35",
+      "hover-accent": "#34D399",
+      "hover-border": "#2D5246",
     },
   },
   {
@@ -248,6 +277,10 @@ export const THEME_PRESETS: ThemePreset[] = [
       "sidebar-border": "#202D54",
       "muted-foreground": "#8E9AAF",
       "muted-bg": "#0B132B",
+      "hover-surface": "#1C2541",
+      "hover-elevated": "#2C3A63",
+      "hover-accent": "#33F3FF",
+      "hover-border": "#3A4668",
     },
   },
   {
@@ -279,6 +312,10 @@ export const THEME_PRESETS: ThemePreset[] = [
       "sidebar-border": "#44403C",
       "muted-foreground": "#A8A29E",
       "muted-bg": "#1C1917",
+      "hover-surface": "#292524",
+      "hover-elevated": "#3C3835",
+      "hover-accent": "#FCD34D",
+      "hover-border": "#57534E",
     },
   },
   {
@@ -310,6 +347,10 @@ export const THEME_PRESETS: ThemePreset[] = [
       "sidebar-accent": "#F5F2EB",
       "muted-foreground": "#7C7267",
       "muted-bg": "#F5F2EB",
+      "hover-surface": "#F5F2EB",
+      "hover-elevated": "#E9E3D8",
+      "hover-accent": "#B03D3D",
+      "hover-border": "#D8D0C1",
     },
   },
 ];

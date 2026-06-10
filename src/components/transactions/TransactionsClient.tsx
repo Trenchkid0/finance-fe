@@ -17,6 +17,7 @@ import {
   MoreHorizontal,
   Pencil,
   Plus,
+  Receipt,
   Search,
   Trash2,
   Wallet,
@@ -56,8 +57,7 @@ import {
   type TransactionFormInitial,
 } from "./TransactionForm";
 import {
-  InlineCategoryPicker,
-  TransferBadge,
+  InlineCategoryPicker
 } from "./InlineCategoryPicker";
 
 export interface TransactionRowData {
@@ -74,6 +74,7 @@ export interface TransactionRowData {
   date: string;
   description: string | null;
   note: string | null;
+  receiptImageUrl: string | null;
 }
 
 export interface TransactionFiltersState {
@@ -132,6 +133,8 @@ export function TransactionsClient({
   const [calendarLoading, setCalendarLoading] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
+
+
   useEffect(() => {
     if (viewMode !== "calendar") return;
 
@@ -168,6 +171,7 @@ export function TransactionsClient({
           date: tx.date,
           description: tx.description,
           note: tx.note,
+          receiptImageUrl: tx.receiptImageUrl ?? null,
         }));
         setCalendarTransactions(mapped);
       } catch (err) {
@@ -247,6 +251,8 @@ export function TransactionsClient({
   function startCreate() {
     setCreating(blankInitial(accounts[0]?.id ?? ""));
   }
+
+
 
   function startDuplicate(row: TransactionRowData) {
     // Pre-fill semua field tapi reset tanggal ke hari ini supaya
@@ -908,6 +914,7 @@ function FilterBar({
   const [searchParams] = useSearchParams();
   const [pending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
 
   function pushFilter(patch: Record<string, string | null | undefined>) {
     // Read current values of other form fields directly from the form DOM to preserve them
@@ -967,6 +974,8 @@ function FilterBar({
           <FilterSelect
             label="Tipe"
             value={filters.type}
+            open={openMenu === "type"}
+            onOpenChange={(o) => setOpenMenu(o ? "type" : null)}
             onChange={(v) => pushFilter({ type: v })}
             options={[
               { value: "all", label: "Semua tipe" },
@@ -976,27 +985,31 @@ function FilterBar({
             ]}
           />
           <FilterSelect
-            label="Akun"
-            value={filters.accountId}
-            onChange={(v) => pushFilter({ accountId: v })}
-            options={[
-              { value: "all", label: "Semua akun" },
-              ...accounts.map((a) => ({ value: a.id, label: a.name })),
-            ]}
-          />
+          label="Akun"
+          value={filters.accountId}
+          open={openMenu === "account"}
+          onOpenChange={(o) => setOpenMenu(o ? "account" : null)}
+          onChange={(v) => pushFilter({ accountId: v })}
+          options={[
+            { value: "all", label: "Semua akun" },
+            ...accounts.map((a) => ({ value: a.id, label: a.name })),
+          ]}
+        />
           <FilterSelect
-            label="Kategori"
-            value={filters.categoryId}
-            onChange={(v) => pushFilter({ categoryId: v })}
-            options={[
-              { value: "all", label: "Semua kategori" },
-              { value: "none", label: "Tanpa kategori" },
-              ...categories.map((c) => ({
-                value: c.id,
-                label: `${c.icon ? `${c.icon} ` : ""}${c.name}`,
-              })),
-            ]}
-          />
+          label="Kategori"
+          value={filters.categoryId}
+          open={openMenu === "category"}
+          onOpenChange={(o) => setOpenMenu(o ? "category" : null)}
+          onChange={(v) => pushFilter({ categoryId: v })}
+          options={[
+            { value: "all", label: "Semua kategori" },
+            { value: "none", label: "Tanpa kategori" },
+            ...categories.map((c) => ({
+              value: c.id,
+              label: `${c.icon ? `${c.icon} ` : ""}${c.name}`,
+            })),
+          ]}
+        />                  
         </div>
       </div>
 
@@ -1571,46 +1584,53 @@ interface FilterSelectOption {
 }
 
 function FilterSelect({
-  label,
-  value,
-  onChange,
-  options,
+	label,
+	value,
+	onChange,
+	options,
+	open,
+	onOpenChange,
 }: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  options: FilterSelectOption[];
+	label: string;
+	value: string;
+	onChange: (v: string) => void;
+	options: FilterSelectOption[];
+	open?: boolean;
+	onOpenChange?: (open: boolean) => void;
 }) {
-  const selectedLabel = options.find((opt) => opt.value === value)?.label ?? label;
+	const selectedLabel = options.find((opt) => opt.value === value)?.label ?? label;
 
-  return (
-    <div className="grid gap-1.5 sm:gap-1">
-      <Label className="sr-only">{label}</Label>
-      <DropdownMenu modal={false}>
-        <DropdownMenuTrigger asChild>
-          <Button
-            type="button"
-            variant="ghost"
-            className="flex h-11 w-full items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-2 text-sm text-foreground hover:border-white/[0.12] hover:bg-white/[0.05] focus:outline-none transition-all duration-300 ease-out text-left"
-          >
-            <span>{selectedLabel}</span>
-            <ChevronDown size={14} className="opacity-60 shrink-0 ml-2" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="min-w-[150px] rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl z-[99999]">
-          {options.map((opt) => (
-            <DropdownMenuItem
-              key={opt.value}
-              className="text-xs font-semibold cursor-pointer"
-              onClick={() => onChange(opt.value)}
-            >
-              {opt.label}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
-  );
+	return (
+		<div className="grid gap-1.5 sm:gap-1">
+			<Label className="sr-only">{label}</Label>
+			<DropdownMenu modal={false} open={open} onOpenChange={onOpenChange}>
+				<DropdownMenuTrigger asChild>
+					<Button
+						type="button"
+						variant="ghost"
+						className="flex h-11 w-full items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-2 text-sm text-foreground hover:border-white/[0.12] hover:bg-white/[0.05] focus:outline-none transition-all duration-300 ease-out text-left"
+					>
+						<span>{selectedLabel}</span>
+						<ChevronDown size={14} className="opacity-60 shrink-0 ml-2" />
+					</Button>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent
+					align="start"
+					className="min-w-[150px] rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl z-[99999] max-h-[300px] overflow-y-auto"
+				>
+					{options.map((opt) => (
+						<DropdownMenuItem
+							key={opt.value}
+							className="text-xs font-semibold cursor-pointer"
+							onClick={() => onChange(opt.value)}
+						>
+							{opt.label}
+						</DropdownMenuItem>
+					))}
+				</DropdownMenuContent>
+			</DropdownMenu>
+		</div>
+	);
 }
 
 // --- List (grouped by date) ---------------------------------------------
@@ -1631,374 +1651,485 @@ function FilterSelect({
  * Group total mempermudah scanning harian — user langsung lihat hari
  * mana paling boros tanpa harus jumlahkan sendiri.
  */
+// --- List (grouped by date) ---------------------------------------------
+
 function TransactionsList({
-  transactions,
-  categories,
-  onEdit,
-  onDelete,
-  onDuplicate,
-  emptyState,
-  selectedIds,
-  toggleSelect,
-  isAllSelected,
-  toggleSelectAll,
-  filters,
+	transactions,
+	categories,
+	onEdit,
+	onDelete,
+	onDuplicate,
+	emptyState,
+	selectedIds,
+	toggleSelect,
+	isAllSelected,
+	toggleSelectAll,
+	filters,
 }: {
-  transactions: TransactionRowData[];
-  categories: CategoryOption[];
-  onEdit: (row: TransactionRowData) => void;
-  onDelete: (row: TransactionRowData) => void;
-  onDuplicate: (row: TransactionRowData) => void;
-  emptyState: React.ReactNode;
-  selectedIds: Set<string>;
-  toggleSelect: (id: string) => void;
-  isAllSelected: boolean;
-  toggleSelectAll: () => void;
-  filters?: TransactionFiltersState;
+	transactions: TransactionRowData[];
+	categories: CategoryOption[];
+	onEdit: (row: TransactionRowData) => void;
+	onDelete: (row: TransactionRowData) => void;
+	onDuplicate: (row: TransactionRowData) => void;
+	emptyState: React.ReactNode;
+	selectedIds: Set<string>;
+	toggleSelect: (id: string) => void;
+	isAllSelected: boolean;
+	toggleSelectAll: () => void;
+	filters?: TransactionFiltersState;
 }) {
-  if (transactions.length === 0) {
-    return (
-      <Card className="gap-0">
-        {emptyState}
-      </Card>
-    );
-  }
+	const { language } = useLanguage();
 
-  const groups = groupByDate(transactions);
+	if (transactions.length === 0) {
+		return <Card className="gap-0">{emptyState}</Card>;
+	}
 
-  return (
-    <div className="space-y-4">
-      {/* Column header — desktop only */}
-      <div className="hidden md:grid grid-cols-12 px-5 py-1 text-[10px] uppercase font-semibold text-text-muted tracking-wider items-center gap-3">
-        <div className="col-span-7 flex items-center gap-3">
-          <input
-            type="checkbox"
-            checked={isAllSelected}
-            onChange={toggleSelectAll}
-            className="rounded border-white/20 bg-white/[0.04] text-accent focus:ring-accent/50 focus:ring-offset-canvas h-3.5 w-3.5 transition-all duration-200 cursor-pointer"
-          />
-          <span>Rincian Transaksi</span>
-        </div>
-        <span className="col-span-3">Kategori</span>
-        <span className="col-span-2 text-right">Jumlah</span>
-      </div>
+	const groups = groupByDate(transactions, language);
 
-      <div className="space-y-5">
-        {groups.map((group) => (
-          <DateGroup
-            key={group.date}
-            group={group}
-            categories={categories}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            onDuplicate={onDuplicate}
-            selectedIds={selectedIds}
-            toggleSelect={toggleSelect}
-            filters={filters}
-          />
-        ))}
-      </div>
-    </div>
-  );
+	return (
+		<div className="space-y-3">
+			{/* Select-all bar */}
+			<div className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+				<label className="flex items-center gap-3 cursor-pointer select-none">
+					<input
+						type="checkbox"
+						checked={isAllSelected}
+						onChange={toggleSelectAll}
+						className="rounded border-white/20 bg-white/[0.04] text-accent focus:ring-accent/50 focus:ring-offset-canvas h-3.5 w-3.5 cursor-pointer"
+					/>
+					<span className="flex items-center gap-2 text-[10px] uppercase font-bold text-text-muted tracking-wider">
+						<span className="w-1.5 h-1.5 rounded-full bg-accent" />
+						{language === "id" ? "Pilih semua di halaman ini" : "Select all on this page"}
+					</span>
+				</label>
+				<span className="text-[10px] uppercase font-bold text-text-muted/60 tracking-wider tabular-nums">
+					{transactions.length} {language === "id" ? "transaksi" : "transactions"}
+				</span>
+			</div>
+
+			<div className="space-y-4">
+				{groups.map((group) => (
+					<DateGroup
+						key={group.date}
+						group={group}
+						categories={categories}
+						onEdit={onEdit}
+						onDelete={onDelete}
+						onDuplicate={onDuplicate}
+						selectedIds={selectedIds}
+						toggleSelect={toggleSelect}
+						filters={filters}
+					/>
+				))}
+			</div>
+		</div>
+	);
 }
 
 interface TransactionGroup {
-  date: string;
-  label: string;
-  total: number;
-  items: TransactionRowData[];
+	date: string;
+	label: string;
+	weekday: string;
+	relative: string | null;
+	income: number;
+	expense: number;
+	net: number;
+	items: TransactionRowData[];
 }
 
-function groupByDate(rows: TransactionRowData[]): TransactionGroup[] {
-  const buckets = new Map<string, TransactionRowData[]>();
-  for (const tx of rows) {
-    const key = tx.date.slice(0, 10);
-    const list = buckets.get(key) ?? [];
-    list.push(tx);
-    buckets.set(key, list);
-  }
+function groupByDate(
+	rows: TransactionRowData[],
+	language: "id" | "en",
+): TransactionGroup[] {
+	const buckets = new Map<string, TransactionRowData[]>();
+	for (const tx of rows) {
+		const key = tx.date.slice(0, 10);
+		const list = buckets.get(key) ?? [];
+		list.push(tx);
+		buckets.set(key, list);
+	}
 
-  const seen = new Set<string>();
-  const ordered: TransactionGroup[] = [];
-  for (const tx of rows) {
-    const key = tx.date.slice(0, 10);
-    if (seen.has(key)) continue;
-    seen.add(key);
-    const items = buckets.get(key)!;
-    ordered.push({
-      date: key,
-      label: formatGroupDate(key),
-      total: items.reduce((sum, t) => sum + signedAmount(t), 0),
-      items,
-    });
-  }
-  return ordered;
+	const seen = new Set<string>();
+	const ordered: TransactionGroup[] = [];
+	for (const tx of rows) {
+		const key = tx.date.slice(0, 10);
+		if (seen.has(key)) continue;
+		seen.add(key);
+		const items = buckets.get(key)!;
+
+		const income = items
+			.filter((t) => t.type === "income")
+			.reduce((s, t) => s + t.amount, 0);
+		const expense = items
+			.filter((t) => t.type === "expense")
+			.reduce((s, t) => s + t.amount, 0);
+
+		const { label, weekday, relative } = formatGroupDateInfo(key, language);
+
+		ordered.push({
+			date: key,
+			label,
+			weekday,
+			relative,
+			income,
+			expense,
+			net: income - expense,
+			items,
+		});
+	}
+	return ordered;
 }
 
-function signedAmount(tx: TransactionRowData): number {
-  if (tx.type === "income") return tx.amount;
-  if (tx.type === "expense") return -tx.amount;
-  return 0; // transfer netral terhadap net worth
-}
+function formatGroupDateInfo(iso: string, language: "id" | "en") {
+	const d = new Date(`${iso}T00:00:00`);
+	const today = new Date();
+	today.setHours(0, 0, 0, 0);
+	const diffDays = Math.round((today.getTime() - d.getTime()) / 86_400_000);
 
-function formatGroupDate(iso: string): string {
-  const d = new Date(`${iso}T00:00:00`);
-  return d.toLocaleDateString("id-ID", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+	const locale = language === "id" ? "id-ID" : "en-US";
+	const label = d.toLocaleDateString(locale, {
+		day: "numeric",
+		month: "long",
+		year: "numeric",
+	});
+	const weekday = d.toLocaleDateString(locale, { weekday: "long" });
+
+	let relative: string | null = null;
+	if (diffDays === 0) relative = language === "id" ? "Hari Ini" : "Today";
+	else if (diffDays === 1) relative = language === "id" ? "Kemarin" : "Yesterday";
+
+	return { label, weekday, relative };
 }
 
 function DateGroup({
-  group,
-  categories,
-  onEdit,
-  onDelete,
-  onDuplicate,
-  selectedIds,
-  toggleSelect,
-  filters,
+	group,
+	categories,
+	onEdit,
+	onDelete,
+	onDuplicate,
+	selectedIds,
+	toggleSelect,
+	filters,
 }: {
-  group: TransactionGroup;
-  categories: CategoryOption[];
-  onEdit: (row: TransactionRowData) => void;
-  onDelete: (row: TransactionRowData) => void;
-  onDuplicate: (row: TransactionRowData) => void;
-  selectedIds: Set<string>;
-  toggleSelect: (id: string) => void;
-  filters?: TransactionFiltersState;
+	group: TransactionGroup;
+	categories: CategoryOption[];
+	onEdit: (row: TransactionRowData) => void;
+	onDelete: (row: TransactionRowData) => void;
+	onDuplicate: (row: TransactionRowData) => void;
+	selectedIds: Set<string>;
+	toggleSelect: (id: string) => void;
+	filters?: TransactionFiltersState;
 }) {
-  const totalColor =
-    group.total > 0
-      ? "text-income"
-      : group.total < 0
-        ? "text-expense font-bold"
-        : "text-foreground";
+	const { language } = useLanguage();
+	const headerCheckboxRef = useRef<HTMLInputElement>(null);
 
-  const isGroupAllSelected = group.items.every((item) => selectedIds.has(item.id));
-  const toggleGroupSelect = () => {
-    if (isGroupAllSelected) {
-      group.items.forEach((item) => {
-        if (selectedIds.has(item.id)) {
-          toggleSelect(item.id);
-        }
-      });
-    } else {
-      group.items.forEach((item) => {
-        if (!selectedIds.has(item.id)) {
-          toggleSelect(item.id);
-        }
-      });
-    }
-  };
+	const isGroupAllSelected = group.items.every((item) => selectedIds.has(item.id));
+	const someSelected = group.items.some((item) => selectedIds.has(item.id));
 
-  // Check if this date group is within the filtered date range
-  const isWithinFilterRange = () => {
-    if (!filters?.startDate && !filters?.endDate) return false;
-    
-    const groupDate = new Date(group.date);
-    const startDate = filters.startDate ? new Date(filters.startDate) : null;
-    const endDate = filters.endDate ? new Date(filters.endDate) : null;
-    
-    if (startDate && endDate) {
-      return groupDate >= startDate && groupDate <= endDate;
-    } else if (startDate) {
-      return groupDate >= startDate;
-    } else if (endDate) {
-      return groupDate <= endDate;
-    }
-    return false;
-  };
+	useEffect(() => {
+		if (headerCheckboxRef.current) {
+			headerCheckboxRef.current.indeterminate = someSelected && !isGroupAllSelected;
+		}
+	}, [someSelected, isGroupAllSelected]);
 
-  const isInFilterRange = isWithinFilterRange();
+	const toggleGroupSelect = () => {
+		if (isGroupAllSelected) {
+			group.items.forEach((item) => selectedIds.has(item.id) && toggleSelect(item.id));
+		} else {
+			group.items.forEach((item) => !selectedIds.has(item.id) && toggleSelect(item.id));
+		}
+	};
 
-  return (
-    <section className="space-y-2">
-      <header className="flex items-center justify-between px-2 text-xs font-semibold text-text-muted">
-        <div className="flex items-center gap-2 uppercase tracking-wider text-[10px]">
-          <input
-            type="checkbox"
-            checked={isGroupAllSelected}
-            onChange={toggleGroupSelect}
-            className="rounded border-white/20 bg-white/[0.04] text-accent focus:ring-accent/50 focus:ring-offset-canvas h-3 w-3 transition-all duration-200 cursor-pointer mr-1"
-          />
-          <span className={cn(isInFilterRange && "text-accent font-bold")}>{group.label}</span>
-          {isInFilterRange && (
-            <span className="bg-accent/15 text-accent px-1.5 py-0.2 rounded text-[9px] font-medium border border-accent/25">
-              Filter Aktif
-            </span>
-          )}
-          <span className="text-text-muted/30">·</span>
-          <span className="font-mono tabular-nums bg-elevated border border-border/85 px-1.5 py-0.2 rounded text-[9px] text-text-muted font-medium">
-            {group.items.length} transaksi
-          </span>
-        </div>
-        <p className={`font-mono tabular-nums ${totalColor}`}>
-          {group.total > 0 ? "+" : ""}
-          {formatIDR(group.total)}
-        </p>
-      </header>
+	// Apakah grup ini berada dalam rentang filter tanggal aktif
+	const isInFilterRange = (() => {
+		if (!filters?.startDate && !filters?.endDate) return false;
+		const groupDate = new Date(group.date);
+		const start = filters.startDate ? new Date(filters.startDate) : null;
+		const end = filters.endDate ? new Date(filters.endDate) : null;
+		if (start && end) return groupDate >= start && groupDate <= end;
+		if (start) return groupDate >= start;
+		if (end) return groupDate <= end;
+		return false;
+	})();
 
-      <Card className={cn(
-        "divide-y divide-white/[0.04] overflow-hidden gap-0 transition-all duration-200",
-        isInFilterRange && "border border-accent/20 bg-accent/5"
-      )}>
-        {group.items.map((tx) => (
-          <TransactionRow
-            key={tx.id}
-            tx={tx}
-            categories={categories}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            onDuplicate={onDuplicate}
-            isSelected={selectedIds.has(tx.id)}
-            onToggleSelect={() => toggleSelect(tx.id)}
-          />
-        ))}
-      </Card>
-    </section>
-  );
+	const netColor =
+		group.net > 0 ? "text-income" : group.net < 0 ? "text-expense" : "text-text-primary";
+
+	return (
+		<section className="space-y-1.5">
+			<header
+				className={cn(
+					"sticky top-0 z-20 flex items-center justify-between gap-3 px-3 py-2 rounded-xl border backdrop-blur-md transition-colors",
+					isInFilterRange
+						? "bg-accent/[0.07] border-accent/25"
+						: "bg-surface/85 border-white/[0.05]",
+				)}
+			>
+				<div className="flex items-center gap-2.5 min-w-0">
+					<input
+						ref={headerCheckboxRef}
+						type="checkbox"
+						checked={isGroupAllSelected}
+						onChange={toggleGroupSelect}
+						className="rounded border-white/20 bg-white/[0.04] text-accent focus:ring-accent/50 focus:ring-offset-canvas h-3.5 w-3.5 cursor-pointer shrink-0"
+					/>
+					<div className="flex flex-col min-w-0">
+						<div className="flex items-center gap-2 min-w-0">
+							{group.relative && (
+								<span className="shrink-0 text-[9px] font-bold uppercase tracking-wide text-accent bg-accent/10 border border-accent/25 px-1.5 py-0.5 rounded">
+									{group.relative}
+								</span>
+							)}
+							{isInFilterRange && (
+								<span className="shrink-0 text-[9px] font-bold uppercase tracking-wide text-accent bg-accent/15 border border-accent/25 px-1.5 py-0.5 rounded">
+									{language === "id" ? "Filter" : "Filtered"}
+								</span>
+							)}
+							<span className="text-xs font-bold text-text-primary truncate">
+								{group.label}
+							</span>
+						</div>
+						<span className="text-[10px] text-text-muted/70 font-medium truncate">
+							{group.weekday} · {group.items.length}{" "}
+							{language === "id" ? "transaksi" : "transactions"}
+						</span>
+					</div>
+				</div>
+
+				<div className="flex items-center gap-3 shrink-0">
+					{group.income > 0 && (
+						<div className="hidden sm:flex flex-col items-end leading-tight">
+							<span className="text-[8px] uppercase tracking-wider text-text-muted/50 font-bold">
+								{language === "id" ? "Masuk" : "In"}
+							</span>
+							<span className="text-[11px] font-mono font-bold text-income tabular-nums">
+								+{formatIDR(group.income)}
+							</span>
+						</div>
+					)}
+					{group.expense > 0 && (
+						<div className="hidden sm:flex flex-col items-end leading-tight">
+							<span className="text-[8px] uppercase tracking-wider text-text-muted/50 font-bold">
+								{language === "id" ? "Keluar" : "Out"}
+							</span>
+							<span className="text-[11px] font-mono font-bold text-expense tabular-nums">
+								-{formatIDR(group.expense)}
+							</span>
+						</div>
+					)}
+					<div className="flex flex-col items-end leading-tight border-l border-white/[0.08] pl-3">
+						<span className="text-[8px] uppercase tracking-wider text-text-muted/50 font-bold">
+							Net
+						</span>
+						<span className={cn("text-xs font-mono font-bold tabular-nums", netColor)}>
+							{group.net > 0 ? "+" : ""}
+							{formatIDR(group.net)}
+						</span>
+					</div>
+				</div>
+			</header>
+
+			<Card
+				className={cn(
+					"divide-y divide-white/[0.04] overflow-hidden gap-0 p-0",
+					isInFilterRange && "border-accent/20",
+				)}
+			>
+				{group.items.map((tx) => (
+					<TransactionRow
+						key={tx.id}
+						tx={tx}
+						categories={categories}
+						onEdit={onEdit}
+						onDelete={onDelete}
+						onDuplicate={onDuplicate}
+						isSelected={selectedIds.has(tx.id)}
+						onToggleSelect={() => toggleSelect(tx.id)}
+					/>
+				))}
+			</Card>
+		</section>
+	);
 }
 
 function TransactionRow({
-  tx,
-  categories,
-  onEdit,
-  onDelete,
-  onDuplicate,
-  isSelected,
-  onToggleSelect,
+	tx,
+	categories,
+	onEdit,
+	onDelete,
+	onDuplicate,
+	isSelected,
+	onToggleSelect,
 }: {
-  tx: TransactionRowData;
-  categories: CategoryOption[];
-  onEdit: (row: TransactionRowData) => void;
-  onDelete: (row: TransactionRowData) => void;
-  onDuplicate: (row: TransactionRowData) => void;
-  isSelected: boolean;
-  onToggleSelect: () => void;
+	tx: TransactionRowData;
+	categories: CategoryOption[];
+	onEdit: (row: TransactionRowData) => void;
+	onDelete: (row: TransactionRowData) => void;
+	onDuplicate: (row: TransactionRowData) => void;
+	isSelected: boolean;
+	onToggleSelect: () => void;
 }) {
-  const { language } = useLanguage();
-  const initial =
-    (tx.description ?? tx.categoryName ?? "T").trim().charAt(0).toUpperCase() ||
-    "T";
+	const { language } = useLanguage();
+	const initial =
+		(tx.description ?? tx.categoryName ?? "T").trim().charAt(0).toUpperCase() || "T";
 
-  const getRowTypeInfo = (type: "income" | "expense" | "transfer") => {
-    switch (type) {
-      case "income":
-        return "bg-income/10 border-income/25 text-income";
-      case "expense":
-        return "bg-expense/10 border-expense/25 text-expense";
-      case "transfer":
-        return "bg-accent/10 border-accent/25 text-accent";
-    }
-  };
+	const style = {
+		income: { bar: "bg-income", chip: "bg-income/10 border-income/25 text-income", amount: "text-income" },
+		expense: { bar: "bg-expense", chip: "bg-expense/10 border-expense/25 text-expense", amount: "text-expense" },
+		transfer: { bar: "bg-accent", chip: "bg-accent/10 border-accent/25 text-accent", amount: "text-text-primary" },
+	}[tx.type];
 
-  return (
-    <div className={cn(
-      "grid grid-cols-12 items-center gap-3 px-4 py-2.5 text-sm transition-colors duration-150 group",
-      isSelected ? "bg-accent/5" : "hover:bg-elevated/30"
-    )}>
-      {/* Avatar + checkbox + description + account (col-span 7) */}
-      <div className="col-span-12 md:col-span-7 flex items-center gap-3 min-w-0">
-        <input
-          type="checkbox"
-          checked={isSelected}
-          onChange={onToggleSelect}
-          className="rounded border-white/20 bg-white/[0.04] text-accent focus:ring-accent/50 focus:ring-offset-canvas h-3.5 w-3.5 transition-all duration-200 cursor-pointer shrink-0"
-        />
-        <span className={cn(
-          "size-8 rounded-lg border flex items-center justify-center text-[10px] font-bold uppercase shrink-0 font-mono transition-colors",
-          getRowTypeInfo(tx.type)
-        )}>
-          {initial}
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-text-primary font-medium truncate text-[13px]">
-            {tx.description ?? tx.categoryName ?? "Transaksi"}
-          </p>
-          <p className="text-[11px] text-text-muted truncate mt-0.5">
-            {tx.type === "transfer" ? (
-              <span className="inline-flex items-center gap-1">
-                <ArrowLeftRight size={10} />
-                Transfer · {tx.accountName} → {tx.transferToName ?? "?"}
-              </span>
-            ) : (
-              tx.accountName
-            )}
-          </p>
-        </div>
-      </div>
+	return (
+		<div
+			className={cn(
+				"relative flex items-center gap-3 pl-4 pr-3 py-2.5 transition-colors duration-150 group",
+				isSelected ? "bg-accent/[0.06]" : "hover:bg-elevated/40",
+			)}
+		>
+			{/* Accent bar sesuai tipe */}
 
-      {/* Category badge (col-span 3) — klik untuk re-categorize */}
-      <div className="hidden md:flex md:col-span-3 items-center min-w-0">
-        {tx.type === "transfer" ? (
-          <TransferBadge transferToName={tx.transferToName} />
-        ) : (
-          <InlineCategoryPicker
-            transactionId={tx.id}
-            type={tx.type}
-            categoryId={tx.categoryId}
-            categoryName={tx.categoryName}
-            categoryIcon={tx.categoryIcon}
-            categories={categories}
-          />
-        )}
-      </div>
+			{/* Checkbox: muncul saat hover/terpilih */}
+			<input
+				type="checkbox"
+				checked={isSelected}
+				onChange={onToggleSelect}
+				className={cn(
+					"rounded border-white/20 bg-white/[0.04] text-accent focus:ring-accent/50 focus:ring-offset-canvas h-3.5 w-3.5 cursor-pointer shrink-0 transition-opacity",
+					isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100 focus-within:opacity-100",
+				)}
+			/>
 
-      {/* Amount + actions (col-span 2) */}
-      <div className="col-span-12 md:col-span-2 flex items-center justify-end gap-1.5">
-        <p
-          className={`font-mono tabular-nums text-[13px] font-bold whitespace-nowrap ${amountClass(tx.type)}`}
-        >
-          {amountPrefix(tx.type)}
-          {formatIDR(tx.amount)}
-        </p>
-        <DropdownMenu modal={false}>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label="Opsi transaksi"
-              className="h-7 w-7 opacity-0 group-hover:opacity-100 hover:bg-white/[0.12] active:bg-white/[0.18] text-text-muted hover:text-text-primary transition-all duration-150 focus:opacity-100 data-[state=open]:opacity-100 data-[state=open]:bg-white/[0.08] data-[state=open]:text-text-primary data-[state=open]:hover:bg-white/[0.12]"
-            >
-              <MoreHorizontal size={14} />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-44 z-[99999]">
-            <DropdownMenuItem onSelect={() => onEdit(tx)}>
-              <Pencil size={12} />
-              {language === "id" ? "Ubah" : "Edit"}
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => onDuplicate(tx)}>
-              <Copy size={12} />
-              {language === "id" ? "Duplikasi" : "Duplicate"}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onSelect={() => onDelete(tx)}
-              variant="destructive"
-            >
-              <Trash2 size={12} />
-              {language === "id" ? "Hapus" : "Delete"}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </div>
-  );
-}
+			{/* Ikon */}
+			<div
+				className={cn(
+					"size-9 rounded-xl border flex items-center justify-center text-sm font-bold uppercase shrink-0 font-mono transition-transform duration-200 group-hover:scale-105",
+					style.chip,
+				)}
+			>
+				{tx.type === "transfer" ? <ArrowLeftRight size={15} /> : tx.categoryIcon || initial}
+			</div>
 
-function amountClass(type: "income" | "expense" | "transfer"): string {
-  if (type === "income") return "text-income";
-  if (type === "expense") return "text-expense";
-  return "text-foreground";
+			{/* Info utama */}
+			<div className="min-w-0 flex-1">
+				<div className="flex items-center gap-1.5 min-w-0">
+					<p className="text-[13px] font-semibold text-text-primary truncate leading-tight">
+						{tx.description ||
+							(tx.type === "transfer"
+								? language === "id" ? "Transfer Dana" : "Fund Transfer"
+								: language === "id" ? "Tanpa Deskripsi" : "No description")}
+					</p>
+					{tx.receiptImageUrl && (
+						<button
+							type="button"
+							onClick={() => window.open(tx.receiptImageUrl!, "_blank")}
+							title={language === "id" ? "Lihat struk" : "View receipt"}
+							className="shrink-0 text-text-muted/50 hover:text-accent transition-colors"
+						>
+							<Receipt size={12} />
+						</button>
+					)}
+				</div>
+				<div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-text-muted/80 min-w-0">
+					<span className="flex items-center gap-1 shrink-0">
+						<Wallet size={10} className="opacity-60" />
+						<span className="truncate max-w-[120px]">{tx.accountName}</span>
+					</span>
+					{tx.type === "transfer" && tx.transferToName && (
+						<>
+							<ArrowLeftRight size={9} className="opacity-50 shrink-0" />
+							<span className="truncate max-w-[120px]">{tx.transferToName}</span>
+						</>
+					)}
+					{/* Kategori (mobile sebagai teks) */}
+					{tx.type !== "transfer" && tx.categoryName && (
+						<span className="md:hidden flex items-center gap-1 shrink-0">
+							<span className="text-text-muted/30">·</span>
+							<span className="truncate max-w-[100px]">{tx.categoryName}</span>
+						</span>
+					)}
+					{tx.note && (
+						<>
+							<span className="text-text-muted/30 shrink-0">·</span>
+							<span className="truncate italic max-w-[140px]" title={tx.note}>
+								{tx.note}
+							</span>
+						</>
+					)}
+				</div>
+			</div>
+
+			{/* Kategori (desktop, bisa diubah) */}
+			<div className="hidden md:flex items-center shrink-0 w-[150px] justify-end">
+				{tx.type === "transfer" ? (
+					<span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-accent/5 border border-accent/15 text-accent text-[11px] font-medium">
+						<ArrowLeftRight size={11} />
+						Transfer
+					</span>
+				) : (
+					<InlineCategoryPicker
+						transactionId={tx.id}
+						type={tx.type}
+						categoryId={tx.categoryId}
+						categoryName={tx.categoryName}
+						categoryIcon={tx.categoryIcon}
+						categories={categories}
+					/>
+				)}
+			</div>
+
+			{/* Jumlah */}
+			<p
+				className={cn(
+					"font-mono tabular-nums text-sm font-bold whitespace-nowrap text-right min-w-[96px] shrink-0",
+					style.amount,
+				)}
+			>
+				{amountPrefix(tx.type)}
+				{formatIDR(tx.amount)}
+			</p>
+
+			{/* Aksi */}
+			<DropdownMenu modal={false}>
+				<DropdownMenuTrigger asChild>
+					<Button
+						variant="ghost"
+						size="icon"
+						aria-label="Opsi transaksi"
+						className="h-8 w-8 shrink-0 text-text-muted hover:text-text-primary hover:bg-white/[0.12] transition-all duration-150 rounded-lg opacity-60 group-hover:opacity-100"
+					>
+						<MoreHorizontal size={15} />
+					</Button>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent align="end" className="w-48 bg-surface border-border shadow-xl z-[99999]">
+					<DropdownMenuItem onSelect={() => onEdit(tx)} className="gap-2">
+						<Pencil size={13} />
+						{language === "id" ? "Ubah" : "Edit"}
+					</DropdownMenuItem>
+					<DropdownMenuItem onSelect={() => onDuplicate(tx)} className="gap-2">
+						<Copy size={13} />
+						{language === "id" ? "Duplikasi" : "Duplicate"}
+					</DropdownMenuItem>
+					{tx.receiptImageUrl && (
+						<DropdownMenuItem onSelect={() => window.open(tx.receiptImageUrl!, "_blank")} className="gap-2">
+							<Receipt size={13} />
+							{language === "id" ? "Lihat Struk" : "View Receipt"}
+						</DropdownMenuItem>
+					)}
+					<DropdownMenuSeparator />
+					<DropdownMenuItem onSelect={() => onDelete(tx)} variant="destructive" className="gap-2">
+						<Trash2 size={13} />
+						{language === "id" ? "Hapus" : "Delete"}
+					</DropdownMenuItem>
+				</DropdownMenuContent>
+			</DropdownMenu>
+		</div>
+	);
 }
 
 function amountPrefix(type: "income" | "expense" | "transfer"): string {
-  if (type === "income") return "+";
-  if (type === "expense") return "-";
-  return "";
+	if (type === "income") return "+";
+	if (type === "expense") return "-";
+	return "";
 }
 
 // --- Pagination ----------------------------------------------------------

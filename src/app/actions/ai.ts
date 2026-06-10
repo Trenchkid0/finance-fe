@@ -5,6 +5,7 @@ export interface AIScanCandidate {
   amount: number;
   date: string | null;
   description: string | null;
+  note: string | null;
   accountId: string | null;
   transferToId: string | null;
   categoryId: string | null;

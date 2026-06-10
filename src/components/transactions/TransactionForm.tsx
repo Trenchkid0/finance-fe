@@ -38,6 +38,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils/cn";
 import { formatInputRupiah } from "@/lib/utils/formatters";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
+import { api } from "@/lib/api";
 
 import {
 	createTransaction,
@@ -115,6 +116,13 @@ export function TransactionForm({
 	const [scanning, setScanning] = useState(false);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
+	// ---- receipt states ----
+	const [receiptFile, setReceiptFile] = useState<File | null>(null);
+	const [receiptImage, setReceiptImage] = useState<string | null>(initial.receiptImageUrl || null);
+	const [receiptUrl, setReceiptUrl] = useState<string | null>(initial.receiptImageUrl || null);
+	const [uploading, setUploading] = useState(false);
+	const receiptInputRef = useRef<HTMLInputElement>(null);
+
 	// ---- server action (signature asli) ----
 	// create: (prev, formData) ; update: (id, prev, formData) → bind id
 	const boundAction = useMemo(
@@ -143,6 +151,9 @@ export function TransactionForm({
 		setNote(initial.note);
 		setTab("manual");
 		setScanning(false);
+		setReceiptFile(null);
+		setReceiptImage(initial.receiptImageUrl || null);
+		setReceiptUrl(initial.receiptImageUrl || null);
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [open]);
 
@@ -219,9 +230,19 @@ export function TransactionForm({
         if (typeof c.amount === "number") setAmount(formatInputRupiah(String(c.amount)));
         if (c.date) setDate(c.date);
         if (c.description) setDescription(c.description);
+        if (c.note) setNote(c.note);
         if (c.accountId && accounts.some((a) => a.id === c.accountId)) setAccountId(c.accountId);
         if (c.transferToId) setTransferToId(c.transferToId);
         if (c.categoryId) setCategoryId(c.categoryId);
+
+        // Auto-attach the scanned file as the receipt for this transaction
+        setReceiptFile(file);
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setReceiptImage(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+
         setTab("manual");
         toast.success(isId ? "Struk berhasil dibaca" : "Receipt scanned");
       } else if ("error" in result) {
@@ -235,6 +256,35 @@ export function TransactionForm({
       setScanning(false);
     }
   };
+
+	// Upload receipt to server using centralized api helper
+	const uploadReceipt = async (file: File): Promise<string | null> => {
+		const formData = new FormData();
+		formData.append("receipt", file);
+		
+		try {
+			const data = await api.post<{ url: string }>("/api/upload/receipt", formData);
+			return data.url;
+		} catch (error) {
+			console.error("Failed to upload receipt:", error);
+			toast.error(isId ? "Gagal mengunggah struk" : "Failed to upload receipt");
+			return null;
+		}
+	};
+
+	// Handle form submission with receipt upload
+	const handleSubmit = async (formData: FormData) => {
+		if (receiptFile) {
+			setUploading(true);
+			const url = await uploadReceipt(receiptFile);
+			setUploading(false);
+			if (!url) return;
+			formData.set("receiptImageUrl", url);
+		} else {
+			formData.set("receiptImageUrl", receiptUrl || "");
+		}
+		formAction(formData);
+	};
 
 	if (!open) return null;
 
@@ -417,6 +467,95 @@ export function TransactionForm({
 					className="min-h-[70px] rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-3"
 				/>
 			</div>
+
+			{/* Lampiran Struk / Receipt Attachment */}
+			<div className="space-y-2.5">
+				<Label className={labelCls}>
+					{isId ? "Foto Struk (opsional)" : "Receipt Photo (optional)"}
+				</Label>
+				<div className="relative">
+					{receiptImage ? (
+						<div className="relative w-full h-24 rounded-xl overflow-hidden border border-white/[0.08] bg-white/[0.02] flex items-center justify-between p-3 gap-3">
+							<div className="flex items-center gap-3 min-w-0">
+								<img
+									src={receiptImage}
+									alt="Receipt preview"
+									className="w-16 h-16 rounded-lg object-cover bg-black/40 border border-white/[0.08]"
+								/>
+								<div className="min-w-0 flex flex-col justify-center">
+									<p className="text-xs font-semibold text-text-primary truncate">
+										{receiptFile ? receiptFile.name : (isId ? "Foto struk terlampir" : "Attached receipt")}
+									</p>
+									{receiptFile && (
+										<p className="text-[10px] text-text-muted font-mono mt-0.5">
+											{(receiptFile.size / (1024 * 1024)).toFixed(2)} MB
+										</p>
+									)}
+								</div>
+							</div>
+							<Button
+								type="button"
+								variant="ghost"
+								size="icon"
+								onClick={() => {
+									setReceiptFile(null);
+									setReceiptImage(null);
+									setReceiptUrl(null);
+									if (receiptInputRef.current) receiptInputRef.current.value = "";
+								}}
+								className="h-8 w-8 text-expense hover:bg-expense/10 hover:text-expense shrink-0 rounded-lg"
+							>
+								<X size={14} />
+							</Button>
+						</div>
+					) : (
+						<button
+							type="button"
+							onClick={() => receiptInputRef.current?.click()}
+							className="w-full h-20 border border-dashed border-white/[0.12] hover:border-accent/40 bg-white/[0.02] hover:bg-white/[0.04] rounded-xl flex flex-col items-center justify-center gap-1 text-text-muted hover:text-text-primary transition-all duration-200"
+						>
+							<Upload size={16} className="text-accent" />
+							<span className="text-[11px] font-semibold">
+								{isId ? "Unggah Foto Struk" : "Upload Receipt Photo"}
+							</span>
+							<span className="text-[9px] text-text-muted/70">
+								PNG, JPG, JPEG (max. 5MB)
+							</span>
+						</button>
+					)}
+					<input
+						ref={receiptInputRef}
+						type="file"
+						accept="image/png,image/jpeg,image/jpg"
+						className="hidden"
+						onChange={(e) => {
+							const file = e.target.files?.[0];
+							if (!file) return;
+							
+							// Check file size (5MB max)
+							if (file.size > 5 * 1024 * 1024) {
+								toast.error(isId ? "Ukuran file maksimal 5MB" : "Maximum file size is 5MB");
+								return;
+							}
+							
+							// Check file type
+							if (!['image/png', 'image/jpeg', 'image/jpg'].includes(file.type)) {
+								toast.error(isId ? "Format file harus PNG, JPG, atau JPEG" : "File format must be PNG, JPG, or JPEG");
+								return;
+							}
+							
+							setReceiptFile(file);
+							
+							// Preview image
+							const reader = new FileReader();
+							reader.onload = (ev) => {
+								setReceiptImage(ev.target?.result as string);
+							};
+							reader.readAsDataURL(file);
+						}}
+					/>
+				</div>
+			</div>
 		</div>
 	);
 
@@ -541,7 +680,7 @@ export function TransactionForm({
 					)}
 
 					{/* form asli yang di-submit; tombolnya di footer via form="" */}
-					<form id={FORM_ID} action={formAction} className="hidden">
+					<form id={FORM_ID} action={handleSubmit} className="hidden">
 						<input type="hidden" name="type" value={type} />
 						<input type="hidden" name="amount" value={amount} />
 						<input type="hidden" name="date" value={date} />
@@ -558,6 +697,7 @@ export function TransactionForm({
 						/>
 						<input type="hidden" name="description" value={description} />
 						<input type="hidden" name="note" value={note} />
+						<input type="hidden" name="receiptImageUrl" value={receiptUrl || ""} />
 					</form>
 
 					{state && !state.ok && state.error ? (
@@ -582,9 +722,9 @@ export function TransactionForm({
 						type="submit"
 						form={FORM_ID}
 						className="h-10 gap-1.5 text-[13px]"
-						disabled={pending || scanning}
+						disabled={pending || scanning || uploading}
 					>
-						{pending ? (
+						{pending || uploading ? (
 							<Loader2 className="h-4 w-4 animate-spin" />
 						) : (
 							<Check className="h-4 w-4" />

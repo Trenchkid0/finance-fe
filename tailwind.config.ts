@@ -61,6 +61,12 @@ const config: Config = {
         accent: withOpacity("--accent"),
         progress: withOpacity("--progress"),
         
+        // Hover states - NEW!
+        "hover-surface": withOpacity("--hover-surface"),
+        "hover-elevated": withOpacity("--hover-elevated"),
+        "hover-accent": withOpacity("--hover-accent"),
+        "hover-border": withOpacity("--hover-border"),
+        
         // Additional accent colors for variety
         purple: "#8B5CF6",
         pink: "#EC4899",

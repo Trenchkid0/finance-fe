@@ -125,7 +125,7 @@ export function InlineCategoryPicker({
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="start"
-        className="w-56 max-h-[320px] overflow-y-auto"
+        className="w-56 max-h-[320px] overflow-y-auto z-[99999]"
       >
         {filtered.map((cat) => (
           <DropdownMenuItem
@@ -168,3 +168,4 @@ export function TransferBadge({
     </Badge>
   );
 }
+

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Check,
@@ -328,6 +329,7 @@ function MonthPicker({
   const { language } = useLanguage();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickedYear, setPickedYear] = useState(year);
+  const pickerTriggerRef = useRef<HTMLDivElement>(null);
 
   const now = new Date();
   const currentY = now.getFullYear();
@@ -348,7 +350,7 @@ function MonthPicker({
         <ChevronLeft size={16} />
       </Button>
 
-      <div className="relative">
+      <div ref={pickerTriggerRef} className="relative">
         <button
           type="button"
           onClick={() => setPickerOpen((v) => !v)}
@@ -375,6 +377,7 @@ function MonthPicker({
             currentMonth={currentM}
             selectedYear={year}
             selectedMonth={month}
+            triggerRef={pickerTriggerRef}
             onPick={(y, m) => {
               setPickerOpen(false);
               onPick(y, m);
@@ -419,6 +422,7 @@ function YearMonthPanel({
   currentMonth,
   selectedYear,
   selectedMonth,
+  triggerRef,
   onPick,
 }: {
   pickedYear: number;
@@ -428,6 +432,7 @@ function YearMonthPanel({
   currentMonth: number;
   selectedYear: number;
   selectedMonth: number;
+  triggerRef: React.RefObject<HTMLDivElement | null>;
   onPick: (y: number, m: number) => void;
 }) {
   const { language } = useLanguage();
@@ -438,8 +443,27 @@ function YearMonthPanel({
     ? ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"]
     : ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-  return (
-    <div className="absolute z-50 right-0 mt-2 w-[260px] rounded-2xl border border-white/[0.08] bg-popover/95 backdrop-blur-xl shadow-2xl shadow-black/40 p-4 space-y-3 animate-in fade-in-50 slide-in-from-top-2 duration-150">
+  const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
+
+  useEffect(() => {
+    const triggerEl = triggerRef.current;
+    if (!triggerEl) return;
+    const rect = triggerEl.getBoundingClientRect();
+    setPosition({
+      top: rect.bottom + 8,
+      left: rect.right - 260,
+    });
+  }, [triggerRef]);
+
+  return createPortal(
+    <div
+      style={{
+        position: "fixed",
+        top: position?.top ?? -9999,
+        left: position?.left ?? -9999,
+      }}
+      className="z-[99999] w-[260px] rounded-2xl border border-white/[0.08] bg-popover/95 backdrop-blur-xl shadow-2xl shadow-black/40 p-4 space-y-3 animate-in fade-in-50 slide-in-from-top-2 duration-150"
+    >
       <div className="flex items-center justify-between">
         <Button
           type="button"
@@ -496,7 +520,8 @@ function YearMonthPanel({
           );
         })}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

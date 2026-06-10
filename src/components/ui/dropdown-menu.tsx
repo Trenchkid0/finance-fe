@@ -1,10 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { useState, useEffect, useContext, createContext, useRef, forwardRef } from "react";
+import { useState, useEffect, useLayoutEffect, useContext, createContext, useRef, forwardRef } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils/cn";
 
-// Context to share open state and trigger reference
 interface DropdownContextType {
   open: boolean;
   setOpen: (open: boolean) => void;
@@ -17,23 +17,31 @@ const DropdownContext = createContext<DropdownContextType | null>(null);
 export function DropdownMenu({
   children,
   modal,
+  open: controlledOpen,
+  onOpenChange,
 }: {
   children: React.ReactNode;
   modal?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const open = controlledOpen !== undefined ? controlledOpen : uncontrolledOpen;
+  const setOpen = (newOpen: boolean) => {
+    if (controlledOpen === undefined) {
+      setUncontrolledOpen(newOpen);
+    }
+    onOpenChange?.(newOpen);
+  };
   const triggerRef = useRef<HTMLElement | null>(null);
   const contentRef = useRef<HTMLElement | null>(null);
 
-  // Close when clicking outside
   useEffect(() => {
     if (!open) return;
     const handleClose = (e: MouseEvent) => {
-      // Don't close if clicking the trigger or inside the active trigger
       if (triggerRef.current && triggerRef.current.contains(e.target as Node)) {
         return;
       }
-      // Don't close if clicking inside the dropdown content
       if (contentRef.current && contentRef.current.contains(e.target as Node)) {
         return;
       }
@@ -45,9 +53,7 @@ export function DropdownMenu({
 
   return (
     <DropdownContext.Provider value={{ open, setOpen, triggerRef, contentRef }}>
-      <div className="relative inline-block text-left">
-        {children}
-      </div>
+      {children}
     </DropdownContext.Provider>
   );
 }
@@ -62,6 +68,7 @@ export const DropdownMenuTrigger = forwardRef<
 
   const handleClick = (e: React.MouseEvent) => {
     if (disabled) return;
+    e.stopPropagation();
     setOpen(!open);
   };
 
@@ -113,61 +120,147 @@ export const DropdownMenuContent = forwardRef<
 >(({ className, align = "end", side = "bottom", sideOffset = 4, children, ...props }, ref) => {
   const context = useContext(DropdownContext);
   if (!context) throw new Error("DropdownMenuContent must be used inside DropdownMenu");
-  const { open, contentRef } = context;
-
-  if (!open) return null;
-
-  const style: React.CSSProperties = {
-    marginTop: side === "bottom" ? sideOffset : undefined,
-    marginBottom: side === "top" ? sideOffset : undefined,
-    marginLeft: side === "right" ? sideOffset : undefined,
-    marginRight: side === "left" ? sideOffset : undefined,
-  };
-
-  const sideAlignClasses = cn(
-    "absolute z-[99999]",
-    side === "bottom" && "top-full",
-    side === "top" && "bottom-full",
-    side === "left" && "right-full",
-    side === "right" && "left-full",
-    side === "bottom" || side === "top"
-      ? align === "end"
-        ? "right-0"
-        : align === "start"
-        ? "left-0"
-        : "left-1/2 -translate-x-1/2"
-      : align === "end"
-      ? "bottom-0"
-      : align === "start"
-      ? "top-0"
-      : "top-1/2 -translate-y-1/2",
-    className
-  );
+  const { open, triggerRef, contentRef } = context;
+  const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
+  const portalContainerRef = useRef<HTMLDivElement | null>(null);
 
   const internalRef = (node: HTMLDivElement | null) => {
     contentRef.current = node;
+    portalContainerRef.current = node;
     if (typeof ref === "function") {
       ref(node);
     } else if (ref) {
-      ref.current = node;
+      (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
     }
   };
 
-  return (
+  // Calculate position after portal content is painted
+  useLayoutEffect(() => {
+    if (!open || !triggerRef.current) return;
+    let attempts = 0;
+    const tryPosition = () => {
+      const el = portalContainerRef.current;
+      if (el && el.offsetHeight > 0 && triggerRef.current) {
+        calcPosition(el, triggerRef.current!, align, side, sideOffset, setPosition);
+      } else if (attempts < 10) {
+        attempts++;
+        requestAnimationFrame(tryPosition);
+      }
+    };
+    requestAnimationFrame(tryPosition);
+  }, [open, align, side, sideOffset]);
+
+  // Recalculate on scroll/resize
+  useEffect(() => {
+    if (!open) return;
+    const update = () => {
+      if (triggerRef.current && portalContainerRef.current) {
+        calcPosition(portalContainerRef.current, triggerRef.current, align, side, sideOffset, setPosition);
+      }
+    };
+    window.addEventListener("scroll", update, true);
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update, true);
+      window.removeEventListener("resize", update);
+    };
+  }, [open, align, side, sideOffset]);
+
+  if (!open) return null;
+
+  return createPortal(
     <div
       ref={internalRef}
-      style={style}
+      style={{
+        position: "fixed",
+        top: position?.top ?? -9999,
+        left: position?.left ?? -9999,
+      }}
       className={cn(
-        "min-w-[8rem] overflow-hidden rounded-xl border border-white/[0.08] bg-popover/95 backdrop-blur-xl p-1 text-popover-foreground shadow-2xl shadow-black/50 animate-in fade-in-0 zoom-in-95 duration-100",
-        sideAlignClasses
+        "min-w-[8rem] rounded-xl border border-white/[0.08] bg-popover/95 backdrop-blur-xl p-1 text-popover-foreground shadow-2xl shadow-black/50 animate-in fade-in-0 zoom-in-95 duration-100 z-[99999]",
+        className
       )}
       {...props}
     >
       {children}
-    </div>
+    </div>,
+    document.body
   );
 });
 DropdownMenuContent.displayName = "DropdownMenuContent";
+
+function calcPosition(
+  contentEl: HTMLElement,
+  triggerEl: HTMLElement,
+  align: "start" | "end" | "center",
+  side: "top" | "bottom" | "left" | "right",
+  sideOffset: number,
+  setPosition: React.Dispatch<React.SetStateAction<{ top: number; left: number } | null>>
+) {
+  const triggerRect = triggerEl.getBoundingClientRect();
+  const contentRect = contentEl.getBoundingClientRect();
+  const contentWidth = contentRect.width || 200;
+  const contentHeight = contentRect.height || 200;
+  const viewportH = window.innerHeight;
+  const viewportW = window.innerWidth;
+
+  let top = 0;
+  let left = 0;
+
+  if (side === "top" || side === "bottom") {
+    // Vertical positioning
+    if (side === "bottom") {
+      top = triggerRect.bottom + sideOffset;
+      if (top + contentHeight > viewportH && triggerRect.top - contentHeight - sideOffset > 0) {
+        top = triggerRect.top - contentHeight - sideOffset;
+      }
+    } else {
+      top = triggerRect.top - contentHeight - sideOffset;
+      if (top < 0 && triggerRect.bottom + contentHeight + sideOffset < viewportH) {
+        top = triggerRect.bottom + sideOffset;
+      }
+    }
+
+    // Horizontal alignment
+    if (align === "end") {
+      left = triggerRect.right - contentWidth;
+    } else if (align === "start") {
+      left = triggerRect.left;
+    } else {
+      left = triggerRect.left + triggerRect.width / 2 - contentWidth / 2;
+    }
+  } else if (side === "left" || side === "right") {
+    // Horizontal positioning
+    if (side === "right") {
+      left = triggerRect.right + sideOffset;
+      if (left + contentWidth > viewportW && triggerRect.left - contentWidth - sideOffset > 0) {
+        left = triggerRect.left - contentWidth - sideOffset;
+      }
+    } else {
+      left = triggerRect.left - contentWidth - sideOffset;
+      if (left < 0 && triggerRect.right + contentWidth + sideOffset < viewportW) {
+        left = triggerRect.right + sideOffset;
+      }
+    }
+
+    // Vertical alignment
+    if (align === "end") {
+      top = triggerRect.bottom - contentHeight;
+    } else if (align === "start") {
+      top = triggerRect.top;
+    } else {
+      top = triggerRect.top + triggerRect.height / 2 - contentHeight / 2;
+    }
+  }
+
+  // Clamp to viewport boundaries
+  if (left < 8) left = 8;
+  if (left + contentWidth > viewportW - 8) left = viewportW - contentWidth - 8;
+  if (top < 8) top = 8;
+  if (top + contentHeight > viewportH - 8) top = viewportH - contentHeight - 8;
+
+  setPosition({ top, left });
+}
 
 export const DropdownMenuItem = forwardRef<
   HTMLButtonElement,

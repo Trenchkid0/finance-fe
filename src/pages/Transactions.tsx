@@ -83,6 +83,7 @@ export default function Transactions() {
     date: tx.date,
     description: tx.description,
     note: tx.note,
+    receiptImageUrl: tx.receiptImageUrl ?? null,
   }));
 
   const total = data?.total || 0;

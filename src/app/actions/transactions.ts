@@ -23,6 +23,7 @@ export async function createTransaction(
     note: getString(formData, "note") || "",
     categoryId: getString(formData, "categoryId") || null,
     transferToId: getString(formData, "transferToId") || null,
+    receiptImageUrl: getString(formData, "receiptImageUrl") || null,
   };
   try {
     await api.post("/api/transactions", payload);
@@ -48,6 +49,7 @@ export async function updateTransaction(
     note: getString(formData, "note") || "",
     categoryId: getString(formData, "categoryId") || null,
     transferToId: getString(formData, "transferToId") || null,
+    receiptImageUrl: getString(formData, "receiptImageUrl") || null,
   };
 
   try {
