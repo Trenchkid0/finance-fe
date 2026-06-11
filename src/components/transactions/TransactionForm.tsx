@@ -72,6 +72,7 @@ export type TransactionFormInitial = {
 	date: string; // YYYY-MM-DD
 	description: string;
 	note: string;
+	receiptImageUrl?: string | null;
 };
 
 export type TransactionModalProps = {
