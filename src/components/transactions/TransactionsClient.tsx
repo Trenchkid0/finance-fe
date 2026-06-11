@@ -61,7 +61,7 @@ import {
 } from "./InlineCategoryPicker";
 
 export interface TransactionRowData {
-  id: string | number;
+  id: string;
   type: "income" | "expense" | "transfer";
   accountId: string;
   accountName: string;
@@ -158,7 +158,7 @@ export function TransactionsClient({
 
         const res = await api.get<any>(`/api/transactions?${params.toString()}`);
         const mapped = (res.transactions || []).map((tx: any) => ({
-          id: tx.id,
+          id: String(tx.id),
           type: tx.type,
           accountId: tx.accountId,
           accountName: tx.account?.name || "Akun Utama",

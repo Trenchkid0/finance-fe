@@ -24,12 +24,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -63,7 +62,7 @@ export type CategoryOption = {
 };
 
 export type TransactionFormInitial = {
-	id?: string | number;
+	id?: string;
 	type: TransactionTypeInput;
 	accountId: string;
 	categoryId: string | null;
@@ -387,60 +386,90 @@ export function TransactionForm({
 								? "Akun"
 								: "Account"}
 					</Label>
-					<Select value={accountId} onValueChange={setAccountId}>
-						<SelectTrigger className="h-11">
-							<SelectValue placeholder={isId ? "Pilih akun" : "Select account"} />
-						</SelectTrigger>
-						<SelectContent>
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<button
+								type="button"
+								className="flex h-11 w-full items-center justify-between rounded-lg border border-border bg-elevated px-3 text-sm text-foreground hover:bg-white/[0.04] transition-all outline-none"
+							>
+								<span>{accounts.find(a => String(a.id) === String(accountId))?.name || (isId ? "Pilih akun" : "Select account")}</span>
+								<ChevronDown size={16} className="opacity-60 shrink-0 ml-2" />
+							</button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="start" className="min-w-[200px] max-h-[250px] overflow-y-auto rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl z-[1000]">
 							{accounts.map((a) => (
-								<SelectItem key={a.id} value={a.id}>
+								<DropdownMenuItem
+									key={a.id}
+									className="text-xs font-semibold cursor-pointer"
+									onClick={() => setAccountId(a.id)}
+								>
 									{a.name}
-								</SelectItem>
+								</DropdownMenuItem>
 							))}
-						</SelectContent>
-					</Select>
+						</DropdownMenuContent>
+					</DropdownMenu>
 				</div>
 
 				{type === "transfer" ? (
 					<div className="space-y-2.5">
 						<Label className={labelCls}>{isId ? "Ke Akun" : "To Account"}</Label>
-						<Select
-							value={transferToId ?? ""}
-							onValueChange={(v) => setTransferToId(v)}
-						>
-							<SelectTrigger className="h-11">
-								<SelectValue placeholder={isId ? "Pilih akun" : "Select account"} />
-							</SelectTrigger>
-							<SelectContent>
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<button
+									type="button"
+									className="flex h-11 w-full items-center justify-between rounded-lg border border-border bg-elevated px-3 text-sm text-foreground hover:bg-white/[0.04] transition-all outline-none"
+								>
+									<span>{accounts.find(a => String(a.id) === String(transferToId))?.name || (isId ? "Pilih akun" : "Select account")}</span>
+									<ChevronDown size={16} className="opacity-60 shrink-0 ml-2" />
+								</button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="start" className="min-w-[200px] max-h-[250px] overflow-y-auto rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl z-[1000]">
 								{accounts
-									.filter((a) => a.id !== accountId)
+									.filter((a) => String(a.id) !== String(accountId))
 									.map((a) => (
-										<SelectItem key={a.id} value={a.id}>
+										<DropdownMenuItem
+											key={a.id}
+											className="text-xs font-semibold cursor-pointer"
+											onClick={() => setTransferToId(a.id)}
+										>
 											{a.name}
-										</SelectItem>
+										</DropdownMenuItem>
 									))}
-							</SelectContent>
-						</Select>
+							</DropdownMenuContent>
+						</DropdownMenu>
 					</div>
 				) : (
 					<div className="space-y-2.5">
 						<Label className={labelCls}>{isId ? "Kategori" : "Category"}</Label>
-						<Select
-							value={categoryId ?? ""}
-							onValueChange={(v) => setCategoryId(v)}
-						>
-							<SelectTrigger className="h-11">
-								<SelectValue placeholder={isId ? "Pilih kategori" : "Select category"} />
-							</SelectTrigger>
-							<SelectContent>
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<button
+									type="button"
+									className="flex h-11 w-full items-center justify-between rounded-lg border border-border bg-elevated px-3 text-sm text-foreground hover:bg-white/[0.04] transition-all outline-none"
+								>
+									<span>
+										{(() => {
+											const selectedCat = filteredCategories.find(c => String(c.id) === String(categoryId));
+											if (!selectedCat) return isId ? "Pilih kategori" : "Select category";
+											return `${selectedCat.icon ? selectedCat.icon + " " : ""}${selectedCat.name}`;
+										})()}
+									</span>
+									<ChevronDown size={16} className="opacity-60 shrink-0 ml-2" />
+								</button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="start" className="min-w-[200px] max-h-[250px] overflow-y-auto rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl z-[1000]">
 								{filteredCategories.map((c) => (
-									<SelectItem key={c.id} value={c.id}>
+									<DropdownMenuItem
+										key={c.id}
+										className="text-xs font-semibold cursor-pointer"
+										onClick={() => setCategoryId(c.id)}
+									>
 										{c.icon ? `${c.icon} ` : ""}
 										{c.name}
-									</SelectItem>
+									</DropdownMenuItem>
 								))}
-							</SelectContent>
-						</Select>
+							</DropdownMenuContent>
+						</DropdownMenu>
 					</div>
 				)}
 			</div>

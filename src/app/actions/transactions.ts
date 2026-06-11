@@ -35,7 +35,7 @@ export async function createTransaction(
 }
 
 export async function updateTransaction(
-  id: string | number,
+  id: string,
   _prev: ActionResult<null> | undefined,
   formData: FormData
 ): Promise<ActionResult<null>> {
@@ -61,7 +61,7 @@ export async function updateTransaction(
   }
 }
 
-export async function deleteTransaction(id: string | number): Promise<ActionResult<null>> {
+export async function deleteTransaction(id: string): Promise<ActionResult<null>> {
   try {
     await api.delete(`/api/transactions/${id}`);
     window.dispatchEvent(new CustomEvent("refresh-app-data"));

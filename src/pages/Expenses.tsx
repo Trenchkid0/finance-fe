@@ -107,7 +107,7 @@ export default function Expenses() {
 
       // Map serialization transaction rows (limit 15)
       const transactions = allExpenses.slice(0, 15).map((tx: any) => ({
-        id: tx.id,
+        id: String(tx.id),
         amount: Number(tx.amount),
         date: tx.date,
         description: tx.description,

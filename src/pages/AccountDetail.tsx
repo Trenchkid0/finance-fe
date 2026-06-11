@@ -33,7 +33,11 @@ export default function AccountDetail() {
       const txResponse = await api.get<any>(`/api/transactions?accountId=${id}&limit=50`);
       setAccount(acc);
       // Backend returns a TransactionsListResponse which contains transactions array
-      setTransactions(txResponse.transactions || []);
+      const mappedTxs = (txResponse.transactions || []).map((tx: any) => ({
+        ...tx,
+        id: String(tx.id),
+      }));
+      setTransactions(mappedTxs);
     } catch (err) {
       console.error("Failed to fetch account detail:", err);
     } finally {
