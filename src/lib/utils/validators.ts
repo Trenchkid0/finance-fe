@@ -120,10 +120,14 @@ export const createAccountSchema = accountFields.extend({
     .default(0),
 });
 
-/** Update tidak menyentuh saldo — saldo hanya berubah lewat transaksi. */
+/** Update saldo juga bisa dilakukan lewat edit form. */
 export const updateAccountSchema = accountFields.extend({
   /** Toggle aktif/nonaktif lewat form edit. */
   isActive: z.coerce.boolean().optional(),
+  balance: z.coerce
+    .number({ invalid_type_error: "Saldo harus berupa angka" })
+    .max(999_999_999_999, "Saldo terlalu besar")
+    .default(0),
 });
 
 export type CreateAccountInput = z.infer<typeof createAccountSchema>;

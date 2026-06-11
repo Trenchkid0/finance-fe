@@ -137,11 +137,20 @@ export const DropdownMenuContent = forwardRef<
   // Calculate position after portal content is painted
   useLayoutEffect(() => {
     if (!open || !triggerRef.current) return;
+    
+    // Try synchronous positioning first
+    const el = portalContainerRef.current;
+    if (el && el.offsetHeight > 0) {
+      calcPosition(el, triggerRef.current, align, side, sideOffset, setPosition);
+      return;
+    }
+
+    // Fallback if element is not rendered or height is 0
     let attempts = 0;
     const tryPosition = () => {
-      const el = portalContainerRef.current;
-      if (el && el.offsetHeight > 0 && triggerRef.current) {
-        calcPosition(el, triggerRef.current!, align, side, sideOffset, setPosition);
+      const currentEl = portalContainerRef.current;
+      if (currentEl && currentEl.offsetHeight > 0 && triggerRef.current) {
+        calcPosition(currentEl, triggerRef.current, align, side, sideOffset, setPosition);
       } else if (attempts < 10) {
         attempts++;
         requestAnimationFrame(tryPosition);
@@ -175,6 +184,7 @@ export const DropdownMenuContent = forwardRef<
         position: "fixed",
         top: position?.top ?? -9999,
         left: position?.left ?? -9999,
+        visibility: position ? undefined : "hidden",
       }}
       className={cn(
         "min-w-[8rem] rounded-xl border border-white/[0.08] bg-popover/95 backdrop-blur-xl p-1 text-popover-foreground shadow-2xl shadow-black/50 animate-in fade-in-0 zoom-in-95 duration-100 z-[99999]",

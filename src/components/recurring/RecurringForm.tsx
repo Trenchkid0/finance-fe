@@ -1,16 +1,17 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Loader2, Calendar, X, ChevronDown } from 'lucide-react'
+import { Loader2, Calendar, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { FormError } from '@/components/ui/form-error'
 import { formatInputRupiah, cleanMoneyString } from '@/lib/utils/formatters'
 import { useLanguage } from '@/lib/contexts/LanguageContext'
@@ -180,40 +181,19 @@ export function RecurringForm({ open, onClose, recurring, categories, onSubmit }
                 <Label htmlFor="category" className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">
                   {isId ? 'Kategori' : 'Category'}
                 </Label>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      type="button"
-                      className="flex h-10 w-full items-center justify-between rounded-lg border border-border bg-elevated px-3 text-xs text-foreground hover:bg-white/[0.04] transition-all outline-none"
-                    >
-                      <span>
-                        {(() => {
-                          const selected = expenseCategories.find(cat => String(cat.id) === String(formData.categoryId));
-                          if (!selected) return isId ? '-- Tanpa Kategori --' : '-- No Category --';
-                          return `${selected.icon ? selected.icon + " " : ""}${selected.name}`;
-                        })()}
-                      </span>
-                      <ChevronDown size={14} className="opacity-60 shrink-0 ml-2" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="min-w-[200px] max-h-[250px] overflow-y-auto rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl z-[1000]">
-                    <DropdownMenuItem
-                      className="text-xs font-semibold cursor-pointer"
-                      onClick={() => setFormData({ ...formData, categoryId: '' })}
-                    >
-                      {isId ? '-- Tanpa Kategori --' : '-- No Category --'}
-                    </DropdownMenuItem>
+                <Select value={formData.categoryId || 'none'} onValueChange={(val) => setFormData({ ...formData, categoryId: val === 'none' ? '' : val })}>
+                  <SelectTrigger id="category">
+                    <SelectValue placeholder={isId ? '-- Pilih Kategori --' : '-- Select Category --'} />
+                  </SelectTrigger>
+                  <SelectContent className="bg-surface border-border">
+                    <SelectItem value="none">{isId ? '-- Tanpa Kategori --' : '-- No Category --'}</SelectItem>
                     {expenseCategories.map((cat) => (
-                      <DropdownMenuItem
-                        key={cat.id}
-                        className="text-xs font-semibold cursor-pointer"
-                        onClick={() => setFormData({ ...formData, categoryId: cat.id })}
-                      >
+                      <SelectItem key={cat.id} value={cat.id}>
                         {cat.icon} {cat.name}
-                      </DropdownMenuItem>
+                      </SelectItem>
                     ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -222,69 +202,34 @@ export function RecurringForm({ open, onClose, recurring, categories, onSubmit }
                 <Label htmlFor="frequency" className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">
                   {isId ? 'Frekuensi' : 'Frequency'}
                 </Label>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      type="button"
-                      className="flex h-10 w-full items-center justify-between rounded-lg border border-border bg-elevated px-3 text-xs text-foreground hover:bg-white/[0.04] transition-all outline-none"
-                    >
-                      <span>
-                        {formData.frequency === "weekly" ? (isId ? 'Mingguan' : 'Weekly') :
-                         formData.frequency === "monthly" ? (isId ? 'Bulanan' : 'Monthly') :
-                         formData.frequency === "yearly" ? (isId ? 'Tahunan' : 'Yearly') : formData.frequency}
-                      </span>
-                      <ChevronDown size={14} className="opacity-60 shrink-0 ml-2" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="min-w-[150px] rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl z-[1000]">
-                    <DropdownMenuItem
-                      className="text-xs font-semibold cursor-pointer"
-                      onClick={() => setFormData({ ...formData, frequency: 'weekly' })}
-                    >
-                      {isId ? 'Mingguan' : 'Weekly'}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="text-xs font-semibold cursor-pointer"
-                      onClick={() => setFormData({ ...formData, frequency: 'monthly' })}
-                    >
-                      {isId ? 'Bulanan' : 'Monthly'}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="text-xs font-semibold cursor-pointer"
-                      onClick={() => setFormData({ ...formData, frequency: 'yearly' })}
-                    >
-                      {isId ? 'Tahunan' : 'Yearly'}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <Select value={formData.frequency} onValueChange={(val) => setFormData({ ...formData, frequency: val })}>
+                  <SelectTrigger id="frequency">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-surface border-border">
+                    <SelectItem value="weekly">{isId ? 'Mingguan' : 'Weekly'}</SelectItem>
+                    <SelectItem value="monthly">{isId ? 'Bulanan' : 'Monthly'}</SelectItem>
+                    <SelectItem value="yearly">{isId ? 'Tahunan' : 'Yearly'}</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="dayOfMonth" className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">
                   {isId ? 'Tanggal Jatuh Tempo' : 'Due Date'}
                 </Label>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      type="button"
-                      className="flex h-10 w-full items-center justify-between rounded-lg border border-border bg-elevated px-3 text-xs text-foreground hover:bg-white/[0.04] transition-all outline-none font-mono"
-                    >
-                      <span>{formData.dayOfMonth}</span>
-                      <ChevronDown size={14} className="opacity-60 shrink-0 ml-2" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="min-w-[100px] max-h-[250px] overflow-y-auto rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl z-[1000] font-mono">
+                <Select value={String(formData.dayOfMonth)} onValueChange={(val) => setFormData({ ...formData, dayOfMonth: Number(val) })}>
+                  <SelectTrigger id="dayOfMonth" className="font-mono">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-surface border-border font-mono">
                     {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
-                      <DropdownMenuItem
-                        key={day}
-                        className="text-xs font-semibold cursor-pointer"
-                        onClick={() => setFormData({ ...formData, dayOfMonth: day })}
-                      >
+                      <SelectItem key={day} value={String(day)}>
                         {day}
-                      </DropdownMenuItem>
+                      </SelectItem>
                     ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 

@@ -51,6 +51,8 @@ export async function updateAccount(
   const color = formData.get("color")?.toString() || "";
   const icon = formData.get("icon")?.toString() || "";
   const isActive = formData.get("isActive") === "on";
+  const rawBalance = formData.get("balance")?.toString() || "0";
+  const balance = cleanMoneyString(rawBalance);
 
   const parsed = updateAccountSchema.safeParse({
     name: name || undefined,
@@ -58,6 +60,7 @@ export async function updateAccount(
     color: color || undefined,
     icon: icon || undefined,
     isActive,
+    balance: balance || "0",
   });
 
   if (!parsed.success) {
@@ -65,15 +68,13 @@ export async function updateAccount(
   }
 
   try {
-    // We fetch current balance first to preserve it
-    const current = await api.get<any>(`/api/accounts/${id}`);
     await api.put(`/api/accounts/${id}`, {
       name: parsed.data.name,
       type: parsed.data.type,
       color: parsed.data.color,
       icon: parsed.data.icon,
       isActive: parsed.data.isActive,
-      balance: current.balance,
+      balance: parsed.data.balance,
     });
     window.dispatchEvent(new CustomEvent("refresh-app-data"));
     return { ok: true };

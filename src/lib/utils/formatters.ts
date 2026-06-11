@@ -89,9 +89,11 @@ export function cleanMoneyString(val: string): string {
  * Used for real-time formatting in input fields.
  */
 export function formatInputRupiah(val: string): string {
-  // Strip all non-digits
+  // Strip all non-digits except optional leading minus
+  const isNegative = val.startsWith("-");
   const digits = val.replace(/\D/g, "");
-  if (!digits) return "";
+  if (!digits) return isNegative ? "-" : "";
 
-  return new Intl.NumberFormat("id-ID").format(Number(digits));
+  const formatted = new Intl.NumberFormat("id-ID").format(Number(digits));
+  return isNegative ? `-${formatted}` : formatted;
 }

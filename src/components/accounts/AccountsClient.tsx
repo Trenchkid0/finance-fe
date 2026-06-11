@@ -16,6 +16,7 @@ import { formatIDR } from "@/lib/utils/formatters";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
+import { useApp } from "@/components/layout/AppLayout";
 import { Card } from "@/components/ui/card";
 import {
   Dialog,
@@ -57,6 +58,7 @@ interface Props {
 
 export function AccountsClient({ accounts }: Props) {
   const { language } = useLanguage();
+  const { refresh } = useApp();
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<AccountRowData | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<AccountRowData | null>(null);
@@ -195,7 +197,10 @@ export function AccountsClient({ accounts }: Props) {
             icon: "",
             isActive: true,
           }}
-          onSuccess={() => setCreating(false)}
+          onSuccess={() => {
+            setCreating(false);
+            refresh();
+          }}
         />
       )}
 
@@ -205,7 +210,10 @@ export function AccountsClient({ accounts }: Props) {
           onClose={() => setEditing(null)}
           mode="edit"
           initial={toFormInitial(editing)}
-          onSuccess={() => setEditing(null)}
+          onSuccess={() => {
+            setEditing(null);
+            refresh();
+          }}
         />
       )}
 
@@ -229,11 +237,13 @@ function AccountCard({
   onDelete: () => void;
 }) {
   const { language } = useLanguage();
+  const { refresh } = useApp();
   const [pending, startTransition] = useTransition();
 
   function handleToggle() {
-    startTransition(() => {
-      void toggleAccountActive(account.id);
+    startTransition(async () => {
+      await toggleAccountActive(account.id);
+      refresh();
     });
   }
 
@@ -426,6 +436,7 @@ function ConfirmDelete({
   onClose: () => void;
 }) {
   const { language } = useLanguage();
+  const { refresh } = useApp();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -436,6 +447,7 @@ function ConfirmDelete({
       const result = await deleteAccount(target.id);
       if (result.ok) {
         onClose();
+        refresh();
       } else {
         setError(result.error ?? "Failed to delete account");
       }
@@ -498,5 +510,6 @@ function toFormInitial(row: AccountRowData): AccountFormInitial {
     color: row.color,
     icon: row.icon,
     isActive: row.isActive,
+    balance: row.balance,
   };
 }

@@ -163,7 +163,7 @@ function PeriodSelect({ value, onChange, disabled }: {
         <Button
           variant="ghost"
           disabled={disabled}
-          className="h-8 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-text-primary hover:bg-white/[0.04] bg-white/[0.03] border border-white/[0.08] transition-all"
+          className="h-8 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-foreground hover:bg-white/[0.04] bg-elevated border border-border transition-all"
         >
           <span>{selectedLabel}</span>
         </Button>

@@ -11,11 +11,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils/cn";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export interface AccountOption {
   id: string;
@@ -257,40 +258,19 @@ export function GoalForm({ open, onClose, goal, accounts, onSubmit }: GoalModalP
               <Label htmlFor="accountId" className={labelCls}>
                 {isId ? "Hubungkan ke Akun (Opsional)" : "Linked Account (Optional)"}
               </Label>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    className="flex h-11 w-full items-center justify-between rounded-lg border border-border bg-elevated px-3 text-sm text-foreground hover:bg-white/[0.04] transition-all outline-none"
-                  >
-                    <span>
-                      {(() => {
-                        const selectedAcc = accounts.find(a => String(a.id) === String(accountId));
-                        if (!selectedAcc) return isId ? "Tanpa rekening" : "No account";
-                        return `${selectedAcc.name} (${formatIDR(selectedAcc.balance)})`;
-                      })()}
-                    </span>
-                    <ChevronDown size={16} className="opacity-60 shrink-0 ml-2" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="min-w-[200px] max-h-[250px] overflow-y-auto rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl z-[1000]">
-                  <DropdownMenuItem
-                    className="text-xs font-semibold cursor-pointer"
-                    onClick={() => setAccountId("")}
-                  >
-                    {isId ? "Tanpa rekening" : "No account"}
-                  </DropdownMenuItem>
+              <Select value={accountId || "none"} onValueChange={(v) => setAccountId(v === "none" ? "" : v)}>
+                <SelectTrigger id="accountId" className="h-11 border-border bg-elevated">
+                  <SelectValue placeholder={isId ? "Pilih rekening" : "Select account"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">{isId ? "Tanpa rekening" : "No account"}</SelectItem>
                   {accounts.map((a) => (
-                    <DropdownMenuItem
-                      key={a.id}
-                      className="text-xs font-semibold cursor-pointer"
-                      onClick={() => setAccountId(a.id)}
-                    >
+                    <SelectItem key={a.id} value={a.id}>
                       {a.name} ({formatIDR(a.balance)})
-                    </DropdownMenuItem>
+                    </SelectItem>
                   ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

@@ -27,6 +27,7 @@ export interface AccountFormInitial {
   color: string | null;
   icon: string | null;
   isActive: boolean;
+  balance?: number;
 }
 
 interface Props {
@@ -52,7 +53,9 @@ export function AccountForm({ open, onClose, mode, initial, onSuccess }: Props) 
   const [color, setColor] = useState<string>(initial.color ?? COLOR_SWATCHES[0]);
   const [type, setType] = useState<AccountTypeInput>(initial.type);
   const [icon, setIcon] = useState<string>(initial.icon && initial.icon !== "" ? initial.icon : "none");
-  const [startingBalance, setStartingBalance] = useState<string>("0");
+  const [startingBalance, setStartingBalance] = useState<string>(
+    initial.balance !== undefined ? formatInputRupiah(String(initial.balance)) : "0"
+  );
 
   const financialIcons = [
     { value: "none", label: language === "id" ? "Tanpa ikon" : "No icon", emoji: "" },
@@ -265,41 +268,56 @@ export function AccountForm({ open, onClose, mode, initial, onSuccess }: Props) 
               </div>
             </div>
 
-            {/* Saldo Awal / Status Aktif */}
-            {mode === "create" ? (
-              <div className="space-y-2">
-                <Label htmlFor="startingBalance" className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">
-                  {isId ? "Saldo awal" : "Starting balance"}
-                </Label>
-                <div className="relative group">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground/45 select-none transition-colors duration-300 group-focus-within:text-foreground">
-                    Rp
-                  </span>
-                  <Input
-                    id="startingBalance"
-                    name="startingBalance"
-                    type="text"
-                    inputMode="numeric"
-                    required
-                    value={startingBalance}
-                    onChange={(e) => setStartingBalance(formatInputRupiah(e.target.value))}
-                    className="pl-10 font-mono font-semibold"
-                    aria-invalid={!!state?.fieldErrors?.startingBalance}
-                  />
-                </div>
-                <p className="text-[10px] text-muted-foreground/50">
-                  {isId
+            {/* Saldo Akun / Status Aktif */}
+            <div className="space-y-2">
+              <Label htmlFor={mode === "create" ? "startingBalance" : "balance"} className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">
+                {mode === "create"
+                  ? isId ? "Saldo awal" : "Starting balance"
+                  : isId ? "Saldo akun" : "Account balance"}
+              </Label>
+              <div className="relative group">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground/45 select-none transition-colors duration-300 group-focus-within:text-foreground">
+                  Rp
+                </span>
+                <Input
+                  id={mode === "create" ? "startingBalance" : "balance"}
+                  name={mode === "create" ? "startingBalance" : "balance"}
+                  type="text"
+                  inputMode="numeric"
+                  required
+                  value={startingBalance}
+                  onChange={(e) => setStartingBalance(formatInputRupiah(e.target.value))}
+                  className="pl-10 font-mono font-semibold"
+                  aria-invalid={mode === "create" ? !!state?.fieldErrors?.startingBalance : !!state?.fieldErrors?.balance}
+                />
+              </div>
+              <p className="text-[10px] text-muted-foreground/50">
+                {mode === "create"
+                  ? isId
                     ? "Saldo akan dihitung secara kumulatif dari transaksi setelah ini."
-                    : "The balance will be calculated cumulatively from subsequent transactions."}
-                </p>
-                {state?.fieldErrors?.startingBalance?.[0] ? (
+                    : "The balance will be calculated cumulatively from subsequent transactions."
+                  : isId
+                    ? "Mengubah saldo akun akan menyesuaikan total kekayaan Anda secara langsung."
+                    : "Changing the account balance will adjust your total net worth immediately."}
+              </p>
+              {mode === "create" ? (
+                state?.fieldErrors?.startingBalance?.[0] ? (
                   <p className="text-xs text-destructive mt-1 flex items-center gap-1.5">
                     <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
                     {state.fieldErrors.startingBalance[0]}
                   </p>
-                ) : null}
-              </div>
-            ) : (
+                ) : null
+              ) : (
+                state?.fieldErrors?.balance?.[0] ? (
+                  <p className="text-xs text-destructive mt-1 flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
+                    {state.fieldErrors.balance[0]}
+                  </p>
+                ) : null
+              )}
+            </div>
+
+            {mode === "edit" && (
               <div className="p-3.5 rounded-xl border border-white/[0.04] bg-white/[0.01] flex items-center">
                 <label className="flex items-center gap-2.5 text-sm text-foreground/80 cursor-pointer select-none">
                   <input
