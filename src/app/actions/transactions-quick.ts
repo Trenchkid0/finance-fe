@@ -2,7 +2,7 @@ import { api } from "@/lib/api";
 import type { ActionResult } from "@/types";
 
 export async function updateTransactionCategory(
-  id: string,
+  id: string | number,
   categoryId: string | null
 ): Promise<ActionResult<null>> {
   try {

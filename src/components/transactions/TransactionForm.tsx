@@ -63,7 +63,7 @@ export type CategoryOption = {
 };
 
 export type TransactionFormInitial = {
-	id?: string;
+	id?: string | number;
 	type: TransactionTypeInput;
 	accountId: string;
 	categoryId: string | null;

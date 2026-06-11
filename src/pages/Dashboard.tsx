@@ -158,7 +158,7 @@ export default function Dashboard() {
   );
 
   const mappedRecent = (summaryData?.recent || []).map((tx: any) => ({
-    id: tx.id,
+    id: String(tx.id),
     description: tx.description || tx.category?.name || (language === "id" ? "Transaksi" : "Transaction"),
     categoryName: tx.category?.name ?? null,
     categoryIcon: tx.category?.icon ?? null,

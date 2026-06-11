@@ -70,7 +70,7 @@ export default function Transactions() {
   }
 
   const transactions = (data?.transactions || []).map((tx: any) => ({
-    id: tx.id,
+    id: String(tx.id),
     type: tx.type,
     accountId: tx.accountId,
     accountName: tx.account?.name || "Akun Utama",

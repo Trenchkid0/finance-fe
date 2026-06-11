@@ -61,7 +61,7 @@ import {
 } from "./InlineCategoryPicker";
 
 export interface TransactionRowData {
-  id: string;
+  id: string | number;
   type: "income" | "expense" | "transfer";
   accountId: string;
   accountName: string;
