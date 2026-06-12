@@ -4,8 +4,6 @@ import { useState, useTransition } from "react";
 import {
   Check,
   Copy,
-  Eye,
-  EyeOff,
   Inbox,
   KeyRound,
   Loader2,
@@ -141,7 +139,6 @@ function ApiKeyRow({ item }: { item: ApiKeyListItem }) {
   const [confirmAction, setConfirmAction] =
     useState<"revoke" | "delete" | null>(null);
 
-  const [showKey, setShowKey] = useState(false);
   const [copied, setCopied] = useState(false);
 
   async function handleCopyKey() {
@@ -214,36 +211,24 @@ function ApiKeyRow({ item }: { item: ApiKeyListItem }) {
           )}
         </div>
 
-        <div className="flex items-center justify-between gap-4 mt-1.5">
-          <p className="text-xs text-muted-foreground font-mono break-all flex-1 select-all">
-            {showKey ? item.prefix : "••••••••••••••••••••••••••••••••"}
-          </p>
-          <div className="flex items-center gap-1 shrink-0">
-            <Button
-              type="button"
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8 text-text-muted hover:text-foreground hover:bg-white/10 transition-all rounded-lg"
-              onClick={() => setShowKey(!showKey)}
-              title={showKey ? (language === "id" ? "Sembunyikan" : "Hide") : (language === "id" ? "Tampilkan" : "Show")}
-            >
-              {showKey ? <EyeOff size={14} /> : <Eye size={14} />}
-            </Button>
-            <Button
-              type="button"
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8 text-text-muted hover:text-foreground hover:bg-white/10 transition-all rounded-lg"
-              onClick={handleCopyKey}
-              title={language === "id" ? "Salin Kunci API" : "Copy API Key"}
-            >
-              {copied ? (
-                <Check size={14} className="text-income animate-in fade-in zoom-in duration-200" />
-              ) : (
-                <Copy size={14} />
-              )}
-            </Button>
-          </div>
+        <div className="rounded-lg border border-border bg-[#0B0E14] pl-3 pr-1.5 py-1.5 flex items-center gap-2 mt-1.5">
+          <code className="text-xs font-mono text-text-primary/95 break-all flex-1 tracking-tight select-all">
+            {item.prefix}
+          </code>
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8 text-text-muted hover:text-foreground hover:bg-white/10 transition-all rounded-lg shrink-0"
+            onClick={handleCopyKey}
+            title={language === "id" ? "Salin Kunci API" : "Copy API Key"}
+          >
+            {copied ? (
+              <Check size={14} className="text-income animate-in fade-in zoom-in duration-200" />
+            ) : (
+              <Copy size={14} />
+            )}
+          </Button>
         </div>
 
         <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
