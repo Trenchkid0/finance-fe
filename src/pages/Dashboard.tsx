@@ -179,13 +179,6 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6 pb-8">
-      {/* Cache indicator (dev only) */}
-      {import.meta.env.DEV && isCached && (
-        <div className="fixed top-20 right-4 z-50 px-3 py-1.5 rounded-full bg-income/10 border border-income/30 text-income text-xs font-bold flex items-center gap-1.5 animate-fade-in">
-          <div className="h-2 w-2 rounded-full bg-income animate-pulse" />
-          Cached
-        </div>
-      )}
 
       {/* ═══════════════════════════════════════════════════════════════════
           LEVEL 1: HERO SECTION - Most Important (Net Worth at a Glance)

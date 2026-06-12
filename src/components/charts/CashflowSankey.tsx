@@ -8,7 +8,6 @@ import {
   type SankeyExtraProperties,
 } from "d3-sankey";
 import { formatIDR } from "@/lib/utils/formatters";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
   DropdownMenu,
@@ -17,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
+import { ChevronDown } from "lucide-react";
 
 /**
  * Cashflow sankey — pola Maybe Finance asli.
@@ -143,13 +143,15 @@ export function CashflowSankey({ data, period }: Props) {
         <h2 className="text-base font-medium text-foreground transition-colors duration-300 group-hover:text-accent">Arus kas</h2>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
+            <button
+              type="button"
               disabled={pending}
-              className="h-8 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-foreground hover:bg-white/[0.04] bg-elevated border border-border transition-all"
+              className="h-8 gap-1.5 px-2.5 text-xs font-semibold text-foreground hover:bg-white/[0.04] bg-elevated border border-border transition-all flex items-center justify-center disabled:opacity-50 disabled:pointer-events-none"
+              style={{ borderRadius: 'var(--dropdown-radius, 9999px)' }}
             >
               <span>{PERIOD_OPTIONS.find((o) => o.value === period)?.label ?? period}</span>
-            </Button>
+              <ChevronDown size={13} className="opacity-60 shrink-0 ml-1.5" />
+            </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="min-w-[120px] rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl">
             {PERIOD_OPTIONS.map((o) => (

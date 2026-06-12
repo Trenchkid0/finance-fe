@@ -80,12 +80,13 @@ export function SiteHeader() {
           {/* Language selector */}
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="h-8 gap-1.5 rounded-lg px-2 text-xs font-semibold text-text-primary hover:bg-white/[0.04] transition-all ml-1"
+              <button
+                type="button"
+                className="h-8 gap-1.5 px-2 text-xs font-semibold text-text-primary hover:bg-white/[0.04] transition-all ml-1 flex items-center justify-center"
+                style={{ borderRadius: 'var(--dropdown-radius, 8px)' }}
               >
                 <span>{language === "id" ? "ID" : "EN"}</span>
-              </Button>
+              </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-[120px] rounded-xl border-border/40 bg-elevated/60 backdrop-blur-xl">
               <DropdownMenuItem

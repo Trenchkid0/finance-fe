@@ -374,16 +374,16 @@ function AccountCard({
           </div>
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
+              <button
+                type="button"
                 aria-label={language === "id" ? "Aksi akun" : "Account actions"}
-                className="h-7 w-7 rounded-lg hover:bg-white/[0.12] bg-white/[0.04] border border-white/[0.08] text-muted-foreground/60 hover:text-foreground hover:border-white/[0.15] shrink-0 transition-all duration-200 backdrop-blur-md shadow-lg"
+                className="h-7 w-7 hover:bg-white/[0.12] bg-white/[0.04] border border-white/[0.08] text-muted-foreground/60 hover:text-foreground hover:border-white/[0.15] shrink-0 transition-all duration-200 backdrop-blur-md shadow-lg flex items-center justify-center disabled:opacity-50 disabled:pointer-events-none"
+                style={{ borderRadius: 'var(--dropdown-radius, 8px)' }}
                 disabled={pending}
                 onClick={(e) => e.stopPropagation()}
               >
                 <MoreVertical size={13} />
-              </Button>
+              </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl shadow-2xl p-1">
               <DropdownMenuItem

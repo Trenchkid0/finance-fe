@@ -22,7 +22,7 @@ export default function Budget() {
 
   if (monthParam && /^\d{4}-\d{2}$/.test(monthParam)) {
     const [y, m] = monthParam.split("-").map(Number);
-    if (y >= 2000 && y <= now.getFullYear() + 1 && m >= 1 && m <= 12) {
+    if (y >= 2000 && y <= now.getFullYear() + 2 && m >= 1 && m <= 12) {
       currentYear = y;
       currentMonthNum = m;
     }
@@ -37,7 +37,9 @@ export default function Budget() {
     year: "numeric",
   });
 
-  const yearOptions = [now.getFullYear() - 1, now.getFullYear()];
+  const startYear = 2020;
+  const endYear = now.getFullYear() + 2;
+  const yearOptions = Array.from({ length: endYear - startYear + 1 }, (_, i) => startYear + i);
 
   const fetchBudgetsAndTransactions = async () => {
     try {

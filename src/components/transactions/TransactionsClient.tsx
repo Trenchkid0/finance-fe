@@ -21,6 +21,7 @@ import {
   Search,
   Trash2,
   Wallet,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils/cn";
@@ -37,6 +38,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
 import { EmptyState } from "@/components/ui/empty-state";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -182,7 +184,14 @@ export function TransactionsClient({
     };
 
     fetchCalendarData();
-  }, [viewMode, currentDate, filters]);
+  }, [
+    viewMode,
+    currentDate,
+    filters.q,
+    filters.type,
+    filters.accountId,
+    filters.categoryId,
+  ]);
 
   useEffect(() => {
     if (viewMode !== "calendar") return;
@@ -358,10 +367,14 @@ export function TransactionsClient({
           </div>
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="h-9 rounded-xl gap-2 text-xs font-semibold px-4">
+              <button
+                type="button"
+                className="h-9 border border-border/50 bg-transparent text-foreground hover:bg-white/[0.04] hover:border-border transition-all flex items-center justify-center gap-2 text-xs font-semibold px-4"
+                style={{ borderRadius: 'var(--dropdown-radius, 12px)' }}
+              >
                 <Download size={14} />
                 {t("export")}
-              </Button>
+              </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="bg-surface border-border z-[99999]">
               <DropdownMenuItem asChild>
@@ -914,7 +927,7 @@ function FilterBar({
   const [searchParams] = useSearchParams();
   const [pending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
-  const [openMenu, setOpenMenu] = useState<string | null>(null);
+
 
   function pushFilter(patch: Record<string, string | null | undefined>) {
     // Read current values of other form fields directly from the form DOM to preserve them
@@ -970,12 +983,10 @@ function FilterBar({
         </div>
 
         {/* Filters */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 lg:flex lg:items-center">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:flex lg:items-center lg:gap-3">
           <FilterSelect
             label="Tipe"
             value={filters.type}
-            open={openMenu === "type"}
-            onOpenChange={(o) => setOpenMenu(o ? "type" : null)}
             onChange={(v) => pushFilter({ type: v })}
             options={[
               { value: "all", label: "Semua tipe" },
@@ -985,31 +996,27 @@ function FilterBar({
             ]}
           />
           <FilterSelect
-          label="Akun"
-          value={filters.accountId}
-          open={openMenu === "account"}
-          onOpenChange={(o) => setOpenMenu(o ? "account" : null)}
-          onChange={(v) => pushFilter({ accountId: v })}
-          options={[
-            { value: "all", label: "Semua akun" },
-            ...accounts.map((a) => ({ value: a.id, label: a.name })),
-          ]}
-        />
+            label="Akun"
+            value={filters.accountId}
+            onChange={(v) => pushFilter({ accountId: v })}
+            options={[
+              { value: "all", label: "Semua akun" },
+              ...accounts.map((a) => ({ value: a.id, label: a.name })),
+            ]}
+          />
           <FilterSelect
-          label="Kategori"
-          value={filters.categoryId}
-          open={openMenu === "category"}
-          onOpenChange={(o) => setOpenMenu(o ? "category" : null)}
-          onChange={(v) => pushFilter({ categoryId: v })}
-          options={[
-            { value: "all", label: "Semua kategori" },
-            { value: "none", label: "Tanpa kategori" },
-            ...categories.map((c) => ({
-              value: c.id,
-              label: `${c.icon ? `${c.icon} ` : ""}${c.name}`,
-            })),
-          ]}
-        />                  
+            label="Kategori"
+            value={filters.categoryId}
+            onChange={(v) => pushFilter({ categoryId: v })}
+            options={[
+              { value: "all", label: "Semua kategori" },
+              { value: "none", label: "Tanpa kategori" },
+              ...categories.map((c) => ({
+                value: c.id,
+                label: `${c.icon ? `${c.icon} ` : ""}${c.name}`,
+              })),
+            ]}
+          />                  
         </div>
       </div>
 
@@ -1062,53 +1069,6 @@ function FilterBar({
   );
 }
 
-// --- Date range presets & Period Selection ----------------------------------
-
-interface DateRange {
-  start: string;
-  end: string;
-}
-
-function getDateRangeForPeriod(period: string): DateRange {
-  const today = new Date();
-  const end = isoFromDate(today);
-
-  switch (period) {
-    case "1d":
-      return { start: end, end };
-    case "7d": {
-      const d = new Date(today);
-      d.setDate(d.getDate() - 6);
-      return { start: isoFromDate(d), end };
-    }
-    case "30d": {
-      const d = new Date(today);
-      d.setDate(d.getDate() - 29);
-      return { start: isoFromDate(d), end };
-    }
-    case "90d": {
-      const d = new Date(today);
-      d.setDate(d.getDate() - 89);
-      return { start: isoFromDate(d), end };
-    }
-    case "ytd": {
-      const d = new Date(today.getFullYear(), 0, 1);
-      return { start: isoFromDate(d), end };
-    }
-    case "365d": {
-      const d = new Date(today);
-      d.setDate(d.getDate() - 364);
-      return { start: isoFromDate(d), end };
-    }
-    case "5y": {
-      const d = new Date(today.getFullYear() - 5, today.getMonth(), today.getDate());
-      return { start: isoFromDate(d), end };
-    }
-    default:
-      return { start: "", end: "" };
-  }
-}
-
 
 function formatFriendlyDate(iso: string): string {
   if (!iso) return "";
@@ -1146,18 +1106,17 @@ function CustomDateRangePicker({
     return Math.floor(currentYear / 16) * 16;
   });
 
-  // Position management
   const updatePosition = () => {
     if (triggerRef.current && containerRef.current) {
       const triggerRect = triggerRef.current.getBoundingClientRect();
       const popupHeight = 500;
       
-      let top = triggerRect.bottom + window.scrollY + 8;
-      let left = triggerRect.left + window.scrollX;
+      let top = triggerRect.bottom + 8;
+      let left = triggerRect.left;
       
       // Check if popup would go below viewport, position above instead
-      if (top + popupHeight > window.scrollY + window.innerHeight && triggerRect.top - popupHeight > 0) {
-        top = triggerRect.top + window.scrollY - popupHeight - 8;
+      if (top + popupHeight > window.innerHeight && triggerRect.top - popupHeight > 0) {
+        top = triggerRect.top - popupHeight - 8;
       }
       
       // Check if popup would overflow right
@@ -1211,9 +1170,13 @@ function CustomDateRangePicker({
   }, [viewDate]);
 
   useEffect(() => {
-    setTempStart(startDate);
-    setTempEnd(endDate);
-  }, [startDate, endDate]);
+    if (isOpen) {
+      setTempStart(startDate);
+      setTempEnd(endDate);
+      const d = startDate ? new Date(startDate) : new Date();
+      setViewDate(isNaN(d.getTime()) ? new Date() : d);
+    }
+  }, [isOpen, startDate, endDate]);
 
   const year = viewDate.getFullYear();
   const month = viewDate.getMonth();
@@ -1258,34 +1221,16 @@ function CustomDateRangePicker({
     } else {
       if (new Date(dateStr) < new Date(tempStart)) {
         setTempStart(dateStr);
+        setTempEnd("");
       } else {
         setTempEnd(dateStr);
+        onPick({ start: tempStart, end: dateStr });
+        setIsOpen(false);
       }
     }
   };
 
-  const applyPreset = (presetName: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const range = getDateRangeForPeriod(presetName);
-    setTempStart(range.start);
-    setTempEnd(range.end);
-    onPick(range);
-    setIsOpen(false);
-  };
 
-  const handleApply = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onPick({ start: tempStart, end: tempEnd });
-    setIsOpen(false);
-  };
-
-  const handleReset = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setTempStart("");
-    setTempEnd("");
-    onPick({ start: "", end: "" });
-    setIsOpen(false);
-  };
 
   let label = "Pilih Tanggal";
   if (startDate && endDate) {
@@ -1310,11 +1255,26 @@ function CustomDateRangePicker({
         type="button"
         variant="outline"
         onClick={() => setIsOpen(!isOpen)}
-        className="h-8 gap-2 px-3 text-xs font-semibold text-text-primary bg-white/[0.03] border-white/[0.08] hover:border-white/[0.15] hover:bg-white/[0.05] rounded-lg transition-all"
+        className="h-8 gap-2 px-3 text-xs font-semibold text-text-primary bg-white/[0.03] border-white/[0.08] hover:border-white/[0.15] hover:bg-white/[0.05] transition-all relative group"
+        style={{ borderRadius: "var(--custom-dropdown-radius, 8px)" }}
       >
         <Calendar size={12} className="text-text-muted pointer-events-none" />
         <span>{label}</span>
-        <ChevronDown size={12} className="text-text-muted opacity-60 ml-0.5" />
+        {(startDate || endDate) ? (
+          <span
+            role="button"
+            aria-label="Clear date range"
+            onClick={(e) => {
+              e.stopPropagation();
+              onPick({ start: "", end: "" });
+            }}
+            className="hover:text-expense p-0.5 rounded transition-colors ml-0.5 z-10 flex items-center justify-center"
+          >
+            <X size={10} className="opacity-80 hover:opacity-100" />
+          </span>
+        ) : (
+          <ChevronDown size={12} className="text-text-muted opacity-60 ml-0.5" />
+        )}
       </Button>
       
       {isOpen && createPortal(
@@ -1325,34 +1285,13 @@ function CustomDateRangePicker({
             position: "fixed",
             top: "0",
             left: "0",
+            borderRadius: "var(--custom-dropdown-menu-radius, 12px)",
           }}
-          className="p-4 w-[280px] rounded-xl border border-white/[0.08] bg-popover/95 backdrop-blur-xl flex flex-col gap-3.5 text-text-primary shadow-2xl z-[100000] max-h-[500px] overflow-y-auto"
+          className="p-4 w-[280px] border border-white/[0.08] bg-popover/95 backdrop-blur-xl flex flex-col gap-3.5 text-text-primary shadow-2xl z-[100000] max-h-[500px] overflow-y-auto"
         >
-        {/* Presets Grid */}
-        <div className="grid grid-cols-3 gap-1">
-          {["1d", "7d", "30d", "ytd", "365d", "all"].map((p) => {
-            const labels: Record<string, string> = {
-              "1d": "Hari Ini",
-              "7d": "7 Hari",
-              "30d": "30 Hari",
-              "ytd": "Tahun Ini",
-              "365d": "1 Tahun",
-              "all": "Semua",
-            };
-            return (
-              <button
-                key={p}
-                type="button"
-                onClick={(e) => applyPreset(p, e)}
-                className="text-[10px] py-1 px-1.5 rounded-lg border border-white/[0.04] bg-white/[0.02] hover:bg-white/[0.08] hover:border-white/[0.12] text-text-muted hover:text-text-primary transition-all font-semibold"
-              >
-                {labels[p]}
-              </button>
-            );
-          })}
-        </div>
 
-        <div className="border-t border-white/[0.06]" />
+
+
 
         {/* Calendar Control Header */}
         <div className="flex items-center justify-between px-1">
@@ -1512,58 +1451,7 @@ function CustomDateRangePicker({
           </div>
         )}
 
-        {/* Selected Range Display & Actions */}
-        {(tempStart || tempEnd) && (
-          <div className="pt-2 border-t border-white/[0.06]">
-            <div className="text-[10px] font-medium text-text-muted mb-2">Rentang Dipilih:</div>
-            <div className="flex items-center justify-between bg-elevated/40 border border-border/50 rounded-lg px-3 py-2 mb-2">
-              <div className="flex items-center gap-2">
-                <Calendar size={10} className="text-text-muted" />
-                <span className="text-xs font-mono tabular-nums">
-                  {tempStart ? formatFriendlyDate(tempStart) : "..."}
-                </span>
-                <span className="text-text-muted/50 text-[10px]">→</span>
-                <span className="text-xs font-mono tabular-nums">
-                  {tempEnd ? formatFriendlyDate(tempEnd) : "..."}
-                </span>
-              </div>
-              {(tempStart || tempEnd) && (
-                <button
-                  type="button"
-                  onClick={handleReset}
-                  className="text-[10px] text-expense hover:text-red-400 transition-colors"
-                >
-                  Reset
-                </button>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                size="sm"
-                onClick={handleApply}
-                className="flex-1 h-7 text-xs bg-accent hover:bg-accent/90 text-white"
-              >
-                Terapkan
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const modal = document.activeElement as HTMLElement;
-                  if (modal && modal.contains(e.currentTarget)) {
-                    modal.click();
-                  }
-                }}
-                className="h-7 text-xs"
-              >
-                Tutup
-              </Button>
-            </div>
-          </div>
-        )}
+
         </div>,
         document.body
       )}
@@ -1571,12 +1459,7 @@ function CustomDateRangePicker({
   );
 }
 
-function isoFromDate(d: Date): string {
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
-}
+
 
 interface FilterSelectOption {
   value: string;
@@ -1584,53 +1467,117 @@ interface FilterSelectOption {
 }
 
 function FilterSelect({
-	label,
-	value,
-	onChange,
-	options,
-	open,
-	onOpenChange,
+  label,
+  value,
+  onChange,
+  options,
 }: {
-	label: string;
-	value: string;
-	onChange: (v: string) => void;
-	options: FilterSelectOption[];
-	open?: boolean;
-	onOpenChange?: (open: boolean) => void;
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: FilterSelectOption[];
 }) {
-	const selectedLabel = options.find((opt) => opt.value === value)?.label ?? label;
+  const [isOpen, setIsOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  
+  const selectedLabel = options.find((opt) => opt.value === value)?.label ?? label;
 
-	return (
-		<div className="grid gap-1.5 sm:gap-1">
-			<Label className="sr-only">{label}</Label>
-			<DropdownMenu modal={false} open={open} onOpenChange={onOpenChange}>
-				<DropdownMenuTrigger asChild>
-					<Button
-						type="button"
-						variant="ghost"
-						className="flex h-11 w-full items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-2 text-sm text-foreground hover:border-white/[0.12] hover:bg-white/[0.05] focus:outline-none transition-all duration-300 ease-out text-left"
-					>
-						<span>{selectedLabel}</span>
-						<ChevronDown size={14} className="opacity-60 shrink-0 ml-2" />
-					</Button>
-				</DropdownMenuTrigger>
-				<DropdownMenuContent
-					align="start"
-					className="min-w-[150px] rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl z-[99999] max-h-[300px] overflow-y-auto"
-				>
-					{options.map((opt) => (
-						<DropdownMenuItem
-							key={opt.value}
-							className="text-xs font-semibold cursor-pointer"
-							onClick={() => onChange(opt.value)}
-						>
-							{opt.label}
-						</DropdownMenuItem>
-					))}
-				</DropdownMenuContent>
-			</DropdownMenu>
-		</div>
-	);
+  const updatePosition = () => {
+    if (triggerRef.current && containerRef.current) {
+      const triggerRect = triggerRef.current.getBoundingClientRect();
+      const popupHeight = 250;
+      
+      let top = triggerRect.bottom + 8;
+      let left = triggerRect.left;
+      
+      if (top + popupHeight > window.innerHeight && triggerRect.top - popupHeight > 0) {
+        top = triggerRect.top - popupHeight - 8;
+      }
+      
+      if (left + 176 > window.innerWidth) {
+        left = Math.max(10, window.innerWidth - 186);
+      }
+      
+      containerRef.current.style.top = `${top}px`;
+      containerRef.current.style.left = `${left}px`;
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      updatePosition();
+      const timer = requestAnimationFrame(updatePosition);
+      window.addEventListener("scroll", updatePosition, true);
+      window.addEventListener("resize", updatePosition);
+      return () => {
+        cancelAnimationFrame(timer);
+        window.removeEventListener("scroll", updatePosition, true);
+        window.removeEventListener("resize", updatePosition);
+      };
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClose = (e: MouseEvent) => {
+      if (triggerRef.current && triggerRef.current.contains(e.target as Node)) {
+        return;
+      }
+      if (containerRef.current && containerRef.current.contains(e.target as Node)) {
+        return;
+      }
+      setIsOpen(false);
+    };
+    document.addEventListener("click", handleClose, true);
+    return () => document.removeEventListener("click", handleClose, true);
+  }, [isOpen]);
+
+  return (
+    <div className="grid gap-1.5 sm:gap-1 w-full lg:w-44">
+      <Label className="sr-only">{label}</Label>
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex h-11 w-full items-center justify-between border border-white/[0.06] bg-white/[0.03] px-4 py-2 text-sm text-foreground hover:border-white/[0.12] hover:bg-white/[0.05] focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50 focus:bg-white/[0.04] transition-all duration-300 ease-out text-left"
+        style={{ borderRadius: "var(--custom-dropdown-radius, 9999px)" }}
+      >
+        <span>{selectedLabel}</span>
+        <ChevronDown size={14} className="opacity-60 shrink-0 ml-2" />
+      </button>
+
+      {isOpen && createPortal(
+        <div
+          ref={containerRef}
+          style={{
+            position: "fixed",
+            top: "0",
+            left: "0",
+            borderRadius: "var(--custom-dropdown-menu-radius, 12px)",
+          }}
+          className="p-1 w-[176px] border border-white/[0.08] bg-popover/95 backdrop-blur-xl flex flex-col text-text-primary shadow-2xl z-[100000] max-h-[300px] overflow-y-auto"
+        >
+          {options.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              className={`relative flex w-full cursor-pointer select-none items-center rounded-lg py-2.5 px-4 text-xs font-semibold outline-none transition-colors duration-200 text-left hover:bg-white/[0.06] ${
+                opt.value === value ? "bg-white/[0.04] text-foreground font-semibold" : "text-muted-foreground"
+              }`}
+              onClick={() => {
+                onChange(opt.value);
+                setIsOpen(false);
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>,
+        document.body
+      )}
+    </div>
+  );
 }
 
 // --- List (grouped by date) ---------------------------------------------
@@ -2091,14 +2038,14 @@ function TransactionRow({
 			{/* Aksi */}
 			<DropdownMenu modal={false}>
 				<DropdownMenuTrigger asChild>
-					<Button
-						variant="ghost"
-						size="icon"
+					<button
+						type="button"
 						aria-label="Opsi transaksi"
-						className="h-8 w-8 shrink-0 text-text-muted hover:text-text-primary hover:bg-white/[0.12] transition-all duration-150 rounded-lg opacity-60 group-hover:opacity-100"
+						className="h-8 w-8 shrink-0 text-text-muted hover:text-text-primary hover:bg-white/[0.12] transition-all duration-150 opacity-60 group-hover:opacity-100 flex items-center justify-center border border-transparent hover:border-white/[0.15]"
+						style={{ borderRadius: 'var(--dropdown-radius, 8px)' }}
 					>
 						<MoreHorizontal size={15} />
-					</Button>
+					</button>
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align="end" className="w-48 bg-surface border-border shadow-xl z-[99999]">
 					<DropdownMenuItem onSelect={() => onEdit(tx)} className="gap-2">
@@ -2178,14 +2125,14 @@ function PaginationBar({
           <span className="hidden sm:inline">Per halaman</span>
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
-              <Button
+              <button
                 type="button"
-                variant="outline"
-                className="h-8 w-20 flex items-center justify-between px-2.5 text-xs font-semibold text-text-primary hover:bg-white/[0.04] bg-white/[0.03] border border-white/[0.08] transition-all rounded-lg"
+                className="h-8 w-20 flex items-center justify-between px-2.5 text-xs font-semibold text-text-primary hover:bg-white/[0.04] bg-white/[0.03] border border-white/[0.08] transition-all"
+                style={{ borderRadius: 'var(--dropdown-radius, 8px)' }}
               >
                 <span>{pageSize}</span>
                 <ChevronDown size={12} className="opacity-60 shrink-0 ml-1" />
-              </Button>
+              </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-[80px] rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl z-[99999]">
               {pageSizeOptions.map((size) => (

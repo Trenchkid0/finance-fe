@@ -69,6 +69,7 @@ export const DropdownMenuTrigger = forwardRef<
   const handleClick = (e: React.MouseEvent) => {
     if (disabled) return;
     e.stopPropagation();
+    e.nativeEvent.stopImmediatePropagation();
     setOpen(!open);
   };
 
@@ -185,9 +186,12 @@ export const DropdownMenuContent = forwardRef<
         top: position?.top ?? -9999,
         left: position?.left ?? -9999,
         visibility: position ? undefined : "hidden",
+        borderRadius: "var(--dropdown-menu-radius, 12px)",
+        ...props.style
       }}
       className={cn(
-        "min-w-[8rem] rounded-xl border border-white/[0.08] bg-popover/95 backdrop-blur-xl p-1 text-popover-foreground shadow-2xl shadow-black/50 animate-in fade-in-0 zoom-in-95 duration-100 z-[99999]",
+        "min-w-[8rem] border border-white/[0.08] bg-popover/95 backdrop-blur-xl p-1 text-popover-foreground shadow-2xl shadow-black/50 z-[99999]",
+        position && "animate-in fade-in-0 zoom-in-95 duration-100",
         className
       )}
       {...props}

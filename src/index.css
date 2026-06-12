@@ -28,6 +28,16 @@
   --card-border-width: 1px;
   --card-backdrop-blur: 12px;
   --card-opacity: 0.75;
+  --dropdown-radius: 9999px;
+  --dropdown-menu-radius: 12px;
+  --custom-dropdown-radius: 9999px;
+  --custom-dropdown-menu-radius: 12px;
+}
+
+/* Force standard dropdown radius values inside form flows, dialog boxes, and inputs */
+form, .form-container, [role="dialog"], [role="alertdialog"], .form-dropdown-override {
+  --dropdown-radius: 8px !important;
+  --dropdown-menu-radius: 12px !important;
 }
 
 html,
@@ -45,6 +55,14 @@ body,
   padding: 0;
   font-family: var(--font-family, 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
   overflow-x: hidden;
+}
+
+/* Prevent Radix UI scroll lock from shifting layout */
+body[data-radix-scroll-locked],
+html[data-radix-scroll-locked] {
+  overflow: auto !important;
+  margin-right: 0 !important;
+  padding-right: 0 !important;
 }
 
 /* Page fade-in-up animation with high-end spring/easing curve */

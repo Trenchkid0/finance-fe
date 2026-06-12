@@ -1,10 +1,9 @@
 "use client";
 import { useMemo, useState, useTransition } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowDown, ArrowUp, Minus } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronDown, Minus } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from "recharts";
 import { formatDateShort, formatIDR } from "@/lib/utils/formatters";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
   DropdownMenu,
@@ -160,13 +159,15 @@ function PeriodSelect({ value, onChange, disabled }: {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
+        <button
+          type="button"
           disabled={disabled}
-          className="h-8 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-foreground hover:bg-white/[0.04] bg-elevated border border-border transition-all"
+          className="h-8 gap-1.5 px-2.5 text-xs font-semibold text-foreground hover:bg-white/[0.04] bg-elevated border border-border transition-all flex items-center justify-center disabled:opacity-50 disabled:pointer-events-none"
+          style={{ borderRadius: 'var(--dropdown-radius, 9999px)' }}
         >
           <span>{selectedLabel}</span>
-        </Button>
+          <ChevronDown size={13} className="opacity-60 shrink-0 ml-1.5" />
+        </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-[120px] rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl">
         {PERIOD_OPTIONS.map((o) => (

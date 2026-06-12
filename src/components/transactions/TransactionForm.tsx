@@ -4,7 +4,6 @@ import { useActionState, useEffect, useRef, useState, useMemo } from "react";
 import { createPortal } from "react-dom";
 import {
 	ArrowLeftRight,
-	Calendar,
 	Check,
 	ChevronDown,
 	ChevronLeft,
@@ -23,13 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
+
 
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -387,60 +380,38 @@ export function TransactionForm({
 								? "Akun"
 								: "Account"}
 					</Label>
-					<Select value={accountId} onValueChange={setAccountId}>
-						<SelectTrigger className="h-11">
-							<SelectValue placeholder={isId ? "Pilih akun" : "Select account"} />
-						</SelectTrigger>
-						<SelectContent>
-							{accounts.map((a) => (
-								<SelectItem key={a.id} value={a.id}>
-									{a.name}
-								</SelectItem>
-							))}
-						</SelectContent>
-					</Select>
+					<FormSelect
+						value={accountId}
+						onChange={setAccountId}
+						options={accounts.map((a) => ({ value: a.id, label: a.name }))}
+						placeholder={isId ? "Pilih akun" : "Select account"}
+					/>
 				</div>
 
 				{type === "transfer" ? (
 					<div className="space-y-2.5">
 						<Label className={labelCls}>{isId ? "Ke Akun" : "To Account"}</Label>
-						<Select
+						<FormSelect
 							value={transferToId ?? ""}
-							onValueChange={(v) => setTransferToId(v)}
-						>
-							<SelectTrigger className="h-11">
-								<SelectValue placeholder={isId ? "Pilih akun" : "Select account"} />
-							</SelectTrigger>
-							<SelectContent>
-								{accounts
-									.filter((a) => a.id !== accountId)
-									.map((a) => (
-										<SelectItem key={a.id} value={a.id}>
-											{a.name}
-										</SelectItem>
-									))}
-							</SelectContent>
-						</Select>
+							onChange={(v) => setTransferToId(v)}
+							options={accounts
+								.filter((a) => a.id !== accountId)
+								.map((a) => ({ value: a.id, label: a.name }))}
+							placeholder={isId ? "Pilih akun" : "Select account"}
+						/>
 					</div>
 				) : (
 					<div className="space-y-2.5">
 						<Label className={labelCls}>{isId ? "Kategori" : "Category"}</Label>
-						<Select
+						<FormSelect
 							value={categoryId ?? ""}
-							onValueChange={(v) => setCategoryId(v)}
-						>
-							<SelectTrigger className="h-11">
-								<SelectValue placeholder={isId ? "Pilih kategori" : "Select category"} />
-							</SelectTrigger>
-							<SelectContent>
-								{filteredCategories.map((c) => (
-									<SelectItem key={c.id} value={c.id}>
-										{c.icon ? `${c.icon} ` : ""}
-										{c.name}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
+							onChange={(v) => setCategoryId(v)}
+							options={filteredCategories.map((c) => ({
+								value: c.id,
+								label: `${c.icon ? `${c.icon} ` : ""}${c.name}`,
+							}))}
+							placeholder={isId ? "Pilih kategori" : "Select category"}
+						/>
 					</div>
 				)}
 			</div>
@@ -780,21 +751,24 @@ function CustomSingleDatePicker({
   const updatePosition = () => {
     if (triggerRef.current && containerRef.current) {
       const triggerRect = triggerRef.current.getBoundingClientRect();
-      const popupHeight = 460;
+      const popupHeight = containerRef.current.offsetHeight || 320;
+      const popupWidth = 280;
       
-      let top = triggerRect.bottom + window.scrollY + 8;
-      let left = triggerRect.left + window.scrollX;
+      const spaceBelow = window.innerHeight - triggerRect.bottom;
+      const spaceAbove = triggerRect.top;
       
-      // Check if popup would go below viewport, position above instead
-      if (top + popupHeight > window.scrollY + window.innerHeight && triggerRect.top - popupHeight > 0) {
-        top = triggerRect.top + window.scrollY - popupHeight - 8;
+      let top = triggerRect.bottom + 8;
+      
+      if (spaceBelow < popupHeight + 10 && spaceAbove > spaceBelow) {
+        top = triggerRect.top - popupHeight - 8;
       }
       
-      // Check if popup would overflow right
-      if (left + 280 > window.innerWidth) {
-        left = Math.max(10, window.innerWidth - 290);
-      }
+      top = Math.max(10, Math.min(top, window.innerHeight - popupHeight - 10));
       
+      let left = triggerRect.left;
+      if (left + popupWidth > window.innerWidth) {
+        left = Math.max(10, window.innerWidth - popupWidth - 10);
+      }
       if (left < 10) {
         left = 10;
       }
@@ -894,19 +868,15 @@ function CustomSingleDatePicker({
 
   return (
     <>
-      <Button
+      <button
         ref={triggerRef}
         type="button"
-        variant="outline"
         onClick={() => setIsOpen(!isOpen)}
-        className="h-11 w-full justify-between px-3.5 text-sm text-text-primary bg-white/[0.03] border-white/[0.08] hover:border-white/[0.15] hover:bg-white/[0.06] active:bg-white/[0.08] rounded-lg transition-all font-mono"
+        className="flex h-11 w-full items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-2 text-sm text-foreground hover:border-white/[0.12] hover:bg-white/[0.05] focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50 focus:bg-white/[0.04] transition-all duration-300 ease-out"
       >
-        <span className="flex items-center gap-2.5">
-          <Calendar size={16} className="text-accent opacity-70" />
-          <span className="font-medium">{label}</span>
-        </span>
-        <ChevronDown size={16} className={cn("text-text-muted opacity-50 transition-transform duration-200", isOpen && "rotate-180")} />
-      </Button>
+        <span>{label}</span>
+        <ChevronDown size={14} className="opacity-60 shrink-0 ml-2" />
+      </button>
 
       {isOpen &&
         createPortal(
@@ -918,7 +888,7 @@ function CustomSingleDatePicker({
               top: "0",
               left: "0",
             }}
-            className="p-4 w-[280px] rounded-xl border border-white/[0.08] bg-popover/95 backdrop-blur-xl flex flex-col gap-3.5 text-text-primary shadow-2xl z-[99999]"
+            className="p-4 w-[280px] rounded-2xl border border-white/[0.08] bg-popover/95 backdrop-blur-xl flex flex-col gap-3.5 text-text-primary shadow-2xl z-[99999]"
           >
             {/* Calendar Control Header */}
             <div className="flex items-center justify-between px-1">
@@ -1097,5 +1067,130 @@ function CustomSingleDatePicker({
           document.body
         )}
     </>
+  );
+}
+
+interface FormSelectOption {
+  value: string;
+  label: string;
+}
+
+function FormSelect({
+  value,
+  onChange,
+  options,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: FormSelectOption[];
+  placeholder: string;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  
+  const selectedLabel = options.find((opt) => opt.value === value)?.label ?? placeholder;
+
+  const updatePosition = () => {
+    if (triggerRef.current && containerRef.current) {
+      const triggerRect = triggerRef.current.getBoundingClientRect();
+      const popupHeight = containerRef.current.offsetHeight || 250;
+      const popupWidth = triggerRect.width;
+      
+      const spaceBelow = window.innerHeight - triggerRect.bottom;
+      const spaceAbove = triggerRect.top;
+      
+      let top = triggerRect.bottom + 8;
+      
+      if (spaceBelow < popupHeight + 10 && spaceAbove > spaceBelow) {
+        top = triggerRect.top - popupHeight - 8;
+      }
+      
+      top = Math.max(10, Math.min(top, window.innerHeight - popupHeight - 10));
+      
+      let left = triggerRect.left;
+      if (left + popupWidth > window.innerWidth) {
+        left = Math.max(10, window.innerWidth - popupWidth - 10);
+      }
+      
+      containerRef.current.style.top = `${top}px`;
+      containerRef.current.style.left = `${left}px`;
+      containerRef.current.style.width = `${popupWidth}px`;
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      updatePosition();
+      const timer = requestAnimationFrame(updatePosition);
+      window.addEventListener("scroll", updatePosition, true);
+      window.addEventListener("resize", updatePosition);
+      return () => {
+        cancelAnimationFrame(timer);
+        window.removeEventListener("scroll", updatePosition, true);
+        window.removeEventListener("resize", updatePosition);
+      };
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClose = (e: MouseEvent) => {
+      if (triggerRef.current && triggerRef.current.contains(e.target as Node)) {
+        return;
+      }
+      if (containerRef.current && containerRef.current.contains(e.target as Node)) {
+        return;
+      }
+      setIsOpen(false);
+    };
+    document.addEventListener("click", handleClose, true);
+    return () => document.removeEventListener("click", handleClose, true);
+  }, [isOpen]);
+
+  return (
+    <div className="relative w-full">
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex h-11 w-full items-center justify-between border border-white/[0.06] bg-white/[0.03] px-4 py-2 text-sm text-foreground hover:border-white/[0.12] hover:bg-white/[0.05] focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50 focus:bg-white/[0.04] transition-all duration-300 ease-out text-left"
+        style={{ borderRadius: "var(--dropdown-radius, 8px)" }}
+      >
+        <span>{selectedLabel}</span>
+        <ChevronDown size={14} className="opacity-60 shrink-0 ml-2" />
+      </button>
+
+      {isOpen && createPortal(
+        <div
+          ref={containerRef}
+          style={{
+            position: "fixed",
+            top: "0",
+            left: "0",
+            borderRadius: "var(--dropdown-menu-radius, 12px)",
+          }}
+          className="p-1 border border-white/[0.08] bg-popover/95 backdrop-blur-xl flex flex-col text-text-primary shadow-2xl z-[100000] max-h-[300px] overflow-y-auto"
+        >
+          {options.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              className={`relative flex w-full cursor-pointer select-none items-center rounded-lg py-2.5 px-4 text-xs font-semibold outline-none transition-colors duration-200 text-left hover:bg-white/[0.06] ${
+                opt.value === value ? "bg-white/[0.04] text-foreground font-semibold" : "text-muted-foreground"
+              }`}
+              onClick={() => {
+                onChange(opt.value);
+                setIsOpen(false);
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>,
+        document.body
+      )}
+    </div>
   );
 }

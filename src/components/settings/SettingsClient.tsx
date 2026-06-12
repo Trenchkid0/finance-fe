@@ -98,6 +98,7 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
         borderWidth: "1px",
         blur: "12px",
         opacity: "0.75",
+        dropdownRadius: "9999px",
       };
     }
     const defaults: CardStyles = {
@@ -105,6 +106,7 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
       borderWidth: "1px",
       blur: "12px",
       opacity: "0.75",
+      dropdownRadius: "9999px",
     };
     const stored = localStorage.getItem("racks-card-styles");
     try {
@@ -303,7 +305,15 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
                     {customCategories.map((cat) => (
                       <div
                         key={cat.id}
-                        className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-3 flex items-center justify-between hover:border-white/[0.15] hover:bg-white/[0.04] transition-all duration-200"
+                        className="p-3 border flex items-center justify-between hover:border-white/[0.15] hover:bg-white/[0.04] transition-all duration-200"
+                        style={{
+                          borderRadius: 'var(--card-radius)',
+                          borderWidth: 'var(--card-border-width)',
+                          borderColor: 'var(--border)',
+                          backgroundColor: 'color-mix(in srgb, var(--card-bg) calc(var(--card-opacity) * 100%), transparent)',
+                          backdropFilter: 'var(--card-backdrop-filter)',
+                          WebkitBackdropFilter: 'var(--card-backdrop-filter)',
+                        }}
                       >
                         <div className="flex items-center gap-2 min-w-0">
                           <span aria-hidden>{cat.icon ?? "📂"}</span>
@@ -353,7 +363,15 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
                       {defaultCategories.map((cat) => (
                         <div
                           key={cat.id}
-                          className="bg-white/[0.01] border border-white/[0.04] rounded-xl p-3 flex items-center gap-2.5 opacity-80 hover:opacity-100 transition-opacity"
+                          className="p-3 border flex items-center gap-2.5 opacity-80 hover:opacity-100 transition-opacity"
+                          style={{
+                            borderRadius: 'var(--card-radius)',
+                            borderWidth: 'var(--card-border-width)',
+                            borderColor: 'var(--border)',
+                            backgroundColor: 'color-mix(in srgb, var(--card-bg) calc(var(--card-opacity) * 100%), transparent)',
+                            backdropFilter: 'var(--card-backdrop-filter)',
+                            WebkitBackdropFilter: 'var(--card-backdrop-filter)',
+                          }}
                         >
                           <span aria-hidden>{cat.icon ?? "📂"}</span>
                           <div className="min-w-0">
@@ -458,160 +476,479 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                   {language === "id" ? "Penyesuaian Warna Manual" : "Manual Color Adjustments"}
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {/* Accent Color */}
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="color"
-                      value={customVars.accent || THEME_PRESETS.find(p => p.id === activePresetId)?.variables.accent || "#3B82F6"}
-                      onChange={(e) => handleCustomVarChange("accent", e.target.value)}
-                      onInput={(e) => handleCustomVarChange("accent", (e.target as HTMLInputElement).value)}
-                      className="h-8 w-8 rounded-lg cursor-pointer border border-border bg-transparent shrink-0"
-                    />
-                    <span className="text-xs text-foreground font-medium">
-                      {language === "id" ? "Aksen / Tombol Utama" : "Accent / Primary Buttons"}
-                    </span>
-                  </div>
+                  {(() => {
+                    const preset = THEME_PRESETS.find(p => p.id === activePresetId);
+                    const def = preset?.variables.accent || "#3B82F6";
+                    const current = customVars.accent || def;
+                    return (
+                      <div
+                        className="flex flex-col gap-1.5 p-3 border transition-all duration-200"
+                        style={{
+                          borderRadius: 'var(--card-radius)',
+                          borderWidth: 'var(--card-border-width)',
+                          borderColor: 'var(--border)',
+                          backgroundColor: 'color-mix(in srgb, var(--card-bg) calc(var(--card-opacity) * 100%), transparent)',
+                          backdropFilter: 'var(--card-backdrop-filter)',
+                          WebkitBackdropFilter: 'var(--card-backdrop-filter)',
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="color"
+                            value={current}
+                            onChange={(e) => handleCustomVarChange("accent", e.target.value)}
+                            onInput={(e) => handleCustomVarChange("accent", (e.target as HTMLInputElement).value)}
+                            className="h-8 w-8 rounded-lg cursor-pointer border border-border bg-transparent shrink-0"
+                          />
+                          <span className="text-xs text-foreground font-semibold">
+                            {language === "id" ? "Aksen / Tombol Utama" : "Accent / Primary Buttons"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] text-muted-foreground font-mono mt-1">
+                          <span>{current}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleCustomVarChange("accent", def)}
+                            className="text-[9px] px-1.5 py-0.5 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.1] hover:border-white/[0.15] hover:text-foreground rounded transition-all"
+                          >
+                            {language === "id" ? `Bawaan: ${def}` : `Default: ${def}`}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
-                  {/* Canvas Color */}
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="color"
-                      value={customVars.background || THEME_PRESETS.find(p => p.id === activePresetId)?.variables.background || "#0A0E1A"}
-                      onChange={(e) => handleCustomVarChange("background", e.target.value)}
-                      onInput={(e) => handleCustomVarChange("background", (e.target as HTMLInputElement).value)}
-                      className="h-8 w-8 rounded-lg cursor-pointer border border-border bg-transparent shrink-0"
-                    />
-                    <span className="text-xs text-foreground font-medium">
-                      {language === "id" ? "Latar Belakang Halaman" : "Page Background"}
-                    </span>
-                  </div>
+                  {/* Page Background */}
+                  {(() => {
+                    const preset = THEME_PRESETS.find(p => p.id === activePresetId);
+                    const def = preset?.variables.background || "#0A0E1A";
+                    const current = customVars.background || def;
+                    return (
+                      <div
+                        className="flex flex-col gap-1.5 p-3 border transition-all duration-200"
+                        style={{
+                          borderRadius: 'var(--card-radius)',
+                          borderWidth: 'var(--card-border-width)',
+                          borderColor: 'var(--border)',
+                          backgroundColor: 'color-mix(in srgb, var(--card-bg) calc(var(--card-opacity) * 100%), transparent)',
+                          backdropFilter: 'var(--card-backdrop-filter)',
+                          WebkitBackdropFilter: 'var(--card-backdrop-filter)',
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="color"
+                            value={current}
+                            onChange={(e) => handleCustomVarChange("background", e.target.value)}
+                            onInput={(e) => handleCustomVarChange("background", (e.target as HTMLInputElement).value)}
+                            className="h-8 w-8 rounded-lg cursor-pointer border border-border bg-transparent shrink-0"
+                          />
+                          <span className="text-xs text-foreground font-semibold">
+                            {language === "id" ? "Latar Belakang Halaman" : "Page Background"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] text-muted-foreground font-mono mt-1">
+                          <span>{current}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleCustomVarChange("background", def)}
+                            className="text-[9px] px-1.5 py-0.5 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.1] hover:border-white/[0.15] hover:text-foreground rounded transition-all"
+                          >
+                            {language === "id" ? `Bawaan: ${def}` : `Default: ${def}`}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {/* Card Surface */}
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="color"
-                      value={customVars["card-bg"] || THEME_PRESETS.find(p => p.id === activePresetId)?.variables["card-bg"] || "#111827"}
-                      onChange={(e) => handleCustomVarChange("card-bg", e.target.value)}
-                      onInput={(e) => handleCustomVarChange("card-bg", (e.target as HTMLInputElement).value)}
-                      className="h-8 w-8 rounded-lg cursor-pointer border border-border bg-transparent shrink-0"
-                    />
-                    <span className="text-xs text-foreground font-medium">
-                      {language === "id" ? "Latar Belakang Panel/Kartu" : "Card / Panel Surface"}
-                    </span>
-                  </div>
+                  {(() => {
+                    const preset = THEME_PRESETS.find(p => p.id === activePresetId);
+                    const def = preset?.variables["card-bg"] || "#111827";
+                    const current = customVars["card-bg"] || def;
+                    return (
+                      <div
+                        className="flex flex-col gap-1.5 p-3 border transition-all duration-200"
+                        style={{
+                          borderRadius: 'var(--card-radius)',
+                          borderWidth: 'var(--card-border-width)',
+                          borderColor: 'var(--border)',
+                          backgroundColor: 'color-mix(in srgb, var(--card-bg) calc(var(--card-opacity) * 100%), transparent)',
+                          backdropFilter: 'var(--card-backdrop-filter)',
+                          WebkitBackdropFilter: 'var(--card-backdrop-filter)',
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="color"
+                            value={current}
+                            onChange={(e) => handleCustomVarChange("card-bg", e.target.value)}
+                            onInput={(e) => handleCustomVarChange("card-bg", (e.target as HTMLInputElement).value)}
+                            className="h-8 w-8 rounded-lg cursor-pointer border border-border bg-transparent shrink-0"
+                          />
+                          <span className="text-xs text-foreground font-semibold">
+                            {language === "id" ? "Latar Belakang Panel/Kartu" : "Card / Panel Surface"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] text-muted-foreground font-mono mt-1">
+                          <span>{current}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleCustomVarChange("card-bg", def)}
+                            className="text-[9px] px-1.5 py-0.5 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.1] hover:border-white/[0.15] hover:text-foreground rounded transition-all"
+                          >
+                            {language === "id" ? `Bawaan: ${def}` : `Default: ${def}`}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
-                  {/* Elevated Popover */}
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="color"
-                      value={customVars.elevated || THEME_PRESETS.find(p => p.id === activePresetId)?.variables.elevated || "#1E293B"}
-                      onChange={(e) => handleCustomVarChange("elevated", e.target.value)}
-                      onInput={(e) => handleCustomVarChange("elevated", (e.target as HTMLInputElement).value)}
-                      className="h-8 w-8 rounded-lg cursor-pointer border border-border bg-transparent shrink-0"
-                    />
-                    <span className="text-xs text-foreground font-medium">
-                      {language === "id" ? "Menu Dropdown & Popover" : "Dropdown & Popover Menus"}
-                    </span>
-                  </div>
+                  {/* Dropdown Menu & Popovers */}
+                  {(() => {
+                    const preset = THEME_PRESETS.find(p => p.id === activePresetId);
+                    const def = preset?.variables.elevated || "#1E293B";
+                    const current = customVars.elevated || def;
+                    return (
+                      <div
+                        className="flex flex-col gap-1.5 p-3 border transition-all duration-200"
+                        style={{
+                          borderRadius: 'var(--card-radius)',
+                          borderWidth: 'var(--card-border-width)',
+                          borderColor: 'var(--border)',
+                          backgroundColor: 'color-mix(in srgb, var(--card-bg) calc(var(--card-opacity) * 100%), transparent)',
+                          backdropFilter: 'var(--card-backdrop-filter)',
+                          WebkitBackdropFilter: 'var(--card-backdrop-filter)',
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="color"
+                            value={current}
+                            onChange={(e) => handleCustomVarChange("elevated", e.target.value)}
+                            onInput={(e) => handleCustomVarChange("elevated", (e.target as HTMLInputElement).value)}
+                            className="h-8 w-8 rounded-lg cursor-pointer border border-border bg-transparent shrink-0"
+                          />
+                          <span className="text-xs text-foreground font-semibold">
+                            {language === "id" ? "Menu Dropdown & Popover" : "Dropdown & Popover Menus"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] text-muted-foreground font-mono mt-1">
+                          <span>{current}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleCustomVarChange("elevated", def)}
+                            className="text-[9px] px-1.5 py-0.5 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.1] hover:border-white/[0.15] hover:text-foreground rounded transition-all"
+                          >
+                            {language === "id" ? `Bawaan: ${def}` : `Default: ${def}`}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
-                  {/* Border */}
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="color"
-                      value={customVars.border || THEME_PRESETS.find(p => p.id === activePresetId)?.variables.border || "#334155"}
-                      onChange={(e) => handleCustomVarChange("border", e.target.value)}
-                      onInput={(e) => handleCustomVarChange("border", (e.target as HTMLInputElement).value)}
-                      className="h-8 w-8 rounded-lg cursor-pointer border border-border bg-transparent shrink-0"
-                    />
-                    <span className="text-xs text-foreground font-medium">
-                      {language === "id" ? "Garis Batas & Pembatas" : "Borders & Dividers"}
-                    </span>
-                  </div>
+                  {/* Borders & Dividers */}
+                  {(() => {
+                    const preset = THEME_PRESETS.find(p => p.id === activePresetId);
+                    const def = preset?.variables.border || "#334155";
+                    const current = customVars.border || def;
+                    return (
+                      <div
+                        className="flex flex-col gap-1.5 p-3 border transition-all duration-200"
+                        style={{
+                          borderRadius: 'var(--card-radius)',
+                          borderWidth: 'var(--card-border-width)',
+                          borderColor: 'var(--border)',
+                          backgroundColor: 'color-mix(in srgb, var(--card-bg) calc(var(--card-opacity) * 100%), transparent)',
+                          backdropFilter: 'var(--card-backdrop-filter)',
+                          WebkitBackdropFilter: 'var(--card-backdrop-filter)',
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="color"
+                            value={current}
+                            onChange={(e) => handleCustomVarChange("border", e.target.value)}
+                            onInput={(e) => handleCustomVarChange("border", (e.target as HTMLInputElement).value)}
+                            className="h-8 w-8 rounded-lg cursor-pointer border border-border bg-transparent shrink-0"
+                          />
+                          <span className="text-xs text-foreground font-semibold">
+                            {language === "id" ? "Garis Batas & Pembatas" : "Borders & Dividers"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] text-muted-foreground font-mono mt-1">
+                          <span>{current}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleCustomVarChange("border", def)}
+                            className="text-[9px] px-1.5 py-0.5 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.1] hover:border-white/[0.15] hover:text-foreground rounded transition-all"
+                          >
+                            {language === "id" ? `Bawaan: ${def}` : `Default: ${def}`}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
-                  {/* Progress Color */}
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="color"
-                      value={customVars.progress || THEME_PRESETS.find(p => p.id === activePresetId)?.variables.progress || "#3B82F6"}
-                      onChange={(e) => handleCustomVarChange("progress", e.target.value)}
-                      onInput={(e) => handleCustomVarChange("progress", (e.target as HTMLInputElement).value)}
-                      className="h-8 w-8 rounded-lg cursor-pointer border border-border bg-transparent shrink-0"
-                    />
-                    <span className="text-xs text-foreground font-medium">
-                      {language === "id" ? "Warna Progress Bar" : "Progress Bar Color"}
-                    </span>
-                  </div>
+                  {/* Progress Bar Color */}
+                  {(() => {
+                    const preset = THEME_PRESETS.find(p => p.id === activePresetId);
+                    const def = preset?.variables.progress || "#3B82F6";
+                    const current = customVars.progress || def;
+                    return (
+                      <div
+                        className="flex flex-col gap-1.5 p-3 border transition-all duration-200"
+                        style={{
+                          borderRadius: 'var(--card-radius)',
+                          borderWidth: 'var(--card-border-width)',
+                          borderColor: 'var(--border)',
+                          backgroundColor: 'color-mix(in srgb, var(--card-bg) calc(var(--card-opacity) * 100%), transparent)',
+                          backdropFilter: 'var(--card-backdrop-filter)',
+                          WebkitBackdropFilter: 'var(--card-backdrop-filter)',
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="color"
+                            value={current}
+                            onChange={(e) => handleCustomVarChange("progress", e.target.value)}
+                            onInput={(e) => handleCustomVarChange("progress", (e.target as HTMLInputElement).value)}
+                            className="h-8 w-8 rounded-lg cursor-pointer border border-border bg-transparent shrink-0"
+                          />
+                          <span className="text-xs text-foreground font-semibold">
+                            {language === "id" ? "Warna Progress Bar" : "Progress Bar Color"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] text-muted-foreground font-mono mt-1">
+                          <span>{current}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleCustomVarChange("progress", def)}
+                            className="text-[9px] px-1.5 py-0.5 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.1] hover:border-white/[0.15] hover:text-foreground rounded transition-all"
+                          >
+                            {language === "id" ? `Bawaan: ${def}` : `Default: ${def}`}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {/* Primary Text Color */}
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="color"
-                      value={customVars.foreground || THEME_PRESETS.find(p => p.id === activePresetId)?.variables.foreground || "#F8FAFC"}
-                      onChange={(e) => handleCustomVarChange("foreground", e.target.value)}
-                      onInput={(e) => handleCustomVarChange("foreground", (e.target as HTMLInputElement).value)}
-                      className="h-8 w-8 rounded-lg cursor-pointer border border-border bg-transparent shrink-0"
-                    />
-                    <span className="text-xs text-foreground font-medium">
-                      {language === "id" ? "Warna Teks Utama" : "Primary Text Color"}
-                    </span>
-                  </div>
+                  {(() => {
+                    const preset = THEME_PRESETS.find(p => p.id === activePresetId);
+                    const def = preset?.variables.foreground || "#F8FAFC";
+                    const current = customVars.foreground || def;
+                    return (
+                      <div
+                        className="flex flex-col gap-1.5 p-3 border transition-all duration-200"
+                        style={{
+                          borderRadius: 'var(--card-radius)',
+                          borderWidth: 'var(--card-border-width)',
+                          borderColor: 'var(--border)',
+                          backgroundColor: 'color-mix(in srgb, var(--card-bg) calc(var(--card-opacity) * 100%), transparent)',
+                          backdropFilter: 'var(--card-backdrop-filter)',
+                          WebkitBackdropFilter: 'var(--card-backdrop-filter)',
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="color"
+                            value={current}
+                            onChange={(e) => handleCustomVarChange("foreground", e.target.value)}
+                            onInput={(e) => handleCustomVarChange("foreground", (e.target as HTMLInputElement).value)}
+                            className="h-8 w-8 rounded-lg cursor-pointer border border-border bg-transparent shrink-0"
+                          />
+                          <span className="text-xs text-foreground font-semibold">
+                            {language === "id" ? "Warna Teks Utama" : "Primary Text Color"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] text-muted-foreground font-mono mt-1">
+                          <span>{current}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleCustomVarChange("foreground", def)}
+                            className="text-[9px] px-1.5 py-0.5 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.1] hover:border-white/[0.15] hover:text-foreground rounded transition-all"
+                          >
+                            {language === "id" ? `Bawaan: ${def}` : `Default: ${def}`}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
-                  {/* Muted Text Color */}
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="color"
-                      value={customVars["muted-foreground"] || THEME_PRESETS.find(p => p.id === activePresetId)?.variables["muted-foreground"] || "#94A3B8"}
-                      onChange={(e) => handleCustomVarChange("muted-foreground", e.target.value)}
-                      onInput={(e) => handleCustomVarChange("muted-foreground", (e.target as HTMLInputElement).value)}
-                      className="h-8 w-8 rounded-lg cursor-pointer border border-border bg-transparent shrink-0"
-                    />
-                    <span className="text-xs text-foreground font-medium">
-                      {language === "id" ? "Warna Teks Sekunder" : "Secondary Text Color"}
-                    </span>
-                  </div>
+                  {/* Secondary Text Color */}
+                  {(() => {
+                    const preset = THEME_PRESETS.find(p => p.id === activePresetId);
+                    const def = preset?.variables["muted-foreground"] || "#94A3B8";
+                    const current = customVars["muted-foreground"] || def;
+                    return (
+                      <div
+                        className="flex flex-col gap-1.5 p-3 border transition-all duration-200"
+                        style={{
+                          borderRadius: 'var(--card-radius)',
+                          borderWidth: 'var(--card-border-width)',
+                          borderColor: 'var(--border)',
+                          backgroundColor: 'color-mix(in srgb, var(--card-bg) calc(var(--card-opacity) * 100%), transparent)',
+                          backdropFilter: 'var(--card-backdrop-filter)',
+                          WebkitBackdropFilter: 'var(--card-backdrop-filter)',
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="color"
+                            value={current}
+                            onChange={(e) => handleCustomVarChange("muted-foreground", e.target.value)}
+                            onInput={(e) => handleCustomVarChange("muted-foreground", (e.target as HTMLInputElement).value)}
+                            className="h-8 w-8 rounded-lg cursor-pointer border border-border bg-transparent shrink-0"
+                          />
+                          <span className="text-xs text-foreground font-semibold">
+                            {language === "id" ? "Warna Teks Sekunder" : "Secondary Text Color"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] text-muted-foreground font-mono mt-1">
+                          <span>{current}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleCustomVarChange("muted-foreground", def)}
+                            className="text-[9px] px-1.5 py-0.5 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.1] hover:border-white/[0.15] hover:text-foreground rounded transition-all"
+                          >
+                            {language === "id" ? `Bawaan: ${def}` : `Default: ${def}`}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
-                  {/* Income Color */}
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="color"
-                      value={customVars.income || THEME_PRESETS.find(p => p.id === activePresetId)?.variables.income || "#10B981"}
-                      onChange={(e) => handleCustomVarChange("income", e.target.value)}
-                      onInput={(e) => handleCustomVarChange("income", (e.target as HTMLInputElement).value)}
-                      className="h-8 w-8 rounded-lg cursor-pointer border border-border bg-transparent shrink-0"
-                    />
-                    <span className="text-xs text-foreground font-medium">
-                      {language === "id" ? "Warna Uang Masuk / Sukses" : "Income / Success Color"}
-                    </span>
-                  </div>
+                  {/* Income / Success Color */}
+                  {(() => {
+                    const preset = THEME_PRESETS.find(p => p.id === activePresetId);
+                    const def = preset?.variables.income || "#10B981";
+                    const current = customVars.income || def;
+                    return (
+                      <div
+                        className="flex flex-col gap-1.5 p-3 border transition-all duration-200"
+                        style={{
+                          borderRadius: 'var(--card-radius)',
+                          borderWidth: 'var(--card-border-width)',
+                          borderColor: 'var(--border)',
+                          backgroundColor: 'color-mix(in srgb, var(--card-bg) calc(var(--card-opacity) * 100%), transparent)',
+                          backdropFilter: 'var(--card-backdrop-filter)',
+                          WebkitBackdropFilter: 'var(--card-backdrop-filter)',
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="color"
+                            value={current}
+                            onChange={(e) => handleCustomVarChange("income", e.target.value)}
+                            onInput={(e) => handleCustomVarChange("income", (e.target as HTMLInputElement).value)}
+                            className="h-8 w-8 rounded-lg cursor-pointer border border-border bg-transparent shrink-0"
+                          />
+                          <span className="text-xs text-foreground font-semibold">
+                            {language === "id" ? "Warna Uang Masuk / Sukses" : "Income / Success Color"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] text-muted-foreground font-mono mt-1">
+                          <span>{current}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleCustomVarChange("income", def)}
+                            className="text-[9px] px-1.5 py-0.5 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.1] hover:border-white/[0.15] hover:text-foreground rounded transition-all"
+                          >
+                            {language === "id" ? `Bawaan: ${def}` : `Default: ${def}`}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
-                  {/* Expense Color */}
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="color"
-                      value={customVars.expense || THEME_PRESETS.find(p => p.id === activePresetId)?.variables.expense || "#EF4444"}
-                      onChange={(e) => handleCustomVarChange("expense", e.target.value)}
-                      onInput={(e) => handleCustomVarChange("expense", (e.target as HTMLInputElement).value)}
-                      className="h-8 w-8 rounded-lg cursor-pointer border border-border bg-transparent shrink-0"
-                    />
-                    <span className="text-xs text-foreground font-medium">
-                      {language === "id" ? "Warna Uang Keluar / Bahaya" : "Expense / Danger Color"}
-                    </span>
-                  </div>
+                  {/* Expense / Danger Color */}
+                  {(() => {
+                    const preset = THEME_PRESETS.find(p => p.id === activePresetId);
+                    const def = preset?.variables.expense || "#EF4444";
+                    const current = customVars.expense || def;
+                    return (
+                      <div
+                        className="flex flex-col gap-1.5 p-3 border transition-all duration-200"
+                        style={{
+                          borderRadius: 'var(--card-radius)',
+                          borderWidth: 'var(--card-border-width)',
+                          borderColor: 'var(--border)',
+                          backgroundColor: 'color-mix(in srgb, var(--card-bg) calc(var(--card-opacity) * 100%), transparent)',
+                          backdropFilter: 'var(--card-backdrop-filter)',
+                          WebkitBackdropFilter: 'var(--card-backdrop-filter)',
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="color"
+                            value={current}
+                            onChange={(e) => handleCustomVarChange("expense", e.target.value)}
+                            onInput={(e) => handleCustomVarChange("expense", (e.target as HTMLInputElement).value)}
+                            className="h-8 w-8 rounded-lg cursor-pointer border border-border bg-transparent shrink-0"
+                          />
+                          <span className="text-xs text-foreground font-semibold">
+                            {language === "id" ? "Warna Uang Keluar / Bahaya" : "Expense / Danger Color"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] text-muted-foreground font-mono mt-1">
+                          <span>{current}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleCustomVarChange("expense", def)}
+                            className="text-[9px] px-1.5 py-0.5 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.1] hover:border-white/[0.15] hover:text-foreground rounded transition-all"
+                          >
+                            {language === "id" ? `Bawaan: ${def}` : `Default: ${def}`}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
-                  {/* Warning Color */}
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="color"
-                      value={customVars.warning || THEME_PRESETS.find(p => p.id === activePresetId)?.variables.warning || "#F59E0B"}
-                      onChange={(e) => handleCustomVarChange("warning", e.target.value)}
-                      onInput={(e) => handleCustomVarChange("warning", (e.target as HTMLInputElement).value)}
-                      className="h-8 w-8 rounded-lg cursor-pointer border border-border bg-transparent shrink-0"
-                    />
-                    <span className="text-xs text-foreground font-medium">
-                      {language === "id" ? "Warna Uang Pending / Peringatan" : "Warning / Pending Color"}
-                    </span>
-                  </div>
+                  {/* Warning / Pending Color */}
+                  {(() => {
+                    const preset = THEME_PRESETS.find(p => p.id === activePresetId);
+                    const def = preset?.variables.warning || "#F59E0B";
+                    const current = customVars.warning || def;
+                    return (
+                      <div
+                        className="flex flex-col gap-1.5 p-3 border transition-all duration-200"
+                        style={{
+                          borderRadius: 'var(--card-radius)',
+                          borderWidth: 'var(--card-border-width)',
+                          borderColor: 'var(--border)',
+                          backgroundColor: 'color-mix(in srgb, var(--card-bg) calc(var(--card-opacity) * 100%), transparent)',
+                          backdropFilter: 'var(--card-backdrop-filter)',
+                          WebkitBackdropFilter: 'var(--card-backdrop-filter)',
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="color"
+                            value={current}
+                            onChange={(e) => handleCustomVarChange("warning", e.target.value)}
+                            onInput={(e) => handleCustomVarChange("warning", (e.target as HTMLInputElement).value)}
+                            className="h-8 w-8 rounded-lg cursor-pointer border border-border bg-transparent shrink-0"
+                          />
+                          <span className="text-xs text-foreground font-semibold">
+                            {language === "id" ? "Warna Uang Pending / Peringatan" : "Warning / Pending Color"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] text-muted-foreground font-mono mt-1">
+                          <span>{current}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleCustomVarChange("warning", def)}
+                            className="text-[9px] px-1.5 py-0.5 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.1] hover:border-white/[0.15] hover:text-foreground rounded transition-all"
+                          >
+                            {language === "id" ? `Bawaan: ${def}` : `Default: ${def}`}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Reset Customizations Button */}
@@ -836,7 +1173,7 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
               <div className="mt-6 pt-6 space-y-6 border-t border-border/60">                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                   {language === "id" ? "Gaya & Tampilan Kartu" : "Card Styles & Appearance"}
                 </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
                   {(() => {
                     const radiusOptions = [
                       { value: "0px", label: language === "id" ? "Tajam (0px)" : "Sharp (0px)" },
@@ -860,11 +1197,19 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
                       { value: "0.75", label: language === "id" ? "Sedang (75%)" : "Medium (75%)" },
                       { value: "0.5", label: language === "id" ? "Transparan (50%)" : "Clear (50%)" },
                     ];
+                    const dropdownRadiusOptions = [
+                      { value: "0px", label: language === "id" ? "Tajam (0px)" : "Sharp (0px)" },
+                      { value: "8px", label: language === "id" ? "Kompak (8px)" : "Compact (8px)" },
+                      { value: "12px", label: language === "id" ? "Sedang (12px)" : "Medium (12px)" },
+                      { value: "16px", label: language === "id" ? "Bulat (16px)" : "Rounded (16px)" },
+                      { value: "9999px", label: language === "id" ? "Kapsul / Pill" : "Pill / Capsule" },
+                    ];
 
                     const selectedRadiusLabel = radiusOptions.find(o => o.value === cardStyles.radius)?.label ?? cardStyles.radius;
                     const selectedBorderLabel = borderOptions.find(o => o.value === cardStyles.borderWidth)?.label ?? cardStyles.borderWidth;
                     const selectedBlurLabel = blurOptions.find(o => o.value === cardStyles.blur)?.label ?? cardStyles.blur;
                     const selectedOpacityLabel = opacityOptions.find(o => o.value === cardStyles.opacity)?.label ?? cardStyles.opacity;
+                    const selectedDropdownRadiusLabel = dropdownRadiusOptions.find(o => o.value === (cardStyles.dropdownRadius || "9999px"))?.label ?? (language === "id" ? "Kapsul / Pill (9999px)" : "Pill / Capsule (9999px)");
 
                     return (
                       <>
@@ -983,6 +1328,35 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
+
+                        {/* Dropdown Roundedness */}
+                        <div className="space-y-2 flex flex-col">
+                          <label className="text-xs font-semibold text-foreground">
+                            {language === "id" ? "Kelengkungan Dropdown" : "Dropdown Roundedness"}
+                          </label>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                type="button"
+                                className="flex h-9 w-full items-center justify-between rounded-lg border border-border bg-elevated px-3 text-xs text-foreground hover:bg-white/[0.04] transition-all outline-none"
+                              >
+                                <span>{selectedDropdownRadiusLabel}</span>
+                                <ChevronDown size={14} className="opacity-60 shrink-0 ml-2" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start" className="min-w-[150px] max-h-[250px] overflow-y-auto rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl z-[1000]">
+                              {dropdownRadiusOptions.map((o) => (
+                                <DropdownMenuItem
+                                  key={o.value}
+                                  className="text-xs font-semibold cursor-pointer"
+                                  onClick={() => handleCardStyleChange("dropdownRadius", o.value)}
+                                >
+                                  {o.label}
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </>
                     );
                   })()}
@@ -1063,6 +1437,9 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
                         </li>
                         <li>
                           <strong>{language === "id" ? "Tingkat Transparansi" : "Card Transparency"}:</strong> {language === "id" ? `Kepadatan latar kartu diatur ke ${Math.round(parseFloat(cardStyles.opacity) * 100)}%` : `Card surface color opacity is ${Math.round(parseFloat(cardStyles.opacity) * 100)}%`}.
+                        </li>
+                        <li>
+                          <strong>{language === "id" ? "Kelengkungan Dropdown" : "Dropdown Roundedness"}:</strong> {language === "id" ? `Sudut kelengkungan tombol pilihan (dropdown) diatur ke ${cardStyles.dropdownRadius || "9999px"}` : `Dropdown triggers corner radius set to ${cardStyles.dropdownRadius || "9999px"}`}.
                         </li>
                       </ul>
                     </div>

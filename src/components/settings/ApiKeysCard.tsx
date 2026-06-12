@@ -4,6 +4,8 @@ import { useState, useTransition } from "react";
 import {
   Check,
   Copy,
+  Eye,
+  EyeOff,
   Inbox,
   KeyRound,
   Loader2,
@@ -138,6 +140,24 @@ function ApiKeyRow({ item }: { item: ApiKeyListItem }) {
   const [confirmAction, setConfirmAction] =
     useState<"revoke" | "delete" | null>(null);
 
+  const [showKey, setShowKey] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopyKey() {
+    try {
+      await navigator.clipboard.writeText(item.prefix);
+      setCopied(true);
+      toast.success(
+        language === "id" ? "Kunci API disalin ke clipboard" : "API key copied to clipboard"
+      );
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error(
+        language === "id" ? "Gagal menyalin" : "Failed to copy"
+      );
+    }
+  }
+
   const isRevoked = !!item.revokedAt;
 
   function handleConfirm() {
@@ -187,9 +207,29 @@ function ApiKeyRow({ item }: { item: ApiKeyListItem }) {
             </Badge>
           )}
         </div>
-        <p className="text-xs text-muted-foreground font-mono mt-1">
-          {item.prefix}…••••••••
-        </p>
+        <div className="flex items-start justify-between gap-4 mt-1">
+          <p className="text-xs text-muted-foreground font-mono break-all flex-1">
+            {showKey ? item.prefix : "••••••••••••••••"}
+          </p>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              type="button"
+              onClick={() => setShowKey(!showKey)}
+              className="text-muted-foreground hover:text-foreground transition-colors p-0.5"
+              title={showKey ? (language === "id" ? "Sembunyikan" : "Hide") : (language === "id" ? "Tampilkan" : "Show")}
+            >
+              {showKey ? <EyeOff size={13} /> : <Eye size={13} />}
+            </button>
+            <button
+              type="button"
+              onClick={handleCopyKey}
+              className="text-muted-foreground hover:text-foreground transition-colors p-0.5"
+              title={language === "id" ? "Salin Kunci API" : "Copy API Key"}
+            >
+              {copied ? <Check size={13} className="text-income" /> : <Copy size={13} />}
+            </button>
+          </div>
+        </div>
         <p className="text-[10px] text-muted-foreground mt-0.5">
           {language === "id" ? "Dibuat" : "Created"} {formatDate(item.createdAt)}
           {item.lastUsedAt

@@ -1,17 +1,11 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { Loader2, Calendar, X } from 'lucide-react'
+import { Loader2, Calendar, X, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+
 import { FormError } from '@/components/ui/form-error'
 import { formatInputRupiah, cleanMoneyString } from '@/lib/utils/formatters'
 import { useLanguage } from '@/lib/contexts/LanguageContext'
@@ -181,19 +175,18 @@ export function RecurringForm({ open, onClose, recurring, categories, onSubmit }
                 <Label htmlFor="category" className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">
                   {isId ? 'Kategori' : 'Category'}
                 </Label>
-                <Select value={formData.categoryId || 'none'} onValueChange={(val) => setFormData({ ...formData, categoryId: val === 'none' ? '' : val })}>
-                  <SelectTrigger id="category">
-                    <SelectValue placeholder={isId ? '-- Pilih Kategori --' : '-- Select Category --'} />
-                  </SelectTrigger>
-                  <SelectContent className="bg-surface border-border">
-                    <SelectItem value="none">{isId ? '-- Tanpa Kategori --' : '-- No Category --'}</SelectItem>
-                    {expenseCategories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.id}>
-                        {cat.icon} {cat.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormSelect
+                  value={formData.categoryId || 'none'}
+                  onChange={(val) => setFormData({ ...formData, categoryId: val === 'none' ? '' : val })}
+                  options={[
+                    { value: "none", label: isId ? '-- Tanpa Kategori --' : '-- No Category --' },
+                    ...expenseCategories.map((cat) => ({
+                      value: cat.id,
+                      label: `${cat.icon ? `${cat.icon} ` : ""}${cat.name}`,
+                    })),
+                  ]}
+                  placeholder={isId ? '-- Pilih Kategori --' : '-- Select Category --'}
+                />
               </div>
             </div>
 
@@ -202,34 +195,31 @@ export function RecurringForm({ open, onClose, recurring, categories, onSubmit }
                 <Label htmlFor="frequency" className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">
                   {isId ? 'Frekuensi' : 'Frequency'}
                 </Label>
-                <Select value={formData.frequency} onValueChange={(val) => setFormData({ ...formData, frequency: val })}>
-                  <SelectTrigger id="frequency">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-surface border-border">
-                    <SelectItem value="weekly">{isId ? 'Mingguan' : 'Weekly'}</SelectItem>
-                    <SelectItem value="monthly">{isId ? 'Bulanan' : 'Monthly'}</SelectItem>
-                    <SelectItem value="yearly">{isId ? 'Tahunan' : 'Yearly'}</SelectItem>
-                  </SelectContent>
-                </Select>
+                <FormSelect
+                  value={formData.frequency}
+                  onChange={(val) => setFormData({ ...formData, frequency: val })}
+                  options={[
+                    { value: "weekly", label: isId ? 'Mingguan' : 'Weekly' },
+                    { value: "monthly", label: isId ? 'Bulanan' : 'Monthly' },
+                    { value: "yearly", label: isId ? 'Tahunan' : 'Yearly' },
+                  ]}
+                  placeholder=""
+                />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="dayOfMonth" className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">
                   {isId ? 'Tanggal Jatuh Tempo' : 'Due Date'}
                 </Label>
-                <Select value={String(formData.dayOfMonth)} onValueChange={(val) => setFormData({ ...formData, dayOfMonth: Number(val) })}>
-                  <SelectTrigger id="dayOfMonth" className="font-mono">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-surface border-border font-mono">
-                    {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
-                      <SelectItem key={day} value={String(day)}>
-                        {day}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormSelect
+                  value={String(formData.dayOfMonth)}
+                  onChange={(val) => setFormData({ ...formData, dayOfMonth: Number(val) })}
+                  options={Array.from({ length: 31 }, (_, i) => i + 1).map((day) => ({
+                    value: String(day),
+                    label: String(day),
+                  }))}
+                  placeholder=""
+                />
               </div>
             </div>
 
@@ -267,6 +257,131 @@ export function RecurringForm({ open, onClose, recurring, categories, onSubmit }
       </div>
     </div>,
     document.body
+  );
+}
+
+interface FormSelectOption {
+  value: string;
+  label: string;
+}
+
+function FormSelect({
+  value,
+  onChange,
+  options,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: FormSelectOption[];
+  placeholder: string;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  
+  const selectedLabel = options.find((opt) => opt.value === value)?.label ?? placeholder;
+
+  const updatePosition = () => {
+    if (triggerRef.current && containerRef.current) {
+      const triggerRect = triggerRef.current.getBoundingClientRect();
+      const popupHeight = containerRef.current.offsetHeight || 250;
+      const popupWidth = triggerRect.width;
+      
+      const spaceBelow = window.innerHeight - triggerRect.bottom;
+      const spaceAbove = triggerRect.top;
+      
+      let top = triggerRect.bottom + 8;
+      
+      if (spaceBelow < popupHeight + 10 && spaceAbove > spaceBelow) {
+        top = triggerRect.top - popupHeight - 8;
+      }
+      
+      top = Math.max(10, Math.min(top, window.innerHeight - popupHeight - 10));
+      
+      let left = triggerRect.left;
+      if (left + popupWidth > window.innerWidth) {
+        left = Math.max(10, window.innerWidth - popupWidth - 10);
+      }
+      
+      containerRef.current.style.top = `${top}px`;
+      containerRef.current.style.left = `${left}px`;
+      containerRef.current.style.width = `${popupWidth}px`;
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      updatePosition();
+      const timer = requestAnimationFrame(updatePosition);
+      window.addEventListener("scroll", updatePosition, true);
+      window.addEventListener("resize", updatePosition);
+      return () => {
+        cancelAnimationFrame(timer);
+        window.removeEventListener("scroll", updatePosition, true);
+        window.removeEventListener("resize", updatePosition);
+      };
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClose = (e: MouseEvent) => {
+      if (triggerRef.current && triggerRef.current.contains(e.target as Node)) {
+        return;
+      }
+      if (containerRef.current && containerRef.current.contains(e.target as Node)) {
+        return;
+      }
+      setIsOpen(false);
+    };
+    document.addEventListener("click", handleClose, true);
+    return () => document.removeEventListener("click", handleClose, true);
+  }, [isOpen]);
+
+  return (
+    <div className="relative w-full">
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex h-11 w-full items-center justify-between border border-white/[0.06] bg-white/[0.03] px-4 py-2 text-sm text-foreground hover:border-white/[0.12] hover:bg-white/[0.05] focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50 focus:bg-white/[0.04] transition-all duration-300 ease-out text-left"
+        style={{ borderRadius: "var(--dropdown-radius, 8px)" }}
+      >
+        <span>{selectedLabel}</span>
+        <ChevronDown size={14} className="opacity-60 shrink-0 ml-2" />
+      </button>
+
+      {isOpen && createPortal(
+        <div
+          ref={containerRef}
+          style={{
+            position: "fixed",
+            top: "0",
+            left: "0",
+            borderRadius: "var(--dropdown-menu-radius, 12px)",
+          }}
+          className="p-1 border border-white/[0.08] bg-popover/95 backdrop-blur-xl flex flex-col text-text-primary shadow-2xl z-[100000] max-h-[200px] overflow-y-auto"
+        >
+          {options.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              className={`relative flex w-full cursor-pointer select-none items-center rounded-lg py-2.5 px-4 text-xs font-semibold outline-none transition-colors duration-200 text-left hover:bg-white/[0.06] ${
+                opt.value === value ? "bg-white/[0.04] text-foreground font-semibold" : "text-muted-foreground"
+              }`}
+              onClick={() => {
+                onChange(opt.value);
+                setIsOpen(false);
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>,
+        document.body
+      )}
+    </div>
   );
 }
 

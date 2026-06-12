@@ -407,6 +407,7 @@ export interface CardStyles {
   borderWidth: string; // "0px" | "1px" | "2px" | "3px"
   blur: string;        // "0px" | "12px" | "24px"
   opacity: string;     // "1" | "0.75" | "0.5"
+  dropdownRadius: string; // "0px" | "8px" | "12px" | "16px" | "24px" | "9999px"
 }
 
 export interface ButtonStyles {
@@ -422,6 +423,14 @@ export function applyCardStyles(styles: CardStyles) {
   root.style.setProperty("--card-border-width", styles.borderWidth);
   root.style.setProperty("--card-backdrop-blur", styles.blur);
   root.style.setProperty("--card-opacity", styles.opacity);
+  
+  const dr = styles.dropdownRadius || "9999px";
+  root.style.setProperty("--dropdown-radius", dr);
+  root.style.setProperty("--custom-dropdown-radius", dr);
+  const dmr = dr === "9999px" ? "16px" : dr;
+  root.style.setProperty("--dropdown-menu-radius", dmr);
+  root.style.setProperty("--custom-dropdown-menu-radius", dmr);
+  
   localStorage.setItem("racks-card-styles", JSON.stringify(styles));
 }
 
@@ -440,7 +449,8 @@ export function loadSavedCardStyles() {
     radius: "16px",
     borderWidth: "1px",
     blur: "12px",
-    opacity: "0.75"
+    opacity: "0.75",
+    dropdownRadius: "9999px",
   };
   const savedStr = localStorage.getItem("racks-card-styles");
   let styles = defaults;
