@@ -16,6 +16,7 @@ import Settings from "@/pages/Settings";
 import Profile from "@/pages/Profile";
 import Goals from "@/pages/Goals";
 import Recurring from "@/pages/Recurring";
+import Investments from "@/pages/Investments";
 
 import { useEffect } from "react";
 import { LanguageProvider } from "@/lib/contexts/LanguageContext";
@@ -120,6 +121,14 @@ export default function App() {
           element={
             <AppLayout>
               <Recurring />
+            </AppLayout>
+          }
+        />
+        <Route
+          path="/investments"
+          element={
+            <AppLayout>
+              <Investments />
             </AppLayout>
           }
         />

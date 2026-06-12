@@ -58,6 +58,7 @@ import {
   type CategoryOption,
   type TransactionFormInitial,
 } from "./TransactionForm";
+import { ImportCsvModal } from "./ImportCsvModal";
 import {
   InlineCategoryPicker
 } from "./InlineCategoryPicker";
@@ -134,6 +135,7 @@ export function TransactionsClient({
   const [calendarTransactions, setCalendarTransactions] = useState<TransactionRowData[]>([]);
   const [calendarLoading, setCalendarLoading] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
 
 
@@ -373,17 +375,21 @@ export function TransactionsClient({
                 style={{ borderRadius: 'var(--dropdown-radius, 12px)' }}
               >
                 <Download size={14} />
-                {t("export")}
+                {language === "id" ? "Ekspor / Impor" : "Export / Import"}
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="bg-surface border-border z-[99999]">
               <DropdownMenuItem asChild>
                 <a href={exportHref()} download className="cursor-pointer w-full flex items-center gap-2">
-                  <span>CSV Format</span>
+                  <span>CSV Format (Export)</span>
                 </a>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={downloadJSON} className="cursor-pointer flex items-center gap-2">
-                <span>JSON Format</span>
+                <span>JSON Format (Export)</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator className="bg-border/40" />
+              <DropdownMenuItem onClick={() => setIsImportModalOpen(true)} className="cursor-pointer flex items-center gap-2 text-accent focus:text-accent font-semibold">
+                <span>Import CSV</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -878,6 +884,20 @@ export function TransactionsClient({
           </DialogBody>
         </DialogContent>
       </Dialog>
+
+      {isImportModalOpen && (
+        <ImportCsvModal
+          open={isImportModalOpen}
+          onClose={() => setIsImportModalOpen(false)}
+          onSuccess={() => {
+            setIsImportModalOpen(false);
+            window.dispatchEvent(new CustomEvent("refresh-app-data"));
+            setTimeout(() => {
+              window.location.reload();
+            }, 300);
+          }}
+        />
+      )}
     </div>
   );
 }

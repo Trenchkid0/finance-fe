@@ -13,6 +13,7 @@ import {
   Wallet,
   CalendarRange,
   Target,
+  Briefcase,
   type LucideIcon,
 } from "lucide-react";
 
@@ -74,6 +75,11 @@ export function AppSidebar({ user, counts, ...props }: AppSidebarProps) {
         counts?.transactions && counts.transactions > 0
           ? counts.transactions
           : undefined,
+    },
+    {
+      href: "/investments",
+      label: language === "id" ? "Investasi & Aset" : "Investments",
+      icon: Briefcase,
     },
     {
       href: "/goals",

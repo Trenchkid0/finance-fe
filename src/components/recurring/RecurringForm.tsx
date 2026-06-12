@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 
 import { FormError } from '@/components/ui/form-error'
-import { formatInputRupiah, cleanMoneyString } from '@/lib/utils/formatters'
+import { formatInputRupiah, cleanMoneyString, formatIDR } from '@/lib/utils/formatters'
 import { useLanguage } from '@/lib/contexts/LanguageContext'
 
 interface CategoryOption {
@@ -24,6 +24,8 @@ interface RecurringFormData {
   categoryId?: string | null
   frequency: string
   dayOfMonth: number
+  autoPay?: boolean
+  accountId?: string | null
   note?: string
 }
 
@@ -32,10 +34,11 @@ interface RecurringFormProps {
   onClose: () => void
   recurring?: RecurringFormData
   categories: CategoryOption[]
+  accounts: any[]
   onSubmit: (data: RecurringFormData) => Promise<void>
 }
 
-export function RecurringForm({ open, onClose, recurring, categories, onSubmit }: RecurringFormProps) {
+export function RecurringForm({ open, onClose, recurring, categories, accounts, onSubmit }: RecurringFormProps) {
   const { language } = useLanguage()
   const [formData, setFormData] = useState({
     name: recurring?.name || '',
@@ -43,6 +46,8 @@ export function RecurringForm({ open, onClose, recurring, categories, onSubmit }
     categoryId: recurring?.categoryId || '',
     frequency: recurring?.frequency || 'monthly',
     dayOfMonth: recurring?.dayOfMonth || 1,
+    autoPay: recurring?.autoPay || false,
+    accountId: recurring?.accountId || '',
     note: recurring?.note || '',
   })
   const [error, setError] = useState('')
@@ -68,6 +73,11 @@ export function RecurringForm({ open, onClose, recurring, categories, onSubmit }
       return
     }
 
+    if (formData.autoPay && !formData.accountId) {
+      setError(language === 'id' ? 'Akun pembayaran harus dipilih jika Auto-Pay diaktifkan' : 'Payment account is required when Auto-Pay is enabled')
+      return
+    }
+
     setIsSubmitting(true)
     try {
       await onSubmit({
@@ -77,6 +87,8 @@ export function RecurringForm({ open, onClose, recurring, categories, onSubmit }
         categoryId: formData.categoryId || null,
         frequency: formData.frequency,
         dayOfMonth: formData.dayOfMonth,
+        autoPay: formData.autoPay,
+        accountId: formData.accountId || null,
         note: formData.note,
       })
     } catch (err) {
@@ -224,6 +236,44 @@ export function RecurringForm({ open, onClose, recurring, categories, onSubmit }
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="accountId" className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">
+                {isId ? 'Akun Pembayaran' : 'Payment Account'}
+              </Label>
+              <FormSelect
+                value={formData.accountId || 'none'}
+                onChange={(val) => setFormData({ ...formData, accountId: val === 'none' ? '' : val })}
+                options={[
+                  { value: "none", label: isId ? '-- Pilih Akun --' : '-- Select Account --' },
+                  ...accounts.map((acc) => ({
+                    value: acc.id,
+                    label: `${acc.name} (${formatIDR(acc.balance)})`,
+                  })),
+                ]}
+                placeholder={isId ? '-- Pilih Akun --' : '-- Select Account --'}
+              />
+            </div>
+
+            <div className="flex items-center gap-3 py-2 bg-white/[0.01] border border-white/[0.04] p-3 rounded-xl">
+              <input
+                id="autoPay"
+                type="checkbox"
+                checked={formData.autoPay}
+                onChange={(e) => setFormData({ ...formData, autoPay: e.target.checked })}
+                className="size-4 rounded border-border text-accent focus:ring-accent bg-elevated/45"
+              />
+              <div>
+                <Label htmlFor="autoPay" className="text-xs font-bold text-text-primary uppercase tracking-wider cursor-pointer">
+                  {isId ? 'Bayar Otomatis (Auto-Pay)' : 'Auto-Pay'}
+                </Label>
+                <p className="text-[10px] text-muted-foreground/80 leading-normal mt-0.5">
+                  {isId 
+                    ? 'Otomatis buat transaksi pengeluaran dan potong saldo pada tanggal jatuh tempo.' 
+                    : 'Automatically record expense transaction and deduct balance on due date.'}
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="note" className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">
                 {isId ? 'Catatan' : 'Note'}
               </Label>
@@ -348,7 +398,7 @@ function FormSelect({
         className="flex h-11 w-full items-center justify-between border border-white/[0.06] bg-white/[0.03] px-4 py-2 text-sm text-foreground hover:border-white/[0.12] hover:bg-white/[0.05] focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50 focus:bg-white/[0.04] transition-all duration-300 ease-out text-left"
         style={{ borderRadius: "var(--dropdown-radius, 8px)" }}
       >
-        <span>{selectedLabel}</span>
+        <span className="truncate">{selectedLabel}</span>
         <ChevronDown size={14} className="opacity-60 shrink-0 ml-2" />
       </button>
 
@@ -384,5 +434,3 @@ function FormSelect({
     </div>
   );
 }
-
-// Made with Bob

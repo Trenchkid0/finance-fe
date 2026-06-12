@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useApp } from "@/components/layout/AppLayout";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 import { api } from "@/lib/api";
-import { formatIDR } from "@/lib/utils/formatters";
+import { formatIDR, formatDateShort } from "@/lib/utils/formatters";
 import { toast } from "sonner";
 import {
   Plus,
@@ -15,6 +15,8 @@ import {
   Info,
   Repeat,
   CalendarRange,
+  Loader2,
+  CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,6 +43,9 @@ interface RecurringBill {
   categoryId?: string | null;
   frequency: string; // "weekly", "monthly", "yearly"
   dayOfMonth: number;
+  autoPay?: boolean;
+  accountId?: string | null;
+  lastPaidAt?: string | null;
   note?: string;
   category?: {
     id: string;
@@ -48,13 +53,20 @@ interface RecurringBill {
     icon: string;
     color: string;
   } | null;
+  account?: {
+    id: string;
+    name: string;
+    type: string;
+    balance: number;
+  } | null;
 }
 
 export default function Recurring() {
   const { language } = useLanguage();
-  const { categories } = useApp();
+  const { categories, accounts } = useApp();
   const [bills, setBills] = useState<RecurringBill[]>([]);
   const [loading, setLoading] = useState(true);
+  const [payingBillId, setPayingBillId] = useState<string | null>(null);
 
   // Calendar Date State (default to current date)
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -93,6 +105,8 @@ export default function Recurring() {
       categoryId: null,
       frequency: 'monthly',
       dayOfMonth: initialDay || selectedDay || 1,
+      autoPay: false,
+      accountId: null,
       note: '',
     } as any);
     setIsModalOpen(true);
@@ -131,6 +145,21 @@ export default function Recurring() {
     } catch (err) {
       console.error(err);
       toast.error(language === "id" ? "Gagal menghapus tagihan" : "Failed to delete bill");
+    }
+  };
+
+  const handlePay = async (billId: string) => {
+    try {
+      setPayingBillId(billId);
+      await api.post(`/api/recurring/${billId}/pay`, {});
+      toast.success(language === "id" ? "Pembayaran tagihan berhasil dicatat!" : "Bill payment recorded successfully!");
+      fetchBills();
+      window.dispatchEvent(new CustomEvent("refresh-app-data"));
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || (language === "id" ? "Gagal membayar tagihan" : "Failed to pay bill"));
+    } finally {
+      setPayingBillId(null);
     }
   };
 
@@ -447,8 +476,13 @@ export default function Recurring() {
                     >
                       <div className="flex justify-between items-start gap-1">
                         <div>
-                          <h4 className="text-xs font-bold text-text-primary leading-tight">
-                            {bill.name}
+                          <h4 className="text-xs font-bold text-text-primary leading-tight flex items-center gap-1.5 flex-wrap">
+                            <span>{bill.name}</span>
+                            {bill.autoPay && (
+                              <span className="bg-income/10 text-income text-[8px] px-1.5 py-0.5 rounded-full font-bold border border-income/20">
+                                Auto-Pay
+                              </span>
+                            )}
                           </h4>
                           <span className="text-[9px] font-medium text-accent uppercase tracking-wider mt-1 block">
                             {bill.frequency === "monthly"
@@ -473,6 +507,37 @@ export default function Recurring() {
                           </button>
                         </div>
                       </div>
+
+                      {bill.account && (
+                        <div className="mt-2 text-[10px] text-text-muted bg-white/[0.02] border border-white/[0.04] p-1.5 rounded-lg flex justify-between items-center">
+                          <span>{language === "id" ? "Pembayaran dari:" : "Payment from:"}</span>
+                          <span className="font-semibold text-text-primary">{bill.account.name}</span>
+                        </div>
+                      )}
+
+                      {bill.lastPaidAt && (
+                        <p className="mt-1 text-[9px] text-muted-foreground/60 italic text-right">
+                          {language === "id" 
+                            ? `Terakhir dibayar: ${formatDateShort(bill.lastPaidAt)}` 
+                            : `Last paid: ${formatDateShort(bill.lastPaidAt)}`}
+                        </p>
+                      )}
+
+                      {bill.accountId && (
+                        <Button
+                          onClick={() => handlePay(bill.id)}
+                          disabled={payingBillId === bill.id}
+                          variant="outline"
+                          className="mt-3.5 w-full h-8 rounded-lg text-xs font-semibold bg-accent/10 border-accent/20 hover:bg-accent/20 text-accent gap-1.5"
+                        >
+                          {payingBillId === bill.id ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <CheckCircle2 className="h-3 w-3" />
+                          )}
+                          {language === "id" ? "Bayar Sekarang" : "Pay Now"}
+                        </Button>
+                      )}
 
                       <div className="flex justify-between items-end mt-3 pt-2 border-t border-border/50">
                         <span className="text-[10px] text-text-muted">
@@ -531,6 +596,7 @@ export default function Recurring() {
           }}
           recurring={editingBill?.id ? editingBill : undefined}
           categories={categories}
+          accounts={accounts}
           onSubmit={handleFormSubmit}
         />
       )}
