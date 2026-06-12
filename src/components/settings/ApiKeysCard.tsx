@@ -21,6 +21,7 @@ import {
   revokeApiKey,
   type ApiKeyListItem,
 } from "@/app/actions/api-keys";
+import { cn } from "@/lib/utils/cn";
 import { formatDate } from "@/lib/utils/formatters";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -183,7 +184,11 @@ function ApiKeyRow({ item }: { item: ApiKeyListItem }) {
   }
 
   return (
-    <li className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.06] px-4 py-3.5 hover:border-white/[0.12] transition-all duration-200"
+    <li
+      className={cn(
+        "flex items-start justify-between gap-4 rounded-xl border border-white/[0.06] p-4 hover:border-white/[0.12] transition-all duration-200",
+        isRevoked && "opacity-60 grayscale-[15%]"
+      )}
       style={{
         borderRadius: 'var(--card-radius)',
         borderWidth: 'var(--card-border-width)',
@@ -191,59 +196,73 @@ function ApiKeyRow({ item }: { item: ApiKeyListItem }) {
         backgroundColor: 'color-mix(in srgb, var(--card-bg) calc(var(--card-opacity) * 100%), transparent)',
         backdropFilter: 'var(--card-backdrop-filter)',
         WebkitBackdropFilter: 'var(--card-backdrop-filter)',
-      }}>
-      <div className="min-w-0 flex-1">
+      }}
+    >
+      <div className="min-w-0 flex-1 space-y-2.5">
         <div className="flex items-center gap-2 flex-wrap">
-          <p className="text-sm font-medium text-foreground truncate">
+          <p className="text-sm font-semibold text-foreground tracking-tight truncate">
             {item.name}
           </p>
           {isRevoked ? (
-            <Badge variant="outline" className="font-normal">
+            <Badge variant="outline" className="font-normal text-[10px] px-2 py-0">
               {language === "id" ? "Dicabut" : "Revoked"}
             </Badge>
           ) : (
-            <Badge variant="income" className="font-normal">
+            <Badge variant="income" className="font-normal text-[10px] px-2 py-0">
               {language === "id" ? "Aktif" : "Active"}
             </Badge>
           )}
         </div>
-        <div className="flex items-start justify-between gap-4 mt-1">
-          <p className="text-xs text-muted-foreground font-mono break-all flex-1">
-            {showKey ? item.prefix : "••••••••••••••••"}
+
+        <div className="flex items-center justify-between gap-4 mt-1.5">
+          <p className="text-xs text-muted-foreground font-mono break-all flex-1 select-all">
+            {showKey ? item.prefix : "••••••••••••••••••••••••••••••••"}
           </p>
-          <div className="flex items-center gap-1.5 shrink-0">
-            <button
+          <div className="flex items-center gap-1 shrink-0">
+            <Button
               type="button"
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8 text-text-muted hover:text-foreground hover:bg-white/10 transition-all rounded-lg"
               onClick={() => setShowKey(!showKey)}
-              className="text-muted-foreground hover:text-foreground transition-colors p-0.5"
               title={showKey ? (language === "id" ? "Sembunyikan" : "Hide") : (language === "id" ? "Tampilkan" : "Show")}
             >
-              {showKey ? <EyeOff size={13} /> : <Eye size={13} />}
-            </button>
-            <button
+              {showKey ? <EyeOff size={14} /> : <Eye size={14} />}
+            </Button>
+            <Button
               type="button"
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8 text-text-muted hover:text-foreground hover:bg-white/10 transition-all rounded-lg"
               onClick={handleCopyKey}
-              className="text-muted-foreground hover:text-foreground transition-colors p-0.5"
               title={language === "id" ? "Salin Kunci API" : "Copy API Key"}
             >
-              {copied ? <Check size={13} className="text-income" /> : <Copy size={13} />}
-            </button>
+              {copied ? (
+                <Check size={14} className="text-income animate-in fade-in zoom-in duration-200" />
+              ) : (
+                <Copy size={14} />
+              )}
+            </Button>
           </div>
         </div>
-        <p className="text-[10px] text-muted-foreground mt-0.5">
-          {language === "id" ? "Dibuat" : "Created"} {formatDate(item.createdAt)}
-          {item.lastUsedAt
-            ? ` · ${language === "id" ? "Terakhir dipakai" : "Last used"} ${formatDate(item.lastUsedAt)}`
-            : ` · ${language === "id" ? "Belum pernah dipakai" : "Never used"}`}
-        </p>
+
+        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+          <span>{language === "id" ? "Dibuat" : "Created"} {formatDate(item.createdAt)}</span>
+          <span>•</span>
+          <span>
+            {item.lastUsedAt
+              ? `${language === "id" ? "Terakhir dipakai" : "Last used"} ${formatDate(item.lastUsedAt)}`
+              : language === "id" ? "Belum pernah dipakai" : "Never used"}
+          </span>
+        </div>
       </div>
 
-      <div className="flex items-center gap-1 shrink-0">
+      <div className="flex items-center gap-1 shrink-0 mt-0.5">
         {!isRevoked ? (
           <Button
             size="icon"
             variant="ghost"
-            className="h-7 w-7"
+            className="h-8 w-8 text-text-muted hover:text-warning hover:bg-warning/10 transition-all rounded-lg"
             onClick={() => setConfirmAction("revoke")}
             aria-label={language === "id" ? "Cabut kunci" : "Revoke key"}
             title={language === "id" ? "Cabut kunci" : "Revoke key"}
@@ -254,7 +273,7 @@ function ApiKeyRow({ item }: { item: ApiKeyListItem }) {
         <Button
           size="icon"
           variant="ghost"
-          className="h-7 w-7 hover:text-destructive"
+          className="h-8 w-8 text-text-muted hover:text-destructive hover:bg-destructive/10 transition-all rounded-lg"
           onClick={() => setConfirmAction("delete")}
           aria-label={language === "id" ? "Hapus kunci" : "Delete key"}
           title={language === "id" ? "Hapus permanen" : "Delete permanently"}
@@ -503,23 +522,22 @@ function PlainKeyDialog({
                 </span>
                 :
               </p>
-              <div className="rounded-md border border-border bg-elevated p-3 flex items-start gap-2">
-                <code className="text-xs font-mono text-foreground break-all flex-1">
+              <div className="rounded-lg border border-border bg-[#0B0E14] pl-3 pr-1.5 py-2 flex items-center gap-2">
+                <code className="text-xs font-mono text-text-primary/95 break-all flex-1 tracking-tight select-all">
                   {target.plain}
                 </code>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-7 w-7 shrink-0"
+                <button
+                  type="button"
                   onClick={handleCopy}
+                  className="text-text-muted hover:text-text-primary hover:bg-white/[0.08] active:bg-white/[0.12] rounded-md p-1.5 transition-all shrink-0"
                   aria-label={language === "id" ? "Salin kunci" : "Copy key"}
                 >
                   {copied ? (
-                    <Check size={14} className="text-income" />
+                    <Check size={14} className="text-income animate-in fade-in zoom-in duration-200" />
                   ) : (
                     <Copy size={14} />
                   )}
-                </Button>
+                </button>
               </div>
               <p className="text-xs text-muted-foreground">
                 {language === "id" ? "Pakai sebagai header" : "Use as header"}{" "}
