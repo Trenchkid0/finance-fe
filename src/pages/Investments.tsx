@@ -23,14 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils/cn";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+
 
 interface AssetHolding {
   id: string;
@@ -164,10 +157,11 @@ export default function Investments() {
     }
 
     try {
+      const priceNum = parseFloat(sellForm.price.replace(/\D/g, "")) || 0;
       const payload = {
         holdingId: selectedHolding.id,
         quantity: sellQty,
-        price: parseFloat(sellForm.price),
+        price: priceNum,
         addToAccountId: sellForm.addToAccountId === "none" ? null : sellForm.addToAccountId,
       };
 
@@ -193,9 +187,10 @@ export default function Investments() {
     if (!selectedHolding || !updatePriceValue) return;
 
     try {
+      const priceNum = parseFloat(updatePriceValue.replace(/\D/g, "")) || 0;
       const payload = {
         holdingId: selectedHolding.id,
-        currentPrice: parseFloat(updatePriceValue),
+        currentPrice: priceNum,
       };
 
       await api.post("/api/investments/update-price", payload);
@@ -379,7 +374,7 @@ export default function Investments() {
                           <button
                             onClick={() => {
                               setSelectedHolding(h);
-                              setUpdatePriceValue(String(h.currentPrice));
+                              setUpdatePriceValue(formatInputRupiah(String(h.currentPrice)));
                               setIsUpdatePriceOpen(true);
                             }}
                             className="p-1.5 rounded hover:bg-elevated text-text-muted hover:text-text-primary transition-colors"
@@ -392,7 +387,7 @@ export default function Investments() {
                               setSelectedHolding(h);
                               setSellForm({
                                 quantity: String(h.quantity),
-                                price: String(h.currentPrice),
+                                price: formatInputRupiah(String(h.currentPrice)),
                                 addToAccountId: "none",
                               });
                               setIsSellModalOpen(true);
@@ -423,133 +418,32 @@ export default function Investments() {
         onSubmit={handleBuySubmit}
       />
 
-      {/* ================= SELL ASSET DIALOG ================= */}
-      <Dialog open={isSellModalOpen} onOpenChange={setIsSellModalOpen}>
-        <DialogContent className="bg-elevated border-border text-foreground">
-          <DialogHeader>
-            <DialogTitle>
-              {isId ? `Jual Sebagian / Seluruh ${selectedHolding?.symbol}` : `Sell ${selectedHolding?.symbol}`}
-            </DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground">
-              {isId
-                ? `Kepemilikan aktif saat ini: ${selectedHolding?.quantity} unit.`
-                : `Currently holding ${selectedHolding?.quantity} units.`}
-            </DialogDescription>
-          </DialogHeader>
+      {/* ================= SELL ASSET MODAL ================= */}
+      <SellAssetModal
+        open={isSellModalOpen}
+        onClose={() => {
+          setIsSellModalOpen(false);
+          setSelectedHolding(null);
+        }}
+        accounts={accounts}
+        selectedHolding={selectedHolding}
+        sellForm={sellForm}
+        setSellForm={setSellForm}
+        onSubmit={handleSellSubmit}
+      />
 
-          <form onSubmit={handleSellSubmit} className="space-y-3 pt-2">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label htmlFor="sell-quantity" className="text-xs font-bold text-muted-foreground/75 uppercase tracking-wider">
-                  {isId ? "Jumlah Dijual" : "Quantity to Sell"}
-                </Label>
-                <Input
-                  id="sell-quantity"
-                  type="number"
-                  step="any"
-                  max={selectedHolding?.quantity}
-                  value={sellForm.quantity}
-                  onChange={(e) => setSellForm({ ...sellForm, quantity: e.target.value })}
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="sell-price" className="text-xs font-bold text-muted-foreground/75 uppercase tracking-wider">
-                  {isId ? "Harga Jual per Unit" : "Sale Price per Unit"}
-                </Label>
-                <Input
-                  id="sell-price"
-                  type="number"
-                  step="any"
-                  value={sellForm.price}
-                  onChange={(e) => setSellForm({ ...sellForm, price: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1 border-t border-border/50 pt-3 mt-3">
-              <Label htmlFor="sell-add" className="text-xs font-bold text-muted-foreground/75 uppercase tracking-wider">
-                {isId ? "Tambahkan Dana Ke Rekening (Opsional)" : "Deposit Proceeds To (Optional)"}
-              </Label>
-              <select
-                id="sell-add"
-                value={sellForm.addToAccountId}
-                onChange={(e) => setSellForm({ ...sellForm, addToAccountId: e.target.value })}
-                className="w-full h-10 bg-surface border border-border rounded-xl px-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-              >
-                <option value="none">{isId ? "-- Tidak, Catat Pengurangan Aset Saja --" : "-- No, just decrease holding --"}</option>
-                {accounts.map((acc) => (
-                  <option key={acc.id} value={acc.id}>
-                    {acc.name} ({formatIDR(acc.balance)})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <DialogFooter className="pt-2">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => {
-                  setIsSellModalOpen(false);
-                  setSelectedHolding(null);
-                }}
-                className="h-9 rounded-xl text-xs font-semibold"
-              >
-                {isId ? "Batal" : "Cancel"}
-              </Button>
-              <Button type="submit" className="h-9 rounded-xl text-xs font-semibold px-4 bg-expense hover:bg-red-600 text-white border-0">
-                {isId ? "Catat Penjualan" : "Record Sale"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* ================= UPDATE PRICE DIALOG ================= */}
-      <Dialog open={isUpdatePriceOpen} onOpenChange={setIsUpdatePriceOpen}>
-        <DialogContent className="bg-elevated border-border text-foreground">
-          <DialogHeader>
-            <DialogTitle>
-              {isId ? `Perbarui Harga Pasar ${selectedHolding?.symbol}` : `Update Market Price: ${selectedHolding?.symbol}`}
-            </DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground">
-              {isId ? "Masukan harga terkini dari bursa/pasar keuangan." : "Enter the latest price quote from market indices."}
-            </DialogDescription>
-          </DialogHeader>
-
-          <form onSubmit={handleUpdatePriceSubmit} className="space-y-3 pt-2">
-            <div className="space-y-1">
-              <Label htmlFor="update-price-input" className="text-xs font-bold text-muted-foreground/75 uppercase tracking-wider">
-                {isId ? "Harga per Unit Sekarang (IDR)" : "Current Price per Unit (IDR)"}
-              </Label>
-              <Input
-                id="update-price-input"
-                type="number"
-                step="any"
-                value={updatePriceValue}
-                onChange={(e) => setUpdatePriceValue(e.target.value)}
-              />
-            </div>
-
-            <DialogFooter className="pt-2">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => {
-                  setIsUpdatePriceOpen(false);
-                  setSelectedHolding(null);
-                }}
-                className="h-9 rounded-xl text-xs font-semibold"
-              >
-                {isId ? "Batal" : "Cancel"}
-              </Button>
-              <Button type="submit" className="h-9 rounded-xl text-xs font-semibold px-4">
-                {isId ? "Perbarui Harga" : "Update Price"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {/* ================= UPDATE PRICE MODAL ================= */}
+      <UpdateAssetPriceModal
+        open={isUpdatePriceOpen}
+        onClose={() => {
+          setIsUpdatePriceOpen(false);
+          setSelectedHolding(null);
+        }}
+        selectedHolding={selectedHolding}
+        updatePriceValue={updatePriceValue}
+        setUpdatePriceValue={setUpdatePriceValue}
+        onSubmit={handleUpdatePriceSubmit}
+      />
     </div>
   );
 }
@@ -1207,5 +1101,284 @@ function CustomSingleDatePicker({
           document.body
         )}
     </>
+  );
+}
+
+// ================= UPDATE ASSET PRICE MODAL =================
+interface UpdateAssetPriceModalProps {
+  open: boolean;
+  onClose: () => void;
+  selectedHolding: AssetHolding | null;
+  updatePriceValue: string;
+  setUpdatePriceValue: (v: string) => void;
+  onSubmit: (e: React.FormEvent) => void;
+}
+
+function UpdateAssetPriceModal({
+  open,
+  onClose,
+  selectedHolding,
+  updatePriceValue,
+  setUpdatePriceValue,
+  onSubmit,
+}: UpdateAssetPriceModalProps) {
+  const { language } = useLanguage();
+  const isId = language === "id";
+  const labelCls = "text-xs font-bold text-muted-foreground/70 uppercase tracking-wider";
+
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  if (!open) return null;
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6 backdrop-blur-sm"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="flex max-h-[calc(100dvh-48px)] w-full max-w-[500px] flex-col overflow-hidden rounded-[22px] border border-border bg-surface shadow-2xl">
+        {/* STICKY HEADER */}
+        <div className="flex items-start gap-4 border-b border-border px-7 py-5">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-accent to-accent/60 text-white shadow-lg">
+            <RefreshCw className="h-5 w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-[17px] font-semibold leading-tight text-foreground">
+              {isId ? `Perbarui Harga ${selectedHolding?.symbol}` : `Update Price: ${selectedHolding?.symbol}`}
+            </h2>
+            <p className="mt-0.5 text-[13px] text-muted-foreground/70">
+              {isId
+                ? "Masukkan harga pasar terkini per unit aset."
+                : "Enter the latest unit price quote for this holding."}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="-mr-1.5 -mt-1 flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground/60 transition hover:bg-white/[0.06] hover:text-foreground"
+            aria-label={isId ? "Tutup" : "Close"}
+          >
+            <X className="h-[18px] w-[18px]" />
+          </button>
+        </div>
+
+        {/* SCROLLABLE BODY */}
+        <div className="flex-1 overflow-y-auto px-7 py-6">
+          <form onSubmit={onSubmit} className="space-y-[18px]">
+            <div className="space-y-2.5">
+              <Label className={labelCls}>{isId ? "Harga per Unit Sekarang (IDR)" : "Current Price per Unit (IDR)"}</Label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-muted-foreground/70">Rp</span>
+                <Input
+                  inputMode="numeric"
+                  value={updatePriceValue}
+                  onChange={(e) => setUpdatePriceValue(formatInputRupiah(e.target.value))}
+                  placeholder="0"
+                  className="h-11 pl-10 font-mono font-semibold"
+                />
+              </div>
+            </div>
+          </form>
+        </div>
+
+        {/* STICKY FOOTER */}
+        <div className="flex items-center justify-end gap-3 border-t border-border px-7 py-5">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={onClose}
+            className="h-10 text-[13px]"
+          >
+            {isId ? "Batal" : "Cancel"}
+          </Button>
+          <Button
+            type="submit"
+            onClick={onSubmit}
+            className="h-10 gap-1.5 text-[13px]"
+          >
+            <Check className="h-4 w-4" />
+            {isId ? "Perbarui Harga" : "Update Price"}
+          </Button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+// ================= SELL ASSET MODAL =================
+interface SellAssetModalProps {
+  open: boolean;
+  onClose: () => void;
+  accounts: { id: string; name: string; balance: number }[];
+  selectedHolding: AssetHolding | null;
+  sellForm: {
+    quantity: string;
+    price: string;
+    addToAccountId: string;
+  };
+  setSellForm: React.Dispatch<
+    React.SetStateAction<{
+      quantity: string;
+      price: string;
+      addToAccountId: string;
+    }>
+  >;
+  onSubmit: (e: React.FormEvent) => void;
+}
+
+function SellAssetModal({
+  open,
+  onClose,
+  accounts,
+  selectedHolding,
+  sellForm,
+  setSellForm,
+  onSubmit,
+}: SellAssetModalProps) {
+  const { language } = useLanguage();
+  const isId = language === "id";
+  const labelCls = "text-xs font-bold text-muted-foreground/70 uppercase tracking-wider";
+
+  // Calculate total proceeds
+  const qty = parseFloat(sellForm.quantity) || 0;
+  const priceNum = parseFloat(sellForm.price.replace(/\D/g, "")) || 0;
+  const totalProceeds = qty * priceNum;
+
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  if (!open) return null;
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6 backdrop-blur-sm"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="flex max-h-[calc(100dvh-48px)] w-full max-w-[500px] flex-col overflow-hidden rounded-[22px] border border-border bg-surface shadow-2xl">
+        {/* STICKY HEADER */}
+        <div className="flex items-start gap-4 border-b border-border px-7 py-5">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-expense to-expense/60 text-white shadow-lg">
+            <MinusCircle className="h-5 w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-[17px] font-semibold leading-tight text-foreground">
+              {isId ? `Jual ${selectedHolding?.symbol}` : `Sell Asset: ${selectedHolding?.symbol}`}
+            </h2>
+            <p className="mt-0.5 text-[13px] text-muted-foreground/70">
+              {isId
+                ? `Kepemilikan aktif saat ini: ${selectedHolding?.quantity} unit.`
+                : `Currently holding ${selectedHolding?.quantity} units.`}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="-mr-1.5 -mt-1 flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground/60 transition hover:bg-white/[0.06] hover:text-foreground"
+            aria-label={isId ? "Tutup" : "Close"}
+          >
+            <X className="h-[18px] w-[18px]" />
+          </button>
+        </div>
+
+        {/* SCROLLABLE BODY */}
+        <div className="flex-1 overflow-y-auto px-7 py-6">
+          <form onSubmit={onSubmit} className="space-y-[18px]">
+            {/* Kuantitas Jual */}
+            <div className="space-y-2.5">
+              <Label className={labelCls}>{isId ? "Jumlah Dijual" : "Quantity to Sell"}</Label>
+              <Input
+                inputMode="decimal"
+                type="number"
+                step="any"
+                max={selectedHolding?.quantity}
+                value={sellForm.quantity}
+                onChange={(e) => setSellForm((prev) => ({ ...prev, quantity: e.target.value }))}
+                placeholder="0.00"
+                className="h-11 font-mono font-semibold"
+              />
+            </div>
+
+            {/* Harga Jual per Unit */}
+            <div className="space-y-2.5">
+              <Label className={labelCls}>{isId ? "Harga Jual per Unit" : "Sale Price per Unit"}</Label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-muted-foreground/70">Rp</span>
+                <Input
+                  inputMode="numeric"
+                  value={sellForm.price}
+                  onChange={(e) => setSellForm((prev) => ({ ...prev, price: formatInputRupiah(e.target.value) }))}
+                  placeholder="0"
+                  className="h-11 pl-10 font-mono font-semibold"
+                />
+              </div>
+            </div>
+
+            {/* Total Penerimaan */}
+            {qty > 0 && priceNum > 0 && (
+              <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3 flex items-center justify-between">
+                <span className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">
+                  {isId ? "Total Penerimaan Penjualan" : "Total Sale Proceeds"}
+                </span>
+                <span className="text-sm font-black font-mono text-foreground">{formatIDR(totalProceeds)}</span>
+              </div>
+            )}
+
+            {/* Tambahkan ke Rekening */}
+            <div className="space-y-2.5">
+              <Label className={labelCls}>
+                {isId ? "Tambahkan Dana Ke Rekening (Opsional)" : "Deposit Proceeds To (Optional)"}
+              </Label>
+              <FormSelect
+                value={sellForm.addToAccountId}
+                onChange={(v) => setSellForm((prev) => ({ ...prev, addToAccountId: v }))}
+                options={[
+                  { value: "none", label: isId ? "-- Tidak, Catat Aset Saja --" : "-- No, just record holding --" },
+                  ...accounts.map((a) => ({ value: a.id, label: `${a.name} (${formatIDR(a.balance)})` })),
+                ]}
+                placeholder={isId ? "Pilih rekening" : "Select account"}
+              />
+            </div>
+          </form>
+        </div>
+
+        {/* STICKY FOOTER */}
+        <div className="flex items-center justify-end gap-3 border-t border-border px-7 py-5">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={onClose}
+            className="h-10 text-[13px]"
+          >
+            {isId ? "Batal" : "Cancel"}
+          </Button>
+          <Button
+            type="submit"
+            onClick={onSubmit}
+            className="h-10 gap-1.5 text-[13px] bg-expense hover:bg-red-600 text-white border-0"
+          >
+            <Check className="h-4 w-4" />
+            {isId ? "Catat Penjualan" : "Record Sale"}
+          </Button>
+        </div>
+      </div>
+    </div>,
+    document.body
   );
 }

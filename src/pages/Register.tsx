@@ -111,17 +111,17 @@ export default function Register() {
       {/* ═══════════════════════════════════════════════════════════════
           RIGHT COLUMN — 60% — Visual Showcase
       ═══════════════════════════════════════════════════════════════ */}
-      <div className="hidden lg:flex relative flex-col overflow-hidden bg-gradient-to-br from-[#060A18] via-[#0A1128] to-[#080E20] border-l border-white/[0.04]">
+      <div className="hidden lg:flex relative flex-col overflow-hidden bg-gradient-to-br from-sidebar via-canvas to-elevated border-l border-border/40">
         {/* Animated ambient glow blobs */}
         <div className="absolute top-[10%] right-[10%] w-[500px] h-[500px] bg-accent/[0.08] rounded-full blur-[120px] animate-pulse" style={{ animationDuration: '7s' }} />
-        <div className="absolute bottom-[5%] left-[15%] w-[450px] h-[450px] bg-indigo-600/[0.06] rounded-full blur-[130px] animate-pulse" style={{ animationDuration: '11s' }} />
-        <div className="absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-purple-500/[0.04] rounded-full blur-[100px]" />
+        <div className="absolute bottom-[5%] left-[15%] w-[450px] h-[450px] bg-progress/[0.06] rounded-full blur-[130px] animate-pulse" style={{ animationDuration: '11s' }} />
+        <div className="absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-warning/[0.04] rounded-full blur-[100px]" />
 
         {/* Grid dots pattern overlay */}
         <div
-          className="absolute inset-0 opacity-[0.03]"
+          className="absolute inset-0 opacity-[0.3]"
           style={{
-            backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)',
+            backgroundImage: 'radial-gradient(circle, var(--border) 1px, transparent 1px)',
             backgroundSize: '24px 24px',
           }}
         />
@@ -135,9 +135,9 @@ export default function Register() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-income opacity-75" />
                 <span className="relative inline-flex size-2 rounded-full bg-income" />
               </span>
-              <span className="text-[11px] font-semibold tracking-wider text-muted-foreground/70 uppercase">Sistem aktif</span>
+              <span className="text-[11px] font-semibold tracking-wider text-text-muted uppercase">Sistem aktif</span>
             </div>
-            <div className="text-[11px] text-muted-foreground/40 font-mono">v2.4.0</div>
+            <div className="text-[11px] text-text-muted/40 font-mono">v2.4.0</div>
           </div>
 
           {/* Main showcase — tilted perspective mockup */}
@@ -145,14 +145,14 @@ export default function Register() {
             <div className="w-full max-w-lg space-y-5" style={{ perspective: '1200px' }}>
               {/* Hero net worth card */}
               <div
-                className="rounded-2xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-xl p-7 shadow-2xl shadow-black/40"
+                className="rounded-2xl border border-border bg-surface/30 backdrop-blur-xl p-7 shadow-2xl shadow-black/10"
                 style={{ transform: 'rotateY(-2deg) rotateX(1deg)' }}
               >
                 <div className="flex justify-between items-start mb-6">
                   <div className="space-y-1">
-                    <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">Total Kekayaan Bersih</p>
-                    <div className="text-4xl font-black font-mono tracking-tight text-foreground">
-                      Rp 1.482<span className="text-foreground/40">.950.000</span>
+                    <p className="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Total Kekayaan Bersih</p>
+                    <div className="text-4xl font-black font-mono tracking-tight text-text-primary">
+                      Rp 1.482<span className="text-text-primary/45">.950.000</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5 text-xs font-bold text-income bg-income/10 px-3 py-1.5 rounded-full border border-income/20">
@@ -166,8 +166,8 @@ export default function Register() {
                   <svg viewBox="0 0 200 60" className="w-full h-full overflow-visible" preserveAspectRatio="none">
                     <defs>
                       <linearGradient id="registerChartFill" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#388BFD" stopOpacity="0.15" />
-                        <stop offset="100%" stopColor="#388BFD" stopOpacity="0" />
+                        <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.15" />
+                        <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
                       </linearGradient>
                     </defs>
                     <path
@@ -177,16 +177,17 @@ export default function Register() {
                     <path
                       d="M0,50 C20,45 35,30 50,35 S70,15 90,20 S120,5 140,10 S170,3 200,2"
                       fill="none"
-                      stroke="#388BFD"
+                      stroke="var(--accent)"
                       strokeWidth="2.5"
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     />
-                    <circle cx="200" cy="2" r="4" fill="#388BFD" opacity="0.3">
+                    {/* Glowing endpoint */}
+                    <circle cx="200" cy="2" r="4" fill="var(--accent)" opacity="0.3">
                       <animate attributeName="r" values="4;8;4" dur="2s" repeatCount="indefinite" />
                       <animate attributeName="opacity" values="0.3;0.1;0.3" dur="2s" repeatCount="indefinite" />
                     </circle>
-                    <circle cx="200" cy="2" r="3" fill="#388BFD" />
+                    <circle cx="200" cy="2" r="3" fill="var(--accent)" />
                   </svg>
                 </div>
 
@@ -198,7 +199,7 @@ export default function Register() {
                       className={`text-[10px] font-semibold px-2.5 py-1 rounded-full transition-all ${
                         i === 3
                           ? "bg-accent/15 text-accent border border-accent/30"
-                          : "text-muted-foreground/50 hover:text-muted-foreground/80 hover:bg-white/[0.03]"
+                          : "text-text-muted hover:text-text-primary hover:bg-hover-surface"
                       }`}
                     >
                       {label}
@@ -210,68 +211,68 @@ export default function Register() {
               {/* Stats row */}
               <div className="grid grid-cols-3 gap-3">
                 <div
-                  className="rounded-xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-md p-4"
+                  className="rounded-xl border border-border bg-surface/30 backdrop-blur-md p-4"
                   style={{ transform: 'rotateY(-2deg)' }}
                 >
                   <div className="flex items-center gap-2 mb-2.5">
                     <div className="flex size-7 items-center justify-center rounded-lg bg-income/10 text-income">
                       <Wallet size={14} />
                     </div>
-                    <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wide">Pemasukan</span>
+                    <span className="text-[10px] font-semibold text-text-muted uppercase tracking-wide">Pemasukan</span>
                   </div>
                   <p className="text-lg font-black font-mono text-income">+12.5<span className="text-sm text-income/60">jt</span></p>
                 </div>
 
                 <div
-                  className="rounded-xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-md p-4"
+                  className="rounded-xl border border-border bg-surface/30 backdrop-blur-md p-4"
                   style={{ transform: 'rotateY(-2deg)' }}
                 >
                   <div className="flex items-center gap-2 mb-2.5">
                     <div className="flex size-7 items-center justify-center rounded-lg bg-accent/10 text-accent">
                       <PiggyBank size={14} />
                     </div>
-                    <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wide">Tabungan</span>
+                    <span className="text-[10px] font-semibold text-text-muted uppercase tracking-wide">Tabungan</span>
                   </div>
-                  <p className="text-lg font-black font-mono text-foreground">480<span className="text-sm text-foreground/40">jt</span></p>
+                  <p className="text-lg font-black font-mono text-text-primary">480<span className="text-sm text-text-primary/45">jt</span></p>
                 </div>
 
                 <div
-                  className="rounded-xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-md p-4"
+                  className="rounded-xl border border-border bg-surface/30 backdrop-blur-md p-4"
                   style={{ transform: 'rotateY(-2deg)' }}
                 >
                   <div className="flex items-center gap-2 mb-2.5">
-                    <div className="flex size-7 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400">
+                    <div className="flex size-7 items-center justify-center rounded-lg bg-indigo-500/10" style={{ color: 'var(--progress)' }}>
                       <BarChart3 size={14} />
                     </div>
-                    <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wide">Investasi</span>
+                    <span className="text-[10px] font-semibold text-text-muted uppercase tracking-wide">Investasi</span>
                   </div>
-                  <p className="text-lg font-black font-mono text-foreground">534<span className="text-sm text-foreground/40">jt</span></p>
+                  <p className="text-lg font-black font-mono text-text-primary">534<span className="text-sm text-text-primary/45">jt</span></p>
                 </div>
               </div>
 
               {/* Portfolio bar */}
               <div
-                className="rounded-xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-md p-5"
+                className="rounded-xl border border-border bg-surface/30 backdrop-blur-md p-5"
                 style={{ transform: 'rotateY(-2deg)' }}
               >
-                <div className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-widest mb-3">Alokasi Portofolio</div>
+                <div className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-3">Alokasi Portofolio</div>
                 <div className="flex h-2.5 rounded-full overflow-hidden gap-0.5">
-                  <div className="bg-accent rounded-l-full" style={{ width: '54%' }} />
-                  <div className="bg-indigo-500" style={{ width: '36%' }} />
-                  <div className="bg-emerald-500 rounded-r-full" style={{ width: '10%' }} />
+                  <div className="rounded-l-full" style={{ width: '54%', backgroundColor: 'var(--accent)' }} />
+                  <div style={{ width: '36%', backgroundColor: 'var(--progress)' }} />
+                  <div className="rounded-r-full" style={{ width: '10%', backgroundColor: 'var(--income)' }} />
                 </div>
                 <div className="flex justify-between mt-3 text-[11px]">
                   <div className="flex items-center gap-1.5">
-                    <span className="size-1.5 rounded-full bg-accent" />
-                    <span className="text-muted-foreground/60">Bank <span className="text-foreground/80 font-semibold ml-0.5">54%</span></span>
+                    <span className="size-1.5 rounded-full" style={{ backgroundColor: 'var(--accent)' }} />
+                    <span className="text-text-muted">Bank <span className="text-text-primary font-semibold ml-0.5">54%</span></span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="size-1.5 rounded-full bg-indigo-500" />
-                    <span className="text-muted-foreground/60">Saham <span className="text-foreground/80 font-semibold ml-0.5">36%</span></span>
+                    <span className="size-1.5 rounded-full" style={{ backgroundColor: 'var(--progress)' }} />
+                    <span className="text-text-muted">Saham <span className="text-text-primary font-semibold ml-0.5">36%</span></span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="size-1.5 rounded-full bg-emerald-500" />
-                    <span className="text-muted-foreground/60">Tunai <span className="text-foreground/80 font-semibold ml-0.5">10%</span></span>
+                    <span className="size-1.5 rounded-full" style={{ backgroundColor: 'var(--income)' }} />
+                    <span className="text-text-muted">Tunai <span className="text-text-primary font-semibold ml-0.5">10%</span></span>
                   </div>
                 </div>
               </div>
@@ -279,7 +280,7 @@ export default function Register() {
           </div>
 
           {/* Bottom tagline */}
-          <div className="space-y-2 max-w-md border-t border-white/[0.04] pt-6 mt-6">
+          <div className="space-y-2 max-w-md border-t border-border/40 pt-6 mt-6">
             <p className="text-base font-bold text-text-primary leading-snug">
               {language === "id"
                 ? "Satu dasbor terpadu untuk seluruh aset finansial Anda."
