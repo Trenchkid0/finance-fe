@@ -385,9 +385,9 @@ function TransactionRow({
             </button>
           )}
         </div>
-        <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-text-muted/80 min-w-0">
-          <span className="flex items-center gap-1 shrink-0">
-            <Wallet size={10} className="opacity-60" />
+        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mt-0.5 text-[11px] text-text-muted/80 min-w-0">
+          <span className="flex items-center gap-1">
+            <Wallet size={10} className="opacity-60 shrink-0" />
             <span className="truncate max-w-[120px]">{tx.accountName}</span>
           </span>
           {tx.type === "transfer" && tx.transferToName && (
@@ -397,8 +397,8 @@ function TransactionRow({
             </>
           )}
           {tx.type !== "transfer" && tx.categoryName && (
-            <span className="md:hidden flex items-center gap-1 shrink-0">
-              <span className="text-text-muted/30">·</span>
+            <span className="md:hidden flex items-center gap-1">
+              <span className="text-text-muted/30 shrink-0">·</span>
               <span className="truncate max-w-[100px]">{tx.categoryName}</span>
             </span>
           )}
@@ -433,7 +433,7 @@ function TransactionRow({
 
       <p
         className={cn(
-          "font-mono tabular-nums text-sm font-bold whitespace-nowrap text-right min-w-[96px] shrink-0",
+          "font-mono tabular-nums text-xs sm:text-sm font-bold whitespace-nowrap text-right min-w-[70px] sm:min-w-[96px] shrink-0",
           style.amount,
         )}
       >

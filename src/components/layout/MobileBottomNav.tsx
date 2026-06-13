@@ -57,28 +57,35 @@ export function MobileBottomNav() {
               key={item.href}
               to={item.href}
               className={cn(
-                "relative flex flex-col items-center justify-center gap-1.5 rounded-xl py-2 px-1 transition-colors duration-200 min-h-[44px]",
+                "group relative flex flex-col items-center justify-center rounded-xl py-1.5 transition-colors duration-200 min-h-[44px]",
                 isActive
-                  ? "text-accent bg-accent/10 font-semibold"
-                  : "text-muted-foreground hover:text-foreground hover:bg-elevated/40 active:scale-95"
+                  ? "text-accent font-bold"
+                  : "text-text-muted active:scale-95"
               )}
               aria-current={isActive ? "page" : undefined}
             >
-              {/* Simple active indicator dot at top */}
-              {isActive && (
-                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-b-full bg-accent" />
-              )}
-              
-              <Icon
-                size={18}
-                strokeWidth={isActive ? 2.5 : 2}
+              <div
                 className={cn(
-                  "shrink-0 transition-transform duration-200",
-                  isActive && "scale-110"
+                  "flex items-center justify-center rounded-full transition-all duration-300",
+                  isActive
+                    ? "bg-accent/10 px-4 py-1 text-accent border border-accent/20 shadow-[0_0_15px_rgba(56,139,253,0.15)]"
+                    : "px-4 py-1 text-text-muted group-hover:text-text-primary"
                 )}
-                aria-hidden="true"
-              />
-              <span className="text-[9px] font-semibold tracking-wide uppercase leading-none scale-95">
+              >
+                <Icon
+                  size={18}
+                  strokeWidth={isActive ? 2.5 : 2}
+                  className={cn(
+                    "shrink-0 transition-transform duration-300",
+                    isActive && "scale-105"
+                  )}
+                  aria-hidden="true"
+                />
+              </div>
+              <span className={cn(
+                "text-[9px] font-semibold tracking-wide uppercase leading-none mt-1 transition-colors duration-200",
+                isActive ? "text-accent" : "text-text-muted group-hover:text-text-primary"
+              )}>
                 {item.label}
               </span>
             </Link>

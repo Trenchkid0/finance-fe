@@ -324,7 +324,7 @@ export function TransactionsClient({
             {t("transactionsSubtitle")}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {/* View Mode Toggle */}
           <div className="flex bg-white/[0.02] border border-white/[0.06] rounded-xl p-0.5 gap-0.5 mr-2">
             <button

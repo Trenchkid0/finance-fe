@@ -126,9 +126,9 @@ function BalanceSide({ title, total, groups }: SideProps) {
           <div className="rounded-xl bg-white/[0.01] overflow-hidden border border-border/30">
             <header className="px-4 py-2.5 flex items-center text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-widest">
               <span className="flex-1 min-w-0">{language === "id" ? "Nama" : "Name"}</span>
-              <span className="ml-auto flex items-center gap-6 shrink-0">
-                <span className="w-36 text-right">{language === "id" ? "Bobot" : "Weight"}</span>
-                <span className="w-32 text-right">{language === "id" ? "Nilai" : "Value"}</span>
+              <span className="ml-auto flex items-center gap-4 sm:gap-6 shrink-0">
+                <span className="hidden sm:inline-block w-36 text-right">{language === "id" ? "Bobot" : "Weight"}</span>
+                <span className="w-24 sm:w-32 text-right">{language === "id" ? "Nilai" : "Value"}</span>
               </span>
             </header>
             <div className="bg-card/35 rounded-md m-1 mt-0">
@@ -202,11 +202,11 @@ function GroupRow({ group, isLast }: { group: BalanceGroup; isLast: boolean }) {
           />
           <span className="truncate">{group.name}</span>
         </span>
-        <span className="ml-auto flex items-center gap-6 text-sm shrink-0">
-          <span className="w-36 flex justify-end">
+        <span className="ml-auto flex items-center gap-4 sm:gap-6 text-sm shrink-0">
+          <span className="hidden sm:flex w-36 justify-end">
             <DotWeight percent={group.percent} color={group.color} />
           </span>
-          <span className="w-32 text-right font-mono tabular-nums text-foreground transition-all duration-200 group-hover:scale-105 group-hover:font-bold">
+          <span className="w-24 sm:w-32 text-right font-mono tabular-nums text-foreground transition-all duration-200 group-hover:scale-105 group-hover:font-bold">
             {formatIDR(group.total)}
           </span>
         </span>
@@ -236,11 +236,11 @@ function GroupRow({ group, isLast }: { group: BalanceGroup; isLast: boolean }) {
                 </span>
                 <span className="text-foreground truncate transition-colors duration-200 group-hover/account:text-accent">{acc.name}</span>
               </span>
-              <span className="ml-auto flex items-center gap-6 shrink-0">
-                <span className="w-36 flex justify-end">
+              <span className="ml-auto flex items-center gap-4 sm:gap-6 shrink-0">
+                <span className="hidden sm:flex w-36 justify-end">
                   <DotWeight percent={acc.percent} color={group.color} />
                 </span>
-                <span className="w-32 text-right font-mono tabular-nums text-foreground transition-all duration-200 group-hover/account:scale-105 group-hover/account:font-bold group-hover/account:text-accent">
+                <span className="w-24 sm:w-32 text-right font-mono tabular-nums text-foreground transition-all duration-200 group-hover/account:scale-105 group-hover/account:font-bold group-hover/account:text-accent">
                   {formatIDR(acc.value)}
                 </span>
               </span>

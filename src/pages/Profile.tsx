@@ -186,7 +186,7 @@ export default function Profile() {
         <div className="space-y-6 lg:col-span-2">
           
           {/* Account Portfolio Breakdown */}
-          <Card className="border-border bg-card">
+          <Card className="border-border bg-surface">
             <CardHeader className="p-6 pb-2">
               <CardTitle className="text-base font-semibold text-text-primary">
                 Struktur Rekening & Wallet
@@ -239,7 +239,7 @@ export default function Profile() {
           </Card>
 
           {/* Activity Logs & Audit metrics */}
-          <Card className="border-border bg-card">
+          <Card className="border-border bg-surface">
             <CardHeader className="p-6 pb-2">
               <CardTitle className="text-base font-semibold text-text-primary">
                 Aktivitas & Metrik Pencatatan
@@ -250,39 +250,43 @@ export default function Profile() {
             </CardHeader>
             <CardContent className="px-6 pb-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div className="p-6 rounded-xl bg-elevated/40 border border-border/60 space-y-3 hover:border-border transition-colors">
-                  <div className="flex items-center gap-2 text-accent">
-                    <Receipt size={20} />
-                    <span className="text-xs font-bold uppercase tracking-wider text-text-muted">
-                      Catatan Transaksi
-                    </span>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-3xl font-bold font-mono tabular-nums text-text-primary">
-                      {counts.transactions}
-                    </p>
-                    <p className="text-xs text-text-muted">
-                      Total baris data riwayat transaksi tersimpan di server lokal Anda.
-                    </p>
-                  </div>
-                </div>
+                <Card className="hover:border-accent/40 transition-all duration-200">
+                  <CardContent className="p-6 space-y-3">
+                    <div className="flex items-center gap-2 text-accent">
+                      <Receipt size={20} />
+                      <span className="text-xs font-bold uppercase tracking-wider text-text-muted">
+                        Catatan Transaksi
+                      </span>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-3xl font-bold font-mono tabular-nums text-text-primary">
+                        {counts.transactions}
+                      </p>
+                      <p className="text-xs text-text-muted">
+                        Total baris data riwayat transaksi tersimpan di server lokal Anda.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
 
-                <div className="p-6 rounded-xl bg-elevated/40 border border-border/60 space-y-3 hover:border-border transition-colors">
-                  <div className="flex items-center gap-2 text-income">
-                    <Wallet size={20} />
-                    <span className="text-xs font-bold uppercase tracking-wider text-text-muted">
-                      Konektivitas Aset
-                    </span>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-3xl font-bold font-mono tabular-nums text-text-primary">
-                      {accounts.length}
-                    </p>
-                    <p className="text-xs text-text-muted">
-                      Akun keuangan terintegrasi dalam sistem dashboard saat ini.
-                    </p>
-                  </div>
-                </div>
+                <Card className="hover:border-accent/40 transition-all duration-200">
+                  <CardContent className="p-6 space-y-3">
+                    <div className="flex items-center gap-2 text-income">
+                      <Wallet size={20} />
+                      <span className="text-xs font-bold uppercase tracking-wider text-text-muted">
+                        Konektivitas Aset
+                      </span>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-3xl font-bold font-mono tabular-nums text-text-primary">
+                        {accounts.length}
+                      </p>
+                      <p className="text-xs text-text-muted">
+                        Akun keuangan terintegrasi dalam sistem dashboard saat ini.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </CardContent>
           </Card>
@@ -340,19 +344,21 @@ function PortfolioSegmentCard({
   accentColor: string;
 }) {
   return (
-    <div className="p-6 rounded-xl bg-elevated/30 border border-border/80 hover:border-border hover:bg-elevated/50 transition-all duration-200">
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">{label}</span>
-        <span
-          className="w-2 h-2 rounded-full"
-          style={{ backgroundColor: accentColor }}
-        />
-      </div>
-      <p className="text-xl font-bold font-mono tabular-nums text-text-primary truncate">
-        {formatIDR(total)}
-      </p>
-      <p className="text-xs text-text-muted mt-1.5">{count} rekening aktif</p>
-    </div>
+    <Card className="hover:border-accent/40 transition-all duration-200">
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">{label}</span>
+          <span
+            className="w-2 h-2 rounded-full"
+            style={{ backgroundColor: accentColor }}
+          />
+        </div>
+        <p className="text-xl font-bold font-mono tabular-nums text-text-primary truncate">
+          {formatIDR(total)}
+        </p>
+        <p className="text-xs text-text-muted mt-1.5">{count} rekening aktif</p>
+      </CardContent>
+    </Card>
   );
 }
 
