@@ -1,5 +1,3 @@
-"use client";
-
 import { Link } from "react-router-dom";
 import { ChevronRight, ChevronsUpDown, LogOut, Settings, UserCircle } from "lucide-react";
 import {

@@ -1,6 +1,7 @@
 import { api } from "@/lib/api";
 import { createCategorySchema } from "@/lib/utils/validators";
 import type { ActionResult } from "@/types";
+import { getErrorMessage } from "@/types";
 
 function getString(fd: FormData, name: string): string | undefined {
   const v = fd.get(name);
@@ -31,8 +32,8 @@ export async function createCategory(
     });
     window.dispatchEvent(new CustomEvent("refresh-app-data"));
     return { ok: true };
-  } catch (err: any) {
-    return { ok: false, error: err.message || "Gagal membuat kategori baru." };
+  } catch (err: unknown) {
+    return { ok: false, error: getErrorMessage(err, "Gagal membuat kategori baru.") };
   }
 }
 
@@ -41,7 +42,7 @@ export async function deleteCategory(id: string): Promise<ActionResult<null>> {
     await api.delete(`/api/categories/${id}`);
     window.dispatchEvent(new CustomEvent("refresh-app-data"));
     return { ok: true };
-  } catch (err: any) {
-    return { ok: false, error: err.message || "Gagal menghapus kategori." };
+  } catch (err: unknown) {
+    return { ok: false, error: getErrorMessage(err, "Gagal menghapus kategori.") };
   }
 }

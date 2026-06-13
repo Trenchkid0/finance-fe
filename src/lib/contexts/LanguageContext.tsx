@@ -1,5 +1,3 @@
-"use client";
-
 import React, { createContext, useContext, useState } from "react";
 
 export const translations = {
@@ -78,6 +76,118 @@ export const translations = {
     noTransactions: "Belum ada transaksi",
     noTransactionsDesc: "Catat transaksi pertama Anda untuk mulai melacak arus kas.",
     addAccountFirst: "Tambahkan akun terlebih dahulu untuk mencatat transaksi.",
+
+    // App Layout
+    connectingToApp: "Menghubungkan ke Maybe Finance...",
+
+    // Transactions (extra)
+    tableView: "Tabel",
+    calendarView: "Kalender",
+    cashFlowCalendar: "Kalender Arus Kas",
+    transactionsOn: "Transaksi Pada",
+    noTransactionsOnDay: "Tidak ada transaksi tercatat pada tanggal ini.",
+    ofTotal: "dari total",
+    selectAllOnPage: "Pilih semua di halaman ini",
+    transactionOptions: "Opsi transaksi",
+    showing: "Menampilkan",
+    from: "dari",
+    perPage: "Per halaman",
+    filtered: "Terkirim",
+    incomeShort: "Masuk",
+    expenseShort: "Keluar",
+    addAccountFirstTitle: "Tambahkan akun terlebih dahulu",
+    exportSuccessJson: "Berhasil mengekspor JSON",
+    exportFailed: "Gagal mengekspor data",
+    deleteSuccess: "Transaksi berhasil dihapus",
+    deleteFailed: "Gagal menghapus transaksi",
+    deleteBulkFailed: "Gagal menghapus transaksi terpilih",
+
+    // Budget
+    budgetTitle: "Anggaran Bulanan",
+    totalBudget: "Total Anggaran",
+    totalSpent: "Total Pengeluaran",
+    remaining: "Sisa",
+    noBudgetSet: "Belum ada anggaran",
+    setBudget: "Atur Anggaran",
+    editBudget: "Ubah Anggaran",
+    deleteBudget: "Hapus Anggaran",
+    spent: "Terpakai",
+    overBudget: "Melebihi anggaran",
+    underBudget: "Dalam anggaran",
+
+    // Settings
+    settingsTitle: "Pengaturan",
+    categoriesTab: "Kategori",
+    apiKeysTab: "API Keys",
+    themeTab: "Tema",
+    addCategory: "Tambah Kategori",
+    deleteCategory: "Hapus kategori",
+    categoryDeleted: "Kategori berhasil dihapus",
+    categoryDeleteFailed: "Gagal menghapus kategori",
+    categoryCreated: "Kategori berhasil ditambahkan",
+    categoryCreateFailed: "Gagal menambahkan kategori",
+    confirmDeleteCategory: "Apakah Anda yakin ingin menghapus",
+    categoryDeleteWarning: "Transaksi yang menggunakan kategori ini akan dikosongkan kategorinya (data transaksi tetap aman).",
+
+    // Investments
+    investments: "Investasi",
+    portfolio: "Portofolio",
+    totalValue: "Total Nilai",
+    totalCost: "Total Modal",
+    totalPnl: "Total Laba/Rugi",
+    buyAsset: "Beli Aset",
+    sellAsset: "Jual Aset",
+    updatePrice: "Update Harga",
+    noInvestments: "Belum ada aset investasi",
+    quantity: "Jumlah",
+    buyPrice: "Harga Beli",
+    currentPrice: "Harga Saat Ini",
+    marketValue: "Nilai Pasar",
+    pnl: "Laba/Rugi",
+
+    // Goals
+    goals: "Target Tabungan",
+    addGoal: "Tambah Target",
+    targetAmount: "Jumlah Target",
+    currentAmount: "Terkumpul",
+    targetDate: "Target Tanggal",
+
+    // Recurring
+    recurring: "Tagihan Rutin",
+    addRecurring: "Tambah Tagihan",
+    frequency: "Frekuensi",
+    autoPay: "Bayar Otomatis",
+    nextPayment: "Pembayaran Berikutnya",
+    billSchedule: "Jadwal Tagihan & Langganan",
+    totalMonthlyCommitment: "TOTAL BULANAN",
+    activeSubscriptions: "LAYANAN AKTIF",
+    setupBill: "Pasang Tagihan",
+    payNow: "Bayar Sekarang",
+    deleteRecurringTitle: "Hapus Tagihan Berulang?",
+    deleteRecurringDesc: "Apakah Anda yakin ingin menghapus tagihan berulang ini?",
+
+    // Theme Settings
+    themeCustomizer: "Kustomisasi Tema",
+    customThemeLabel: "Warna Tema Kustom",
+    accentColor: "Warna Aksen",
+    canvasColor: "Warna Canvas",
+    surfaceColor: "Warna Kartu/Panel",
+    borderColor: "Warna Border",
+    successColor: "Warna Pemasukan",
+    dangerColor: "Warna Pengeluaran",
+    saveTheme: "Simpan Desain Tema",
+    resetTheme: "Kembalikan Tema Default",
+
+    // Common
+    save: "Simpan",
+    cancel: "Batal",
+    delete: "Hapus",
+    edit: "Ubah",
+    create: "Buat",
+    loading: "Memuat...",
+    error: "Terjadi kesalahan",
+    success: "Berhasil",
+    confirm: "Konfirmasi",
   },
   en: {
     // Navigation / Sidebar
@@ -154,6 +264,118 @@ export const translations = {
     noTransactions: "No transactions yet",
     noTransactionsDesc: "Record your first transaction to start tracking cash flow.",
     addAccountFirst: "Add an account first to record transactions.",
+
+    // App Layout
+    connectingToApp: "Connecting to Maybe Finance...",
+
+    // Transactions (extra)
+    tableView: "Table",
+    calendarView: "Calendar",
+    cashFlowCalendar: "Cash Flow Calendar",
+    transactionsOn: "Transactions on",
+    noTransactionsOnDay: "No transactions recorded on this day.",
+    ofTotal: "of total",
+    selectAllOnPage: "Select all on this page",
+    transactionOptions: "Transaction options",
+    showing: "Showing",
+    from: "of",
+    perPage: "Per page",
+    filtered: "Filtered",
+    incomeShort: "Income",
+    expenseShort: "Expense",
+    addAccountFirstTitle: "Add an account first",
+    exportSuccessJson: "Successfully exported JSON",
+    exportFailed: "Failed to export data",
+    deleteSuccess: "Transaction deleted successfully",
+    deleteFailed: "Failed to delete transaction",
+    deleteBulkFailed: "Failed to delete selected transactions",
+
+    // Budget
+    budgetTitle: "Monthly Budget",
+    totalBudget: "Total Budget",
+    totalSpent: "Total Spent",
+    remaining: "Remaining",
+    noBudgetSet: "No budgets set",
+    setBudget: "Set Budget",
+    editBudget: "Edit Budget",
+    deleteBudget: "Delete Budget",
+    spent: "Spent",
+    overBudget: "Over budget",
+    underBudget: "Under budget",
+
+    // Settings
+    settingsTitle: "Settings",
+    categoriesTab: "Categories",
+    apiKeysTab: "API Keys",
+    themeTab: "Theme",
+    addCategory: "Add Category",
+    deleteCategory: "Delete category",
+    categoryDeleted: "Category deleted successfully",
+    categoryDeleteFailed: "Failed to delete category",
+    categoryCreated: "Category added successfully",
+    categoryCreateFailed: "Failed to add category",
+    confirmDeleteCategory: "Are you sure you want to delete",
+    categoryDeleteWarning: "Transactions using this category will have their category cleared (transaction data remains safe).",
+
+    // Investments
+    investments: "Investments",
+    portfolio: "Portfolio",
+    totalValue: "Total Value",
+    totalCost: "Total Cost",
+    totalPnl: "Total P&L",
+    buyAsset: "Buy Asset",
+    sellAsset: "Sell Asset",
+    updatePrice: "Update Price",
+    noInvestments: "No investment assets yet",
+    quantity: "Quantity",
+    buyPrice: "Buy Price",
+    currentPrice: "Current Price",
+    marketValue: "Market Value",
+    pnl: "P&L",
+
+    // Goals
+    goals: "Savings Goals",
+    addGoal: "Add Goal",
+    targetAmount: "Target Amount",
+    currentAmount: "Saved",
+    targetDate: "Target Date",
+
+    // Recurring
+    recurring: "Recurring Bills",
+    addRecurring: "Add Bill",
+    frequency: "Frequency",
+    autoPay: "Auto-Pay",
+    nextPayment: "Next Payment",
+    billSchedule: "Bill Schedule & Subscriptions",
+    totalMonthlyCommitment: "TOTAL MONTHLY COMMITMENT",
+    activeSubscriptions: "ACTIVE SUBSCRIPTIONS",
+    setupBill: "Setup Bill",
+    payNow: "Pay Now",
+    deleteRecurringTitle: "Delete Recurring Bill?",
+    deleteRecurringDesc: "Are you sure you want to delete this recurring bill?",
+
+    // Theme Settings
+    themeCustomizer: "Theme Customizer",
+    customThemeLabel: "Custom Theme Colors",
+    accentColor: "Accent Color",
+    canvasColor: "Canvas Color",
+    surfaceColor: "Card/Surface Color",
+    borderColor: "Border Color",
+    successColor: "Success/Income Color",
+    dangerColor: "Danger/Expense Color",
+    saveTheme: "Save Theme Design",
+    resetTheme: "Reset Theme",
+
+    // Common
+    save: "Save",
+    cancel: "Cancel",
+    delete: "Delete",
+    edit: "Edit",
+    create: "Create",
+    loading: "Loading...",
+    error: "An error occurred",
+    success: "Success",
+    confirm: "Confirm",
   }
 };
 

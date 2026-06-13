@@ -1,5 +1,6 @@
 import { api } from "@/lib/api";
-import type { ActionResult } from "@/types";
+import type { ActionResult, BudgetApiItem } from "@/types";
+import { getErrorMessage } from "@/types";
 
 export async function setBudgetLimit(
   categoryId: string,
@@ -12,7 +13,7 @@ export async function setBudgetLimit(
   try {
     if (limit === 0) {
       // Find the budget limit to delete
-      const budgets = await api.get<any[]>("/api/budgets");
+      const budgets = await api.get<BudgetApiItem[]>("/api/budgets");
       const budget = budgets.find((b) => b.categoryId === categoryId);
       if (budget) {
         await api.delete(`/api/budgets/${budget.id}`);
@@ -23,7 +24,7 @@ export async function setBudgetLimit(
 
     window.dispatchEvent(new CustomEvent("refresh-app-data"));
     return { ok: true };
-  } catch (err: any) {
-    return { ok: false, error: err.message || "Gagal menyimpan batas anggaran." };
+  } catch (err: unknown) {
+    return { ok: false, error: getErrorMessage(err, "Gagal menyimpan batas anggaran.") };
   }
 }

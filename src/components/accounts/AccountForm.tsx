@@ -1,5 +1,3 @@
-"use client";
-
 import { useActionState, useState } from "react";
 import { createPortal } from "react-dom";
 import { Loader2, Wallet, X } from "lucide-react";

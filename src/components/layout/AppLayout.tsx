@@ -9,30 +9,8 @@ import { QuickAddDialog } from "@/components/transactions/QuickAddDialog";
 import { QuickAddFab } from "@/components/transactions/QuickAddFab";
 import { QuickAddProvider } from "@/components/transactions/QuickAddProvider";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  image?: string;
-}
-
-export interface Account {
-  id: string;
-  name: string;
-  type: string;
-  balance: number;
-  isActive: boolean;
-  transactionCount?: number;
-}
-
-export interface Category {
-  id: string;
-  name: string;
-  type: "income" | "expense";
-  icon: string;
-  isDefault?: boolean;
-}
+import { useLanguage } from "@/lib/contexts/LanguageContext";
+import type { User, Account, Category } from "@/types";
 
 interface AppContextType {
   user: User | null;
@@ -55,6 +33,7 @@ export function useApp() {
 }
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
+  const { t } = useLanguage();
   const [user, setUser] = useState<User | null>(null);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -73,7 +52,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       const catList = await api.get<Category[]>("/api/categories");
       
       // Fetch transactions count via transactions API with limit 1
-      const txData = await api.get<any>("/api/transactions?limit=1");
+      const txData = await api.get<{ total?: number }>("/api/transactions?limit=1");
 
       setAccounts(accList);
       setCategories(catList);
@@ -105,7 +84,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   if (loading) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-background text-foreground font-mono">
-        <div className="text-sm animate-pulse">Menghubungkan ke Racks Finance...</div>
+        <div className="text-sm animate-pulse">
+          {t("connectingToApp")}
+        </div>
       </div>
     );
   }
@@ -146,7 +127,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <QuickAddDialog
             accounts={accounts}
             categories={categories}
-            aiScanEnabled={true} // Enabled since we support DeepSeek scan
+            aiScanEnabled={true}
           />
           <QuickAddFab />
           <MobileBottomNav />

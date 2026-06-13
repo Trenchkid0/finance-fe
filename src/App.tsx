@@ -1,5 +1,6 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { Toaster } from "sonner";
 
 // Import all pages
@@ -22,6 +23,17 @@ import { useEffect } from "react";
 import { LanguageProvider } from "@/lib/contexts/LanguageContext";
 import { loadSavedTheme } from "@/lib/utils/theme";
 
+/** Layout wrapper — renders AppLayout + child routes via <Outlet /> */
+function DashboardLayout() {
+  return (
+    <AppLayout>
+      <ErrorBoundary>
+        <Outlet />
+      </ErrorBoundary>
+    </AppLayout>
+  );
+}
+
 export default function App() {
   useEffect(() => {
     loadSavedTheme();
@@ -30,115 +42,32 @@ export default function App() {
   return (
     <LanguageProvider>
       <BrowserRouter>
-      <Routes>
-        {/* Auth routes */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Routes>
+          {/* Auth routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
-        {/* Dashboard/App shell routes */}
-        <Route
-          path="/"
-          element={
-            <AppLayout>
-              <Dashboard />
-            </AppLayout>
-          }
-        />
-        <Route
-          path="/accounts"
-          element={
-            <AppLayout>
-              <Accounts />
-            </AppLayout>
-          }
-        />
-        <Route
-          path="/accounts/:id"
-          element={
-            <AppLayout>
-              <AccountDetail />
-            </AppLayout>
-          }
-        />
-        <Route
-          path="/transactions"
-          element={
-            <AppLayout>
-              <Transactions />
-            </AppLayout>
-          }
-        />
-        <Route
-          path="/income"
-          element={
-            <AppLayout>
-              <Income />
-            </AppLayout>
-          }
-        />
-        <Route
-          path="/expenses"
-          element={
-            <AppLayout>
-              <Expenses />
-            </AppLayout>
-          }
-        />
-        <Route
-          path="/budget"
-          element={
-            <AppLayout>
-              <Budget />
-            </AppLayout>
-          }
-        />
-        <Route
-          path="/settings"
-          element={
-            <AppLayout>
-              <Settings />
-            </AppLayout>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <AppLayout>
-              <Profile />
-            </AppLayout>
-          }
-        />
-        <Route
-          path="/goals"
-          element={
-            <AppLayout>
-              <Goals />
-            </AppLayout>
-          }
-        />
-        <Route
-          path="/recurring"
-          element={
-            <AppLayout>
-              <Recurring />
-            </AppLayout>
-          }
-        />
-        <Route
-          path="/investments"
-          element={
-            <AppLayout>
-              <Investments />
-            </AppLayout>
-          }
-        />
+          {/* Protected dashboard routes — shared layout */}
+          <Route element={<DashboardLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="accounts" element={<Accounts />} />
+            <Route path="accounts/:id" element={<AccountDetail />} />
+            <Route path="transactions" element={<Transactions />} />
+            <Route path="income" element={<Income />} />
+            <Route path="expenses" element={<Expenses />} />
+            <Route path="budget" element={<Budget />} />
+            <Route path="goals" element={<Goals />} />
+            <Route path="recurring" element={<Recurring />} />
+            <Route path="investments" element={<Investments />} />
+            <Route path="settings" element={<Settings />} />
+            <Route path="profile" element={<Profile />} />
+          </Route>
 
-
-        {/* Catch-all fallback redirect */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-      <Toaster theme="dark" position="top-right" />
-    </BrowserRouter>
+          {/* Catch-all fallback redirect */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+        <Toaster theme="dark" position="top-right" />
+      </BrowserRouter>
     </LanguageProvider>
   );
 }

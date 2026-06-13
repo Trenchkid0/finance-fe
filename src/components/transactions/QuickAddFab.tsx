@@ -1,5 +1,3 @@
-"use client";
-
 import { Plus } from "lucide-react";
 import { useQuickAdd } from "./QuickAddProvider";
 import { cn } from "@/lib/utils/cn";

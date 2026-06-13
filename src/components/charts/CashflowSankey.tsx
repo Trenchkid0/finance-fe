@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {

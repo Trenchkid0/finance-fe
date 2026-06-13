@@ -1,5 +1,6 @@
 import { api } from "@/lib/api";
-import type { ActionResult } from "@/types";
+import type { ActionResult, ApiKeyValue } from "@/types";
+import { getErrorMessage } from "@/types";
 
 export interface ApiKeyListItem {
   id: string;
@@ -19,7 +20,7 @@ export async function createApiKey(
   }
 
   try {
-    const res = await api.post<any>("/api/api-keys", { name: trimmed });
+    const res = await api.post<ApiKeyValue>("/api/api-keys", { name: trimmed });
     window.dispatchEvent(new CustomEvent("refresh-app-data"));
     return {
       ok: true,
@@ -29,8 +30,8 @@ export async function createApiKey(
         prefix: res.keyPrefix,
       },
     };
-  } catch (err: any) {
-    return { ok: false, error: err.message || "Gagal membuat API key." };
+  } catch (err: unknown) {
+    return { ok: false, error: getErrorMessage(err, "Gagal membuat API key.") };
   }
 }
 
@@ -39,8 +40,8 @@ export async function revokeApiKey(id: string): Promise<ActionResult<null>> {
     await api.delete(`/api/api-keys/${id}`);
     window.dispatchEvent(new CustomEvent("refresh-app-data"));
     return { ok: true };
-  } catch (err: any) {
-    return { ok: false, error: err.message || "Gagal mencabut API key." };
+  } catch (err: unknown) {
+    return { ok: false, error: getErrorMessage(err, "Gagal mencabut API key.") };
   }
 }
 
@@ -50,7 +51,7 @@ export async function deleteApiKey(id: string): Promise<ActionResult<null>> {
 
 export async function listApiKeys(): Promise<ApiKeyListItem[]> {
   try {
-    const rows = await api.get<any[]>("/api/api-keys");
+    const rows = await api.get<ApiKeyValue[]>("/api/api-keys");
     return rows.map((r) => ({
       id: r.id,
       name: r.name,

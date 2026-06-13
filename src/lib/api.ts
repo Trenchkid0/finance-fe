@@ -5,25 +5,21 @@ const getApiBaseUrl = () => {
     if (!url.startsWith("http://") && !url.startsWith("https://")) {
       url = `http://${url}`;
     }
-    console.log('Using VITE_API_URL:', url);
     return url;
   }
-  // Dynamic fallback: matches the accessing device's IP (e.g. 192.168.18.5) on port 8081
+  // Dynamic fallback: matches the accessing device's IP on port 8081
   const host = typeof window !== "undefined" ? window.location.hostname : "localhost";
   const protocol = typeof window !== "undefined" ? window.location.protocol : "http:";
-  const fallbackUrl = `${protocol}//${host}:8081`;
-  console.log('Using fallback API URL:', fallbackUrl);
-  return fallbackUrl;
+  return `${protocol}//${host}:8081`;
 };
 
 const API_BASE_URL = getApiBaseUrl();
-console.log('Final API_BASE_URL:', API_BASE_URL);
 
 
 async function request<T>(
   method: string,
   path: string,
-  body?: any,
+  body?: unknown,
   customHeaders: HeadersInit = {}
 ): Promise<T> {
   const url = `${API_BASE_URL}${path}`;
@@ -79,9 +75,9 @@ async function request<T>(
 
 export const api = {
   get: <T>(path: string, headers?: HeadersInit) => request<T>("GET", path, undefined, headers),
-  post: <T>(path: string, body: any, headers?: HeadersInit) => request<T>("POST", path, body, headers),
-  put: <T>(path: string, body: any, headers?: HeadersInit) => request<T>("PUT", path, body, headers),
-  delete: <T>(path: string, body?: any, headers?: HeadersInit) => request<T>("DELETE", path, body, headers),
+  post: <T>(path: string, body: unknown, headers?: HeadersInit) => request<T>("POST", path, body, headers),
+  put: <T>(path: string, body: unknown, headers?: HeadersInit) => request<T>("PUT", path, body, headers),
+  delete: <T>(path: string, body?: unknown, headers?: HeadersInit) => request<T>("DELETE", path, body, headers),
 };
 
 /**
@@ -116,7 +112,7 @@ export const cachedApi = {
   /**
    * POST with automatic cache invalidation
    */
-  async post<T>(path: string, body: any, invalidatePatterns: string[] = []): Promise<T> {
+  async post<T>(path: string, body: unknown, invalidatePatterns: string[] = []): Promise<T> {
     const result = await api.post<T>(path, body);
     
     // Invalidate related caches
@@ -128,7 +124,7 @@ export const cachedApi = {
   /**
    * PUT with automatic cache invalidation
    */
-  async put<T>(path: string, body: any, invalidatePatterns: string[] = []): Promise<T> {
+  async put<T>(path: string, body: unknown, invalidatePatterns: string[] = []): Promise<T> {
     const result = await api.put<T>(path, body);
     
     // Invalidate related caches

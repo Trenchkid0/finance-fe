@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useTransition } from "react";
 import { Link } from "react-router-dom";
 import {

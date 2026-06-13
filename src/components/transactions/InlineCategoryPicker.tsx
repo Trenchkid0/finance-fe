@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useTransition } from "react";
 import { Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";

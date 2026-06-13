@@ -1,6 +1,7 @@
 import { api } from "@/lib/api";
 import { createAccountSchema, updateAccountSchema } from "@/lib/utils/validators";
 import type { ActionResult } from "@/types";
+import { getErrorMessage } from "@/types";
 import { cleanMoneyString } from "@/lib/utils/formatters";
 
 export async function createAccount(
@@ -36,8 +37,8 @@ export async function createAccount(
     });
     window.dispatchEvent(new CustomEvent("refresh-app-data"));
     return { ok: true };
-  } catch (err: any) {
-    return { ok: false, error: err.message || "Gagal membuat akun." };
+  } catch (err: unknown) {
+    return { ok: false, error: getErrorMessage(err, "Gagal membuat akun.") };
   }
 }
 
@@ -78,14 +79,14 @@ export async function updateAccount(
     });
     window.dispatchEvent(new CustomEvent("refresh-app-data"));
     return { ok: true };
-  } catch (err: any) {
-    return { ok: false, error: err.message || "Gagal memperbarui akun." };
+  } catch (err: unknown) {
+    return { ok: false, error: getErrorMessage(err, "Gagal memperbarui akun.") };
   }
 }
 
 export async function toggleAccountActive(id: string): Promise<ActionResult<null>> {
   try {
-    const current = await api.get<any>(`/api/accounts/${id}`);
+    const current = await api.get<{ isActive: boolean }>(`/api/accounts/${id}`);
     const nextActive = !current.isActive;
     await api.put(`/api/accounts/${id}`, {
       ...current,
@@ -93,8 +94,8 @@ export async function toggleAccountActive(id: string): Promise<ActionResult<null
     });
     window.dispatchEvent(new CustomEvent("refresh-app-data"));
     return { ok: true };
-  } catch (err: any) {
-    return { ok: false, error: err.message || "Gagal mengubah status aktif akun." };
+  } catch (err: unknown) {
+    return { ok: false, error: getErrorMessage(err, "Gagal mengubah status aktif akun.") };
   }
 }
 
@@ -103,7 +104,7 @@ export async function deleteAccount(id: string): Promise<ActionResult<null>> {
     await api.delete(`/api/accounts/${id}`);
     window.dispatchEvent(new CustomEvent("refresh-app-data"));
     return { ok: true };
-  } catch (err: any) {
-    return { ok: false, error: err.message || "Gagal menghapus akun." };
+  } catch (err: unknown) {
+    return { ok: false, error: getErrorMessage(err, "Gagal menghapus akun.") };
   }
 }

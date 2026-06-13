@@ -1,5 +1,6 @@
 import { api } from "@/lib/api";
 import type { ActionResult } from "@/types";
+import { getErrorMessage } from "@/types";
 import { cleanMoneyString } from "@/lib/utils/formatters";
 
 function getString(fd: FormData, name: string): string | undefined {
@@ -29,8 +30,8 @@ export async function createTransaction(
     await api.post("/api/transactions", payload);
     window.dispatchEvent(new CustomEvent("refresh-app-data"));
     return { ok: true };
-  } catch (err: any) {
-    return { ok: false, error: err.message || "Gagal membuat transaksi." };
+  } catch (err: unknown) {
+    return { ok: false, error: getErrorMessage(err, "Gagal membuat transaksi.") };
   }
 }
 
@@ -56,8 +57,8 @@ export async function updateTransaction(
     await api.put(`/api/transactions/${id}`, payload);
     window.dispatchEvent(new CustomEvent("refresh-app-data"));
     return { ok: true };
-  } catch (err: any) {
-    return { ok: false, error: err.message || "Gagal memperbarui transaksi." };
+  } catch (err: unknown) {
+    return { ok: false, error: getErrorMessage(err, "Gagal memperbarui transaksi.") };
   }
 }
 
@@ -66,7 +67,7 @@ export async function deleteTransaction(id: string): Promise<ActionResult<null>>
     await api.delete(`/api/transactions/${id}`);
     window.dispatchEvent(new CustomEvent("refresh-app-data"));
     return { ok: true };
-  } catch (err: any) {
-    return { ok: false, error: err.message || "Gagal menghapus transaksi." };
+  } catch (err: unknown) {
+    return { ok: false, error: getErrorMessage(err, "Gagal menghapus transaksi.") };
   }
 }

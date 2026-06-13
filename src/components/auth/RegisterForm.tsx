@@ -1,5 +1,3 @@
-"use client";
-
 import { useActionState, useState } from "react";
 import { Link } from "react-router-dom";
 import { AlertCircle, Eye, EyeOff, Loader2, User, Mail, Lock, ArrowRight } from "lucide-react";

@@ -1,4 +1,3 @@
-"use client";
 import { useMemo, useState, useTransition } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowDown, ArrowUp, ChevronDown, Minus } from "lucide-react";

@@ -1,5 +1,3 @@
-"use client";
-
 /**
  * Sidebar primitive — port of shadcn `ui/sidebar.tsx` adapted to our
  * import paths (`@/components/ui/*`) and using

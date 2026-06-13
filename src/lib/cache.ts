@@ -3,7 +3,7 @@
  * Zero dependencies, lightweight, and effective
  */
 
-interface CacheEntry<T = any> {
+interface CacheEntry<T = unknown> {
   data: T;
   timestamp: number;
   expiresAt: number;
@@ -148,7 +148,7 @@ export const CacheKeys = {
   summary: () => 'summary',
   accounts: () => 'accounts:list',
   account: (id: string) => `accounts:detail:${id}`,
-  transactions: (filters?: Record<string, any>) => {
+  transactions: (filters?: Record<string, string>) => {
     let key = 'transactions:list';
     if (filters) {
       if (filters.type) key += `:type:${filters.type}`;
