@@ -32,6 +32,8 @@ export function QuickAddDialog({
 		return null;
 	}
 
+	if (!isOpen) return null;
+
 	const initial: TransactionFormInitial = {
 		type: "expense",
 		accountId: accounts[0].id,
