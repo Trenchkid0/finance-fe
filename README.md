@@ -407,7 +407,9 @@ const CHART_COLORS = {
 ### Recurring Bills
 - Weekly/monthly/yearly frequency
 - Auto-pay toggle with background processing
-- Telegram notifications
+- **Telegram Reminders**: Flexible reminder days offset (0-7 days) and premium hour/minute dropdown selectors
+- **Done Button State**: Interactive "Pay Now" button that transitions to a disabled "Done" state with a success theme once payment is completed for the current month
+- Immediate Telegram notifications when manual payment is clicked
 
 ### Settings
 - Profile management (name, currency)
