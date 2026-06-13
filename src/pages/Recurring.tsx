@@ -46,6 +46,9 @@ interface RecurringBill {
   autoPay?: boolean;
   accountId?: string | null;
   lastPaidAt?: string | null;
+  reminderDaysBefore?: number | null;
+  reminderTime?: string | null;
+  lastRemindedAt?: string | null;
   note?: string;
   category?: {
     id: string;
@@ -67,6 +70,7 @@ export default function Recurring() {
   const [bills, setBills] = useState<RecurringBill[]>([]);
   const [loading, setLoading] = useState(true);
   const [payingBillId, setPayingBillId] = useState<string | null>(null);
+  const [justPaidBillIds, setJustPaidBillIds] = useState<string[]>([]);
 
   // Calendar Date State (default to current date)
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -85,6 +89,7 @@ export default function Recurring() {
       setLoading(true);
       const data = await api.get<RecurringBill[]>("/api/recurring");
       setBills(data || []);
+      setJustPaidBillIds([]);
     } catch (err) {
       console.error("Error fetching recurring bills", err);
       setBills([]);
@@ -153,6 +158,7 @@ export default function Recurring() {
       setPayingBillId(billId);
       await api.post(`/api/recurring/${billId}/pay`, {});
       toast.success(language === "id" ? "Pembayaran tagihan berhasil dicatat!" : "Bill payment recorded successfully!");
+      setJustPaidBillIds((prev) => [...prev, billId]);
       fetchBills();
       window.dispatchEvent(new CustomEvent("refresh-app-data"));
     } catch (err: any) {
@@ -237,6 +243,15 @@ export default function Recurring() {
     month: "long",
     year: "numeric",
   });
+
+  const isBillPaid = (bill: RecurringBill) => {
+    if (justPaidBillIds.includes(bill.id)) {
+      return true;
+    }
+    if (!bill.lastPaidAt) return false;
+    const paidDate = new Date(bill.lastPaidAt);
+    return paidDate.getFullYear() === year && paidDate.getMonth() === month;
+  };
 
   // Selected Day bills list
   const selectedDayBills = selectedDay ? getBillsForDay(selectedDay) : [];
@@ -515,8 +530,20 @@ export default function Recurring() {
                         </div>
                       )}
 
+                      {bill.reminderDaysBefore !== undefined && bill.reminderDaysBefore !== null && (
+                        <div className="mt-2 text-[10px] text-text-muted bg-white/[0.02] border border-white/[0.04] p-1.5 rounded-lg flex justify-between items-center">
+                          <span>{language === "id" ? "Pengingat Telegram:" : "Telegram Reminder:"}</span>
+                          <span className="font-semibold text-text-primary">
+                            {bill.reminderDaysBefore === 0
+                              ? (language === "id" ? "Hari H" : "Due Date")
+                              : (language === "id" ? `${bill.reminderDaysBefore} hari sebelum` : `${bill.reminderDaysBefore}d before`)}
+                            {bill.reminderTime ? ` @ ${bill.reminderTime}` : ""}
+                          </span>
+                        </div>
+                      )}
+
                       {bill.lastPaidAt && (
-                        <p className="mt-1 text-[9px] text-muted-foreground/60 italic text-right">
+                        <p className="mt-1.5 text-[9px] text-muted-foreground/60 italic text-right">
                           {language === "id" 
                             ? `Terakhir dibayar: ${formatDateShort(bill.lastPaidAt)}` 
                             : `Last paid: ${formatDateShort(bill.lastPaidAt)}`}
@@ -524,19 +551,30 @@ export default function Recurring() {
                       )}
 
                       {bill.accountId && (
-                        <Button
-                          onClick={() => handlePay(bill.id)}
-                          disabled={payingBillId === bill.id}
-                          variant="outline"
-                          className="mt-3.5 w-full h-8 rounded-lg text-xs font-semibold bg-accent/10 border-accent/20 hover:bg-accent/20 text-accent gap-1.5"
-                        >
-                          {payingBillId === bill.id ? (
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                          ) : (
-                            <CheckCircle2 className="h-3 w-3" />
-                          )}
-                          {language === "id" ? "Bayar Sekarang" : "Pay Now"}
-                        </Button>
+                        isBillPaid(bill) ? (
+                          <Button
+                            disabled
+                            variant="outline"
+                            className="mt-3.5 w-full h-8 rounded-lg text-xs font-semibold bg-income/10 border-income/30 text-income gap-1.5 opacity-100 cursor-not-allowed"
+                          >
+                            <CheckCircle2 className="h-3 w-3 text-income" />
+                            {language === "id" ? "Sudah Dibayar" : "Done"}
+                          </Button>
+                        ) : (
+                          <Button
+                            onClick={() => handlePay(bill.id)}
+                            disabled={payingBillId === bill.id}
+                            variant="outline"
+                            className="mt-3.5 w-full h-8 rounded-lg text-xs font-semibold bg-accent/10 border-accent/20 hover:bg-accent/20 text-accent gap-1.5"
+                          >
+                            {payingBillId === bill.id ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <CheckCircle2 className="h-3 w-3" />
+                            )}
+                            {language === "id" ? "Bayar Sekarang" : "Pay Now"}
+                          </Button>
+                        )
                       )}
 
                       <div className="flex justify-between items-end mt-3 pt-2 border-t border-border/50">

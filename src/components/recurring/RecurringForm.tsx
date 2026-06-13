@@ -26,6 +26,8 @@ interface RecurringFormData {
   dayOfMonth: number
   autoPay?: boolean
   accountId?: string | null
+  reminderDaysBefore?: number | null
+  reminderTime?: string | null
   note?: string
 }
 
@@ -48,6 +50,9 @@ export function RecurringForm({ open, onClose, recurring, categories, accounts, 
     dayOfMonth: recurring?.dayOfMonth || 1,
     autoPay: recurring?.autoPay || false,
     accountId: recurring?.accountId || '',
+    enableReminder: recurring?.reminderDaysBefore !== undefined && recurring?.reminderDaysBefore !== null,
+    reminderDaysBefore: recurring?.reminderDaysBefore !== undefined && recurring?.reminderDaysBefore !== null ? recurring.reminderDaysBefore : 1,
+    reminderTime: recurring?.reminderTime || '08:00',
     note: recurring?.note || '',
   })
   const [error, setError] = useState('')
@@ -89,6 +94,8 @@ export function RecurringForm({ open, onClose, recurring, categories, accounts, 
         dayOfMonth: formData.dayOfMonth,
         autoPay: formData.autoPay,
         accountId: formData.accountId || null,
+        reminderDaysBefore: formData.enableReminder ? formData.reminderDaysBefore : null,
+        reminderTime: formData.enableReminder ? formData.reminderTime : null,
         note: formData.note,
       })
     } catch (err) {
@@ -271,6 +278,88 @@ export function RecurringForm({ open, onClose, recurring, categories, accounts, 
                     : 'Automatically record expense transaction and deduct balance on due date.'}
                 </p>
               </div>
+            </div>
+
+            <div className="space-y-3 bg-white/[0.01] border border-white/[0.04] p-3 rounded-xl">
+              <div className="flex items-center gap-3">
+                <input
+                  id="enableReminder"
+                  type="checkbox"
+                  checked={formData.enableReminder}
+                  onChange={(e) => setFormData({ ...formData, enableReminder: e.target.checked })}
+                  className="size-4 rounded border-border text-accent focus:ring-accent bg-elevated/45"
+                />
+                <div>
+                  <Label htmlFor="enableReminder" className="text-xs font-bold text-text-primary uppercase tracking-wider cursor-pointer">
+                    {isId ? 'Pengingat Telegram' : 'Telegram Reminder'}
+                  </Label>
+                  <p className="text-[10px] text-muted-foreground/80 leading-normal mt-0.5">
+                    {isId 
+                      ? 'Kirim notifikasi pengingat pembayaran ke Telegram.' 
+                      : 'Send payment reminder notifications to Telegram.'}
+                  </p>
+                </div>
+              </div>
+
+              {formData.enableReminder && (
+                <div className="grid grid-cols-2 gap-3 pt-3 border-t border-white/[0.04] animate-fade-in-up">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider">
+                      {isId ? 'Hari Pengingat' : 'Reminder Day'}
+                    </Label>
+                    <FormSelect
+                      value={String(formData.reminderDaysBefore)}
+                      onChange={(val) => setFormData({ ...formData, reminderDaysBefore: Number(val) })}
+                      options={[
+                        { value: '0', label: isId ? 'Hari Jatuh Tempo' : 'On Due Date' },
+                        { value: '1', label: isId ? '1 Hari Sebelum' : '1 Day Before' },
+                        { value: '2', label: isId ? '2 Hari Sebelum' : '2 Days Before' },
+                        { value: '3', label: isId ? '3 Hari Sebelum' : '3 Days Before' },
+                        { value: '5', label: isId ? '5 Hari Sebelum' : '5 Days Before' },
+                        { value: '7', label: isId ? '7 Hari Sebelum' : '7 Days Before' },
+                      ]}
+                      placeholder=""
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider">
+                      {isId ? 'Waktu Pengingat' : 'Reminder Time'}
+                    </Label>
+                    <div className="flex items-center gap-1.5">
+                      <div className="flex-1">
+                        <FormSelect
+                          value={formData.reminderTime ? formData.reminderTime.split(':')[0] : '08'}
+                          onChange={(h) => {
+                            const currentMin = formData.reminderTime ? formData.reminderTime.split(':')[1] : '00';
+                            setFormData({ ...formData, reminderTime: `${h}:${currentMin}` });
+                          }}
+                          options={Array.from({ length: 24 }, (_, i) => {
+                            const hStr = String(i).padStart(2, '0');
+                            return { value: hStr, label: hStr };
+                          })}
+                          placeholder=""
+                        />
+                      </div>
+                      <span className="text-muted-foreground/40 font-bold font-mono select-none px-0.5">:</span>
+                      <div className="flex-1">
+                        <FormSelect
+                          value={formData.reminderTime ? formData.reminderTime.split(':')[1] : '00'}
+                          onChange={(m) => {
+                            const currentHour = formData.reminderTime ? formData.reminderTime.split(':')[0] : '08';
+                            setFormData({ ...formData, reminderTime: `${currentHour}:${m}` });
+                          }}
+                          options={Array.from({ length: 12 }, (_, i) => {
+                            const mStr = String(i * 5).padStart(2, '0');
+                            return { value: mStr, label: mStr };
+                          })}
+                          placeholder=""
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">

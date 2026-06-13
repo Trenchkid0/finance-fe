@@ -411,14 +411,70 @@ const CHART_COLORS = {
 
 ### Settings
 - Profile management (name, currency)
-- 8 premium theme presets
+- **18 Premium Theme Presets** (10 Dark & 8 Light presets, fully customizable)
 - Language switching (ID/EN)
-- API key management
+- API key management (monospace block display, copy button)
 - Data export
 
 ### Command Palette
 - `Cmd+K` / `Ctrl+K` keyboard shortcut
 - Quick navigation and actions
+
+---
+
+## 🎨 Sistem Kustomisasi Tema & Warna Hover
+Aplikasi ini mendukung kustomisasi tema dinamis berbasis CSS Custom Variables (`var(--variable-name)`) dan `localStorage` agar perubahan warna dapat diterapkan secara konsisten di semua halaman.
+
+### 1. Daftar Preset Tema Unggulan
+Kini tersedia 18 preset warna modern:
+*   **Gelap (Dark Presets):**
+    *   *Nordic Midnight (Bawaan)*: Biru laut dalam yang sejuk & nyaman untuk mata.
+    *   *GitHub Dark*: Kontras monokromatik ala antarmuka developer.
+    *   *Midnight Obsidian (AMOLED)*: Hitam pekat pekat untuk hemat daya layar.
+    *   *Emerald Wealth*: Hijau investasi premium bernuansa kestabilan finansial.
+    *   *Midnight Sapphire*: Safir kripto futuristik.
+    *   *Aureum Gold*: Emas & hitam arang prestisius.
+    *   *Cyberpunk Neon*: Aksen hot pink & neon teal retro.
+    *   *Rosewood Forest*: Burgundy gelap dipadu rose pink lembut.
+    *   *Sunset Crimson (Baru)*: Jingga vulkanik & crimson hangat.
+    *   *Oceanic Abyss (Baru)*: Palet dasar laut dalam dengan sian elektrik.
+    *   *Royal Amethyst (Baru)*: Ungu royal berkelas.
+    *   *Deep Forest (Baru)*: Hijau lumut malam.
+    *   *Slate Obsidian (Baru)*: Abu-abu batu modern.
+*   **Terang (Light Presets):**
+    *   *Minimalist Light*: Putih bersih minimalis modern.
+    *   *Retro Sepia*: Kertas antik hangat yang ramah untuk kesehatan mata.
+    *   *Swiss Banking*: Krim perak elegan klasik Swiss.
+    *   *Nordic Snow*: Salju perak berkilau kutub.
+    *   *Sakura Blossom*: Krim merah muda sakura musim semi.
+    *   *Sage Garden (Baru)*: Hijau sage segar penenang pandangan.
+    *   *Tuscan Sun (Baru)*: Buttercream pedesaan Tuscan hangat.
+    *   *Glacier Breeze (Baru)*: Frosty alpine biru segar.
+    *   *Lavender Fields (Baru)*: Padang lavender ungu Provence yang tenang.
+    *   *Soft Peach (Baru)*: Pastel persik musim panas hangat.
+
+### 2. Variabel CSS Interaksi (Hover States)
+Untuk transisi tombol dan tabel yang mulus, pastikan menggunakan variabel CSS berikut:
+```css
+--hover-surface     /* Untuk hover baris tabel/item list (lebih terang dari surface) */
+--hover-elevated    /* Untuk hover tombol sekunder/dropdown (lebih terang dari elevated) */
+--hover-accent      /* Untuk hover tombol utama/aksen (lebih terang dari accent) */
+--hover-border      /* Untuk hover pembatas/border (lebih terang dari border) */
+```
+
+Implementasi Tailwind:
+```tsx
+// Baris tabel transaksi
+<div className="bg-surface hover:bg-hover-surface border-b border-border hover:border-hover-border transition-colors duration-150" />
+```
+
+---
+
+## 🛠️ Poles Visual & Peningkatan UI Terbaru
+*   **Penyelarasan Input Form /investments**: Form *Buy/Record Asset* (kolom *Holding Account*) diselaraskan penuh dengan kolom *Purchase Date* dari segi tinggi, batas tepi, serta dropdown menu.
+*   **Form Update Market Price**: Dipoles menggunakan komponen input standardisasi yang setara dengan form transaksi utama (ikon mata uang rupiah statis di sebelah kiri, layout proporsional).
+*   **Lampiran Struk Belanja**: Form transaksi mendukung pemilihan lampiran file gambar struk belanja dengan preview interaktif.
+*   **Align Kolom Transaksi & Menu 3-Titik**: Checkbox baris dan ikon menu tiga-titik pada halaman transaksi dirapikan secara vertikal dengan tinggi baris yang presisi.
 
 ---
 
