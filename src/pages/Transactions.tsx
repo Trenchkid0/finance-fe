@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useApp } from "@/components/layout/AppLayout";
 import { TransactionsClient } from "@/components/transactions/TransactionsClient";
+import { SkeletonTransactions } from "@/components/ui/skeleton-loader";
 import { api } from "@/lib/api";
-import { Loader2 } from "lucide-react";
 
 const PAGE_SIZE_DEFAULT = 25;
 const PAGE_SIZE_OPTIONS = [10, 25, 50];
@@ -62,11 +62,7 @@ export default function Transactions() {
   }, [q, type, accountId, categoryId, startDate, endDate, page, pageSize]);
 
   if (loading && !data) {
-    return (
-      <div className="flex h-[50vh] items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-accent" />
-      </div>
-    );
+    return <SkeletonTransactions />;
   }
 
   const transactions = (data?.transactions || []).map((tx: any) => ({

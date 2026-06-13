@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useApp } from "@/components/layout/AppLayout";
 import { SettingsClient } from "@/components/settings/SettingsClient";
+import { SkeletonSettings } from "@/components/ui/skeleton-loader";
 import { listApiKeys, type ApiKeyListItem } from "@/app/actions/api-keys";
-import { Loader2 } from "lucide-react";
 
 export default function Settings() {
   const { user, categories: globalCategories, refresh } = useApp();
@@ -37,11 +37,7 @@ export default function Settings() {
   }, [refresh]);
 
   if (loading && apiKeys.length === 0) {
-    return (
-      <div className="flex h-[50vh] items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-accent" />
-      </div>
-    );
+    return <SkeletonSettings />;
   }
 
   // Format categories to match CategoryItem interface expected by SettingsClient
