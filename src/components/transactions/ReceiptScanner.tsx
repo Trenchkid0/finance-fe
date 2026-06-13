@@ -1,10 +1,12 @@
-import { useRef } from "react";
+import { useRef, useEffect, useState } from "react";
 import { Loader2, Sparkles, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 import { scanTransactionText } from "@/app/actions/ai";
 import type { AIScanCandidate } from "@/app/actions/ai";
+import { api } from "@/lib/api";
+import { cn } from "@/lib/utils/cn";
 
 const TESSERACT_CDN = "https://unpkg.com/tesseract.js@5.1.0/dist/tesseract.min.js";
 
@@ -22,6 +24,26 @@ export function ReceiptScanner({
   const { language } = useLanguage();
   const isId = language === "id";
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [aiEnabled, setAiEnabled] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    api.get<{ enabled: boolean }>("/api/ai/status")
+      .then((res) => {
+        if (active) {
+          setAiEnabled(res.enabled);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to fetch AI status:", err);
+        if (active) {
+          setAiEnabled(false);
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleScanFile = async (file: File) => {
     setScanning(true);
@@ -58,17 +80,39 @@ export function ReceiptScanner({
     }
   };
 
+  const isDisabled = aiEnabled === false;
+
   return (
     <div
-      className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/[0.12] bg-white/[0.02] px-6 py-10 text-center cursor-pointer"
-      onClick={() => !scanning && fileInputRef.current?.click()}
+      className={cn(
+        "flex flex-col items-center justify-center rounded-2xl border border-dashed px-6 py-10 text-center transition-all duration-200",
+        isDisabled
+          ? "border-white/[0.06] bg-white/[0.01] cursor-not-allowed opacity-60"
+          : "border-white/[0.12] bg-white/[0.02] cursor-pointer hover:bg-white/[0.04] hover:border-white/[0.18]"
+      )}
+      onClick={() => !scanning && !isDisabled && fileInputRef.current?.click()}
       role="button"
+      aria-disabled={isDisabled}
     >
       {scanning ? (
         <>
           <Loader2 className="mb-3 h-7 w-7 animate-spin text-accent" />
           <p className="text-sm text-muted-foreground">
             {isId ? "Membaca struk…" : "Reading receipt…"}
+          </p>
+        </>
+      ) : isDisabled ? (
+        <>
+          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/[0.04] text-muted-foreground/60">
+            <Upload className="h-6 w-6" />
+          </div>
+          <p className="text-sm font-medium text-muted-foreground/90">
+            {isId ? "Scan AI Tidak Aktif" : "AI Scan Inactive"}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground/50 max-w-[280px]">
+            {isId
+              ? "Layanan Scan AI dinonaktifkan karena DEEPSEEK_API_KEY belum dikonfigurasi di server."
+              : "AI Scan is disabled because DEEPSEEK_API_KEY is not configured on the server."}
           </p>
         </>
       ) : (
@@ -94,6 +138,7 @@ export function ReceiptScanner({
         type="file"
         accept="image/*"
         className="hidden"
+        disabled={isDisabled}
         onChange={(e) => {
           const f = e.target.files?.[0];
           if (f) handleScanFile(f);
