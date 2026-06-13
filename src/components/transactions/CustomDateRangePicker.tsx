@@ -3,7 +3,6 @@ import { createPortal } from "react-dom";
 import { Calendar, ChevronDown, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
-import { useLanguage } from "@/lib/contexts/LanguageContext";
 
 export function formatFriendlyDate(iso: string): string {
   if (!iso) return "";

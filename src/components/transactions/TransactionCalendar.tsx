@@ -47,7 +47,7 @@ export function TransactionCalendar({
   categories,
   aiScanEnabled,
 }: TransactionCalendarProps) {
-  const { t, language } = useLanguage();
+  const { language } = useLanguage();
   const [editing, setEditing] = useState<TransactionRowData | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<TransactionRowData | null>(null);
 

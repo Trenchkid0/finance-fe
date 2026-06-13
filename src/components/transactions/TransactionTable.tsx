@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { ArrowLeftRight, Copy, MoreHorizontal, Pencil, Receipt, Trash2, Wallet } from "lucide-react";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
-import { formatDateShort, formatIDR } from "@/lib/utils/formatters";
+import { formatIDR } from "@/lib/utils/formatters";
 import { cn } from "@/lib/utils/cn";
 import { Card } from "@/components/ui/card";
 import {

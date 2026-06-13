@@ -1,6 +1,6 @@
 import { Briefcase, MinusCircle, RefreshCw } from "lucide-react";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
-import { formatIDR, formatInputRupiah } from "@/lib/utils/formatters";
+import { formatIDR } from "@/lib/utils/formatters";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { AssetHolding } from "./types";
