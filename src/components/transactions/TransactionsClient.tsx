@@ -375,7 +375,7 @@ export function TransactionsClient({
                 style={{ borderRadius: 'var(--dropdown-radius, 12px)' }}
               >
                 <Download size={14} />
-                {language === "id" ? "Ekspor / Impor" : "Export / Import"}
+                {t("exportImport")}
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="bg-surface border-border z-[99999]">
@@ -406,23 +406,43 @@ export function TransactionsClient({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <Card className="p-4 gap-0">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">{t("totalTransactions")}</p>
-          <p className="text-lg font-black font-mono tabular-nums text-foreground">
-            {summary.total} <span className="text-xs text-muted-foreground/60 font-sans font-semibold ml-1">{language === "id" ? "transaksi" : "transactions"}</span>
+        <Card className="p-4 gap-0 relative overflow-hidden">
+          <div className="absolute top-3 right-3 size-8 rounded-lg bg-accent/10 flex items-center justify-center">
+            <ArrowLeftRight size={15} className="text-accent" />
+          </div>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-2">{t("totalTransactions")}</p>
+          <p className="text-xl font-bold font-mono tabular-nums text-text-primary">
+            {summary.total.toLocaleString()}
           </p>
+          <p className="text-[11px] text-text-muted mt-1">{t("transactionCount")}</p>
         </Card>
-        <Card className="p-4 gap-0">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">{t("incomeLabel")}</p>
-          <p className="text-lg font-black font-mono tabular-nums text-income">
-            {formatIDR(summary.income)}
+        <Card className="p-4 gap-0 relative overflow-hidden">
+          <div className="absolute top-3 right-3 size-8 rounded-lg bg-income/10 flex items-center justify-center">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" className="text-income"><path d="M7.5 12V3M7.5 3L4 6.5M7.5 3L11 6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </div>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-2">{t("incomeLabel")}</p>
+          <p className="text-xl font-bold font-mono tabular-nums text-income">
+            {formatIDR(summary.income, { compact: true })}
           </p>
+          {summary.total > 0 && summary.income > 0 && (
+            <p className="text-[11px] text-income/60 mt-1 tabular-nums">
+              {((summary.income / (summary.income + summary.expense)) * 100).toFixed(0)}% {language === "id" ? "dari total" : "of total"}
+            </p>
+          )}
         </Card>
-        <Card className="p-4 gap-0">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">{t("expenseLabel")}</p>
-          <p className="text-lg font-black font-mono tabular-nums text-expense">
-            {formatIDR(summary.expense)}
+        <Card className="p-4 gap-0 relative overflow-hidden">
+          <div className="absolute top-3 right-3 size-8 rounded-lg bg-expense/10 flex items-center justify-center">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" className="text-expense"><path d="M7.5 3V12M7.5 12L4 8.5M7.5 12L11 8.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </div>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-2">{t("expenseLabel")}</p>
+          <p className="text-xl font-bold font-mono tabular-nums text-expense">
+            {formatIDR(summary.expense, { compact: true })}
           </p>
+          {summary.total > 0 && summary.expense > 0 && (
+            <p className="text-[11px] text-expense/60 mt-1 tabular-nums">
+              {((summary.expense / (summary.income + summary.expense)) * 100).toFixed(0)}% {language === "id" ? "dari total" : "of total"}
+            </p>
+          )}
         </Card>
       </div>
 
@@ -480,18 +500,18 @@ export function TransactionsClient({
               isFilterActive(filters) ? (
                 <EmptyState
                   icon={Search}
-                  title={language === "id" ? "Tidak ada transaksi cocok" : "No matching transactions"}
-                  description={language === "id" ? "Coba ubah kata kunci atau reset filter." : "Try changing keyword or resetting filters."}
+                  title={t("noMatchingTransactions")}
+                  description={t("noMatchingDesc")}
                   size="sm"
                 />
               ) : (
                 <EmptyState
                   icon={Wallet}
-                  title={language === "id" ? "Belum ada transaksi" : "No transactions yet"}
+                  title={t("noTransactions")}
                   description={
                     canCreate
-                      ? (language === "id" ? "Catat transaksi pertama Anda untuk mulai melacak arus kas." : "Record your first transaction to start tracking cash flow.")
-                      : (language === "id" ? "Tambahkan akun terlebih dahulu untuk mencatat transaksi." : "Add an account first to record transactions.")
+                      ? t("noTransactionsDesc")
+                      : t("addAccountFirst")
                   }
                   action={
                     canCreate ? (
@@ -604,10 +624,7 @@ export function TransactionsClient({
                     return acc;
                   }, {} as Record<string, { income: number; expense: number; count: number; hasTransfer: boolean }>);
 
-                  // Debug: log calendar data
-                  console.log('Calendar transactions:', calendarTransactions.length);
-                  console.log('Calendar map:', calendarMap);
-                  console.log('Sample dates:', Object.keys(calendarMap).slice(0, 5));
+
 
                   const todayStr = new Date().toLocaleDateString("sv-SE");
 
@@ -946,6 +963,7 @@ function FilterBar({
   const { pathname } = useLocation();
   const [searchParams] = useSearchParams();
   const [pending, startTransition] = useTransition();
+  const { t } = useLanguage();
   const formRef = useRef<HTMLFormElement>(null);
 
 
@@ -996,9 +1014,9 @@ function FilterBar({
           <Input
             name="q"
             defaultValue={filters.q}
-            placeholder="Cari deskripsi atau catatan..."
+            placeholder={t("searchPlaceholder")}
             className="pl-9"
-            aria-label="Cari transaksi"
+            aria-label={t("searchPlaceholder")}
           />
         </div>
 
@@ -1009,10 +1027,10 @@ function FilterBar({
             value={filters.type}
             onChange={(v) => pushFilter({ type: v })}
             options={[
-              { value: "all", label: "Semua tipe" },
-              { value: "income", label: "Pemasukan" },
-              { value: "expense", label: "Pengeluaran" },
-              { value: "transfer", label: "Transfer" },
+              { value: "all", label: t("allTypes") },
+              { value: "income", label: t("incomeLabel") },
+              { value: "expense", label: t("expenseLabel") },
+              { value: "transfer", label: t("transferLabel") },
             ]}
           />
           <FilterSelect
@@ -1020,7 +1038,7 @@ function FilterBar({
             value={filters.accountId}
             onChange={(v) => pushFilter({ accountId: v })}
             options={[
-              { value: "all", label: "Semua akun" },
+              { value: "all", label: t("allAccounts") },
               ...accounts.map((a) => ({ value: a.id, label: a.name })),
             ]}
           />
@@ -1029,8 +1047,8 @@ function FilterBar({
             value={filters.categoryId}
             onChange={(v) => pushFilter({ categoryId: v })}
             options={[
-              { value: "all", label: "Semua kategori" },
-              { value: "none", label: "Tanpa kategori" },
+              { value: "all", label: t("allCategories") },
+              { value: "none", label: t("noCategory") },
               ...categories.map((c) => ({
                 value: c.id,
                 label: `${c.icon ? `${c.icon} ` : ""}${c.name}`,
@@ -1043,7 +1061,7 @@ function FilterBar({
       {/* Date range + actions row */}
       <div className="flex flex-col gap-3 pt-4 border-t border-white/[0.04] sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          <span className="text-xs font-semibold text-text-muted shrink-0">Rentang Tanggal</span>
+          <span className="text-xs font-semibold text-text-muted shrink-0">{t("dateRangeLabel")}</span>
           <input type="hidden" name="startDate" value={filters.startDate || ""} />
           <input type="hidden" name="endDate" value={filters.endDate || ""} />
           <CustomDateRangePicker
@@ -1076,11 +1094,11 @@ function FilterBar({
                 })
               }
             >
-              Reset
+              {t("resetFilter")}
             </Button>
           ) : null}
           <Button type="submit" size="sm" disabled={pending}>
-            Terapkan Filter
+            {t("applyFilter")}
           </Button>
         </div>
       </div>
@@ -1645,7 +1663,7 @@ function TransactionsList({
 	toggleSelectAll: () => void;
 	filters?: TransactionFiltersState;
 }) {
-	const { language } = useLanguage();
+	const { t, language } = useLanguage();
 
 	if (transactions.length === 0) {
 		return <Card className="gap-0">{emptyState}</Card>;
@@ -1656,7 +1674,7 @@ function TransactionsList({
 	return (
 		<div className="space-y-3">
 			{/* Select-all bar */}
-			<div className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+			<div className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-surface/50 border border-border/50">
 				<label className="flex items-center gap-3 cursor-pointer select-none">
 					<input
 						type="checkbox"
@@ -1664,13 +1682,12 @@ function TransactionsList({
 						onChange={toggleSelectAll}
 						className="rounded border-white/20 bg-white/[0.04] text-accent focus:ring-accent/50 focus:ring-offset-canvas h-3.5 w-3.5 cursor-pointer"
 					/>
-					<span className="flex items-center gap-2 text-[10px] uppercase font-bold text-text-muted tracking-wider">
-						<span className="w-1.5 h-1.5 rounded-full bg-accent" />
+					<span className="text-[10px] uppercase font-semibold text-text-muted tracking-wider">
 						{language === "id" ? "Pilih semua di halaman ini" : "Select all on this page"}
 					</span>
 				</label>
-				<span className="text-[10px] uppercase font-bold text-text-muted/60 tracking-wider tabular-nums">
-					{transactions.length} {language === "id" ? "transaksi" : "transactions"}
+				<span className="text-[10px] font-semibold text-text-muted/50 tracking-wider tabular-nums bg-elevated/60 px-2.5 py-1 rounded-md border border-border/40">
+					{transactions.length} {t("transactionCount")}
 				</span>
 			</div>
 
@@ -1787,7 +1804,7 @@ function DateGroup({
 	toggleSelect: (id: string) => void;
 	filters?: TransactionFiltersState;
 }) {
-	const { language } = useLanguage();
+	const { t, language } = useLanguage();
 	const headerCheckboxRef = useRef<HTMLInputElement>(null);
 
 	const isGroupAllSelected = group.items.every((item) => selectedIds.has(item.id));
@@ -1857,8 +1874,7 @@ function DateGroup({
 							</span>
 						</div>
 						<span className="text-[10px] text-text-muted/70 font-medium truncate">
-							{group.weekday} · {group.items.length}{" "}
-							{language === "id" ? "transaksi" : "transactions"}
+							{group.weekday} · {group.items.length} {t("transactionCount")}
 						</span>
 					</div>
 				</div>
@@ -1867,7 +1883,7 @@ function DateGroup({
 					{group.income > 0 && (
 						<div className="hidden sm:flex flex-col items-end leading-tight">
 							<span className="text-[8px] uppercase tracking-wider text-text-muted/50 font-bold">
-								{language === "id" ? "Masuk" : "In"}
+								{language === "id" ? "Masuk" : "Income"}
 							</span>
 							<span className="text-[11px] font-mono font-bold text-income tabular-nums">
 								+{formatIDR(group.income)}
@@ -1877,7 +1893,7 @@ function DateGroup({
 					{group.expense > 0 && (
 						<div className="hidden sm:flex flex-col items-end leading-tight">
 							<span className="text-[8px] uppercase tracking-wider text-text-muted/50 font-bold">
-								{language === "id" ? "Keluar" : "Out"}
+								{language === "id" ? "Keluar" : "Expense"}
 							</span>
 							<span className="text-[11px] font-mono font-bold text-expense tabular-nums">
 								-{formatIDR(group.expense)}
@@ -1936,7 +1952,7 @@ function TransactionRow({
 	isSelected: boolean;
 	onToggleSelect: () => void;
 }) {
-	const { language } = useLanguage();
+	const { t, language } = useLanguage();
 	const initial =
 		(tx.description ?? tx.categoryName ?? "T").trim().charAt(0).toUpperCase() || "T";
 
@@ -1982,14 +1998,14 @@ function TransactionRow({
 					<p className="text-[13px] font-semibold text-text-primary truncate leading-tight">
 						{tx.description ||
 							(tx.type === "transfer"
-								? language === "id" ? "Transfer Dana" : "Fund Transfer"
-								: language === "id" ? "Tanpa Deskripsi" : "No description")}
+								? t("transferFund")
+								: t("noDescription"))}
 					</p>
 					{tx.receiptImageUrl && (
 						<button
 							type="button"
 							onClick={() => window.open(tx.receiptImageUrl!, "_blank")}
-							title={language === "id" ? "Lihat struk" : "View receipt"}
+							title={t("viewReceipt")}
 							className="shrink-0 text-text-muted/50 hover:text-accent transition-colors"
 						>
 							<Receipt size={12} />
@@ -2030,7 +2046,7 @@ function TransactionRow({
 				{tx.type === "transfer" ? (
 					<span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-accent/5 border border-accent/15 text-accent text-[11px] font-medium">
 						<ArrowLeftRight size={11} />
-						Transfer
+						{t("transferLabel")}
 					</span>
 				) : (
 					<InlineCategoryPicker
@@ -2060,7 +2076,7 @@ function TransactionRow({
 				<DropdownMenuTrigger asChild>
 					<button
 						type="button"
-						aria-label="Opsi transaksi"
+						aria-label={language === "id" ? "Opsi transaksi" : "Transaction options"}
 						className="h-8 w-8 shrink-0 text-text-muted hover:text-text-primary hover:bg-white/[0.12] transition-all duration-150 opacity-60 group-hover:opacity-100 flex items-center justify-center border border-transparent hover:border-white/[0.15]"
 						style={{ borderRadius: 'var(--dropdown-radius, 8px)' }}
 					>
@@ -2070,22 +2086,22 @@ function TransactionRow({
 				<DropdownMenuContent align="end" className="w-48 bg-surface border-border shadow-xl z-[99999]">
 					<DropdownMenuItem onSelect={() => onEdit(tx)} className="gap-2">
 						<Pencil size={13} />
-						{language === "id" ? "Ubah" : "Edit"}
+						{t("editOption")}
 					</DropdownMenuItem>
 					<DropdownMenuItem onSelect={() => onDuplicate(tx)} className="gap-2">
 						<Copy size={13} />
-						{language === "id" ? "Duplikasi" : "Duplicate"}
+						{t("duplicateOption")}
 					</DropdownMenuItem>
 					{tx.receiptImageUrl && (
 						<DropdownMenuItem onSelect={() => window.open(tx.receiptImageUrl!, "_blank")} className="gap-2">
 							<Receipt size={13} />
-							{language === "id" ? "Lihat Struk" : "View Receipt"}
+							{t("viewReceipt")}
 						</DropdownMenuItem>
 					)}
 					<DropdownMenuSeparator />
 					<DropdownMenuItem onSelect={() => onDelete(tx)} variant="destructive" className="gap-2">
 						<Trash2 size={13} />
-						{language === "id" ? "Hapus" : "Delete"}
+						{t("deleteOption")}
 					</DropdownMenuItem>
 				</DropdownMenuContent>
 			</DropdownMenu>
@@ -2110,6 +2126,7 @@ function PaginationBar({
   const { pathname } = useLocation();
   const [searchParams] = useSearchParams();
   const [pending, startTransition] = useTransition();
+  const { t, language } = useLanguage();
 
   const { page, pageSize, pageSizeOptions, total, totalPages } = pagination;
 
@@ -2134,15 +2151,15 @@ function PaginationBar({
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between text-xs text-muted-foreground">
       <p className="tabular-nums">
-        Menampilkan{" "}
+        {language === "id" ? "Menampilkan" : "Showing"}{" "}
         <span className="text-foreground font-medium">{start}</span>–
-        <span className="text-foreground font-medium">{end}</span> dari{" "}
-        <span className="text-foreground font-medium">{total}</span> transaksi
+        <span className="text-foreground font-medium">{end}</span> {language === "id" ? "dari" : "of"}{" "}
+        <span className="text-foreground font-medium">{total}</span> {t("transactionCount")}
       </p>
 
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2">
-          <span className="hidden sm:inline">Per halaman</span>
+          <span className="hidden sm:inline">{language === "id" ? "Per halaman" : "Per page"}</span>
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <button
@@ -2254,11 +2271,11 @@ function ConfirmDelete({
     <Dialog open={target !== null} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="rounded-2xl border-white/[0.08] bg-popover/95 backdrop-blur-xl">
         <DialogHeader>
-          <DialogTitle>{language === "id" ? "Hapus transaksi" : "Delete transaction"}</DialogTitle>
+          <DialogTitle>{t("deleteTransaction")}</DialogTitle>
           <DialogDescription>
             {target?.type === "transfer"
-              ? (language === "id" ? "Saldo akun sumber dan akun tujuan akan dikoreksi otomatis." : "Source and target account balances will be corrected automatically.")
-              : (language === "id" ? "Saldo akun akan disesuaikan otomatis." : "Account balance will be adjusted automatically.")}
+              ? t("deleteTransferDesc")
+              : t("deleteTransactionDesc")}
           </DialogDescription>
         </DialogHeader>
         <DialogBody>
@@ -2283,7 +2300,7 @@ function ConfirmDelete({
             disabled={pending}
             className="rounded-xl"
           >
-            {pending ? (language === "id" ? "Menghapus..." : "Deleting...") : (language === "id" ? "Hapus" : "Delete")}
+            {pending ? t("deletingLabel") : t("deleteOption")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -2346,6 +2363,7 @@ function FilterStatusIndicator({ filters }: { filters: TransactionFiltersState }
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [searchParams] = useSearchParams();
+  const { language } = useLanguage();
 
   if (!isFilterActive(filters)) return null;
 
@@ -2365,7 +2383,9 @@ function FilterStatusIndicator({ filters }: { filters: TransactionFiltersState }
       <div className="flex items-center gap-2">
         <Calendar size={14} className="text-accent" />
         <div className="flex flex-col gap-0.5">
-          <span className="text-xs font-semibold text-accent">Filter Tanggal Aktif</span>
+          <span className="text-xs font-semibold text-accent">
+            {language === "id" ? "Filter Tanggal Aktif" : "Active Date Filter"}
+          </span>
           <div className="flex items-center gap-2 text-xs text-text-muted font-mono tabular-nums">
             {filters.startDate && (
               <span className="bg-elevated/60 px-1.5 py-0.5 rounded border border-border/50">
@@ -2389,7 +2409,7 @@ function FilterStatusIndicator({ filters }: { filters: TransactionFiltersState }
         onClick={handleRemoveFilter}
         className="text-xs text-text-muted hover:text-text-primary h-7 px-2.5"
       >
-        Hapus Filter
+        {language === "id" ? "Hapus Filter" : "Clear Filter"}
       </Button>
     </div>
   );

@@ -75,6 +75,14 @@ import { formatIDR } from "@/lib/utils/formatters";
 <span className="text-money-expense text-sm">{formatIDR(-85000)}</span>
 ```
 
+### 🎨 3. Website Color Customization (Sistem Tema Global)
+Aplikasi mendukung kustomisasi tema visual secara real-time yang dapat diakses melalui menu **Settings**. Terdapat **8 preset tema premium**:
+- **Dark Themes (4):** Default Dark, Emerald Depth, Cyberpunk Neon (Baru), Rosewood Forest (Baru).
+- **Light Themes (4):** Minimalist Light, Swiss Banking, Nordic Snow (Baru), Sakura Blossom (Baru).
+
+**Integrasi Halaman Login & Register:**
+Halaman masuk dan pendaftaran sepenuhnya terintegrasi dengan variabel CSS tema (`from-sidebar via-canvas to-elevated`, `border-border/40`, dll). Warna visual, ambient glow, serta chart mockup akan otomatis menyesuaikan dengan tema aktif di peramban.
+
 ---
 
 ## 🚀 Cara Menjalankan Aplikasi
