@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { ChevronDown, Palette, Plus, Settings } from "lucide-react";
+import { useState, useLayoutEffect, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
+import { ChevronDown, Palette, Plus, Settings, Type, CreditCard, Square, Bell } from "lucide-react";
 import { toast } from "sonner";
 import {
   applyTheme,
@@ -11,20 +12,154 @@ import {
   applyCardStyles,
   type ButtonStyles,
   applyButtonStyles,
+  type TypographyStyles,
+  applyTypographyStyles,
 } from "@/lib/utils/theme";
 import { cn } from "@/lib/utils/cn";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
+function SettingsSelect({
+  value,
+  onChange,
+  options,
+  className,
+  minWidth = "150px",
+}: {
+  value: any;
+  onChange: (v: any) => void;
+  options: { value: any; label: string }[];
+  className?: string;
+  minWidth?: string;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  const selectedOption = options.find((opt) => opt.value === value);
+  const selectedLabel = selectedOption ? selectedOption.label : String(value);
+
+  const updatePosition = () => {
+    if (triggerRef.current && containerRef.current) {
+      const triggerRect = triggerRef.current.getBoundingClientRect();
+      const popupHeight = containerRef.current.offsetHeight || 150;
+      const popupWidth = containerRef.current.offsetWidth || parseInt(minWidth) || 150;
+      
+      let top = triggerRect.bottom + 4;
+      let left = triggerRect.left;
+      
+      if (top + popupHeight > window.innerHeight && triggerRect.top - popupHeight > 0) {
+        top = triggerRect.top - popupHeight - 4;
+      }
+      
+      if (left + popupWidth > window.innerWidth) {
+        left = Math.max(10, window.innerWidth - popupWidth - 10);
+      }
+      
+      setPosition({ top, left });
+    }
+  };
+
+  useLayoutEffect(() => {
+    if (isOpen) {
+      updatePosition();
+      
+      let attempts = 0;
+      const tryPosition = () => {
+        if (containerRef.current && triggerRef.current) {
+          updatePosition();
+          if (containerRef.current.offsetHeight > 0) return;
+        }
+        if (attempts < 5) {
+          attempts++;
+          requestAnimationFrame(tryPosition);
+        }
+      };
+      requestAnimationFrame(tryPosition);
+
+      window.addEventListener("scroll", updatePosition, true);
+      window.addEventListener("resize", updatePosition);
+      return () => {
+        window.removeEventListener("scroll", updatePosition, true);
+        window.removeEventListener("resize", updatePosition);
+      };
+    } else {
+      setPosition(null);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClose = (e: MouseEvent) => {
+      if (triggerRef.current && triggerRef.current.contains(e.target as Node)) {
+        return;
+      }
+      if (containerRef.current && containerRef.current.contains(e.target as Node)) {
+        return;
+      }
+      setIsOpen(false);
+    };
+    document.addEventListener("click", handleClose, true);
+    return () => document.removeEventListener("click", handleClose, true);
+  }, [isOpen]);
+
+  return (
+    <div className="relative w-full">
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={cn(
+          "flex h-9 w-full items-center justify-between rounded-lg border border-border bg-elevated px-3 text-xs text-foreground hover:bg-white/[0.04] transition-all outline-none text-left",
+          className
+        )}
+        style={{ borderRadius: "var(--button-radius)" }}
+      >
+        <span>{selectedLabel}</span>
+        <ChevronDown size={14} className="opacity-60 shrink-0 ml-2" />
+      </button>
+
+      {isOpen && createPortal(
+        <div
+          ref={containerRef}
+          style={{
+            position: "fixed",
+            top: position ? `${position.top}px` : "-9999px",
+            left: position ? `${position.left}px` : "-9999px",
+            visibility: position ? undefined : "hidden",
+            width: minWidth,
+            borderRadius: "var(--custom-dropdown-menu-radius, 12px)",
+          }}
+          className="p-1 border border-white/[0.08] bg-popover/95 backdrop-blur-xl flex flex-col text-text-primary shadow-2xl z-[100000] max-h-[300px] overflow-y-auto"
+        >
+          {options.map((opt) => (
+            <button
+              key={String(opt.value)}
+              type="button"
+              className={cn(
+                "relative flex w-full cursor-pointer select-none items-center rounded-lg py-1.5 px-2.5 text-xs font-semibold outline-none transition-colors duration-200 text-left hover:bg-white/[0.06] text-text-primary",
+                opt.value === value ? "bg-white/[0.04] text-foreground font-semibold" : "text-muted-foreground"
+              )}
+              onClick={() => {
+                onChange(opt.value);
+                setIsOpen(false);
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>,
+        document.body
+      )}
+    </div>
+  );
+}
 
 export function ThemeSettings() {
   const { language } = useLanguage();
+  const [activeSubTab, setActiveSubTab] = useState<"colors" | "typography" | "cards" | "buttons" | "notifications">("colors");
 
   const [activePresetId, setActivePresetId] = useState(() => {
     if (typeof window === "undefined") return "nordic-midnight";
@@ -38,6 +173,38 @@ export function ThemeSettings() {
       return stored ? JSON.parse(stored) : {};
     } catch {
       return {};
+    }
+  });
+
+  const [typographyStyles, setTypographyStyles] = useState<TypographyStyles>(() => {
+    const defaults: TypographyStyles = {
+      normal: "400",
+      medium: "500",
+      semibold: "600",
+      bold: "700",
+    };
+    if (typeof window === "undefined") return defaults;
+    const stored = localStorage.getItem("racks-typography-styles");
+    try {
+      return stored ? { ...defaults, ...JSON.parse(stored) } : defaults;
+    } catch {
+      return defaults;
+    }
+  });
+
+  const [notificationSettings, setNotificationSettings] = useState(() => {
+    const defaults = {
+      position: "top-right",
+      theme: "dark",
+      duration: 4000,
+      expand: false,
+    };
+    if (typeof window === "undefined") return defaults;
+    const stored = localStorage.getItem("racks-notification-settings");
+    try {
+      return stored ? { ...defaults, ...JSON.parse(stored) } : defaults;
+    } catch {
+      return defaults;
     }
   });
 
@@ -100,6 +267,49 @@ export function ThemeSettings() {
     );
   };
 
+  const handleTypographyStyleChange = (key: keyof TypographyStyles, value: string) => {
+    const updated = { ...typographyStyles, [key]: value };
+    setTypographyStyles(updated);
+    applyTypographyStyles(updated);
+    toast.success(
+      language === "id"
+        ? "Ketebalan huruf berhasil diperbarui!"
+        : "Typography weight updated successfully!"
+    );
+  };
+
+  const handleNotificationChange = (key: string, value: any) => {
+    const updated = { ...notificationSettings, [key]: value };
+    setNotificationSettings(updated);
+    localStorage.setItem("racks-notification-settings", JSON.stringify(updated));
+    window.dispatchEvent(new Event("notification-settings-changed"));
+  };
+
+  const triggerTestNotification = (type: "success" | "error" | "info") => {
+    if (type === "success") {
+      toast.success(
+        language === "id" ? "Berhasil menyimpan pengaturan!" : "Settings saved successfully!",
+        {
+          description: language === "id" ? "Semua kustomisasi Anda telah diterapkan secara instan." : "All your customizations have been applied instantly."
+        }
+      );
+    } else if (type === "error") {
+      toast.error(
+        language === "id" ? "Koneksi terputus dengan server!" : "Connection lost with the server!",
+        {
+          description: language === "id" ? "Mohon periksa sambungan internet Anda dan coba lagi." : "Please check your internet connection and try again."
+        }
+      );
+    } else {
+      toast(
+        language === "id" ? "Informasi Sistem Terbaru" : "Latest System Information",
+        {
+          description: language === "id" ? "Fitur kustomisasi notifikasi sekarang sudah aktif." : "Notification customization features are now active."
+        }
+      );
+    }
+  };
+
   const handlePresetSelect = (id: string) => {
     setActivePresetId(id);
     setCustomVars({});
@@ -147,11 +357,6 @@ export function ThemeSettings() {
     { value: "9999px", label: language === "id" ? "Kapsul / Pill" : "Pill / Capsule" },
   ];
 
-  const selectedRadiusLabel = radiusOptions.find((o) => o.value === cardStyles.radius)?.label ?? cardStyles.radius;
-  const selectedBorderLabel = borderOptions.find((o) => o.value === cardStyles.borderWidth)?.label ?? cardStyles.borderWidth;
-  const selectedBlurLabel = blurOptions.find((o) => o.value === cardStyles.blur)?.label ?? cardStyles.blur;
-  const selectedOpacityLabel = opacityOptions.find((o) => o.value === cardStyles.opacity)?.label ?? cardStyles.opacity;
-  const selectedDropdownRadiusLabel = dropdownRadiusOptions.find((o) => o.value === (cardStyles.dropdownRadius || "9999px"))?.label ?? (language === "id" ? "Kapsul / Pill (9999px)" : "Pill / Capsule (9999px)");
 
   const btnRadiusOptions = [
     { value: "0px", label: language === "id" ? "Tajam (0px)" : "Sharp (0px)" },
@@ -171,9 +376,13 @@ export function ThemeSettings() {
     { value: "bold", label: language === "id" ? "Tebal (700)" : "Bold (700)" },
   ];
 
-  const selectedBtnRadiusLabel = btnRadiusOptions.find((o) => o.value === buttonStyles.radius)?.label ?? buttonStyles.radius;
-  const selectedBtnSizeLabel = btnSizeOptions.find((o) => o.value === buttonStyles.size)?.label ?? buttonStyles.size;
-  const selectedBtnWeightLabel = btnWeightOptions.find((o) => o.value === buttonStyles.weight)?.label ?? buttonStyles.weight;
+  const subTabs: { id: "colors" | "typography" | "cards" | "buttons" | "notifications"; label: string; icon: React.ReactNode }[] = [
+    { id: "colors", label: language === "id" ? "Tema & Warna" : "Theme & Colors", icon: <Palette size={14} /> },
+    { id: "typography", label: language === "id" ? "Tipografi" : "Typography", icon: <Type size={14} /> },
+    { id: "cards", label: language === "id" ? "Gaya Kartu" : "Card Styles", icon: <CreditCard size={14} /> },
+    { id: "buttons", label: language === "id" ? "Gaya Tombol" : "Button Styles", icon: <Square size={14} /> },
+    { id: "notifications", label: language === "id" ? "Notifikasi" : "Notifications", icon: <Bell size={14} /> },
+  ];
 
   return (
     <div className="space-y-6">
@@ -181,14 +390,37 @@ export function ThemeSettings() {
         <div className="mb-6">
           <h2 className="text-base font-medium text-foreground flex items-center gap-2">
             <Palette size={14} className="text-muted-foreground" />
-            {language === "id" ? "Kustomisasi Warna Website" : "Website Color Customization"}
+            {language === "id" ? "Personalisasi Tampilan" : "Appearance Customization"}
           </h2>
           <p className="text-xs text-muted-foreground mt-1">
             {language === "id"
-              ? "Pilih preset tema warna yang direkomendasikan atau sesuaikan warna secara manual untuk mempersonalisasi dashboard keuangan Anda."
-              : "Select a recommended theme preset or customize colors manually to personalize your financial dashboard."}
+              ? "Sesuaikan warna, jenis huruf, serta tampilan kartu dan tombol untuk mempercantik antarmuka keuangan Anda."
+              : "Customize color palettes, typography fonts, cards layout, and buttons to match your branding aesthetics."}
           </p>
         </div>
+
+        {/* Sub-Tabs Navigation */}
+        <div className="flex flex-wrap gap-1 border-b border-border/40 pb-3 mb-6">
+          {subTabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveSubTab(tab.id)}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-150",
+                activeSubTab === tab.id
+                  ? "bg-accent/10 border-accent text-accent"
+                  : "border-transparent text-muted-foreground hover:text-foreground hover:bg-white/[0.02]"
+              )}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {activeSubTab === "colors" && (
+          <div className="space-y-6 animate-fade-in-up">
 
         {/* Preset Cards Grid */}
         <div className="space-y-4">
@@ -951,84 +1183,182 @@ export function ThemeSettings() {
             </div>
           </div>
         </div>
+      </div>
+    )}
 
-        {/* Typography Customization */}
-        <div className="mt-6 pt-6 space-y-4 border-t border-border/60">
-          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-            {language === "id" ? "Gaya Huruf / Tipografi" : "Typography & Font Styles"}
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            {FONT_OPTIONS.map((option) => {
-              const isSelected = activeFontId === option.id;
-              return (
-                <button
-                  key={option.id}
-                  onClick={() => handleFontChange(option.id)}
-                  className={cn(
-                    "flex flex-col items-start p-4 rounded-xl border text-left transition-all duration-300",
-                    isSelected
-                      ? "border-accent bg-accent/5 ring-1 ring-accent"
-                      : "border-border/60 bg-transparent hover:border-accent/30 hover:bg-white/[0.01]"
-                  )}
+        {activeSubTab === "typography" && (
+          <div className="space-y-6 animate-fade-in-up">
+            <div className="space-y-4">
+              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                {language === "id" ? "Gaya Huruf / Tipografi" : "Typography & Font Styles"}
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                {FONT_OPTIONS.map((option) => {
+                  const isSelected = activeFontId === option.id;
+                  return (
+                    <button
+                      key={option.id}
+                      onClick={() => handleFontChange(option.id)}
+                      className={cn(
+                        "flex flex-col items-start p-4 rounded-xl border text-left transition-all duration-300",
+                        isSelected
+                          ? "border-accent bg-accent/5 ring-1 ring-accent"
+                          : "border-border/60 bg-transparent hover:border-accent/30 hover:bg-white/[0.01]"
+                      )}
+                      style={{
+                        borderRadius: 'var(--card-radius)',
+                        borderWidth: 'var(--card-border-width)',
+                      }}
+                    >
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">
+                        {language === "id" ? option.name : option.nameEn}
+                      </span>
+                      <span
+                        className="text-lg font-semibold tracking-tight text-foreground mt-2"
+                        style={{ fontFamily: option.value }}
+                      >
+                        Rp 12.345.678
+                      </span>
+                      <span
+                        className="text-[10px] text-muted-foreground font-mono mt-1"
+                        style={{ fontFamily: option.value }}
+                      >
+                        {option.id === "jetbrains" ? "Tabular Mono font" : "Sans-serif tabular-nums"}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Custom Font Weights */}
+              <div className="mt-8 pt-6 border-t border-border/40 space-y-4">
+                <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  {language === "id" ? "Kustomisasi Ketebalan Huruf (Font Weights)" : "Custom Font Weights"}
+                </h4>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                  {/* Normal Weight */}
+                  <div className="space-y-2 flex flex-col">
+                    <label className="text-xs font-semibold text-foreground">
+                      {language === "id" ? "Teks Biasa (Normal)" : "Regular Text"}
+                    </label>
+                    <SettingsSelect
+                      value={typographyStyles.normal}
+                      onChange={(val) => handleTypographyStyleChange("normal", val)}
+                      minWidth="150px"
+                      options={[
+                        { value: "300", label: language === "id" ? "Tipis (300)" : "Light (300)" },
+                        { value: "400", label: language === "id" ? "Normal (400)" : "Normal (400)" },
+                        { value: "500", label: language === "id" ? "Sedang (500)" : "Medium (500)" },
+                      ]}
+                    />
+                  </div>
+
+                  {/* Medium Weight */}
+                  <div className="space-y-2 flex flex-col">
+                    <label className="text-xs font-semibold text-foreground">
+                      {language === "id" ? "Teks Sedang (Medium)" : "Medium Text"}
+                    </label>
+                    <SettingsSelect
+                      value={typographyStyles.medium}
+                      onChange={(val) => handleTypographyStyleChange("medium", val)}
+                      minWidth="150px"
+                      options={[
+                        { value: "500", label: language === "id" ? "Sedang (500)" : "Medium (500)" },
+                        { value: "600", label: language === "id" ? "Semi Tebal (600)" : "Semibold (600)" },
+                      ]}
+                    />
+                  </div>
+
+                  {/* Semibold Weight */}
+                  <div className="space-y-2 flex flex-col">
+                    <label className="text-xs font-semibold text-foreground">
+                      {language === "id" ? "Teks Semi Tebal (Semibold)" : "Semibold Text"}
+                    </label>
+                    <SettingsSelect
+                      value={typographyStyles.semibold}
+                      onChange={(val) => handleTypographyStyleChange("semibold", val)}
+                      minWidth="150px"
+                      options={[
+                        { value: "600", label: language === "id" ? "Semi Tebal (600)" : "Semibold (600)" },
+                        { value: "700", label: language === "id" ? "Tebal (700)" : "Bold (700)" },
+                      ]}
+                    />
+                  </div>
+
+                  {/* Bold Weight */}
+                  <div className="space-y-2 flex flex-col">
+                    <label className="text-xs font-semibold text-foreground">
+                      {language === "id" ? "Teks Tebal (Bold)" : "Bold Text"}
+                    </label>
+                    <SettingsSelect
+                      value={typographyStyles.bold}
+                      onChange={(val) => handleTypographyStyleChange("bold", val)}
+                      minWidth="150px"
+                      options={[
+                        { value: "700", label: language === "id" ? "Tebal (700)" : "Bold (700)" },
+                        { value: "800", label: language === "id" ? "Sangat Tebal (800)" : "Extra Bold (800)" },
+                        { value: "900", label: language === "id" ? "Hitam (900)" : "Black (900)" },
+                      ]}
+                    />
+                  </div>
+                </div>
+
+                {/* Typography Preview box */}
+                <div
+                  className="mt-6 p-5 border text-left rounded-2xl flex flex-col justify-center gap-3 transition-all duration-300"
                   style={{
-                    borderRadius: 'var(--card-radius)',
-                    borderWidth: 'var(--card-border-width)',
+                    borderRadius: "var(--card-radius)",
+                    borderWidth: "var(--card-border-width)",
+                    borderColor: "var(--border)",
+                    backgroundColor: "color-mix(in srgb, var(--card-bg) calc(var(--card-opacity) * 100%), transparent)",
                   }}
                 >
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">
-                    {language === "id" ? option.name : option.nameEn}
-                  </span>
-                  <span
-                    className="text-lg font-semibold tracking-tight text-foreground mt-2"
-                    style={{ fontFamily: option.value }}
-                  >
-                    Rp 12.345.678
-                  </span>
-                  <span
-                    className="text-[10px] text-muted-foreground font-mono mt-1"
-                    style={{ fontFamily: option.value }}
-                  >
-                    {option.id === "jetbrains" ? "Tabular Mono font" : "Sans-serif tabular-nums"}
-                  </span>
-                </button>
-              );
-            })}
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">
+                    {language === "id" ? "Pratinjau Ketebalan Huruf Terkustomisasi" : "Customized Typography Weight Preview"}
+                  </p>
+                  <div className="space-y-2">
+                    <p className="text-sm font-normal text-foreground">
+                      <span className="text-muted-foreground font-mono mr-3">[font-normal]:</span>
+                      {language === "id" ? "Ini adalah teks biasa (regular) yang digunakan untuk deskripsi dan konten utama." : "This is regular text used for descriptions and main content."}
+                    </p>
+                    <p className="text-sm font-medium text-foreground">
+                      <span className="text-muted-foreground font-mono mr-3">[font-medium]:</span>
+                      {language === "id" ? "Ini adalah teks tingkat sedang, digunakan untuk label formulir dan sub-item." : "This is medium text, used for form labels and sub-items."}
+                    </p>
+                    <p className="text-sm font-semibold text-foreground">
+                      <span className="text-muted-foreground font-mono mr-3">[font-semibold]:</span>
+                      {language === "id" ? "Ini adalah teks semi-tebal, digunakan untuk judul kartu dan penekanan data." : "This is semibold text, used for card headers and data emphasis."}
+                    </p>
+                    <p className="text-sm font-bold text-foreground">
+                      <span className="text-muted-foreground font-mono mr-3">[font-bold]:</span>
+                      {language === "id" ? "Ini adalah teks tebal, digunakan untuk judul halaman dan nominal uang utama." : "This is bold text, used for page titles and main monetary values."}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Card Style Customization */}
-        <div className="mt-6 pt-6 space-y-6 border-t border-border/60">
-          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-            {language === "id" ? "Gaya & Tampilan Kartu" : "Card Styles & Appearance"}
-          </h3>
+        {activeSubTab === "cards" && (
+          <div className="space-y-6 animate-fade-in-up">
+            <div className="space-y-6">
+              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                {language === "id" ? "Gaya & Tampilan Kartu" : "Card Styles & Appearance"}
+              </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
             {/* Card Roundedness */}
             <div className="space-y-2 flex flex-col">
               <label className="text-xs font-semibold text-foreground">
                 {language === "id" ? "Sudut Kelengkungan" : "Corner Radius"}
               </label>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    className="flex h-9 w-full items-center justify-between rounded-lg border border-border bg-elevated px-3 text-xs text-foreground hover:bg-white/[0.04] transition-all outline-none"
-                  >
-                    <span>{selectedRadiusLabel}</span>
-                    <ChevronDown size={14} className="opacity-60 shrink-0 ml-2" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="min-w-[150px] max-h-[250px] overflow-y-auto rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl z-[1000]">
-                  {radiusOptions.map((o) => (
-                    <DropdownMenuItem
-                      key={o.value}
-                      className="text-xs font-semibold cursor-pointer"
-                      onClick={() => handleCardStyleChange("radius", o.value)}
-                    >
-                      {o.label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <SettingsSelect
+                value={cardStyles.radius}
+                onChange={(val) => handleCardStyleChange("radius", val)}
+                minWidth="150px"
+                options={radiusOptions}
+              />
             </div>
 
             {/* Card Border Thickness */}
@@ -1036,28 +1366,12 @@ export function ThemeSettings() {
               <label className="text-xs font-semibold text-foreground">
                 {language === "id" ? "Ketebalan Garis Batas" : "Border Thickness"}
               </label>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    className="flex h-9 w-full items-center justify-between rounded-lg border border-border bg-elevated px-3 text-xs text-foreground hover:bg-white/[0.04] transition-all outline-none"
-                  >
-                    <span>{selectedBorderLabel}</span>
-                    <ChevronDown size={14} className="opacity-60 shrink-0 ml-2" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="min-w-[150px] max-h-[250px] overflow-y-auto rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl z-[1000]">
-                  {borderOptions.map((o) => (
-                    <DropdownMenuItem
-                      key={o.value}
-                      className="text-xs font-semibold cursor-pointer"
-                      onClick={() => handleCardStyleChange("borderWidth", o.value)}
-                    >
-                      {o.label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <SettingsSelect
+                value={cardStyles.borderWidth}
+                onChange={(val) => handleCardStyleChange("borderWidth", val)}
+                minWidth="150px"
+                options={borderOptions}
+              />
             </div>
 
             {/* Card Glassmorphism Backdrop Blur */}
@@ -1065,28 +1379,12 @@ export function ThemeSettings() {
               <label className="text-xs font-semibold text-foreground">
                 {language === "id" ? "Kekaburan Latar (Blur)" : "Backdrop Blur"}
               </label>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    className="flex h-9 w-full items-center justify-between rounded-lg border border-border bg-elevated px-3 text-xs text-foreground hover:bg-white/[0.04] transition-all outline-none"
-                  >
-                    <span>{selectedBlurLabel}</span>
-                    <ChevronDown size={14} className="opacity-60 shrink-0 ml-2" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="min-w-[150px] max-h-[250px] overflow-y-auto rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl z-[1000]">
-                  {blurOptions.map((o) => (
-                    <DropdownMenuItem
-                      key={o.value}
-                      className="text-xs font-semibold cursor-pointer"
-                      onClick={() => handleCardStyleChange("blur", o.value)}
-                    >
-                      {o.label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <SettingsSelect
+                value={cardStyles.blur}
+                onChange={(val) => handleCardStyleChange("blur", val)}
+                minWidth="150px"
+                options={blurOptions}
+              />
             </div>
 
             {/* Card Background Opacity */}
@@ -1094,28 +1392,12 @@ export function ThemeSettings() {
               <label className="text-xs font-semibold text-foreground">
                 {language === "id" ? "Tingkat Transparansi" : "Card Transparency"}
               </label>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    className="flex h-9 w-full items-center justify-between rounded-lg border border-border bg-elevated px-3 text-xs text-foreground hover:bg-white/[0.04] transition-all outline-none"
-                  >
-                    <span>{selectedOpacityLabel}</span>
-                    <ChevronDown size={14} className="opacity-60 shrink-0 ml-2" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="min-w-[150px] max-h-[250px] overflow-y-auto rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl z-[1000]">
-                  {opacityOptions.map((o) => (
-                    <DropdownMenuItem
-                      key={o.value}
-                      className="text-xs font-semibold cursor-pointer"
-                      onClick={() => handleCardStyleChange("opacity", o.value)}
-                    >
-                      {o.label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <SettingsSelect
+                value={cardStyles.opacity}
+                onChange={(val) => handleCardStyleChange("opacity", val)}
+                minWidth="150px"
+                options={opacityOptions}
+              />
             </div>
 
             {/* Dropdown Roundedness */}
@@ -1123,28 +1405,12 @@ export function ThemeSettings() {
               <label className="text-xs font-semibold text-foreground">
                 {language === "id" ? "Kelengkungan Dropdown" : "Dropdown Roundedness"}
               </label>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    className="flex h-9 w-full items-center justify-between rounded-lg border border-border bg-elevated px-3 text-xs text-foreground hover:bg-white/[0.04] transition-all outline-none"
-                  >
-                    <span>{selectedDropdownRadiusLabel}</span>
-                    <ChevronDown size={14} className="opacity-60 shrink-0 ml-2" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="min-w-[150px] max-h-[250px] overflow-y-auto rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl z-[1000]">
-                  {dropdownRadiusOptions.map((o) => (
-                    <DropdownMenuItem
-                      key={o.value}
-                      className="text-xs font-semibold cursor-pointer"
-                      onClick={() => handleCardStyleChange("dropdownRadius", o.value)}
-                    >
-                      {o.label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <SettingsSelect
+                value={cardStyles.dropdownRadius}
+                onChange={(val) => handleCardStyleChange("dropdownRadius", val)}
+                minWidth="150px"
+                options={dropdownRadiusOptions}
+              />
             </div>
           </div>
 
@@ -1247,40 +1513,27 @@ export function ThemeSettings() {
             </div>
           </div>
         </div>
+      </div>
+    )}
 
-        {/* Button Customization */}
-        <div className="mt-6 pt-6 space-y-6 border-t border-border/60">
-          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-            {language === "id" ? "Gaya & Tampilan Tombol" : "Button Styles & Appearance"}
-          </h3>
+        {activeSubTab === "buttons" && (
+          <div className="space-y-6 animate-fade-in-up">
+            <div className="space-y-6">
+              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                {language === "id" ? "Gaya & Tampilan Tombol" : "Button Styles & Appearance"}
+              </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {/* Button Corner Radius */}
             <div className="space-y-2 flex flex-col">
               <label className="text-xs font-semibold text-foreground">
                 {language === "id" ? "Sudut Kelengkungan" : "Corner Radius"}
               </label>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    className="flex h-9 w-full items-center justify-between rounded-lg border border-border bg-elevated px-3 text-xs text-foreground hover:bg-white/[0.04] transition-all outline-none"
-                  >
-                    <span>{selectedBtnRadiusLabel}</span>
-                    <ChevronDown size={14} className="opacity-60 shrink-0 ml-2" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="min-w-[150px] max-h-[250px] overflow-y-auto rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl z-[1000]">
-                  {btnRadiusOptions.map((o) => (
-                    <DropdownMenuItem
-                      key={o.value}
-                      className="text-xs font-semibold cursor-pointer"
-                      onClick={() => handleButtonStyleChange("radius", o.value)}
-                    >
-                      {o.label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <SettingsSelect
+                value={buttonStyles.radius}
+                onChange={(val) => handleButtonStyleChange("radius", val)}
+                minWidth="150px"
+                options={btnRadiusOptions}
+              />
             </div>
 
             {/* Button Height Size */}
@@ -1288,28 +1541,12 @@ export function ThemeSettings() {
               <label className="text-xs font-semibold text-foreground">
                 {language === "id" ? "Tinggi Tombol" : "Button Height"}
               </label>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    className="flex h-9 w-full items-center justify-between rounded-lg border border-border bg-elevated px-3 text-xs text-foreground hover:bg-white/[0.04] transition-all outline-none"
-                  >
-                    <span>{selectedBtnSizeLabel}</span>
-                    <ChevronDown size={14} className="opacity-60 shrink-0 ml-2" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="min-w-[150px] max-h-[250px] overflow-y-auto rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl z-[1000]">
-                  {btnSizeOptions.map((o) => (
-                    <DropdownMenuItem
-                      key={o.value}
-                      className="text-xs font-semibold cursor-pointer"
-                      onClick={() => handleButtonStyleChange("size", o.value)}
-                    >
-                      {o.label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <SettingsSelect
+                value={buttonStyles.size}
+                onChange={(val) => handleButtonStyleChange("size", val)}
+                minWidth="150px"
+                options={btnSizeOptions}
+              />
             </div>
 
             {/* Button Font Weight */}
@@ -1317,28 +1554,12 @@ export function ThemeSettings() {
               <label className="text-xs font-semibold text-foreground">
                 {language === "id" ? "Ketebalan Font" : "Font Weight"}
               </label>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    className="flex h-9 w-full items-center justify-between rounded-lg border border-border bg-elevated px-3 text-xs text-foreground hover:bg-white/[0.04] transition-all outline-none"
-                  >
-                    <span>{selectedBtnWeightLabel}</span>
-                    <ChevronDown size={14} className="opacity-60 shrink-0 ml-2" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="min-w-[150px] max-h-[250px] overflow-y-auto rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl z-[1000]">
-                  {btnWeightOptions.map((o) => (
-                    <DropdownMenuItem
-                      key={o.value}
-                      className="text-xs font-semibold cursor-pointer"
-                      onClick={() => handleButtonStyleChange("weight", o.value)}
-                    >
-                      {o.label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <SettingsSelect
+                value={buttonStyles.weight}
+                onChange={(val) => handleButtonStyleChange("weight", val)}
+                minWidth="150px"
+                options={btnWeightOptions}
+              />
             </div>
           </div>
 
@@ -1416,6 +1637,168 @@ export function ThemeSettings() {
             </div>
           </div>
         </div>
+      </div>
+    )}
+
+        {activeSubTab === "notifications" && (
+          <div className="space-y-6 animate-fade-in-up">
+            <div className="space-y-6">
+              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                {language === "id" ? "Kustomisasi Tampilan Notifikasi (Toast)" : "Toast Notifications Customization"}
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Position selection */}
+                <div className="space-y-4">
+                  <label className="text-xs font-semibold text-foreground block">
+                    {language === "id" ? "Peletakan Notifikasi (Position)" : "Notification Placement"}
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { value: "top-left", label: language === "id" ? "Kiri Atas" : "Top Left" },
+                      { value: "top-center", label: language === "id" ? "Tengah Atas" : "Top Center" },
+                      { value: "top-right", label: language === "id" ? "Kanan Atas" : "Top Right" },
+                      { value: "bottom-left", label: language === "id" ? "Kiri Bawah" : "Bottom Left" },
+                      { value: "bottom-center", label: language === "id" ? "Tengah Bawah" : "Bottom Center" },
+                      { value: "bottom-right", label: language === "id" ? "Kanan Bawah" : "Bottom Right" },
+                    ].map((pos) => {
+                      const isSelected = notificationSettings.position === pos.value;
+                      return (
+                        <button
+                          key={pos.value}
+                          type="button"
+                          onClick={() => handleNotificationChange("position", pos.value)}
+                          className={cn(
+                            "py-3 px-2 rounded-xl border text-center text-xs font-semibold transition-all duration-200",
+                            isSelected
+                              ? "bg-accent/10 border-accent text-accent ring-1 ring-accent"
+                              : "border-border/60 bg-transparent hover:border-accent/30 hover:bg-white/[0.01] text-muted-foreground hover:text-foreground"
+                          )}
+                          style={{ borderRadius: 'var(--button-radius)' }}
+                        >
+                          {pos.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Style/Theme and Duration */}
+                <div className="space-y-4 flex flex-col justify-between">
+                  <div className="space-y-2 flex flex-col">
+                    <label className="text-xs font-semibold text-foreground">
+                      {language === "id" ? "Gaya / Tema Notifikasi" : "Notification Style Theme"}
+                    </label>
+                    <SettingsSelect
+                      value={notificationSettings.theme}
+                      onChange={(val) => handleNotificationChange("theme", val)}
+                      minWidth="200px"
+                      options={[
+                        { value: "dark", label: language === "id" ? "Gelap (Dark)" : "Dark" },
+                        { value: "light", label: language === "id" ? "Terang (Light)" : "Light" },
+                        { value: "system", label: language === "id" ? "Sistem (System)" : "System" },
+                        { value: "custom", label: language === "id" ? "Kustom Tema Aktif (Themed)" : "Dynamic Custom Theme" },
+                      ]}
+                    />
+                    <p className="text-[10px] text-muted-foreground leading-normal">
+                      {language === "id"
+                        ? "Pilihan 'Kustom Tema Aktif' akan merubah warna notifikasi secara dinamis menyesuaikan tema warna website yang Anda pilih."
+                        : "Choosing 'Dynamic Custom Theme' forces the toast notification container to automatically adapt to the active website theme colors."}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Duration */}
+                    <div className="space-y-2 flex flex-col">
+                      <label className="text-xs font-semibold text-foreground">
+                        {language === "id" ? "Durasi Tampil" : "Auto-close Duration"}
+                      </label>
+                      <SettingsSelect
+                        value={notificationSettings.duration}
+                        onChange={(val) => handleNotificationChange("duration", val)}
+                        minWidth="150px"
+                        options={[
+                          { value: 2000, label: language === "id" ? "Cepat (2d)" : "Fast (2s)" },
+                          { value: 4000, label: language === "id" ? "Normal (4d)" : "Normal (4s)" },
+                          { value: 8000, label: language === "id" ? "Lambat (8d)" : "Slow (8s)" },
+                        ]}
+                      />
+                    </div>
+
+                    {/* Stack / Expand */}
+                    <div className="space-y-2 flex flex-col">
+                      <label className="text-xs font-semibold text-foreground">
+                        {language === "id" ? "Tumpuk / Susun" : "Stack / Expand"}
+                      </label>
+                      <SettingsSelect
+                        value={notificationSettings.expand}
+                        onChange={(val) => handleNotificationChange("expand", val)}
+                        minWidth="150px"
+                        options={[
+                          { value: false, label: language === "id" ? "Tumpuk (Stack)" : "Stack" },
+                          { value: true, label: language === "id" ? "Ekspansi (Expand)" : "Expand" },
+                        ]}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Trigger preview buttons */}
+              <div
+                className="mt-6 p-5 border text-left rounded-2xl flex flex-col justify-center gap-4 transition-all duration-300"
+                style={{
+                  borderRadius: "var(--card-radius)",
+                  borderWidth: "var(--card-border-width)",
+                  borderColor: "var(--border)",
+                  backgroundColor: "color-mix(in srgb, var(--card-bg) calc(var(--card-opacity) * 100%), transparent)",
+                }}
+              >
+                <div>
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">
+                    {language === "id" ? "Uji Coba Notifikasi Langsung" : "Live Notification Tester"}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {language === "id"
+                      ? "Klik tombol di bawah ini untuk melihat tampilan notifikasi sesuai dengan konfigurasi peletakan, tema, dan durasi yang Anda tentukan di atas."
+                      : "Click the buttons below to trigger actual toasts and verify your placement, theme, and duration configurations."}
+                  </p>
+                </div>
+                
+                <div className="flex flex-wrap gap-2.5">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => triggerTestNotification("success")}
+                    className="border-income/40 text-income hover:bg-income/10 hover:text-income text-xs h-9"
+                    style={{ borderRadius: 'var(--button-radius)' }}
+                  >
+                    {language === "id" ? "Test Notifikasi Sukses" : "Test Success Toast"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => triggerTestNotification("error")}
+                    className="border-expense/40 text-expense hover:bg-expense/10 hover:text-expense text-xs h-9"
+                    style={{ borderRadius: 'var(--button-radius)' }}
+                  >
+                    {language === "id" ? "Test Notifikasi Gagal/Error" : "Test Error Toast"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => triggerTestNotification("info")}
+                    className="border-border hover:bg-elevated hover:text-foreground text-xs h-9"
+                    style={{ borderRadius: 'var(--button-radius)' }}
+                  >
+                    {language === "id" ? "Test Notifikasi Info" : "Test Info Toast"}
+                  </Button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        )}
       </Card>
     </div>
   );

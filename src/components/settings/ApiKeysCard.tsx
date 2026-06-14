@@ -181,7 +181,7 @@ function ApiKeyRow({ item }: { item: ApiKeyListItem }) {
   return (
     <li
       className={cn(
-        "flex items-start justify-between gap-4 rounded-xl border border-white/[0.06] p-4 hover:border-white/[0.12] transition-all duration-200",
+        "flex items-start justify-between gap-4 rounded-xl border border-border/60 p-4 hover:border-accent/40 transition-all duration-200",
         isRevoked && "opacity-60 grayscale-[15%]"
       )}
       style={{
@@ -209,7 +209,7 @@ function ApiKeyRow({ item }: { item: ApiKeyListItem }) {
           )}
         </div>
 
-        <div className="rounded-lg border border-border bg-[#0B0E14] pl-3 pr-1.5 py-1.5 flex items-center gap-2 mt-1.5">
+        <div className="rounded-lg border border-border bg-elevated/50 pl-3 pr-1.5 py-1.5 flex items-center gap-2 mt-1.5">
           <code className="text-xs font-mono text-text-primary/95 break-all flex-1 tracking-tight select-all">
             {item.prefix}
           </code>
@@ -505,7 +505,7 @@ function PlainKeyDialog({
                 </span>
                 :
               </p>
-              <div className="rounded-lg border border-border bg-[#0B0E14] pl-3 pr-1.5 py-2 flex items-center gap-2">
+              <div className="rounded-lg border border-border bg-elevated/50 pl-3 pr-1.5 py-2 flex items-center gap-2">
                 <code className="text-xs font-mono text-text-primary/95 break-all flex-1 tracking-tight select-all">
                   {target.plain}
                 </code>

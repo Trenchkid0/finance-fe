@@ -19,7 +19,7 @@ import Goals from "@/pages/Goals";
 import Recurring from "@/pages/Recurring";
 import Investments from "@/pages/Investments";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { LanguageProvider } from "@/lib/contexts/LanguageContext";
 import { loadSavedTheme } from "@/lib/utils/theme";
 
@@ -35,8 +35,55 @@ function DashboardLayout() {
 }
 
 export default function App() {
+  const [toastSettings, setToastSettings] = useState(() => {
+    if (typeof window === "undefined") {
+      return {
+        position: "top-right" as const,
+        theme: "dark" as const,
+        duration: 4000,
+        expand: false,
+      };
+    }
+    try {
+      const saved = localStorage.getItem("racks-notification-settings");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          position: parsed.position || "top-right",
+          theme: parsed.theme || "dark",
+          duration: parsed.duration || 4000,
+          expand: parsed.expand !== undefined ? parsed.expand : false,
+        };
+      }
+    } catch (e) {}
+    return {
+      position: "top-right" as const,
+      theme: "dark" as const,
+      duration: 4000,
+      expand: false,
+    };
+  });
+
   useEffect(() => {
     loadSavedTheme();
+
+    const handleUpdate = () => {
+      try {
+        const saved = localStorage.getItem("racks-notification-settings");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          setToastSettings({
+            position: parsed.position || "top-right",
+            theme: parsed.theme || "dark",
+            duration: parsed.duration || 4000,
+            expand: parsed.expand !== undefined ? parsed.expand : false,
+          });
+        }
+      } catch (e) {}
+    };
+
+    window.addEventListener("notification-settings-changed", handleUpdate);
+    return () => window.removeEventListener("notification-settings-changed", handleUpdate);
   }, []);
 
   return (
@@ -66,7 +113,13 @@ export default function App() {
           {/* Catch-all fallback redirect */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-        <Toaster theme="dark" position="top-right" />
+        <Toaster
+          theme={toastSettings.theme === "custom" ? undefined : (toastSettings.theme as any)}
+          position={toastSettings.position as any}
+          duration={toastSettings.duration}
+          expand={toastSettings.expand}
+          className={toastSettings.theme === "custom" ? "custom-toaster" : ""}
+        />
       </BrowserRouter>
     </LanguageProvider>
   );

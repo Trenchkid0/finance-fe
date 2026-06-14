@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useLayoutEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown } from "lucide-react";
 import { Label } from "@/components/ui/label";
@@ -22,6 +22,7 @@ export function FilterSelect({
   options,
 }: FilterSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   
@@ -30,7 +31,8 @@ export function FilterSelect({
   const updatePosition = () => {
     if (triggerRef.current && containerRef.current) {
       const triggerRect = triggerRef.current.getBoundingClientRect();
-      const popupHeight = 250;
+      const popupHeight = containerRef.current.offsetHeight || 250;
+      const popupWidth = containerRef.current.offsetWidth || 176;
       
       let top = triggerRect.bottom + 8;
       let left = triggerRect.left;
@@ -39,26 +41,39 @@ export function FilterSelect({
         top = triggerRect.top - popupHeight - 8;
       }
       
-      if (left + 176 > window.innerWidth) {
-        left = Math.max(10, window.innerWidth - 186);
+      if (left + popupWidth > window.innerWidth) {
+        left = Math.max(10, window.innerWidth - popupWidth - 10);
       }
       
-      containerRef.current.style.top = `${top}px`;
-      containerRef.current.style.left = `${left}px`;
+      setPosition({ top, left });
     }
   };
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (isOpen) {
       updatePosition();
-      const timer = requestAnimationFrame(updatePosition);
+      
+      let attempts = 0;
+      const tryPosition = () => {
+        if (containerRef.current && triggerRef.current) {
+          updatePosition();
+          if (containerRef.current.offsetHeight > 0) return;
+        }
+        if (attempts < 5) {
+          attempts++;
+          requestAnimationFrame(tryPosition);
+        }
+      };
+      requestAnimationFrame(tryPosition);
+
       window.addEventListener("scroll", updatePosition, true);
       window.addEventListener("resize", updatePosition);
       return () => {
-        cancelAnimationFrame(timer);
         window.removeEventListener("scroll", updatePosition, true);
         window.removeEventListener("resize", updatePosition);
       };
+    } else {
+      setPosition(null);
     }
   }, [isOpen]);
 
@@ -96,8 +111,9 @@ export function FilterSelect({
           ref={containerRef}
           style={{
             position: "fixed",
-            top: "0",
-            left: "0",
+            top: position ? `${position.top}px` : "-9999px",
+            left: position ? `${position.left}px` : "-9999px",
+            visibility: position ? undefined : "hidden",
             borderRadius: "var(--custom-dropdown-menu-radius, 12px)",
           }}
           className="p-1 w-[176px] border border-white/[0.08] bg-popover/95 backdrop-blur-xl flex flex-col text-text-primary shadow-2xl z-[100000] max-h-[300px] overflow-y-auto"

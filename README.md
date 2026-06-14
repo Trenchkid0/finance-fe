@@ -119,8 +119,9 @@ frontend/
 │   │   └── utils/
 │   │       ├── cn.ts               # clsx + tailwind-merge helper
 │   │       ├── constants.ts        # App-wide constants (routes, category colors)
+│   │       ├── currency.ts         # Safe currency math (roundCurrency, safeSum, safePercent)
 │   │       ├── formatters.ts       # Currency (IDR), date, percentage formatters
-│   │       ├── theme.ts            # Theme engine (8 presets, CSS variable injection)
+│   │       ├── theme.ts            # Theme engine (18 presets, CSS variable injection)
 │   │       └── validators.ts       # Zod validation schemas for all forms
 │   ├── pages/                      # Route-level page components
 │   │   ├── Dashboard.tsx           # Main dashboard overview
@@ -205,16 +206,30 @@ Defined in `src/index.css` for consistent styling:
 
 ### Theme Engine
 
-**8 Premium Theme Presets** accessible from **Settings**:
+**18 Premium Theme Presets** and advanced customizations accessible from **Settings (Appearance Customization)**:
 
-| Dark Themes | Light Themes |
-|-------------|-------------|
-| Default Dark | Minimalist Light |
-| Emerald Depth | Swiss Banking |
-| Cyberpunk Neon | Nordic Snow |
-| Rosewood Forest | Sakura Blossom |
+#### 1. Color Customization
+- **18 Built-in Presets** (Nordic Midnight, GitHub Dark, Cyberpunk Neon, Retro Sepia, Tuscan Sun, etc.)
+- **Advanced Custom Mode**: Users can fully configure each individual CSS theme variable (`--canvas`, `--surface`, `--elevated`, `--border`, `--text-primary`, `--text-muted`, `--accent`, `--income`, `--expense`, `--warning`).
+- All interactive components (including the **API Keys Card**, code snippets, inputs, and badges) adapt dynamically to use these custom colors.
 
-Themes are persisted in `localStorage` and apply instantly via CSS custom properties. Login/Register pages also inherit the active theme.
+#### 2. Typography Customization
+- **Font Face options**: Choice between Plus Jakarta Sans, Geist Sans, Inter, JetBrains Mono, etc.
+- **Custom Font Weights**: Granular control over font weights across the entire system. Users can adjust the specific weights for:
+  - `font-normal` (Regular Text): Options `300` / `400` / `500`
+  - `font-medium` (Medium Text): Options `500` / `600`
+  - `font-semibold` (Semibold Text): Options `600` / `700`
+  - `font-bold` (Bold Text): Options `700` / `800` / `900`
+- Persists instantly to local stylesheet overrides via `:root` CSS variables (`--font-weight-normal`, `--font-weight-medium`, etc.).
+
+#### 3. Custom Notification Toast Configuration
+- **Placement**: Supports custom positioning: `top-left`, `top-center`, `top-right`, `bottom-left`, `bottom-center`, `bottom-right`.
+- **Styling Theme**: Choose between `dark`, `light`, `system`, or `custom` (Dynamic Custom Theme). Choosing `custom` automatically binds the notification toast's container background, border, text, success, and error indicators to match the active custom theme variables.
+- **Animation Layout**: Choose between stacking toasts (`stack`) or expanding them sequentially (`expand`).
+- **Auto-close Duration**: Custom timer selection (`2s`, `4s`, `8s`).
+- Includes a live tester button within the sub-tab to instantly verify styling adjustments.
+
+Themes and customizations are persisted in `localStorage` and apply instantly. Login/Register pages also inherit the active theme.
 
 ---
 

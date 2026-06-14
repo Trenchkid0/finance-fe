@@ -973,11 +973,49 @@ export function loadSavedButtonStyles() {
   applyButtonStyles(styles);
 }
 
+export interface TypographyStyles {
+  normal: string;   // "300" | "400" | "500"
+  medium: string;   // "500" | "600"
+  semibold: string; // "600" | "700"
+  bold: string;     // "700" | "800" | "900"
+}
+
+export function applyTypographyStyles(styles: TypographyStyles) {
+  if (typeof window === "undefined") return;
+  const root = document.documentElement;
+  root.style.setProperty("--font-weight-normal", styles.normal);
+  root.style.setProperty("--font-weight-medium", styles.medium);
+  root.style.setProperty("--font-weight-semibold", styles.semibold);
+  root.style.setProperty("--font-weight-bold", styles.bold);
+  localStorage.setItem("racks-typography-styles", JSON.stringify(styles));
+}
+
+export function loadSavedTypographyStyles() {
+  if (typeof window === "undefined") return;
+  const defaults: TypographyStyles = {
+    normal: "400",
+    medium: "500",
+    semibold: "600",
+    bold: "700",
+  };
+  const savedStr = localStorage.getItem("racks-typography-styles");
+  let styles = defaults;
+  if (savedStr) {
+    try {
+      styles = { ...defaults, ...JSON.parse(savedStr) };
+    } catch (e) {
+      // Ignore
+    }
+  }
+  applyTypographyStyles(styles);
+}
+
 export function loadSavedTheme() {
   if (typeof window === "undefined") return;
   loadSavedFont();
   loadSavedCardStyles();
   loadSavedButtonStyles();
+  loadSavedTypographyStyles();
   const themeId = localStorage.getItem("racks-theme-id") || "nordic-midnight";
   const customVarsStr = localStorage.getItem("racks-custom-theme-vars");
   let customVars = undefined;
