@@ -1,4 +1,4 @@
-# Maybe Finance — Frontend Dashboard
+# Racks Finance — Frontend Dashboard
 
 A modern, premium personal finance management web application built with **React 19**, **TypeScript**, and **Vite**. Features a sleek dark-mode-first design system inspired by GitHub's dark palette and Linear's information density. Includes interactive charts (Sankey, Line, Bar, Pie), multi-theme support, internationalization, and a fully responsive layout.
 
@@ -150,7 +150,7 @@ frontend/
 ├── tailwind.config.ts              # Tailwind CSS configuration
 ├── eslint.config.js                # ESLint rules
 ├── tsconfig.json                   # TypeScript compiler settings
-└── index.html                      # HTML entry template
+│   └── index.html                  # HTML entry template
 ```
 
 ---
@@ -253,7 +253,7 @@ VITE_API_URL=http://localhost:8080    # Backend API URL
 ### 2. Install & Run
 
 ```bash
-cd maybe-finance/frontend
+cd frontend
 
 # Install dependencies
 npm install
@@ -288,11 +288,11 @@ The Dockerfile wraps the static build in a high-performance **Nginx** server:
 
 ```bash
 # Build image (optionally pass VITE_API_URL)
-docker build -t maybe-finance-frontend \
+docker build -t racks-finance-frontend \
   --build-arg VITE_API_URL=http://localhost:8080 .
 
 # Run container
-docker run -d -p 3000:80 --name maybe-frontend maybe-finance-frontend
+docker run -d -p 3000:80 --name racks-frontend racks-finance-frontend
 ```
 
 Access at [http://localhost:3000](http://localhost:3000).
@@ -557,10 +557,11 @@ Implementasi Tailwind:
 
 ---
 
-## 🤝 Related Projects
+## 🔗 Related Projects
 
-- **[Backend API](../backend/)** — Go REST API server
-- **[Telegram Bot](../../bot-keuangan/)** — Telegram bot for transaction input
+- **Frontend Dashboard (racks-finance-frontend)**: [GitHub Repository (finance-fe)](https://github.com/Trenchkid0/finance-fe)
+- **Backend API (racks-finance-backend)**: [GitHub Repository (finance-be)](https://github.com/Trenchkid0/finance-be)
+- **Telegram Bot (bot-finance)**: [GitHub Repository (bot-finance)](https://github.com/Trenchkid0/bot-finance)
 
 ---
 
