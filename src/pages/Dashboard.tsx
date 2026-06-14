@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { useSearchParams, Link } from "react-router-dom";
-import { TrendingUp, ArrowUpRight, Clock, Wallet, Plus, Sparkles } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
+import { TrendingUp, Clock } from "lucide-react";
 import { NetWorthHero } from "@/components/dashboard/NetWorthHero";
 import { OnboardingHero } from "@/components/dashboard/OnboardingHero";
 import { BalanceSheet } from "@/components/dashboard/BalanceSheet";
@@ -8,9 +8,6 @@ import { CashflowSankey } from "@/components/charts/CashflowSankey";
 import { RecentTransactions } from "@/components/dashboard/RecentTransactions";
 import { SkeletonDashboard } from "@/components/ui/skeleton-loader";
 import { useApp } from "@/components/layout/AppLayout";
-import { formatIDR } from "@/lib/utils/formatters";
-import { cn } from "@/lib/utils/cn";
-import { Card } from "@/components/ui/card";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 import { useCachedApi } from "@/hooks/use-cached-api";
 import { CacheKeys, CacheTTL } from "@/lib/cache";
@@ -172,8 +169,6 @@ export default function Dashboard() {
   const name = user?.name?.trim().split(" ")[0] || user?.email?.split("@")[0] || "kamu";
 
   // Compute quick stats for the hero section
-  const totalIncome = (summaryData?.cashflow?.inflow || []).reduce((s: number, i: any) => s + (Number(i.amount) || 0), 0);
-  const totalExpense = (summaryData?.cashflow?.outflow || []).reduce((s: number, i: any) => s + (Number(i.amount) || 0), 0);
   const delta = (summaryData?.netWorthCurrent || 0) - (summaryData?.netWorthPrevious || 0);
   const deltaRatio = summaryData?.netWorthPrevious ? (delta / summaryData.netWorthPrevious) * 100 : 0;
 
@@ -278,95 +273,5 @@ export default function Dashboard() {
         </div>
       )}
     </div>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════════
-   Quick Stat Card — Enhanced with Trend Indicators & Quick Actions
-   ═══════════════════════════════════════════════════════════════════ */
-function QuickStatCard({
-  label,
-  value,
-  prefix,
-  suffix,
-  colorClass,
-  accent,
-  trend,
-  quickAction,
-}: {
-  label: string;
-  value: string;
-  prefix?: string;
-  suffix?: string;
-  colorClass?: string;
-  accent?: boolean;
-  trend?: { value: number; isPositive: boolean };
-  quickAction?: { label: string; icon: React.ReactNode; href: string };
-}) {
-  return (
-    <Card
-      className={cn(
-        "group relative overflow-hidden p-5 transition-all duration-300",
-        "hover:border-accent/40 hover:-translate-y-0.5",
-        accent && "border-accent/40 bg-gradient-to-br from-accent/10 to-accent/5"
-      )}
-    >
-      {/* Enhanced gradient overlay on hover */}
-      <div className="absolute inset-0 bg-gradient-to-br from-accent/0 via-accent/5 to-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-      
-      {/* Sparkle effect on hover (top-right corner) */}
-      <div className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-all duration-300">
-        <Sparkles size={16} className="text-accent animate-pulse" />
-      </div>
-      
-      <div className="relative z-10 space-y-3">
-        {/* Header: Label + Trend */}
-        <div className="flex items-center justify-between">
-          <p className="text-body-xs font-semibold text-muted-foreground uppercase tracking-wider transition-colors duration-200 group-hover:text-foreground/80">
-            {label}
-          </p>
-          
-          {/* Mini Trend Indicator */}
-          {trend && (
-            <div className={cn(
-              "flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold transition-all duration-200",
-              trend.isPositive
-                ? "bg-income/10 text-income group-hover:bg-income/20"
-                : "bg-expense/10 text-expense group-hover:bg-expense/20"
-            )}>
-              <TrendingUp size={10} className={!trend.isPositive ? "rotate-180" : ""} />
-              {Math.abs(trend.value).toFixed(1)}%
-            </div>
-          )}
-        </div>
-        
-        {/* Value with enhanced typography */}
-        <p className={cn(
-          "text-numeric-xl font-bold tabular-nums tracking-tight transition-all duration-200",
-          "group-hover:scale-[1.02]",
-          colorClass || "text-foreground"
-        )}>
-          {prefix && <span className="text-numeric-lg opacity-80">{prefix}</span>}
-          {value}
-          {suffix && <span className="text-body-sm font-medium opacity-70 ml-1.5">{suffix}</span>}
-        </p>
-
-        {/* Quick Action Button (appears on hover) */}
-        {quickAction && (
-          <Link
-            to={quickAction.href}
-            className={cn(
-              "flex items-center gap-1.5 text-body-xs font-medium text-accent",
-              "opacity-0 group-hover:opacity-100 transition-all duration-200",
-              "hover:text-accent/80 hover:gap-2"
-            )}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {quickAction.icon}
-            {quickAction.label}
-          </Link>
-        )}
-      </div>
-    </Card>
   );
 }
