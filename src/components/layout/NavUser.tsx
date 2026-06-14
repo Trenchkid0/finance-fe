@@ -1,21 +1,13 @@
 import { Link } from "react-router-dom";
-import { ChevronRight, ChevronsUpDown, LogOut, Settings, UserCircle } from "lucide-react";
+import {LogOut, MoreVertical, Settings, UserCircle } from "lucide-react";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/avatar";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
@@ -31,13 +23,9 @@ interface NavUserProps {
   };
 }
 
-/**
- * User card pinned to sidebar footer. Click → dropdown with profile,
- * settings, logout (mirrors dashboard-01 NavUser).
- */
 export function NavUser({ user }: NavUserProps) {
   const { isMobile } = useSidebar();
-  const { t } = useLanguage();
+  const { language } = useLanguage();
 
   const initials = user.name
     ? user.name
@@ -51,130 +39,102 @@ export function NavUser({ user }: NavUserProps) {
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <DropdownMenu modal={false}>
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuButton
-              size="lg"
-              className="rounded-xl hover:bg-white/[0.04] transition-all duration-300 data-[state=open]:bg-white/[0.06] data-[state=open]:text-foreground"
+        <DropdownMenu.Root modal={false}>
+          <DropdownMenu.Trigger asChild>
+            <button
+              type="button"
+              data-slot="dropdown-menu-trigger"
+              data-sidebar="menu-button"
+              data-size="lg"
+              className="peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left ring-sidebar-ring outline-hidden transition-[width,height,padding] group-has-data-[sidebar=menu-action]/menu-item:pr-8 group-data-[collapsible=icon]:!size-8 focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground h-12 text-sm group-data-[collapsible=icon]:!p-0 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <Avatar className="h-8 w-8 rounded-xl border border-white/[0.08]">
+              <Avatar className="rounded-lg text-[10px] font-bold bg-gradient-to-br from-accent/20 to-indigo-500/20 text-accent">
                 {user.image ? (
                   <AvatarImage src={user.image} alt={user.name ?? "User"} />
                 ) : null}
-                <AvatarFallback className="rounded-xl text-[10px] font-bold bg-gradient-to-br from-accent/20 to-indigo-500/20 text-accent">
+                <AvatarFallback className="rounded-lg text-[10px] font-bold bg-gradient-to-br from-accent/20 to-indigo-500/20 text-accent">
                   {initials}
                 </AvatarFallback>
               </Avatar>
-              <div className="grid flex-1 text-left leading-tight">
-                <span className="truncate text-[13px] font-semibold text-foreground">
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-medium text-foreground">
                   {user.name ?? "User"}
                 </span>
-                <span className="truncate text-[11px] text-muted-foreground/50">
+                <span className="truncate text-xs text-muted-foreground">
                   {user.email}
                 </span>
               </div>
-              <ChevronsUpDown size={14} className="ml-auto text-muted-foreground/30" />
-            </SidebarMenuButton>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            className="min-w-[280px] rounded-2xl border border-border/40 bg-elevated/60 backdrop-blur-xl p-2 shadow-[0_10px_40px_rgba(0,0,0,0.5)] space-y-1 animate-in fade-in-0 zoom-in-95 duration-100 overflow-hidden"
-            side={isMobile ? "bottom" : "right"}
-            align="end"
-            sideOffset={8}
-          >
-            <DropdownMenuLabel className="p-1 font-normal">
-              <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-gradient-to-b from-surface/50 to-elevated/30 border border-border/40">
-                <div className="relative">
-                  <Avatar className="h-10 w-10 rounded-xl border border-white/[0.08]">
+              <MoreVertical size={16} className="ml-auto text-muted-foreground/30 size-4 shrink-0" />
+            </button>
+          </DropdownMenu.Trigger>
+
+          <DropdownMenu.Portal>
+            <DropdownMenu.Content
+              side={isMobile ? "bottom" : "right"}
+              align="end"
+              sideOffset={4}
+              data-slot="dropdown-menu-content"
+              className="z-50 max-h-[var(--radix-dropdown-menu-content-available-height)] overflow-x-hidden overflow-y-auto border border-sidebar-border bg-sidebar p-1 text-sidebar-foreground shadow-md data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 w-[var(--radix-dropdown-menu-trigger-width)] min-w-56 rounded-lg outline-none"
+            >
+              <div data-slot="dropdown-menu-label" className="text-sm data-[inset]:pl-8 p-0 font-normal">
+                <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                  <Avatar className="h-8 w-8 rounded-lg">
                     {user.image ? (
                       <AvatarImage src={user.image} alt={user.name ?? "User"} />
                     ) : null}
-                    <AvatarFallback className="rounded-xl text-[11px] font-bold bg-gradient-to-br from-accent/20 to-indigo-500/20 text-accent">
+                    <AvatarFallback className="rounded-lg text-[10px] font-bold bg-gradient-to-br from-accent/20 to-indigo-500/20 text-accent">
                       {initials}
                     </AvatarFallback>
                   </Avatar>
-                  {/* Status Indicator Dot */}
-                  <span className="absolute -bottom-0.5 -right-0.5 flex h-2.5 w-2.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 border border-elevated"></span>
-                  </span>
-                </div>
-                <div className="grid flex-1 text-left leading-tight min-w-0">
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <span className="truncate text-[13px] font-bold text-text-primary">
+                  <div className="grid flex-1 text-left text-sm leading-tight">
+                    <span className="truncate font-medium text-sidebar-foreground">
                       {user.name ?? "User"}
                     </span>
-                    <span className="text-[8px] bg-accent/15 text-accent font-bold px-1.5 py-0.5 rounded-full border border-accent/30 uppercase tracking-widest scale-90 origin-left shrink-0">
-                      Demo
+                    <span className="truncate text-xs text-sidebar-foreground/60">
+                      {user.email}
                     </span>
                   </div>
-                  <span className="truncate text-[10px] text-text-muted mt-1 font-mono">
-                    {user.email}
-                  </span>
                 </div>
               </div>
-            </DropdownMenuLabel>
 
-            <div className="h-px bg-border/60 my-1 mx-1" />
+              <div role="separator" aria-orientation="horizontal" data-slot="dropdown-menu-separator" className="-mx-1 my-1 h-px bg-sidebar-border" />
 
-            <DropdownMenuGroup className="space-y-1">
-              {/* Profile Item */}
-              <DropdownMenuItem asChild className="rounded-xl mx-1 px-3 py-2 text-[12px] group/item hover:bg-white/[0.03] border border-transparent hover:border-border/30 transition-all duration-200 cursor-pointer">
-                <Link to="/profile" className="flex items-center justify-between w-full">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="p-1.5 rounded-lg bg-accent/5 border border-accent/10 text-accent/70 group-hover/item:bg-accent/10 group-hover/item:text-accent transition-colors duration-200">
-                      <UserCircle size={15} />
-                    </div>
-                    <div className="flex flex-col text-left min-w-0">
-                      <span className="font-semibold text-text-primary group-hover/item:text-accent transition-colors duration-200">{t("profile")}</span>
-                      <span className="text-[9px] text-text-muted/60 mt-0.5 truncate">Kelola informasi detail akun Anda</span>
-                    </div>
-                  </div>
-                  <ChevronRight size={12} className="text-text-muted/30 group-hover/item:text-accent group-hover/item:translate-x-0.5 transition-all duration-200 shrink-0" />
-                </Link>
-              </DropdownMenuItem>
+              <div role="group" data-slot="dropdown-menu-group" className="space-y-0.5">
+                <DropdownMenu.Item asChild>
+                  <Link
+                    to="/profile"
+                    className="relative flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-sidebar-accent focus:text-sidebar-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-sidebar-foreground/60"
+                  >
+                    <UserCircle />
+                    {language === "id" ? "Akun" : "Account"}
+                  </Link>
+                </DropdownMenu.Item>
 
-              {/* Settings Item */}
-              <DropdownMenuItem asChild className="rounded-xl mx-1 px-3 py-2 text-[12px] group/item hover:bg-white/[0.03] border border-transparent hover:border-border/30 transition-all duration-200 cursor-pointer">
-                <Link to="/settings" className="flex items-center justify-between w-full">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="p-1.5 rounded-lg bg-accent/5 border border-accent/10 text-accent/70 group-hover/item:bg-accent/10 group-hover/item:text-accent transition-colors duration-200">
-                      <Settings size={15} />
-                    </div>
-                    <div className="flex flex-col text-left min-w-0">
-                      <span className="font-semibold text-text-primary group-hover/item:text-accent transition-colors duration-200">{t("settings")}</span>
-                      <span className="text-[9px] text-text-muted/60 mt-0.5 truncate">Atur preferensi & konfigurasi aplikasi</span>
-                    </div>
-                  </div>
-                  <ChevronRight size={12} className="text-text-muted/30 group-hover/item:text-accent group-hover/item:translate-x-0.5 transition-all duration-200 shrink-0" />
-                </Link>
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-
-            <div className="h-px bg-border/60 my-1 mx-1" />
-
-            {/* Logout Item */}
-            <DropdownMenuItem
-              variant="destructive"
-              className="rounded-xl mx-1 px-3 py-2 text-[12px] cursor-pointer group/item hover:bg-expense/10 hover:text-expense border border-transparent hover:border-expense/20 transition-all duration-200 flex items-center justify-between w-full"
-              onSelect={async (e) => {
-                e.preventDefault();
-                await logout();
-              }}
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="p-1.5 rounded-lg bg-expense/5 border border-expense/10 text-expense/70 group-hover/item:bg-expense/20 group-hover/item:text-expense transition-colors duration-200">
-                  <LogOut size={15} />
-                </div>
-                <div className="flex flex-col text-left min-w-0">
-                  <span className="font-bold text-expense">{t("logout")}</span>
-                  <span className="text-[9px] text-expense/60 mt-0.5 truncate">Akhiri sesi aktif Anda dengan aman</span>
-                </div>
+                <DropdownMenu.Item asChild>
+                  <Link
+                    to="/settings"
+                    className="relative flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-sidebar-accent focus:text-sidebar-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-sidebar-foreground/60"
+                  >
+                    <Settings />
+                    {language === "id" ? "Pengaturan" : "Settings"}
+                  </Link>
+                </DropdownMenu.Item>
               </div>
-              <ChevronRight size={12} className="text-expense/30 group-hover/item:text-expense group-hover/item:translate-x-0.5 transition-all duration-200 shrink-0" />
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+
+              <div role="separator" aria-orientation="horizontal" data-slot="dropdown-menu-separator" className="-mx-1 my-1 h-px bg-sidebar-border" />
+
+              <DropdownMenu.Item
+                onSelect={async () => {
+                  await logout();
+                }}
+                className="relative flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-expense/10 focus:text-expense data-[disabled]:pointer-events-none data-[disabled]:opacity-50 text-expense [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-expense"
+              >
+                <LogOut />
+                {language === "id" ? "Keluar" : "Log out"}
+              </DropdownMenu.Item>
+            </DropdownMenu.Content>
+          </DropdownMenu.Portal>
+        </DropdownMenu.Root>
       </SidebarMenuItem>
     </SidebarMenu>
   );
