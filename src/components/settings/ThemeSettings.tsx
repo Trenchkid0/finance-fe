@@ -376,6 +376,18 @@ export function ThemeSettings() {
     { value: "bold", label: language === "id" ? "Tebal (700)" : "Bold (700)" },
   ];
 
+  const generalWeightOptions = [
+    { value: "100", label: language === "id" ? "Sangat Tipis (Thin 100)" : "Thin (100)" },
+    { value: "200", label: language === "id" ? "Ekstra Ringan (Extra Light 200)" : "Extra Light (200)" },
+    { value: "300", label: language === "id" ? "Ringan (Light 300)" : "Light (300)" },
+    { value: "400", label: language === "id" ? "Biasa (Normal 400)" : "Regular (400)" },
+    { value: "500", label: language === "id" ? "Sedang (Medium 500)" : "Medium (500)" },
+    { value: "600", label: language === "id" ? "Semi Tebal (Semibold 600)" : "Semibold (600)" },
+    { value: "700", label: language === "id" ? "Tebal (Bold 700)" : "Bold (700)" },
+    { value: "800", label: language === "id" ? "Sangat Tebal (Extra Bold 800)" : "Extra Bold (800)" },
+    { value: "900", label: language === "id" ? "Hitam Pekat (Black 900)" : "Black (900)" },
+  ];
+
   const subTabs: { id: "colors" | "typography" | "cards" | "buttons" | "notifications"; label: string; icon: React.ReactNode }[] = [
     { id: "colors", label: language === "id" ? "Tema & Warna" : "Theme & Colors", icon: <Palette size={14} /> },
     { id: "typography", label: language === "id" ? "Tipografi" : "Typography", icon: <Type size={14} /> },
@@ -1246,11 +1258,7 @@ export function ThemeSettings() {
                       value={typographyStyles.normal}
                       onChange={(val) => handleTypographyStyleChange("normal", val)}
                       minWidth="150px"
-                      options={[
-                        { value: "300", label: language === "id" ? "Tipis (300)" : "Light (300)" },
-                        { value: "400", label: language === "id" ? "Normal (400)" : "Normal (400)" },
-                        { value: "500", label: language === "id" ? "Sedang (500)" : "Medium (500)" },
-                      ]}
+                      options={generalWeightOptions}
                     />
                   </div>
 
@@ -1263,10 +1271,7 @@ export function ThemeSettings() {
                       value={typographyStyles.medium}
                       onChange={(val) => handleTypographyStyleChange("medium", val)}
                       minWidth="150px"
-                      options={[
-                        { value: "500", label: language === "id" ? "Sedang (500)" : "Medium (500)" },
-                        { value: "600", label: language === "id" ? "Semi Tebal (600)" : "Semibold (600)" },
-                      ]}
+                      options={generalWeightOptions}
                     />
                   </div>
 
@@ -1279,10 +1284,7 @@ export function ThemeSettings() {
                       value={typographyStyles.semibold}
                       onChange={(val) => handleTypographyStyleChange("semibold", val)}
                       minWidth="150px"
-                      options={[
-                        { value: "600", label: language === "id" ? "Semi Tebal (600)" : "Semibold (600)" },
-                        { value: "700", label: language === "id" ? "Tebal (700)" : "Bold (700)" },
-                      ]}
+                      options={generalWeightOptions}
                     />
                   </div>
 
@@ -1295,11 +1297,7 @@ export function ThemeSettings() {
                       value={typographyStyles.bold}
                       onChange={(val) => handleTypographyStyleChange("bold", val)}
                       minWidth="150px"
-                      options={[
-                        { value: "700", label: language === "id" ? "Tebal (700)" : "Bold (700)" },
-                        { value: "800", label: language === "id" ? "Sangat Tebal (800)" : "Extra Bold (800)" },
-                        { value: "900", label: language === "id" ? "Hitam (900)" : "Black (900)" },
-                      ]}
+                      options={generalWeightOptions}
                     />
                   </div>
                 </div>
@@ -1333,6 +1331,14 @@ export function ThemeSettings() {
                     <p className="text-sm font-bold text-foreground">
                       <span className="text-muted-foreground font-mono mr-3">[font-bold]:</span>
                       {language === "id" ? "Ini adalah teks tebal, digunakan untuk judul halaman dan nominal uang utama." : "This is bold text, used for page titles and main monetary values."}
+                    </p>
+                    <p className="text-sm font-extrabold text-foreground">
+                      <span className="text-muted-foreground font-mono mr-3">[font-extrabold]:</span>
+                      {language === "id" ? "Teks sangat tebal, mengikuti konfigurasi ketebalan bold." : "Extra bold text, following the bold weight configuration."}
+                    </p>
+                    <p className="text-sm font-black text-foreground">
+                      <span className="text-muted-foreground font-mono mr-3">[font-black]:</span>
+                      {language === "id" ? "Teks hitam pekat, mengikuti konfigurasi ketebalan bold." : "Black/heavy text, following the bold weight configuration."}
                     </p>
                   </div>
                 </div>

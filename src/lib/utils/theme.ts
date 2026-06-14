@@ -974,10 +974,10 @@ export function loadSavedButtonStyles() {
 }
 
 export interface TypographyStyles {
-  normal: string;   // "300" | "400" | "500"
-  medium: string;   // "500" | "600"
-  semibold: string; // "600" | "700"
-  bold: string;     // "700" | "800" | "900"
+  normal: string;   // "100" | "200" | ... | "900"
+  medium: string;   // "100" | "200" | ... | "900"
+  semibold: string; // "100" | "200" | ... | "900"
+  bold: string;     // "100" | "200" | ... | "900"
 }
 
 export function applyTypographyStyles(styles: TypographyStyles) {
