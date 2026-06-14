@@ -221,68 +221,7 @@ export default function Dashboard() {
         )}
       </section>
 
-      {/* ═══════════════════════════════════════════════════════════════════
-          LEVEL 2: KEY METRICS - Quick Financial Overview
-          ═══════════════════════════════════════════════════════════════════ */}
-      <section className="animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-        <div className="flex items-center gap-2 mb-4">
-          <div className="h-1 w-1 rounded-full bg-accent" />
-          <h2 className="text-heading-sm text-foreground font-semibold">
-            {language === "id" ? "Ringkasan Bulan Ini" : "This Month's Summary"}
-          </h2>
-        </div>
-        
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <QuickStatCard
-            label={language === "id" ? "Total Pemasukan" : "Total Income"}
-            value={formatIDR(totalIncome)}
-            prefix="+"
-            colorClass="text-income"
-            trend={{ value: 12.5, isPositive: true }}
-            quickAction={{
-              label: language === "id" ? "Tambah Income" : "Add Income",
-              icon: <Plus size={12} />,
-              href: "/transactions?type=income"
-            }}
-          />
-          <QuickStatCard
-            label={language === "id" ? "Total Pengeluaran" : "Total Expenses"}
-            value={formatIDR(totalExpense)}
-            prefix="-"
-            colorClass="text-expense"
-            trend={{ value: 8.3, isPositive: false }}
-            quickAction={{
-              label: language === "id" ? "Tambah Expense" : "Add Expense",
-              icon: <Plus size={12} />,
-              href: "/transactions?type=expense"
-            }}
-          />
-          <QuickStatCard
-            label={language === "id" ? "Selisih Bersih" : "Net Surplus"}
-            value={formatIDR(totalIncome - totalExpense)}
-            colorClass={totalIncome - totalExpense >= 0 ? "text-income" : "text-expense"}
-            trend={{
-              value: totalIncome > 0 ? ((totalIncome - totalExpense) / totalIncome) * 100 : 0,
-              isPositive: totalIncome - totalExpense >= 0
-            }}
-            quickAction={{
-              label: language === "id" ? "Lihat Detail" : "View Details",
-              icon: <ArrowUpRight size={12} />,
-              href: "/transactions"
-            }}
-          />
-          <QuickStatCard
-            label={language === "id" ? "Akun Aktif" : "Active Accounts"}
-            value={String(activeAccounts.length)}
-            suffix={language === "id" ? " akun" : " accounts"}
-            quickAction={{
-              label: language === "id" ? "Kelola Akun" : "Manage Accounts",
-              icon: <Wallet size={12} />,
-              href: "/accounts"
-            }}
-          />
-        </div>
-      </section>
+     
 
       {/* ═══════════════════════════════════════════════════════════════════
           LEVEL 3: DETAILED ANALYSIS - Stacked Layout (Top to Bottom)
