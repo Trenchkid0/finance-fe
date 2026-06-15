@@ -468,7 +468,7 @@ function CustomSingleDatePicker({
         ref={triggerRef}
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex h-11 w-full items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-2 text-sm text-foreground hover:border-white/[0.12] hover:bg-white/[0.05] focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50 focus:bg-white/[0.04] transition-all duration-300 ease-out"
+        className="flex h-11 w-full items-center justify-between rounded-md border border-border bg-elevated px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all duration-200 text-left cursor-pointer"
       >
         <span>{label}</span>
         <ChevronDown size={14} className="opacity-60 shrink-0 ml-2" />
@@ -727,8 +727,7 @@ function FormSelect({
         ref={triggerRef}
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex h-11 w-full items-center justify-between border border-white/[0.06] bg-white/[0.03] px-4 py-2 text-sm text-foreground hover:border-white/[0.12] hover:bg-white/[0.05] focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50 focus:bg-white/[0.04] transition-all duration-300 ease-out text-left"
-        style={{ borderRadius: "var(--dropdown-radius, 8px)" }}
+        className="flex h-11 w-full items-center justify-between rounded-md border border-border bg-elevated px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all duration-200 text-left cursor-pointer"
       >
         <span>{selectedLabel}</span>
         <ChevronDown size={14} className="opacity-60 shrink-0 ml-2" />

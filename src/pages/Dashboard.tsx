@@ -163,6 +163,7 @@ export default function Dashboard() {
     transferToName: tx.transferTo?.name ?? null,
     date: tx.date,
     amount: Number(tx.amount),
+    adminFee: Number(tx.adminFee || 0),
     type: tx.type as "income" | "expense" | "transfer",
   }));
 

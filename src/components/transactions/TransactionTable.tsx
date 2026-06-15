@@ -410,6 +410,14 @@ function TransactionRow({
               </span>
             </>
           )}
+          {tx.adminFee > 0 && (
+            <>
+              <span className="text-text-muted/30 shrink-0">·</span>
+              <span className="text-expense/90 font-semibold font-mono text-[9px] bg-expense/10 border border-expense/20 px-1 py-0.5 rounded flex items-center">
+                Fee: {formatIDR(tx.adminFee)}
+              </span>
+            </>
+          )}
         </div>
       </div>
 

@@ -21,6 +21,7 @@ interface RecurringFormData {
   id?: string
   name: string
   amount: number
+  adminFee?: number
   categoryId?: string | null
   frequency: string
   dayOfMonth: number
@@ -89,6 +90,7 @@ export function RecurringForm({ open, onClose, recurring, categories, accounts, 
         ...recurring,
         name: formData.name,
         amount,
+        adminFee: 0,
         categoryId: formData.categoryId || null,
         frequency: formData.frequency,
         dayOfMonth: formData.dayOfMonth,
@@ -171,42 +173,40 @@ export function RecurringForm({ open, onClose, recurring, categories, accounts, 
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="amount" className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">
-                  {isId ? 'Nominal Tagihan' : 'Amount'}
-                </Label>
-                <div className="relative group">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground/45 select-none transition-colors duration-300 group-focus-within:text-foreground">
-                    Rp
-                  </span>
-                  <Input
-                    id="amount"
-                    type="text"
-                    value={formData.amountInput}
-                    onChange={(e) => setFormData({ ...formData, amountInput: formatInputRupiah(e.target.value) })}
-                    className="pl-9 font-mono tabular-nums"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="category" className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">
-                  {isId ? 'Kategori' : 'Category'}
-                </Label>
-                <FormSelect
-                  value={formData.categoryId || 'none'}
-                  onChange={(val) => setFormData({ ...formData, categoryId: val === 'none' ? '' : val })}
-                  options={[
-                    { value: "none", label: isId ? '-- Tanpa Kategori --' : '-- No Category --' },
-                    ...expenseCategories.map((cat) => ({
-                      value: cat.id,
-                      label: `${cat.icon ? `${cat.icon} ` : ""}${cat.name}`,
-                    })),
-                  ]}
-                  placeholder={isId ? '-- Pilih Kategori --' : '-- Select Category --'}
+            <div className="space-y-2">
+              <Label htmlFor="amount" className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">
+                {isId ? 'Nominal Tagihan' : 'Amount'}
+              </Label>
+              <div className="relative group">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground/45 select-none transition-colors duration-300 group-focus-within:text-foreground">
+                  Rp
+                </span>
+                <Input
+                  id="amount"
+                  type="text"
+                  value={formData.amountInput}
+                  onChange={(e) => setFormData({ ...formData, amountInput: formatInputRupiah(e.target.value) })}
+                  className="pl-9 font-mono tabular-nums"
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="category" className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">
+                {isId ? 'Kategori' : 'Category'}
+              </Label>
+              <FormSelect
+                value={formData.categoryId || 'none'}
+                onChange={(val) => setFormData({ ...formData, categoryId: val === 'none' ? '' : val })}
+                options={[
+                  { value: "none", label: isId ? '-- Tanpa Kategori --' : '-- No Category --' },
+                  ...expenseCategories.map((cat) => ({
+                    value: cat.id,
+                    label: `${cat.icon ? `${cat.icon} ` : ""}${cat.name}`,
+                  })),
+                ]}
+                placeholder={isId ? '-- Pilih Kategori --' : '-- Select Category --'}
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-3">

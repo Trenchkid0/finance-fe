@@ -40,6 +40,7 @@ interface RecurringBill {
   id: string;
   name: string;
   amount: number;
+  adminFee?: number;
   categoryId?: string | null;
   frequency: string; // "weekly", "monthly", "yearly"
   dayOfMonth: number;
@@ -581,9 +582,16 @@ export default function Recurring() {
                         <span className="text-[10px] text-text-muted">
                           {bill.category?.name || (language === "id" ? "Tanpa Kategori" : "Uncategorized")}
                         </span>
-                        <span className="text-xs font-black font-mono tabular-nums text-text-primary">
-                          {formatIDR(bill.amount)}
-                        </span>
+                        <div className="text-right">
+                          {bill.adminFee ? (
+                            <span className="text-[9px] text-text-muted block font-mono">
+                              Fee: {formatIDR(bill.adminFee)}
+                            </span>
+                          ) : null}
+                          <span className="text-xs font-black font-mono tabular-nums text-text-primary">
+                            {formatIDR(bill.amount)}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   ))}

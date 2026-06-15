@@ -16,6 +16,7 @@ export interface RecentTransactionItem {
   transferToName: string | null;
   date: string;
   amount: number;
+  adminFee: number;
   type: "income" | "expense" | "transfer";
 }
 
@@ -122,6 +123,11 @@ export function RecentTransactions({ transactions }: Props) {
                         {tx.categoryName}
                       </span>
                     ) : null}
+                    {tx.adminFee > 0 && (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold border bg-expense/10 border-expense/20 text-expense font-mono">
+                        Fee: {formatIDR(tx.adminFee)}
+                      </span>
+                    )}
                   </div>
 
                   {/* Account info */}
@@ -180,7 +186,7 @@ export function RecentTransactions({ transactions }: Props) {
                     <p className="text-[13px] text-foreground font-semibold truncate transition-all duration-200 group-hover:text-accent">
                       {tx.description}
                     </p>
-                    <div className="flex items-center gap-1.5 mt-1 text-[11px] text-muted-foreground/50 font-medium">
+                    <div className="flex flex-wrap items-center gap-1.5 mt-1 text-[11px] text-muted-foreground/50 font-medium">
                       {tx.type === "transfer" ? (
                         <>
                           <ArrowLeftRight size={10} className="text-accent" />
@@ -194,6 +200,14 @@ export function RecentTransactions({ transactions }: Props) {
                       )}
                       <span>·</span>
                       <span className="truncate">{tx.accountName}</span>
+                      {tx.adminFee > 0 && (
+                        <>
+                          <span>·</span>
+                          <span className="text-expense font-semibold text-[9px] bg-expense/10 border border-expense/20 px-1 py-0.2 rounded font-mono">
+                            Fee: {formatIDR(tx.adminFee)}
+                          </span>
+                        </>
+                      )}
                     </div>
                   </div>
 

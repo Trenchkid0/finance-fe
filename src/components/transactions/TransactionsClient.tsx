@@ -42,6 +42,7 @@ export interface TransactionRowData {
   transferToId: string | null;
   transferToName: string | null;
   amount: number;
+  adminFee: number;
   date: string;
   description: string | null;
   note: string | null;
@@ -112,6 +113,7 @@ interface CalendarTransactionItem {
   transferToId: string | null;
   transferTo?: { name: string };
   amount: number | string;
+  adminFee: number | string;
   date: string;
   description: string | null;
   note: string | null;
@@ -173,6 +175,7 @@ export function TransactionsClient({
           transferToId: tx.transferToId,
           transferToName: tx.transferTo?.name ?? null,
           amount: Number(tx.amount),
+          adminFee: Number(tx.adminFee || 0),
           date: tx.date,
           description: tx.description,
           note: tx.note,

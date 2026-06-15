@@ -68,6 +68,7 @@ export interface TransactionApiItem {
   transferToId: string | null;
   transferTo?: { id: string; name: string } | null;
   amount: number;
+  adminFee: number;
   date: string;
   description: string | null;
   note: string | null;

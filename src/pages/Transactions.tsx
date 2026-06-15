@@ -76,6 +76,7 @@ export default function Transactions() {
     transferToId: tx.transferToId,
     transferToName: tx.transferTo?.name ?? null,
     amount: Number(tx.amount),
+    adminFee: Number(tx.adminFee || 0),
     date: tx.date,
     description: tx.description,
     note: tx.note,

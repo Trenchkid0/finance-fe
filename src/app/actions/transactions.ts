@@ -15,10 +15,12 @@ export async function createTransaction(
   formData: FormData
 ): Promise<ActionResult<null>> {
   const rawAmount = getString(formData, "amount") || "0";
+  const rawAdminFee = getString(formData, "adminFee") || "0";
   const payload = {
     type: getString(formData, "type"),
     accountId: getString(formData, "accountId"),
     amount: parseFloat(cleanMoneyString(rawAmount)),
+    adminFee: parseFloat(cleanMoneyString(rawAdminFee)) || 0,
     date: getString(formData, "date"),
     description: getString(formData, "description"),
     note: getString(formData, "note") || "",
@@ -41,10 +43,12 @@ export async function updateTransaction(
   formData: FormData
 ): Promise<ActionResult<null>> {
   const rawAmount = getString(formData, "amount") || "0";
+  const rawAdminFee = getString(formData, "adminFee") || "0";
   const payload = {
     type: getString(formData, "type"),
     accountId: getString(formData, "accountId"),
     amount: parseFloat(cleanMoneyString(rawAmount)),
+    adminFee: parseFloat(cleanMoneyString(rawAdminFee)) || 0,
     date: getString(formData, "date"),
     description: getString(formData, "description"),
     note: getString(formData, "note") || "",

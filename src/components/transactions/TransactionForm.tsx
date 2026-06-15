@@ -20,7 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 import { cn } from "@/lib/utils/cn";
-import { formatInputRupiah } from "@/lib/utils/formatters";
+import { formatInputRupiah, formatIDR, cleanMoneyString } from "@/lib/utils/formatters";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 import { api } from "@/lib/api";
 
@@ -43,7 +43,7 @@ import type { AIScanCandidate } from "@/app/actions/ai";
 
 const FORM_ID = "transaction-modal-form";
 
-export type AccountOption = { id: string; name: string };
+export type AccountOption = { id: string; name: string; balance?: number };
 export type CategoryOption = {
   id: string;
   name: string;
@@ -58,6 +58,7 @@ export type TransactionFormInitial = {
   categoryId: string | null;
   transferToId: string | null;
   amount: number;
+  adminFee?: number;
   date: string; // YYYY-MM-DD
   description: string;
   note: string;
@@ -92,6 +93,9 @@ export function TransactionForm({
   const [type, setType] = useState<TransactionTypeInput>(initial.type);
   const [amount, setAmount] = useState(
     initial.amount ? formatInputRupiah(String(initial.amount)) : ""
+  );
+  const [adminFee, setAdminFee] = useState(
+    initial.adminFee ? formatInputRupiah(String(initial.adminFee)) : ""
   );
   const [date, setDate] = useState(initial.date);
   const [accountId, setAccountId] = useState(initial.accountId);
@@ -130,6 +134,7 @@ export function TransactionForm({
     if (!open) return;
     setType(initial.type);
     setAmount(initial.amount ? formatInputRupiah(String(initial.amount)) : "");
+    setAdminFee(initial.adminFee ? formatInputRupiah(String(initial.adminFee)) : "");
     setDate(initial.date);
     setAccountId(initial.accountId);
     setCategoryId(initial.categoryId);
@@ -186,6 +191,30 @@ export function TransactionForm({
   );
 
   const fieldErrors = (state?.fieldErrors ?? {}) as Record<string, string[]>;
+
+  const selectedAccount = accounts.find((a) => a.id === accountId);
+  const selectedDestAccount = accounts.find((a) => a.id === transferToId);
+  const accountBalance = selectedAccount?.balance ?? 0;
+
+  const numAmount = parseFloat(cleanMoneyString(amount)) || 0;
+  const numFee = type === "transfer" ? (parseFloat(cleanMoneyString(adminFee)) || 0) : 0;
+
+  let isInsufficient = false;
+  let totalDeducted = 0;
+
+  if (type === "expense" || type === "transfer") {
+    totalDeducted = numAmount + numFee;
+    if (selectedAccount && totalDeducted > accountBalance) {
+      isInsufficient = true;
+    }
+  } else if (type === "income") {
+    if (numFee > numAmount) {
+      totalDeducted = numFee - numAmount;
+      if (selectedAccount && totalDeducted > accountBalance) {
+        isInsufficient = true;
+      }
+    }
+  }
 
   // Handle Scan AI complete
   const handleScanComplete = (c: AIScanCandidate, file: File) => {
@@ -321,31 +350,86 @@ export function TransactionForm({
           <Label className={labelCls}>{isId ? "Tanggal" : "Date"}</Label>
           <CustomSingleDatePicker value={date} onChange={setDate} />
         </div>
+        {type === "transfer" && (
+          <div className="space-y-2.5 sm:col-span-2">
+            <Label className={labelCls}>{isId ? "Biaya Admin (Opsional)" : "Admin Fee (Optional)"}</Label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-muted-foreground/70">Rp</span>
+              <Input
+                inputMode="numeric"
+                value={adminFee}
+                onChange={(e) => setAdminFee(formatInputRupiah(e.target.value))}
+                placeholder="0"
+                className="h-11 pl-10 font-mono font-semibold"
+              />
+            </div>
+            {(() => {
+              const numAmount = parseFloat(cleanMoneyString(amount)) || 0;
+              const numFee = parseFloat(cleanMoneyString(adminFee)) || 0;
+              if (numAmount > 0 && numFee > 0) {
+                const previewLabel = isId ? "Total dipotong dari pengirim: " : "Total deducted from sender: ";
+                const previewValue = numAmount + numFee;
+                return (
+                  <p className="text-xs text-text-muted/80 font-medium">
+                    {previewLabel}
+                    <span className="font-semibold text-text-primary font-mono">{formatIDR(previewValue)}</span>
+                  </p>
+                );
+              }
+              return null;
+            })()}
+          </div>
+        )}
+        {isInsufficient && (
+          <div className="sm:col-span-2">
+            <p className="text-xs text-amber-500 font-semibold flex items-center gap-1.5 mt-1 animate-pulse">
+              <span>⚠️</span>
+              {isId
+                ? `Peringatan: Total pengeluaran (${formatIDR(totalDeducted)}) melebihi saldo akun (${formatIDR(accountBalance)})`
+                : `Warning: Total deduction (${formatIDR(totalDeducted)}) exceeds account balance (${formatIDR(accountBalance)})`}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Akun + (Kategori / Transfer ke) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2.5">
-          <Label className={labelCls}>
-            {type === "transfer"
-              ? isId
-                ? "Dari Akun"
-                : "From Account"
-              : isId
-                ? "Akun"
-                : "Account"}
-          </Label>
+          <div className="flex items-center justify-between">
+            <Label className={labelCls}>
+              {type === "transfer"
+                ? isId
+                  ? "Dari Akun"
+                  : "From Account"
+                : isId
+                  ? "Akun"
+                  : "Account"}
+            </Label>
+            {selectedAccount && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/[0.04] border border-white/[0.08] text-text-muted font-medium font-mono tabular-nums">
+                {isId ? "Saldo: " : "Bal: "}{formatIDR(accountBalance)}
+              </span>
+            )}
+          </div>
           <FormSelect
             value={accountId}
             onChange={setAccountId}
             options={accounts.map((a) => ({ value: a.id, label: a.name }))}
             placeholder={isId ? "Pilih akun" : "Select account"}
           />
+          {fieldErrors.accountId?.[0] ? <ErrText msg={fieldErrors.accountId[0]} /> : null}
         </div>
 
         {type === "transfer" ? (
           <div className="space-y-2.5">
-            <Label className={labelCls}>{isId ? "Ke Akun" : "To Account"}</Label>
+            <div className="flex items-center justify-between">
+              <Label className={labelCls}>{isId ? "Ke Akun" : "To Account"}</Label>
+              {selectedDestAccount && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/[0.04] border border-white/[0.08] text-text-muted font-medium font-mono tabular-nums">
+                  {isId ? "Saldo: " : "Bal: "}{formatIDR(selectedDestAccount.balance ?? 0)}
+                </span>
+              )}
+            </div>
             <FormSelect
               value={transferToId ?? ""}
               onChange={(v) => setTransferToId(v)}
@@ -492,6 +576,7 @@ export function TransactionForm({
           <form id={FORM_ID} action={handleSubmit} className="hidden">
             <input type="hidden" name="type" value={type} />
             <input type="hidden" name="amount" value={amount} />
+            <input type="hidden" name="adminFee" value={type === "transfer" ? adminFee : ""} />
             <input type="hidden" name="date" value={date} />
             <input type="hidden" name="accountId" value={accountId} />
             <input
@@ -527,11 +612,11 @@ export function TransactionForm({
           >
             {isId ? "Batal" : "Cancel"}
           </Button>
-          <Button
+           <Button
             type="submit"
             form={FORM_ID}
             className="h-10 gap-1.5 text-[13px]"
-            disabled={pending || scanning || uploading}
+            disabled={pending || scanning || uploading || isInsufficient}
           >
             {pending || uploading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
