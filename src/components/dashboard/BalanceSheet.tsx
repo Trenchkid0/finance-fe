@@ -261,19 +261,23 @@ function GroupRow({ group, isLast }: { group: BalanceGroup; isLast: boolean }) {
  * opacity 20% dari color yang sama supaya konsisten dengan group.
  */
 function DotWeight({ percent, color }: { percent: number; color: string }) {
+  const filled = Math.min(10, Math.max(0, Math.ceil(percent / 10)));
   return (
     <span className="flex items-center gap-2">
-      <div className="h-1.5 w-16 bg-border/30 rounded-full overflow-hidden shrink-0">
-        <div
-          className="h-full rounded-full transition-all duration-500 ease-out"
-          style={{
-            width: `${percent}%`,
-            backgroundColor: color,
-          }}
-        />
-      </div>
-      <span className="font-mono tabular-nums text-xs text-foreground min-w-[45px] text-right shrink-0">
-        {percent.toFixed(1)}%
+      <span className="flex gap-[3px]">
+        {Array.from({ length: 10 }, (_, i) => (
+          <span
+            key={i}
+            className={cn(
+              "w-0.5 h-2.5 rounded-full",
+              i >= filled && "opacity-20",
+            )}
+            style={{ backgroundColor: color }}
+          />
+        ))}
+      </span>
+      <span className="font-mono tabular-nums text-xs text-foreground min-w-[40px] text-right">
+        {percent.toFixed(percent < 10 ? 2 : 1)}%
       </span>
     </span>
   );

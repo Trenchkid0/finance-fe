@@ -245,15 +245,15 @@ export default function Dashboard() {
                   return {
                     total: cf.total,
                     surplus: cf.surplus,
-                    inflow: cf.inflow.map((item) => ({
+                    inflow: (cf.inflow || []).map((item) => ({
                       name: item.name,
-                      value: item.amount,
+                      value: item.value,
                       side: "source" as const,
                       color: item.color || "#388BFD",
                     })),
-                    outflow: cf.outflow.map((item) => ({
+                    outflow: (cf.outflow || []).map((item) => ({
                       name: item.name,
-                      value: item.amount,
+                      value: item.value,
                       side: "target" as const,
                       color: item.color || "#F85149",
                     })),

@@ -101,8 +101,8 @@ export interface SummaryApiResponse {
   netWorthPrevious: number;
   netWorthSeries: { date: string; value: number }[];
   cashflow: {
-    inflow: { amount: number; name: string; color?: string }[];
-    outflow: { amount: number; name: string; color?: string }[];
+    inflow: { value: number; name: string; color?: string }[];
+    outflow: { value: number; name: string; color?: string }[];
     total: number;
     surplus: number;
   };
