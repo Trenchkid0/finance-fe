@@ -3,9 +3,10 @@ import { useSearchParams } from "react-router-dom";
 import { useApp } from "@/components/layout/AppLayout";
 import { BudgetClient, type BudgetCategoryData } from "@/components/budget/BudgetClient";
 import { api } from "@/lib/api";
-import { Loader2 } from "lucide-react";
+import { SkeletonBudget } from "@/components/ui/skeleton-loader";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
+import { cache, CacheTTL } from "@/lib/cache";
 
 export default function Budget() {
   const { language } = useLanguage();
@@ -41,7 +42,16 @@ export default function Budget() {
   const endYear = now.getFullYear() + 2;
   const yearOptions = Array.from({ length: endYear - startYear + 1 }, (_, i) => startYear + i);
 
+  const BUDGET_CACHE_KEY = `budget:analytics:${currentYear}:${currentMonthNum}`;
+
   const fetchBudgetsAndTransactions = async () => {
+    // ✅ PERF: Check cache first
+    const cached = cache.get<any>(BUDGET_CACHE_KEY);
+    if (cached) {
+      setBudgetData(cached);
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       
@@ -98,7 +108,7 @@ export default function Budget() {
         return a.name.localeCompare(b.name);
       });
 
-      setBudgetData({
+      const budgetResult = {
         monthLabel,
         year: currentYear,
         month: currentMonthNum,
@@ -109,7 +119,9 @@ export default function Budget() {
         totalSpent,
         uncategorizedSpent,
         monthlyIncome,
-      });
+      };
+      setBudgetData(budgetResult);
+      cache.set(BUDGET_CACHE_KEY, budgetResult, CacheTTL.SHORT);
     } catch (err) {
       console.error("Failed to load budget page data:", err);
     } finally {
@@ -123,6 +135,7 @@ export default function Budget() {
 
   useEffect(() => {
     const handleRefresh = () => {
+      cache.delete(BUDGET_CACHE_KEY);
       fetchBudgetsAndTransactions();
     };
     window.addEventListener("refresh-app-data", handleRefresh);
@@ -132,11 +145,7 @@ export default function Budget() {
   }, [monthParam, globalCategories]);
 
   if (loading && !budgetData) {
-    return (
-      <div className="flex h-[50vh] items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-accent" />
-      </div>
-    );
+    return <SkeletonBudget />;
   }
 
   if (!budgetData) return null;

@@ -20,16 +20,16 @@ import { useLanguage } from "@/lib/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
-function SettingsSelect({
+function SettingsSelect<T extends string | number | boolean>({
   value,
   onChange,
   options,
   className,
   minWidth = "150px",
 }: {
-  value: any;
-  onChange: (v: any) => void;
-  options: { value: any; label: string }[];
+  value: T;
+  onChange: (v: T) => void;
+  options: { value: T; label: string }[];
   className?: string;
   minWidth?: string;
 }) {

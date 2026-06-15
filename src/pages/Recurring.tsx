@@ -4,6 +4,8 @@ import { useLanguage } from "@/lib/contexts/LanguageContext";
 import { api } from "@/lib/api";
 import { formatIDR, formatDateShort } from "@/lib/utils/formatters";
 import { toast } from "sonner";
+import { cache, CacheKeys, CacheTTL } from "@/lib/cache";
+import { SkeletonRecurring } from "@/components/ui/skeleton-loader";
 import {
   Plus,
   Calendar,
@@ -86,11 +88,20 @@ export default function Recurring() {
   const [testingTelegram, setTestingTelegram] = useState(false);
 
   const fetchBills = async () => {
+    // ✅ PERF: Check cache first
+    const cached = cache.get<RecurringBill[]>(CacheKeys.recurring());
+    if (cached) {
+      setBills(cached);
+      setJustPaidBillIds([]);
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       const data = await api.get<RecurringBill[]>("/api/recurring");
       setBills(data || []);
       setJustPaidBillIds([]);
+      cache.set(CacheKeys.recurring(), data || [], CacheTTL.MEDIUM);
     } catch (err) {
       console.error("Error fetching recurring bills", err);
       setBills([]);
@@ -114,7 +125,7 @@ export default function Recurring() {
       autoPay: false,
       accountId: null,
       note: '',
-    } as any);
+    });
     setIsModalOpen(true);
   };
 
@@ -123,7 +134,19 @@ export default function Recurring() {
     setIsModalOpen(true);
   };
 
-  const handleFormSubmit = async (data: any) => {
+  const handleFormSubmit = async (data: {
+    name: string;
+    amount: number;
+    adminFee?: number;
+    categoryId?: string | null;
+    frequency: string;
+    dayOfMonth: number;
+    autoPay?: boolean;
+    accountId?: string | null;
+    reminderDaysBefore?: number | null;
+    reminderTime?: string | null;
+    note?: string;
+  }) => {
     try {
       if (editingBill?.id) {
         await api.put(`/api/recurring/${editingBill.id}`, data);
@@ -134,6 +157,7 @@ export default function Recurring() {
       }
       setIsModalOpen(false);
       setEditingBill(null);
+      cache.delete(CacheKeys.recurring());
       fetchBills();
     } catch (err) {
       console.error(err);
@@ -147,6 +171,7 @@ export default function Recurring() {
       await api.delete(`/api/recurring/${deletingBill.id}`);
       toast.success(language === "id" ? "Tagihan berhasil dihapus" : "Bill deleted successfully");
       setDeletingBill(null);
+      cache.delete(CacheKeys.recurring());
       fetchBills();
     } catch (err) {
       console.error(err);
@@ -160,11 +185,13 @@ export default function Recurring() {
       await api.post(`/api/recurring/${billId}/pay`, {});
       toast.success(language === "id" ? "Pembayaran tagihan berhasil dicatat!" : "Bill payment recorded successfully!");
       setJustPaidBillIds((prev) => [...prev, billId]);
+      cache.delete(CacheKeys.recurring());
       fetchBills();
       window.dispatchEvent(new CustomEvent("refresh-app-data"));
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      toast.error(err.message || (language === "id" ? "Gagal membayar tagihan" : "Failed to pay bill"));
+      const message = err instanceof Error ? err.message : "";
+      toast.error(message || (language === "id" ? "Gagal membayar tagihan" : "Failed to pay bill"));
     } finally {
       setPayingBillId(null);
     }
@@ -256,6 +283,10 @@ export default function Recurring() {
 
   // Selected Day bills list
   const selectedDayBills = selectedDay ? getBillsForDay(selectedDay) : [];
+
+  if (loading && bills.length === 0) {
+    return <SkeletonRecurring />;
+  }
 
   return (
     <div className="space-y-6 animate-fade-in-up">

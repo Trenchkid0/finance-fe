@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, memo } from "react";
 import { ArrowLeftRight, Copy, MoreHorizontal, Pencil, Receipt, Trash2, Wallet } from "lucide-react";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 import { formatIDR } from "@/lib/utils/formatters";
@@ -164,7 +164,7 @@ function formatGroupDateInfo(iso: string, language: "id" | "en") {
   return { label, weekday, relative };
 }
 
-function DateGroup({
+const DateGroup = memo(function DateGroup({
   group,
   categories,
   onEdit,
@@ -311,9 +311,9 @@ function DateGroup({
       </Card>
     </section>
   );
-}
+});
 
-function TransactionRow({
+const TransactionRow = memo(function TransactionRow({
   tx,
   categories,
   onEdit,
@@ -484,7 +484,7 @@ function TransactionRow({
       </DropdownMenu>
     </div>
   );
-}
+});
 
 function amountPrefix(type: "income" | "expense" | "transfer"): string {
   if (type === "income") return "+";

@@ -4,15 +4,23 @@ import { useApp } from "@/components/layout/AppLayout";
 import { TransactionsClient } from "@/components/transactions/TransactionsClient";
 import { SkeletonTransactions } from "@/components/ui/skeleton-loader";
 import { api } from "@/lib/api";
+import type { TransactionApiItem } from "@/types";
 
 const PAGE_SIZE_DEFAULT = 25;
 const PAGE_SIZE_OPTIONS = [10, 25, 50];
+
+interface TransactionsPageData {
+  transactions: TransactionApiItem[];
+  total: number;
+  income: number;
+  expense: number;
+}
 
 export default function Transactions() {
   const { accounts, categories } = useApp();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<TransactionsPageData | null>(null);
 
   // Parse filters from URL
   const q = searchParams.get("q") || "";
@@ -38,7 +46,7 @@ export default function Transactions() {
       params.set("limit", String(pageSize));
       params.set("offset", String(offset));
 
-      const res = await api.get<any>(`/api/transactions?${params.toString()}`);
+      const res = await api.get<TransactionsPageData>(`/api/transactions?${params.toString()}`);
       setData(res);
     } catch (err) {
       console.error("Failed to fetch transactions:", err);
@@ -65,7 +73,7 @@ export default function Transactions() {
     return <SkeletonTransactions />;
   }
 
-  const transactions = (data?.transactions || []).map((tx: any) => ({
+  const transactions = (data?.transactions || []).map((tx) => ({
     id: String(tx.id),
     type: tx.type,
     accountId: tx.accountId,
@@ -93,7 +101,7 @@ export default function Transactions() {
       categories={categories}
       filters={{
         q,
-        type: type as any,
+        type: type as "all" | "income" | "expense" | "transfer",
         accountId,
         categoryId,
         startDate,

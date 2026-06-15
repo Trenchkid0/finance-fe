@@ -7,11 +7,15 @@ import { BalanceSheet } from "@/components/dashboard/BalanceSheet";
 import { CashflowSankey } from "@/components/charts/CashflowSankey";
 import { RecentTransactions } from "@/components/dashboard/RecentTransactions";
 import { SkeletonDashboard } from "@/components/ui/skeleton-loader";
+import { InlineErrorBoundary } from "@/components/ui/error-boundary";
 import { useApp } from "@/components/layout/AppLayout";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 import { useCachedApi } from "@/hooks/use-cached-api";
 import { CacheKeys, CacheTTL } from "@/lib/cache";
 import { api } from "@/lib/api";
+
+import type { SummaryApiResponse, AssetGroup, Period } from "@/types";
+import type { CashflowData } from "@/components/charts/CashflowSankey";
 
 const ASSET_GROUP_COLOR: Record<string, string> = {
   cash: "var(--income)",
@@ -25,7 +29,7 @@ function buildAssetGroups(
   totalNet: number,
   language: string
 ) {
-  const buckets = new Map<string, any[]>();
+  const buckets = new Map<string, { id: string; name: string; value: number; percent: number; initial: string }[]>();
   const totals = new Map<string, number>();
 
   const assetGroupLabels: Record<string, string> = {
@@ -52,7 +56,7 @@ function buildAssetGroups(
     totals.set(groupKey, (totals.get(groupKey) ?? 0) + r.balance);
   }
 
-  const groups: any[] = [];
+  const groups: AssetGroup[] = [];
   for (const [key, accounts] of buckets) {
     const total = totals.get(key) ?? 0;
     accounts.sort((a, b) => b.value - a.value);
@@ -104,7 +108,7 @@ export default function Dashboard() {
     isCached 
   } = useCachedApi({
     cacheKey: CacheKeys.summary() + `:${period}:${cashflowPeriod}`,
-    fetcher: () => api.get<any>(`/api/summary?period=${period}&cashflow_period=${cashflowPeriod}`),
+    fetcher: () => api.get<SummaryApiResponse>(`/api/summary?period=${period}&cashflow_period=${cashflowPeriod}`),
     ttl: CacheTTL.SHORT, // 2 minutes for financial data
   });
 
@@ -154,7 +158,7 @@ export default function Dashboard() {
     language
   );
 
-  const mappedRecent = (summaryData?.recent || []).map((tx: any) => ({
+  const mappedRecent = (summaryData?.recent || []).map((tx) => ({
     id: String(tx.id),
     description: tx.description || tx.category?.name || (language === "id" ? "Transaksi" : "Transaction"),
     categoryName: tx.category?.name ?? null,
@@ -207,12 +211,14 @@ export default function Dashboard() {
         {/* Net Worth Hero - THE MOST IMPORTANT METRIC */}
         {summaryData && (
           <div className="animate-fade-in-up" style={{ animationDelay: '50ms' }}>
-            <NetWorthHero
-              current={summaryData.netWorthCurrent || 0}
-              previous={summaryData.netWorthPrevious || 0}
-              series={summaryData.netWorthSeries || []}
-              period={period as any}
-            />
+            <InlineErrorBoundary label="Net Worth Chart">
+              <NetWorthHero
+                current={summaryData.netWorthCurrent || 0}
+                previous={summaryData.netWorthPrevious || 0}
+                series={summaryData.netWorthSeries || []}
+                period={period as Period}
+              />
+            </InlineErrorBoundary>
           </div>
         )}
       </section>
@@ -232,10 +238,30 @@ export default function Dashboard() {
                 {language === "id" ? "Analisis Arus Kas" : "Cash Flow Analysis"}
               </h2>
             </div>
-            <CashflowSankey
-              data={summaryData.cashflow || { inflow: [], outflow: [], total: 0, surplus: 0 }}
-              period={cashflowPeriod as any}
-            />
+            <InlineErrorBoundary label="Cash Flow Chart">
+              <CashflowSankey
+                data={(() => {
+                  const cf = summaryData.cashflow || { inflow: [], outflow: [], total: 0, surplus: 0 };
+                  return {
+                    total: cf.total,
+                    surplus: cf.surplus,
+                    inflow: cf.inflow.map((item) => ({
+                      name: item.name,
+                      value: item.amount,
+                      side: "source" as const,
+                      color: item.color || "#388BFD",
+                    })),
+                    outflow: cf.outflow.map((item) => ({
+                      name: item.name,
+                      value: item.amount,
+                      side: "target" as const,
+                      color: item.color || "#F85149",
+                    })),
+                  } satisfies CashflowData;
+                })()}
+                period={cashflowPeriod as Period}
+              />
+            </InlineErrorBoundary>
           </section>
 
           {/* Asset Distribution */}
@@ -246,19 +272,21 @@ export default function Dashboard() {
                 {language === "id" ? "Distribusi Aset" : "Asset Distribution"}
               </h2>
             </div>
-             <BalanceSheet
-              assets={{
-                title: "Assets",
-                total: netWorthCurrent,
-                groups: assetGroups,
-              }}
-              liabilities={{
-                title: "Liabilities",
-                total: 0,
-                groups: [],
-              }}
-              hideEmptyLiabilities
-            />
+            <InlineErrorBoundary label="Asset Distribution">
+              <BalanceSheet
+                assets={{
+                  title: "Assets",
+                  total: netWorthCurrent,
+                  groups: assetGroups,
+                }}
+                liabilities={{
+                  title: "Liabilities",
+                  total: 0,
+                  groups: [],
+                }}
+                hideEmptyLiabilities
+              />
+            </InlineErrorBoundary>
           </section>
 
           {/* Recent Transactions */}
@@ -269,7 +297,9 @@ export default function Dashboard() {
                 {language === "id" ? "Transaksi Terbaru" : "Recent Transactions"}
               </h2>
             </div>
-            <RecentTransactions transactions={mappedRecent} />
+            <InlineErrorBoundary label="Recent Transactions">
+              <RecentTransactions transactions={mappedRecent} />
+            </InlineErrorBoundary>
           </section>
         </div>
       )}

@@ -38,8 +38,7 @@ const labelCls =
   "text-[11px] font-bold uppercase tracking-wider text-muted-foreground/70";
 
 export function GoalForm({ open, onClose, goal, accounts, onSubmit }: GoalModalProps) {
-  const { language } = useLanguage();
-  const isId = language === "id";
+  const { t } = useLanguage();
 
   const [name, setName] = useState("");
   const [targetAmount, setTargetAmount] = useState("");
@@ -88,21 +87,21 @@ export function GoalForm({ open, onClose, goal, accounts, onSubmit }: GoalModalP
     setError("");
 
     if (!name.trim()) {
-      setError(isId ? "Nama target harus diisi" : "Goal name is required");
+      setError(t("valGoalNameRequired"));
       return;
     }
     const target = Number(cleanMoneyString(targetAmount));
     if (isNaN(target) || target <= 0) {
-      setError(isId ? "Target nominal harus lebih besar dari 0" : "Target amount must be greater than 0");
+      setError(t("valGoalTargetAmount"));
       return;
     }
     const current = Number(cleanMoneyString(currentAmount));
     if (isNaN(current) || current < 0) {
-      setError(isId ? "Nominal terkumpul tidak valid" : "Current amount is invalid");
+      setError(t("valGoalCurrentAmount"));
       return;
     }
     if (!targetDate) {
-      setError(isId ? "Tanggal target harus diisi" : "Target date is required");
+      setError(t("valGoalDateRequired"));
       return;
     }
 
@@ -119,7 +118,7 @@ export function GoalForm({ open, onClose, goal, accounts, onSubmit }: GoalModalP
       });
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : isId ? "Gagal menyimpan" : "Failed to save");
+      setError(err instanceof Error ? err.message : t("valGoalSaveFailed"));
     } finally {
       setPending(false);
     }
@@ -140,19 +139,17 @@ export function GoalForm({ open, onClose, goal, accounts, onSubmit }: GoalModalP
           </div>
           <div className="min-w-0 flex-1">
             <h2 className="text-lg font-bold leading-tight tracking-tight">
-              {goal
-                ? isId ? "Ubah Target Tabungan" : "Edit Savings Goal"
-                : isId ? "Target Tabungan Baru" : "New Savings Goal"}
+              {goal ? t("editGoalTitle") : t("newGoalTitle")}
             </h2>
             <p className="mt-0.5 text-[13px] text-muted-foreground/60">
-              {isId ? "Ukur dan lacak tujuan finansialmu." : "Measure and track your financial objectives."}
+              {t("goalSubtitle")}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="-mr-1.5 flex-none rounded-lg p-1.5 text-muted-foreground/60 transition-colors hover:bg-white/[0.07] hover:text-foreground"
-            aria-label={isId ? "Tutup" : "Close"}
+            aria-label={t("cancelButton")}
           >
             <X className="h-[18px] w-[18px]" />
           </button>
@@ -163,13 +160,13 @@ export function GoalForm({ open, onClose, goal, accounts, onSubmit }: GoalModalP
           {/* Nama target */}
           <div className="space-y-2.5">
             <Label htmlFor="name" className={labelCls}>
-              {isId ? "Nama Target" : "Goal Name"}
+              {t("goalNameLabel")}
             </Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder={isId ? "Mis. Beli Laptop Baru" : "e.g. New Laptop"}
+              placeholder={t("goalNamePlaceholder")}
               className="h-11 border-border bg-elevated"
             />
           </div>
@@ -178,7 +175,7 @@ export function GoalForm({ open, onClose, goal, accounts, onSubmit }: GoalModalP
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2.5">
               <Label htmlFor="targetAmount" className={labelCls}>
-                {isId ? "Target Nominal" : "Target Amount"}
+                {t("targetAmount")}
               </Label>
               <div className="group relative">
                 <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 select-none text-xs font-bold text-muted-foreground/45 transition-colors duration-300 group-focus-within:text-foreground">
@@ -196,7 +193,7 @@ export function GoalForm({ open, onClose, goal, accounts, onSubmit }: GoalModalP
             </div>
             <div className="space-y-2.5">
               <Label htmlFor="currentAmount" className={labelCls}>
-                {isId ? "Terkumpul Saat Ini" : "Currently Saved"}
+                {t("currentAmount")}
               </Label>
               <div className="group relative">
                 <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 select-none text-xs font-bold text-muted-foreground/45 transition-colors duration-300 group-focus-within:text-foreground">
@@ -242,25 +239,25 @@ export function GoalForm({ open, onClose, goal, accounts, onSubmit }: GoalModalP
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2.5">
               <Label htmlFor="targetDate" className={labelCls}>
-                {isId ? "Tanggal Target" : "Target Date"}
+                {t("targetDate")}
               </Label>
               <CustomSingleDatePicker value={targetDate} onChange={setTargetDate} />
             </div>
             <div className="space-y-2.5">
               <Label htmlFor="accountId" className={labelCls}>
-                {isId ? "Hubungkan ke Akun (Opsional)" : "Linked Account (Optional)"}
+                {t("linkedAccountLabel")}
               </Label>
               <FormSelect
                 value={accountId || "none"}
                 onChange={(v) => setAccountId(v === "none" ? "" : v)}
                 options={[
-                  { value: "none", label: isId ? "Tanpa rekening" : "No account" },
+                  { value: "none", label: t("noAccountLinked") },
                   ...accounts.map((a) => ({
                     value: a.id,
                     label: `${a.name} (${formatIDR(a.balance)})`,
                   })),
                 ]}
-                placeholder={isId ? "Pilih rekening" : "Select account"}
+                placeholder={t("selectAccountPlaceholder")}
               />
             </div>
           </div>
@@ -268,7 +265,7 @@ export function GoalForm({ open, onClose, goal, accounts, onSubmit }: GoalModalP
           {/* Catatan */}
           <div className="space-y-2.5">
             <Label htmlFor="note" className={labelCls}>
-              {isId ? "Catatan (opsional)" : "Note (optional)"}
+              {t("noteOptionalLabel")}
             </Label>
             <Textarea
               id="note"
@@ -276,7 +273,7 @@ export function GoalForm({ open, onClose, goal, accounts, onSubmit }: GoalModalP
               maxLength={2000}
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder={isId ? "Mis. Sisihkan dari bonus tahunan" : "e.g. Save from annual bonus"}
+              placeholder={t("noteOptionalPlaceholder")}
               className="min-h-[80px] resize-none border-border bg-elevated"
             />
           </div>
@@ -299,10 +296,10 @@ export function GoalForm({ open, onClose, goal, accounts, onSubmit }: GoalModalP
           >
             {pending ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />}
             {pending
-              ? isId ? "Menyimpan…" : "Saving…"
+              ? t("savingLabel")
               : goal
-              ? isId ? "Simpan Perubahan" : "Save Changes"
-              : isId ? "Tambah Target" : "Add Goal"}
+              ? t("saveChanges")
+              : t("addGoal")}
           </Button>
           <Button
             type="button"
@@ -311,7 +308,7 @@ export function GoalForm({ open, onClose, goal, accounts, onSubmit }: GoalModalP
             disabled={pending}
             className="h-11 border border-border bg-white/[0.04] px-6 text-[13px] hover:bg-white/[0.08]"
           >
-            {isId ? "Batal" : "Cancel"}
+            {t("cancelButton")}
           </Button>
         </div>
       </div>

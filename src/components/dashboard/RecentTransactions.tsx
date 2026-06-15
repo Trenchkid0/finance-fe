@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeftRight, Plus, Wallet, ArrowRight } from "lucide-react";
 import { formatDateShort, formatIDR } from "@/lib/utils/formatters";
@@ -24,7 +25,7 @@ interface Props {
   transactions: RecentTransactionItem[];
 }
 
-export function RecentTransactions({ transactions }: Props) {
+export const RecentTransactions = memo(function RecentTransactions({ transactions }: Props) {
   const { language } = useLanguage();
 
   return (
@@ -248,7 +249,7 @@ export function RecentTransactions({ transactions }: Props) {
       )}
     </Card>
   );
-}
+});
 
 function amountPrefix(type: "income" | "expense" | "transfer"): string {
   if (type === "income") return "+";

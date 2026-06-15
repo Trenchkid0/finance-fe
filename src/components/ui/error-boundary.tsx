@@ -58,6 +58,34 @@ function ErrorBoundaryFallback({ error, onReset }: { error: Error | null; onRese
 }
 
 /**
+ * Compact inline error fallback for individual component sections.
+ * Shows a small error card with retry button instead of a full-page error.
+ */
+function InlineErrorFallback({ label, onReset }: { label?: string; onReset: () => void }) {
+  const { language } = useLanguage();
+  const isId = language === "id";
+
+  return (
+    <div className="rounded-xl border border-expense/20 bg-expense/5 p-6 flex flex-col items-center justify-center gap-3 text-center min-h-[120px]">
+      <AlertTriangle className="size-5 text-expense/70" />
+      <p className="text-xs text-text-muted">
+        {label
+          ? isId ? `Gagal memuat ${label}` : `Failed to load ${label}`
+          : isId ? "Gagal memuat bagian ini" : "Failed to load this section"}
+      </p>
+      <button
+        type="button"
+        onClick={onReset}
+        className="text-xs font-semibold text-accent hover:text-accent/80 flex items-center gap-1 transition-colors"
+      >
+        <RefreshCw size={12} />
+        {isId ? "Coba lagi" : "Retry"}
+      </button>
+    </div>
+  );
+}
+
+/**
  * React Error Boundary — catches rendering errors and displays
  * a recovery UI instead of a white screen.
  */
@@ -88,6 +116,44 @@ export class ErrorBoundary extends Component<Props, State> {
       );
     }
 
+    return this.props.children;
+  }
+}
+
+/**
+ * Compact Error Boundary for wrapping individual components/sections.
+ * Displays a small inline error card instead of a full-page error.
+ *
+ * Usage:
+ *   <InlineErrorBoundary label="Cash Flow Chart">
+ *     <CashflowSankey ... />
+ *   </InlineErrorBoundary>
+ */
+export class InlineErrorBoundary extends Component<
+  { children: ReactNode; label?: string },
+  State
+> {
+  constructor(props: { children: ReactNode; label?: string }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("[InlineErrorBoundary]", this.props.label, "error:", error, errorInfo);
+  }
+
+  private handleReset = () => {
+    this.setState({ hasError: false, error: null });
+  };
+
+  render() {
+    if (this.state.hasError) {
+      return <InlineErrorFallback label={this.props.label} onReset={this.handleReset} />;
+    }
     return this.props.children;
   }
 }

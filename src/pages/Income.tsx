@@ -3,19 +3,48 @@ import { startOfMonth, subMonths } from "date-fns";
 import { api } from "@/lib/api";
 import { formatMonthLabel } from "@/lib/utils/formatters";
 import { IncomeClient } from "@/components/income/IncomeClient";
-import { Loader2 } from "lucide-react";
+import { SkeletonIncome } from "@/components/ui/skeleton-loader";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
+import { cache, CacheTTL } from "@/lib/cache";
+import type { TransactionApiItem } from "@/types";
+
+interface IncomeAnalyticsData {
+  transactions: {
+    id: string;
+    amount: number;
+    date: string;
+    description: string | null;
+    accountName: string;
+    categoryName: string | null;
+    categoryIcon: string | null;
+  }[];
+  monthlyTrend: { month: string; amount: number }[];
+  categoryBreakdown: { category: string; amount: number; percent: number; icon: string | null }[];
+  currentMonthTotal: number;
+  monthlyDelta: number | undefined;
+  averageMonthly: number;
+  maxIncome: { description: string; amount: number } | null;
+}
 
 export default function Income() {
   const { language } = useLanguage();
   const [loading, setLoading] = useState(true);
-  const [incomeData, setIncomeData] = useState<any>(null);
+  const [incomeData, setIncomeData] = useState<IncomeAnalyticsData | null>(null);
+
+  const INCOME_CACHE_KEY = `income:analytics:${language}`;
 
   const fetchIncomeData = async () => {
+    // ✅ PERF: Check cache first — avoids heavy client-side recomputation
+    const cached = cache.get<IncomeAnalyticsData>(INCOME_CACHE_KEY);
+    if (cached) {
+      setIncomeData(cached);
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       // Fetch up to 1000 income transactions for calculations
-      const res = await api.get<any>("/api/transactions?type=income&limit=1000");
+      const res = await api.get<{ transactions: TransactionApiItem[]; total: number }>("/api/transactions?type=income&limit=1000");
       const allIncome = res.transactions || [];
 
       const now = new Date();
@@ -24,18 +53,18 @@ export default function Income() {
 
       // Current Month Total
       const currentMonthTotal = allIncome
-        .filter((tx: any) => new Date(tx.date) >= currentMonthStart)
-        .reduce((sum: number, tx: any) => sum + Number(tx.amount), 0);
+        .filter((tx) => new Date(tx.date) >= currentMonthStart)
+        .reduce((sum: number, tx) => sum + Number(tx.amount), 0);
 
       // Previous Month Total
       const previousMonthStart = startOfMonth(subMonths(now, 1));
       const previousMonthTotal = allIncome
         .filter(
-          (tx: any) =>
+          (tx) =>
             new Date(tx.date) >= previousMonthStart &&
             new Date(tx.date) < currentMonthStart
         )
-        .reduce((sum: number, tx: any) => sum + Number(tx.amount), 0);
+        .reduce((sum: number, tx) => sum + Number(tx.amount), 0);
 
       const monthlyDelta =
         previousMonthTotal === 0
@@ -43,7 +72,7 @@ export default function Income() {
           : (currentMonthTotal - previousMonthTotal) / previousMonthTotal;
 
       // Maximum Single Income
-      const maxIncomeTx = allIncome.reduce((max: any, tx: any) => {
+      const maxIncomeTx = allIncome.reduce<{ description: string; amount: number } | null>((max, tx) => {
         const amt = Number(tx.amount);
         if (!max || amt > max.amount) {
           return {
@@ -109,7 +138,7 @@ export default function Income() {
         .sort((a, b) => b.amount - a.amount);
 
       // Map serialization transaction rows (limit 15)
-      const transactions = allIncome.slice(0, 15).map((tx: any) => ({
+      const transactions = allIncome.slice(0, 15).map((tx) => ({
         id: String(tx.id),
         amount: Number(tx.amount),
         date: tx.date,
@@ -119,7 +148,7 @@ export default function Income() {
         categoryIcon: tx.category?.icon ?? null,
       }));
 
-      setIncomeData({
+      const incomeResult: IncomeAnalyticsData = {
         transactions,
         monthlyTrend,
         categoryBreakdown,
@@ -127,7 +156,9 @@ export default function Income() {
         monthlyDelta,
         averageMonthly,
         maxIncome: maxIncomeTx,
-      });
+      };
+      setIncomeData(incomeResult);
+      cache.set(INCOME_CACHE_KEY, incomeResult, CacheTTL.SHORT);
     } catch (err) {
       console.error("Failed to fetch income analytics data:", err);
     } finally {
@@ -141,6 +172,7 @@ export default function Income() {
 
   useEffect(() => {
     const handleRefresh = () => {
+      cache.delete(INCOME_CACHE_KEY);
       fetchIncomeData();
     };
     window.addEventListener("refresh-app-data", handleRefresh);
@@ -150,11 +182,7 @@ export default function Income() {
   }, []);
 
   if (loading && !incomeData) {
-    return (
-      <div className="flex h-[50vh] items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-accent" />
-      </div>
-    );
+    return <SkeletonIncome />;
   }
 
   if (!incomeData) return null;

@@ -276,3 +276,228 @@ export function SkeletonSettings() {
     </div>
   );
 }
+
+/**
+ * Skeleton for analytics pages (Income / Expenses) — stat cards + chart + category breakdown + transaction list.
+ */
+export function SkeletonAnalytics({ className }: { className?: string }) {
+  return (
+    <div className={cn("space-y-6 animate-fade-in-up", className)}>
+      {/* Header */}
+      <div className="space-y-2">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-4 w-72" />
+      </div>
+      {/* Stat cards row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="rounded-lg border border-border bg-card p-4 space-y-2">
+            <Skeleton className="h-2.5 w-16" />
+            <Skeleton className="h-6 w-24" />
+            <Skeleton className="h-3 w-20" />
+          </div>
+        ))}
+      </div>
+      {/* Chart area */}
+      <SkeletonChart height="h-64" />
+      {/* Category breakdown + recent transactions */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="rounded-lg border border-border bg-card p-5 space-y-4">
+          <Skeleton className="h-5 w-32" />
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-8 w-8 rounded-full" />
+                <div className="space-y-1">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-2.5 w-16" />
+                </div>
+              </div>
+              <Skeleton className="h-4 w-20" />
+            </div>
+          ))}
+        </div>
+        <div className="rounded-lg border border-border bg-card p-5 space-y-4">
+          <Skeleton className="h-5 w-36" />
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="flex items-center justify-between">
+              <div className="flex-1 space-y-1">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-3 w-1/2" />
+              </div>
+              <Skeleton className="h-4 w-24" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Convenience alias for Income page skeleton. */
+export function SkeletonIncome() {
+  return <SkeletonAnalytics />;
+}
+
+/** Convenience alias for Expenses page skeleton. */
+export function SkeletonExpenses() {
+  return <SkeletonAnalytics />;
+}
+
+/**
+ * Skeleton for Budget page — month selector + category budget rows.
+ */
+export function SkeletonBudget() {
+  return (
+    <div className="space-y-6 animate-fade-in-up">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-52" />
+          <Skeleton className="h-4 w-72" />
+        </div>
+        <div className="flex gap-2">
+          <Skeleton className="h-9 w-24 rounded-xl" />
+          <Skeleton className="h-9 w-32 rounded-xl" />
+        </div>
+      </div>
+      {/* Summary cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="rounded-lg border border-border bg-card p-4 space-y-2">
+            <Skeleton className="h-2.5 w-16" />
+            <Skeleton className="h-6 w-28" />
+          </div>
+        ))}
+      </div>
+      {/* Budget category rows */}
+      <div className="rounded-lg border border-border bg-card p-5 space-y-4">
+        <Skeleton className="h-5 w-36" />
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div key={i} className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-8 w-8 rounded-full" />
+                <Skeleton className="h-4 w-28" />
+              </div>
+              <Skeleton className="h-4 w-20" />
+            </div>
+            <Skeleton className="h-2 w-full rounded-full" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Skeleton for Goals page — goal cards in a grid.
+ */
+export function SkeletonGoals() {
+  return (
+    <div className="space-y-6 animate-fade-in-up">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-44" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <Skeleton className="h-9 w-32 rounded-xl" />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div key={i} className="rounded-lg border border-border bg-card p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-5 w-32" />
+              <Skeleton className="h-8 w-8 rounded-full" />
+            </div>
+            <Skeleton className="h-3 w-full rounded-full" />
+            <div className="flex justify-between">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-20" />
+            </div>
+            <Skeleton className="h-3 w-28" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Skeleton for Recurring page — stat cards + calendar grid + side panel.
+ */
+export function SkeletonRecurring() {
+  return (
+    <div className="space-y-6 animate-fade-in-up">
+      <div className="space-y-2">
+        <Skeleton className="h-8 w-56" />
+        <Skeleton className="h-4 w-80" />
+      </div>
+      {/* Stat cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {[1, 2].map((i) => (
+          <div key={i} className="rounded-lg border border-border bg-card p-4 space-y-2">
+            <Skeleton className="h-2.5 w-20" />
+            <Skeleton className="h-6 w-28" />
+          </div>
+        ))}
+      </div>
+      {/* Calendar + side panel */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 rounded-lg border border-border bg-card overflow-hidden">
+          <div className="p-4 border-b border-border flex items-center justify-between">
+            <Skeleton className="h-4 w-32" />
+            <div className="flex gap-1">
+              <Skeleton className="h-8 w-8 rounded-lg" />
+              <Skeleton className="h-8 w-8 rounded-lg" />
+            </div>
+          </div>
+          <div className="grid grid-cols-7 divide-x divide-y divide-border">
+            {Array.from({ length: 35 }).map((_, i) => (
+              <div key={i} className="min-h-[70px] border-t border-l border-border p-2">
+                <Skeleton className="h-3 w-4 mb-1" />
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="rounded-lg border border-border bg-card p-5 space-y-4 min-h-[300px]">
+          <Skeleton className="h-4 w-36" />
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="rounded-lg border border-border bg-elevated/40 p-3 space-y-2">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-8 w-full rounded-lg" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Skeleton for Investments page — stat cards + holdings table.
+ */
+export function SkeletonInvestments() {
+  return (
+    <div className="space-y-6 animate-fade-in-up">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-52" />
+          <Skeleton className="h-4 w-72" />
+        </div>
+        <Skeleton className="h-9 w-36 rounded-xl" />
+      </div>
+      {/* Stats overview */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="rounded-lg border border-border bg-card p-4 space-y-2">
+            <Skeleton className="h-2.5 w-20" />
+            <Skeleton className="h-6 w-28" />
+          </div>
+        ))}
+      </div>
+      {/* Holdings table */}
+      <SkeletonTable rows={5} columns={6} />
+    </div>
+  );
+}

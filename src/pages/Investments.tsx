@@ -12,6 +12,7 @@ import { SellAssetModal } from "@/components/investments/SellAssetModal";
 import { UpdateAssetPriceModal } from "@/components/investments/UpdateAssetPriceModal";
 import { HoldingsTable } from "@/components/investments/HoldingsTable";
 import type { AssetHolding } from "@/components/investments/types";
+import { SkeletonInvestments } from "@/components/ui/skeleton-loader";
 
 export default function Investments() {
   const { language } = useLanguage();
@@ -72,6 +73,10 @@ export default function Investments() {
   const totalPnL = totalMarketValue - totalCostBasis;
   const pnlPercent = totalCostBasis > 0 ? (totalPnL / totalCostBasis) * 100 : 0;
 
+  if (loading && holdings.length === 0) {
+    return <SkeletonInvestments />;
+  }
+
   const handleBuySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!buyForm.accountId || !buyForm.symbol || !buyForm.name || !buyForm.quantity || !buyForm.price) {
@@ -109,9 +114,10 @@ export default function Investments() {
       });
       fetchHoldings();
       window.dispatchEvent(new CustomEvent("refresh-app-data"));
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      toast.error(err.message || (isId ? "Gagal membeli aset" : "Failed to purchase asset"));
+      const message = err instanceof Error ? err.message : "";
+      toast.error(message || (isId ? "Gagal membeli aset" : "Failed to purchase asset"));
     }
   };
 
@@ -148,9 +154,10 @@ export default function Investments() {
       setSelectedHolding(null);
       fetchHoldings();
       window.dispatchEvent(new CustomEvent("refresh-app-data"));
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      toast.error(err.message || (isId ? "Gagal menjual aset" : "Failed to sell asset"));
+      const message = err instanceof Error ? err.message : "";
+      toast.error(message || (isId ? "Gagal menjual aset" : "Failed to sell asset"));
     }
   };
 
@@ -171,9 +178,10 @@ export default function Investments() {
       setUpdatePriceValue("");
       setSelectedHolding(null);
       fetchHoldings();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      toast.error(err.message || (isId ? "Gagal memperbarui harga" : "Failed to update price"));
+      const message = err instanceof Error ? err.message : "";
+      toast.error(message || (isId ? "Gagal memperbarui harga" : "Failed to update price"));
     }
   };
 

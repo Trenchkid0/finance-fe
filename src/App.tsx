@@ -2,24 +2,26 @@ import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { Toaster } from "sonner";
+import { lazy, Suspense, useEffect, useState } from "react";
 
-// Import all pages
+// Auth pages — loaded eagerly (entry point)
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
-import Dashboard from "@/pages/Dashboard";
-import Accounts from "@/pages/Accounts";
-import AccountDetail from "@/pages/AccountDetail";
-import Transactions from "@/pages/Transactions";
-import Income from "@/pages/Income";
-import Expenses from "@/pages/Expenses";
-import Budget from "@/pages/Budget";
-import Settings from "@/pages/Settings";
-import Profile from "@/pages/Profile";
-import Goals from "@/pages/Goals";
-import Recurring from "@/pages/Recurring";
-import Investments from "@/pages/Investments";
 
-import { useEffect, useState } from "react";
+// Dashboard pages — code-split with React.lazy
+const Dashboard = lazy(() => import("@/pages/Dashboard"));
+const Accounts = lazy(() => import("@/pages/Accounts"));
+const AccountDetail = lazy(() => import("@/pages/AccountDetail"));
+const Transactions = lazy(() => import("@/pages/Transactions"));
+const Income = lazy(() => import("@/pages/Income"));
+const Expenses = lazy(() => import("@/pages/Expenses"));
+const Budget = lazy(() => import("@/pages/Budget"));
+const Settings = lazy(() => import("@/pages/Settings"));
+const Profile = lazy(() => import("@/pages/Profile"));
+const Goals = lazy(() => import("@/pages/Goals"));
+const Recurring = lazy(() => import("@/pages/Recurring"));
+const Investments = lazy(() => import("@/pages/Investments"));
+
 import { LanguageProvider } from "@/lib/contexts/LanguageContext";
 import { loadSavedTheme } from "@/lib/utils/theme";
 
@@ -28,9 +30,23 @@ function DashboardLayout() {
   return (
     <AppLayout>
       <ErrorBoundary>
-        <Outlet />
+        <Suspense fallback={<PageLoadingFallback />}>
+          <Outlet />
+        </Suspense>
       </ErrorBoundary>
     </AppLayout>
+  );
+}
+
+/** Lightweight loading fallback for lazy-loaded pages */
+function PageLoadingFallback() {
+  return (
+    <div className="flex h-[60vh] items-center justify-center">
+      <div className="flex flex-col items-center gap-3">
+        <div className="size-8 animate-spin rounded-full border-2 border-accent/30 border-t-accent" />
+        <span className="text-xs text-muted-foreground">Loading...</span>
+      </div>
+    </div>
   );
 }
 

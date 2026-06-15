@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import { Plus, Target, Edit2, Trash2, Calendar, PiggyBank } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { cache, CacheKeys, CacheTTL } from "@/lib/cache";
+import { SkeletonGoals } from "@/components/ui/skeleton-loader";
 import {
   Dialog,
   DialogContent,
@@ -31,7 +33,7 @@ interface SavingsGoal {
 }
 
 export default function Goals() {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const { accounts } = useApp();
   const [goals, setGoals] = useState<SavingsGoal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,10 +46,18 @@ export default function Goals() {
   const [deletingGoal, setDeletingGoal] = useState<SavingsGoal | null>(null);
 
   const fetchGoals = async () => {
+    // ✅ PERF: Check cache first
+    const cached = cache.get<SavingsGoal[]>(CacheKeys.goals());
+    if (cached) {
+      setGoals(cached);
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       const data = await api.get<SavingsGoal[]>("/api/goals");
       setGoals(data || []);
+      cache.set(CacheKeys.goals(), data || [], CacheTTL.MEDIUM);
     } catch (err) {
       console.error("Error fetching goals", err);
       setGoals([]);
@@ -79,15 +89,12 @@ export default function Goals() {
   const handleFormSubmit = async (data: GoalFormData) => {
     if (editingGoal?.id) {
       await api.put(`/api/goals/${editingGoal.id}`, data);
-      toast.success(
-        language === "id" ? "Target tabungan berhasil diperbarui" : "Savings goal updated successfully",
-      );
+      toast.success(t("goalUpdateSuccess"));
     } else {
       await api.post("/api/goals", data);
-      toast.success(
-        language === "id" ? "Target tabungan berhasil ditambahkan" : "Savings goal added successfully",
-      );
+      toast.success(t("goalAddSuccess"));
     }
+    cache.delete(CacheKeys.goals());
     fetchGoals();
     // tidak perlu setIsModalOpen(false) di sini — GoalModal menutup sendiri setelah sukses
   };
@@ -96,13 +103,12 @@ export default function Goals() {
     if (!deletingGoal) return;
     try {
       await api.delete(`/api/goals/${deletingGoal.id}`);
-      toast.success(
-        language === "id" ? "Target tabungan berhasil dihapus" : "Savings goal deleted successfully",
-      );
+      toast.success(t("goalDeleteSuccess"));
       setDeletingGoal(null);
+      cache.delete(CacheKeys.goals());
       fetchGoals();
     } catch {
-      toast.error(language === "id" ? "Gagal menghapus target" : "Failed to delete goal");
+      toast.error(t("goalDeleteFailed"));
     }
   };
 
@@ -117,17 +123,15 @@ export default function Goals() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl lg:text-[1.75rem] font-extrabold tracking-tight text-foreground">
-            {language === "id" ? "Target Tabungan" : "Savings Goals"}
+            {t("goals")}
           </h1>
           <p className="text-sm text-muted-foreground/80 mt-1.5">
-            {language === "id"
-              ? "Kelola rencana dan target finansial masa depan Anda."
-              : "Manage and plan your future financial targets."}
+            {t("goalsPageSubtitle")}
           </p>
         </div>
         <Button onClick={openAddModal} className="h-9 rounded-xl gap-2 text-xs font-semibold px-4">
           <Plus size={14} strokeWidth={2.5} />
-          {language === "id" ? "Tambah Target" : "Add Goal"}
+          {t("addGoal")}
         </Button>
       </div>
 
@@ -135,7 +139,7 @@ export default function Goals() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <Card className="p-4 gap-0">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">
-            {language === "id" ? "TOTAL TARGET AKUMULATIF" : "TOTAL TARGET AMOUNT"}
+            {t("totalTargetAmount")}
           </p>
           <p className="text-lg font-black font-mono tabular-nums text-foreground">
             {formatIDR(totalTarget)}
@@ -143,7 +147,7 @@ export default function Goals() {
         </Card>
         <Card className="p-4 gap-0">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">
-            {language === "id" ? "TOTAL TERKUMPUL" : "TOTAL SAVED"}
+            {t("totalSaved")}
           </p>
           <p className="text-lg font-black font-mono tabular-nums text-income">
             {formatIDR(totalSaved)}
@@ -151,7 +155,7 @@ export default function Goals() {
         </Card>
         <Card className="p-4 gap-0">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">
-            {language === "id" ? "RATA-RATA PROGRES" : "AVERAGE PROGRESS"}
+            {t("averageProgress")}
           </p>
           <p className="text-lg font-black font-mono tabular-nums text-accent">
             {averageProgress.toFixed(1)}%
@@ -161,28 +165,24 @@ export default function Goals() {
 
       {/* Main List */}
       {loading ? (
-        <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent" />
-        </div>
+        <SkeletonGoals />
       ) : goals.length === 0 ? (
         <div className="flex flex-col items-center justify-center p-8 border border-dashed border-border rounded-xl bg-white/[0.01] text-center min-h-[300px]">
           <div className="size-12 rounded-full bg-[#1C2128] border border-border flex items-center justify-center text-muted-foreground/80 mb-4">
             <PiggyBank size={24} />
           </div>
           <h3 className="text-sm font-semibold text-foreground">
-            {language === "id" ? "Belum ada target tabungan" : "No savings goals yet"}
+            {t("noGoalsSet")}
           </h3>
           <p className="text-xs text-muted-foreground mt-1 max-w-[280px]">
-            {language === "id"
-              ? "Tentukan rencana finansial Anda hari ini seperti liburan, dana darurat, atau beli rumah!"
-              : "Define your financial targets today like vacations, emergency funds, or buying a house!"}
+            {t("noGoalsDesc")}
           </p>
           <Button
             onClick={openAddModal}
             variant="outline"
             className="mt-4 h-8 rounded-lg text-xs font-semibold px-4 border-border bg-elevated hover:bg-[#2D333B]"
           >
-            {language === "id" ? "Buat Target Pertama" : "Create First Goal"}
+            {t("createFirstGoal")}
           </Button>
         </div>
       ) : (
@@ -203,15 +203,13 @@ export default function Goals() {
             if (remainingAmount > 0) {
               if (remainingMonths > 0) {
                 const monthlyReq = Math.ceil(remainingAmount / remainingMonths);
-                projectionText = language === "id"
-                  ? `${formatIDR(monthlyReq)} / bln lagi`
-                  : `${formatIDR(monthlyReq)} / mo left`;
+                projectionText = `${formatIDR(monthlyReq)} ${t("projectionMonth")} ${t("projectionLeft")}`;
               } else {
                 isOverdue = true;
-                projectionText = language === "id" ? "Butuh segera!" : "Due now!";
+                projectionText = t("projectionDueNow");
               }
             } else {
-              projectionText = language === "id" ? "Tercapai! 🎉" : "Achieved! 🎉";
+              projectionText = t("projectionAchieved");
             }
 
             return (
@@ -276,22 +274,22 @@ export default function Goals() {
                     <div className="flex items-center gap-2">
                       {pct >= 25 && pct < 50 && (
                         <span className="text-[9px] text-accent/80 font-bold uppercase tracking-wider bg-accent/5 px-1 py-0.5 rounded">
-                          {language === "id" ? "Awal Bagus" : "Nice Start"}
+                          {t("pctNiceStart")}
                         </span>
                       )}
                       {pct >= 50 && pct < 75 && (
                         <span className="text-[9px] text-indigo-400 font-bold uppercase tracking-wider bg-indigo-500/5 px-1 py-0.5 rounded">
-                          {language === "id" ? "Setengah Jalan" : "Halfway"}
+                          {t("pctHalfway")}
                         </span>
                       )}
                       {pct >= 75 && pct < 100 && (
                         <span className="text-[9px] text-blue-400 font-bold uppercase tracking-wider bg-blue-500/5 px-1 py-0.5 rounded">
-                          {language === "id" ? "Hampir Tercapai" : "Almost Done"}
+                          {t("pctAlmostDone")}
                         </span>
                       )}
                       {pct >= 100 && (
                         <span className="text-[9px] text-income font-bold uppercase tracking-wider bg-income/5 px-1 py-0.5 rounded">
-                          {language === "id" ? "Tercapai!" : "Completed!"}
+                          {t("pctCompleted")}
                         </span>
                       )}
                       <span className="font-semibold text-text-primary">{pct.toFixed(0)}%</span>
@@ -323,10 +321,10 @@ export default function Goals() {
                   <div className="flex justify-between items-center text-[10px] text-text-muted pt-1">
                     <span className="flex items-center gap-1 font-medium">
                       <Calendar size={11} className="opacity-70" />
-                      {language === "id" ? "Target:" : "Due:"} {formatDate(goal.targetDate, language)}
+                      {t("dueLabel")} {formatDate(goal.targetDate, language)}
                     </span>
                     <span className="font-semibold tabular-nums text-text-muted">
-                      {language === "id" ? "dari" : "of"} {formatIDR(goal.targetAmount)}
+                      {t("from")} {formatIDR(goal.targetAmount)}
                     </span>
                   </div>
                 </div>
@@ -350,12 +348,10 @@ export default function Goals() {
         <DialogContent className="bg-elevated border-border text-foreground">
           <DialogHeader>
             <DialogTitle className="text-base font-bold">
-              {language === "id" ? "Hapus Target Tabungan?" : "Delete Savings Goal?"}
+              {t("deleteGoalTitle")}
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
-              {language === "id"
-                ? "Tindakan ini permanen dan tidak dapat dibatalkan."
-                : "This action is permanent and cannot be undone."}
+              {t("deletePermanentDesc")}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="pt-2">
@@ -365,7 +361,7 @@ export default function Goals() {
               onClick={() => setDeletingGoal(null)}
               className="h-8 rounded-lg text-xs font-semibold"
             >
-              {language === "id" ? "Batal" : "Cancel"}
+              {t("cancelButton")}
             </Button>
             <Button
               type="button"
@@ -373,7 +369,7 @@ export default function Goals() {
               onClick={handleDelete}
               className="bg-expense hover:bg-red-600 text-white h-8 rounded-lg text-xs font-semibold"
             >
-              {language === "id" ? "Hapus" : "Delete"}
+              {t("deleteOption")}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { TrendingDown, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { formatIDR, formatPercent } from "@/lib/utils/formatters";
@@ -47,7 +48,7 @@ export interface StatCardProps {
   isCurrency?: boolean;
 }
 
-export function StatCard({
+export const StatCard = memo(function StatCard({
   label,
   amount,
   delta,
@@ -137,4 +138,4 @@ export function StatCard({
       ) : null}
     </Card>
   );
-}
+});

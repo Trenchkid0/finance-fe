@@ -3,19 +3,48 @@ import { startOfMonth, subMonths } from "date-fns";
 import { api } from "@/lib/api";
 import { formatMonthLabel } from "@/lib/utils/formatters";
 import { ExpensesClient } from "@/components/expenses/ExpensesClient";
-import { Loader2 } from "lucide-react";
+import { SkeletonExpenses } from "@/components/ui/skeleton-loader";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
+import { cache, CacheTTL } from "@/lib/cache";
+import type { TransactionApiItem } from "@/types";
+
+interface ExpenseAnalyticsData {
+  transactions: {
+    id: string;
+    amount: number;
+    date: string;
+    description: string | null;
+    accountName: string;
+    categoryName: string | null;
+    categoryIcon: string | null;
+  }[];
+  monthlyTrend: { month: string; amount: number }[];
+  categoryBreakdown: { category: string; amount: number; percent: number; icon: string | null }[];
+  currentMonthTotal: number;
+  monthlyDelta: number | undefined;
+  averageMonthly: number;
+  maxExpenseCategory: { name: string; amount: number } | null;
+}
 
 export default function Expenses() {
   const { language } = useLanguage();
   const [loading, setLoading] = useState(true);
-  const [expenseData, setExpenseData] = useState<any>(null);
+  const [expenseData, setExpenseData] = useState<ExpenseAnalyticsData | null>(null);
+
+  const EXPENSE_CACHE_KEY = `expense:analytics:${language}`;
 
   const fetchExpenseData = async () => {
+    // ✅ PERF: Check cache first — avoids heavy client-side recomputation
+    const cached = cache.get<ExpenseAnalyticsData>(EXPENSE_CACHE_KEY);
+    if (cached) {
+      setExpenseData(cached);
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       // Fetch up to 1000 expense transactions for calculations
-      const res = await api.get<any>("/api/transactions?type=expense&limit=1000");
+      const res = await api.get<{ transactions: TransactionApiItem[]; total: number }>("/api/transactions?type=expense&limit=1000");
       const allExpenses = res.transactions || [];
 
       const now = new Date();
@@ -24,18 +53,18 @@ export default function Expenses() {
 
       // Current Month Total
       const currentMonthTotal = allExpenses
-        .filter((tx: any) => new Date(tx.date) >= currentMonthStart)
-        .reduce((sum: number, tx: any) => sum + Number(tx.amount), 0);
+        .filter((tx) => new Date(tx.date) >= currentMonthStart)
+        .reduce((sum: number, tx) => sum + Number(tx.amount), 0);
 
       // Previous Month Total
       const previousMonthStart = startOfMonth(subMonths(now, 1));
       const previousMonthTotal = allExpenses
         .filter(
-          (tx: any) =>
+          (tx) =>
             new Date(tx.date) >= previousMonthStart &&
             new Date(tx.date) < currentMonthStart
         )
-        .reduce((sum: number, tx: any) => sum + Number(tx.amount), 0);
+        .reduce((sum: number, tx) => sum + Number(tx.amount), 0);
 
       const monthlyDelta =
         previousMonthTotal === 0
@@ -106,7 +135,7 @@ export default function Expenses() {
           : null;
 
       // Map serialization transaction rows (limit 15)
-      const transactions = allExpenses.slice(0, 15).map((tx: any) => ({
+      const transactions = allExpenses.slice(0, 15).map((tx) => ({
         id: String(tx.id),
         amount: Number(tx.amount),
         date: tx.date,
@@ -116,7 +145,7 @@ export default function Expenses() {
         categoryIcon: tx.category?.icon ?? null,
       }));
 
-      setExpenseData({
+      const expenseResult: ExpenseAnalyticsData = {
         transactions,
         monthlyTrend,
         categoryBreakdown,
@@ -124,7 +153,9 @@ export default function Expenses() {
         monthlyDelta,
         averageMonthly,
         maxExpenseCategory,
-      });
+      };
+      setExpenseData(expenseResult);
+      cache.set(EXPENSE_CACHE_KEY, expenseResult, CacheTTL.SHORT);
     } catch (err) {
       console.error("Failed to fetch expense analytics data:", err);
     } finally {
@@ -138,6 +169,7 @@ export default function Expenses() {
 
   useEffect(() => {
     const handleRefresh = () => {
+      cache.delete(EXPENSE_CACHE_KEY);
       fetchExpenseData();
     };
     window.addEventListener("refresh-app-data", handleRefresh);
@@ -147,11 +179,7 @@ export default function Expenses() {
   }, []);
 
   if (loading && !expenseData) {
-    return (
-      <div className="flex h-[50vh] items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-accent" />
-      </div>
-    );
+    return <SkeletonExpenses />;
   }
 
   if (!expenseData) return null;

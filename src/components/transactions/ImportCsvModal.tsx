@@ -78,9 +78,10 @@ export function ImportCsvModal({ open, onClose, onSuccess }: ImportCsvModalProps
       if (res.imported > 0) {
         onSuccess();
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      setError(err.message || (isId ? "Gagal mengimpor file" : "Failed to import file"));
+      const message = err instanceof Error ? err.message : "";
+      setError(message || (isId ? "Gagal mengimpor file" : "Failed to import file"));
     } finally {
       setIsUploading(false);
     }

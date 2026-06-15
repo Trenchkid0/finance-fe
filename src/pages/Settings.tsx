@@ -3,6 +3,7 @@ import { useApp } from "@/components/layout/AppLayout";
 import { SettingsClient } from "@/components/settings/SettingsClient";
 import { SkeletonSettings } from "@/components/ui/skeleton-loader";
 import { listApiKeys, type ApiKeyListItem } from "@/app/actions/api-keys";
+import type { Category } from "@/types";
 
 export default function Settings() {
   const { user, categories: globalCategories, refresh } = useApp();
@@ -41,7 +42,7 @@ export default function Settings() {
   }
 
   // Format categories to match CategoryItem interface expected by SettingsClient
-  const formattedCategories = globalCategories.map((c: any) => ({
+  const formattedCategories = globalCategories.map((c: Category) => ({
     id: c.id,
     name: c.name,
     type: c.type as "income" | "expense",

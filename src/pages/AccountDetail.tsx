@@ -6,17 +6,28 @@ import { formatDateShort, formatIDR } from "@/lib/utils/formatters";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
-import { Loader2 } from "lucide-react";
+import { SkeletonAnalytics } from "@/components/ui/skeleton-loader";
 import { Card } from "@/components/ui/card";
 
 import { useLanguage } from "@/lib/contexts/LanguageContext";
+import type { TransactionApiItem } from "@/types";
+
+interface AccountDetailData {
+  id: string;
+  name: string;
+  type: string;
+  balance: number;
+  isActive: boolean;
+  icon?: string;
+  color?: string;
+}
 
 export default function AccountDetail() {
   const { language } = useLanguage();
   const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(true);
-  const [account, setAccount] = useState<any>(null);
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const [account, setAccount] = useState<AccountDetailData | null>(null);
+  const [transactions, setTransactions] = useState<TransactionApiItem[]>([]);
 
   const accountTypeLabel: Record<string, string> = {
     bank: language === "id" ? "Bank" : "Bank",
@@ -29,14 +40,11 @@ export default function AccountDetail() {
     if (!id) return;
     try {
       setLoading(true);
-      const acc = await api.get<any>(`/api/accounts/${id}`);
-      const txResponse = await api.get<any>(`/api/transactions?accountId=${id}&limit=50`);
+      const acc = await api.get<AccountDetailData>(`/api/accounts/${id}`);
+      const txResponse = await api.get<{ transactions: TransactionApiItem[] }>("/api/transactions?accountId=${id}&limit=50");
       setAccount(acc);
       // Backend returns a TransactionsListResponse which contains transactions array
-      const mappedTxs = (txResponse.transactions || []).map((tx: any) => ({
-        ...tx,
-        id: String(tx.id),
-      }));
+      const mappedTxs = (txResponse.transactions || []);
       setTransactions(mappedTxs);
     } catch (err) {
       console.error("Failed to fetch account detail:", err);
@@ -60,11 +68,7 @@ export default function AccountDetail() {
   }, [id]);
 
   if (loading) {
-    return (
-      <div className="flex h-[50vh] items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-accent" />
-      </div>
-    );
+    return <SkeletonAnalytics />;
   }
 
   if (!account) {
