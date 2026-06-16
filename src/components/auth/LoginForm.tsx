@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 
-const isDev = import.meta.env.DEV;
+const isDev = import.meta.env.DEV && import.meta.env.VITE_SHOW_DEMO !== "false";
 
 export function LoginForm() {
   const { t } = useLanguage();
@@ -111,16 +111,18 @@ export function LoginForm() {
         ) : null}
 
         {/* Submit */}
-        <Button type="submit" className="w-full h-12 text-[15px] group" disabled={pending}>
-          {pending ? (
-            <Loader2 size={18} className="animate-spin" />
-          ) : (
-            <>
-              {t("loginButton")}
-              <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
-            </>
-          )}
-        </Button>
+        <div className="pt-5">
+          <Button type="submit" className="w-full h-12 text-[15px] group" disabled={pending}>
+            {pending ? (
+              <Loader2 size={18} className="animate-spin" />
+            ) : (
+              <>
+                {t("loginButton")}
+                <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
+              </>
+            )}
+          </Button>
+        </div>
       </form>
 
 
