@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, FolderTree, Plus, Sparkles, Wallet } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 /**
  * First-time onboarding — ditampilkan saat user belum punya akun.
@@ -108,17 +109,17 @@ function Step({
         </p>
       </div>
 
-      <Link
-        to={href}
-        className={
-          secondary
-            ? "shrink-0 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-            : "shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
-        }
+      <Button
+        asChild
+        variant={secondary ? "secondary" : "default"}
+        size="sm"
+        className="shrink-0 text-xs"
       >
-        {cta}
-        <ArrowRight size={12} />
-      </Link>
+        <Link to={href}>
+          {cta}
+          <ArrowRight size={12} />
+        </Link>
+      </Button>
     </li>
   );
 }
