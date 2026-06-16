@@ -322,6 +322,7 @@ export function IncomeClient({
 												tickLine={false}
 												axisLine={false}
 												dy={10}
+												minTickGap={30}
 											/>
 											<YAxis
 												stroke="var(--foreground)"
@@ -353,6 +354,7 @@ export function IncomeClient({
 												tickLine={false}
 												axisLine={false}
 												dy={10}
+												minTickGap={30}
 											/>
 											<YAxis
 												stroke="var(--foreground)"
@@ -384,6 +386,7 @@ export function IncomeClient({
 												tickLine={false}
 												axisLine={false}
 												dy={10}
+												minTickGap={30}
 											/>
 											<YAxis
 												stroke="var(--foreground)"

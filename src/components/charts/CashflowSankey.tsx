@@ -58,14 +58,14 @@ interface Props {
   period: "1d" | "7d" | "30d" | "90d" | "ytd" | "365d" | "5y";
 }
 
-const PERIOD_OPTIONS: { value: Props["period"]; label: string }[] = [
-  { value: "1d", label: "1H" },
-  { value: "7d", label: "7H" },
-  { value: "30d", label: "30H" },
-  { value: "90d", label: "90H" },
+const getPeriodOptions = (isId: boolean): { value: Props["period"]; label: string }[] => [
+  { value: "1d", label: isId ? "1H" : "1D" },
+  { value: "7d", label: isId ? "7H" : "7D" },
+  { value: "30d", label: isId ? "30H" : "30D" },
+  { value: "90d", label: isId ? "90H" : "90D" },
   { value: "ytd", label: "YTD" },
-  { value: "365d", label: "365H" },
-  { value: "5y", label: "5T" },
+  { value: "365d", label: isId ? "365H" : "365D" },
+  { value: "5y", label: isId ? "5T" : "5Y" },
 ];
 
 const SUCCESS_COLOR = "var(--income)";
@@ -106,6 +106,9 @@ export const CashflowSankey = memo(function CashflowSankey({ data, period }: Pro
   const [pending, startTransition] = useTransition();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [width, setWidth] = useState<number>(940);
+  const { language } = useLanguage();
+  const isId = language === "id";
+  const periodOptions = getPeriodOptions(isId);
 
   // Resize observer — sankey butuh width fixed, jadi kita observe dan
   // re-render saat container berubah (mis. user collapse sidebar).
@@ -138,8 +141,10 @@ export const CashflowSankey = memo(function CashflowSankey({ data, period }: Pro
       role="region"
     >
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-medium text-foreground transition-colors duration-300 group-hover:text-accent">Arus kas</h2>
-        <DropdownMenu>
+        <h2 className="text-base font-medium text-foreground transition-colors duration-300 group-hover:text-accent">
+          {isId ? "Arus kas" : "Cash flow"}
+        </h2>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <button
               type="button"
@@ -147,12 +152,12 @@ export const CashflowSankey = memo(function CashflowSankey({ data, period }: Pro
               className="h-8 gap-1.5 px-2.5 text-xs font-semibold text-foreground hover:bg-hover-elevated bg-elevated border border-border transition-all flex items-center justify-center disabled:opacity-50 disabled:pointer-events-none"
               style={{ borderRadius: 'var(--dropdown-radius, 9999px)' }}
             >
-              <span>{PERIOD_OPTIONS.find((o) => o.value === period)?.label ?? period}</span>
+              <span>{periodOptions.find((o) => o.value === period)?.label ?? period}</span>
               <ChevronDown size={13} className="opacity-60 shrink-0 ml-1.5" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="min-w-[120px] rounded-xl border-border/60 bg-popover/95 backdrop-blur-xl">
-            {PERIOD_OPTIONS.map((o) => (
+            {periodOptions.map((o) => (
               <DropdownMenuItem
                 key={o.value}
                 className="text-xs font-semibold cursor-pointer"
@@ -180,10 +185,12 @@ export const CashflowSankey = memo(function CashflowSankey({ data, period }: Pro
           <div className="h-64 flex items-center justify-center text-center">
             <div>
               <p className="text-sm font-medium text-foreground">
-                Belum cukup data
+                {isId ? "Belum cukup data" : "Not enough data"}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                Tambahkan transaksi untuk melihat arus kas Anda.
+                {isId
+                  ? "Tambahkan transaksi untuk melihat arus kas Anda."
+                  : "Add transactions to see your cash flow."}
               </p>
             </div>
           </div>

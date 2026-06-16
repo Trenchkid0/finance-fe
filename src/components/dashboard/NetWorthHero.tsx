@@ -1,4 +1,4 @@
-import { memo, useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowDown, ArrowUp, ChevronDown, Minus } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from "recharts";
@@ -32,7 +32,7 @@ const getPeriodOptions = (isId: boolean): { value: NetWorthPeriod; label: string
   { value: "5y", label: isId ? "5 Tahun" : "5 Years" },
 ];
 
-export const NetWorthHero = memo(function NetWorthHero({ current, previous, period, series }: Props) {
+export function NetWorthHero({ current, previous, period, series }: Props) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [searchParams] = useSearchParams();
@@ -134,8 +134,7 @@ export const NetWorthHero = memo(function NetWorthHero({ current, previous, peri
       </div>
     </Card>
   );
-});
-
+}
 
 function DeltaLine({ dir, delta, ratio, hoveredLabel, periodLabel, isId }: {
   dir: "up" | "down" | "flat"; delta: number; ratio: number;
@@ -164,7 +163,7 @@ function PeriodSelect({ value, onChange, disabled, isId }: {
   const periodOptions = getPeriodOptions(isId);
   const selectedLabel = periodOptions.find((o) => o.value === value)?.label ?? value;
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <button
           type="button"

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -34,12 +34,71 @@ export function MonthPicker({
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickedYear, setPickedYear] = useState(year);
   const pickerTriggerRef = useRef<HTMLDivElement>(null);
+  const pickerContentRef = useRef<HTMLDivElement>(null);
 
   const now = new Date();
   const currentY = now.getFullYear();
   const currentM = now.getMonth() + 1;
 
   const canGoNext = !(year === currentY && month >= currentM);
+
+  const updatePosition = () => {
+    if (pickerTriggerRef.current && pickerContentRef.current) {
+      const triggerRect = pickerTriggerRef.current.getBoundingClientRect();
+      const popupHeight = 220;
+      
+      let top = triggerRect.bottom + 8;
+      let left = triggerRect.left;
+      
+      if (top + popupHeight > window.innerHeight && triggerRect.top - popupHeight > 0) {
+        top = triggerRect.top - popupHeight - 8;
+      }
+      
+      if (left + 260 > window.innerWidth) {
+        left = Math.max(10, window.innerWidth - 270);
+      }
+      
+      if (left < 10) {
+        left = 10;
+      }
+      
+      pickerContentRef.current.style.top = `${top}px`;
+      pickerContentRef.current.style.left = `${left}px`;
+    }
+  };
+
+  useLayoutEffect(() => {
+    if (pickerOpen) {
+      updatePosition();
+      window.addEventListener("scroll", updatePosition, true);
+      window.addEventListener("resize", updatePosition);
+      return () => {
+        window.removeEventListener("scroll", updatePosition, true);
+        window.removeEventListener("resize", updatePosition);
+      };
+    }
+  }, [pickerOpen]);
+
+  useEffect(() => {
+    if (!pickerOpen) return;
+    const handleClose = (e: MouseEvent) => {
+      if (pickerTriggerRef.current && pickerTriggerRef.current.contains(e.target as Node)) {
+        return;
+      }
+      if (pickerContentRef.current && pickerContentRef.current.contains(e.target as Node)) {
+        return;
+      }
+      setPickerOpen(false);
+    };
+    document.addEventListener("click", handleClose, true);
+    return () => document.removeEventListener("click", handleClose, true);
+  }, [pickerOpen]);
+
+  useEffect(() => {
+    if (pickerOpen) {
+      setPickedYear(year);
+    }
+  }, [pickerOpen, year]);
 
   return (
     <div className="flex items-center gap-2 bg-white/[0.02] border border-white/[0.06] rounded-xl p-1.5 shrink-0 self-start sm:self-center">
@@ -81,7 +140,7 @@ export function MonthPicker({
             currentMonth={currentM}
             selectedYear={year}
             selectedMonth={month}
-            triggerRef={pickerTriggerRef}
+            panelRef={pickerContentRef}
             onPick={(y, m) => {
               setPickerOpen(false);
               onPick(y, m);
@@ -124,7 +183,7 @@ function YearMonthPanel({
   currentMonth,
   selectedYear,
   selectedMonth,
-  triggerRef,
+  panelRef,
   onPick,
 }: {
   pickedYear: number;
@@ -134,8 +193,8 @@ function YearMonthPanel({
   currentMonth: number;
   selectedYear: number;
   selectedMonth: number;
-  triggerRef: React.RefObject<HTMLDivElement | null>;
-  onPick: (y: number, m: number) => void;
+  panelRef: React.RefObject<HTMLDivElement | null>;
+  onPick: (y, m: number) => void;
 }) {
   const { language } = useLanguage();
   const minYear = Math.min(...yearOptions);
@@ -146,26 +205,15 @@ function YearMonthPanel({
       ? ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"]
       : ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-  const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
-
-  useEffect(() => {
-    const triggerEl = triggerRef.current;
-    if (!triggerEl) return;
-    const rect = triggerEl.getBoundingClientRect();
-    setPosition({
-      top: rect.bottom + 8,
-      left: rect.right - 260,
-    });
-  }, [triggerRef]);
-
   return createPortal(
     <div
+      ref={panelRef}
       style={{
         position: "fixed",
-        top: position?.top ?? -9999,
-        left: position?.left ?? -9999,
+        top: "0",
+        left: "0",
       }}
-      className="z-[99999] w-[260px] rounded-2xl border border-white/[0.08] bg-popover/95 backdrop-blur-xl shadow-2xl shadow-black/40 p-4 space-y-3 animate-in fade-in-50 slide-in-from-top-2 duration-150"
+      className="z-[99999] w-[260px] rounded-2xl border border-white/[0.08] bg-popover/95 backdrop-blur-xl shadow-2xl shadow-black/40 p-4 space-y-3"
     >
       <div className="flex items-center justify-between">
         <Button
