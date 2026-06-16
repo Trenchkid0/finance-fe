@@ -31,7 +31,7 @@ export const RecentTransactions = memo(function RecentTransactions({ transaction
   return (
     <Card className="overflow-hidden flex flex-col p-0 gap-0">
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-6 border-b border-white/[0.04] shrink-0">
+      <header className="flex items-center justify-between px-6 py-6 border-b border-border/30 shrink-0">
         <div className="space-y-1.5">
           <h2 className="text-sm font-bold text-foreground">
             {language === "id" ? "Transaksi Terakhir" : "Recent Transactions"}
@@ -72,7 +72,7 @@ export const RecentTransactions = memo(function RecentTransactions({ transaction
       ) : (
         <>
           {/* Column header (desktop only) */}
-          <div className="hidden md:grid grid-cols-12 px-6 py-2.5 bg-white/[0.01] border-b border-white/[0.04] shrink-0 text-[10px] font-bold text-muted-foreground/45 uppercase tracking-wider">
+          <div className="hidden md:grid grid-cols-12 px-6 py-2.5 bg-elevated/20 border-b border-border/30 shrink-0 text-[10px] font-bold text-muted-foreground/45 uppercase tracking-wider">
             <span className="col-span-2">{language === "id" ? "Tanggal" : "Date"}</span>
             <span className="col-span-5">{language === "id" ? "Deskripsi" : "Description"}</span>
             <span className="col-span-3">{language === "id" ? "Akun" : "Account"}</span>
@@ -88,7 +88,7 @@ export const RecentTransactions = memo(function RecentTransactions({ transaction
                   key={tx.id}
                   className={cn(
                     "group grid grid-cols-12 items-center px-4 py-3 rounded-xl border border-transparent",
-                    "bg-transparent hover:bg-white/[0.03] hover:border-white/[0.06]",
+                    "bg-transparent hover:bg-hover-surface/50 hover:border-hover-border/40",
                     "transition-all duration-200 cursor-pointer"
                   )}
                   style={{
@@ -98,7 +98,7 @@ export const RecentTransactions = memo(function RecentTransactions({ transaction
                 >
                   {/* Date */}
                   <div className="col-span-2 flex items-center gap-3">
-                    <div className="h-7 w-7 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center shrink-0">
+                    <div className="h-7 w-7 rounded-lg bg-elevated border border-border/60 flex items-center justify-center shrink-0">
                       <span className="text-[11px] font-bold text-foreground font-mono">
                         {new Date(tx.date).getDate()}
                       </span>
@@ -119,7 +119,7 @@ export const RecentTransactions = memo(function RecentTransactions({ transaction
                         {language === "id" ? "Transfer" : "Transfer"}
                       </span>
                     ) : tx.categoryName ? (
-                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold border bg-white/[0.04] border-white/[0.08] text-muted-foreground/70">
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold border bg-elevated border-border/60 text-muted-foreground/70">
                         {tx.categoryIcon && <span className="mr-0.5">{tx.categoryIcon}</span>}
                         {tx.categoryName}
                       </span>
@@ -146,7 +146,7 @@ export const RecentTransactions = memo(function RecentTransactions({ transaction
                         "transition-all duration-200 group-hover:scale-[1.03]",
                         tx.type === "income" && "text-income bg-income/10",
                         tx.type === "expense" && "text-expense bg-expense/10",
-                        tx.type === "transfer" && "text-foreground bg-white/[0.04] border border-white/[0.08]"
+                        tx.type === "transfer" && "text-foreground bg-elevated border border-border/60"
                       )}
                     >
                       {amountPrefix(tx.type)}
@@ -164,7 +164,7 @@ export const RecentTransactions = memo(function RecentTransactions({ transaction
                   key={tx.id}
                   className={cn(
                     "group flex items-start gap-3 p-3 rounded-xl border border-transparent",
-                    "bg-transparent hover:bg-white/[0.03] hover:border-white/[0.06]",
+                    "bg-transparent hover:bg-hover-surface/50 hover:border-hover-border/40",
                     "transition-all duration-200 cursor-pointer"
                   )}
                   style={{
@@ -173,7 +173,7 @@ export const RecentTransactions = memo(function RecentTransactions({ transaction
                   }}
                 >
                   {/* Date badge */}
-                  <div className="h-10 w-10 rounded-lg bg-white/[0.04] border border-white/[0.06] flex flex-col items-center justify-center shrink-0">
+                  <div className="h-10 w-10 rounded-lg bg-elevated border border-border/60 flex flex-col items-center justify-center shrink-0">
                     <span className="text-xs font-black text-foreground leading-none font-mono">
                       {new Date(tx.date).getDate()}
                     </span>
@@ -219,7 +219,7 @@ export const RecentTransactions = memo(function RecentTransactions({ transaction
                         "text-xs font-bold font-mono tabular-nums px-2.5 py-1 rounded-lg text-right",
                         tx.type === "income" && "text-income bg-income/10",
                         tx.type === "expense" && "text-expense bg-expense/10",
-                        tx.type === "transfer" && "text-foreground bg-white/[0.04]"
+                        tx.type === "transfer" && "text-foreground bg-elevated border border-border/60"
                       )}
                     >
                       {amountPrefix(tx.type)}
@@ -233,7 +233,7 @@ export const RecentTransactions = memo(function RecentTransactions({ transaction
 
           {/* Footer */}
           {transactions.length > 5 && (
-            <div className="px-6 py-3 border-t border-white/[0.04] bg-white/[0.01] shrink-0">
+            <div className="px-6 py-3 border-t border-border/30 bg-elevated/10 shrink-0">
               <Link
                 to="/transactions"
                 className="group inline-flex items-center gap-1 text-xs font-semibold text-accent hover:text-accent/80 transition-all duration-200"

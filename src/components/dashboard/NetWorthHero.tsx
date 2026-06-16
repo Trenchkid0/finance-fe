@@ -127,7 +127,7 @@ export function NetWorthHero({ current, previous, period, series }: Props) {
                   );
                 }}
               />
-              <Area type="monotone" dataKey="value" stroke={lineColor} strokeWidth={2.5} fill="url(#netWorthFill)" activeDot={{ r: 5, stroke: "var(--card-bg)", strokeWidth: 2, fill: lineColor }} />
+              <Area type="monotone" dataKey="value" stroke={lineColor} strokeWidth={2.5} fill="none" activeDot={{ r: 5, stroke: "var(--card-bg)", strokeWidth: 2, fill: lineColor }} />
             </AreaChart>
           </ResponsiveContainer>
         )}

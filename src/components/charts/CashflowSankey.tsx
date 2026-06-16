@@ -133,7 +133,7 @@ export function CashflowSankey({ data, period }: Props) {
 
   return (
     <Card
-      className="group p-5 space-y-4 hover:border-white/[0.12] transition-all duration-300"
+      className="group p-5 space-y-4 hover:border-hover-border transition-all duration-300"
       aria-label="Cash Flow Sankey Diagram"
       role="region"
     >
@@ -144,14 +144,14 @@ export function CashflowSankey({ data, period }: Props) {
             <button
               type="button"
               disabled={pending}
-              className="h-8 gap-1.5 px-2.5 text-xs font-semibold text-foreground hover:bg-white/[0.04] bg-elevated border border-border transition-all flex items-center justify-center disabled:opacity-50 disabled:pointer-events-none"
+              className="h-8 gap-1.5 px-2.5 text-xs font-semibold text-foreground hover:bg-hover-elevated bg-elevated border border-border transition-all flex items-center justify-center disabled:opacity-50 disabled:pointer-events-none"
               style={{ borderRadius: 'var(--dropdown-radius, 9999px)' }}
             >
               <span>{PERIOD_OPTIONS.find((o) => o.value === period)?.label ?? period}</span>
               <ChevronDown size={13} className="opacity-60 shrink-0 ml-1.5" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="min-w-[120px] rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl">
+          <DropdownMenuContent align="end" className="min-w-[120px] rounded-xl border-border/60 bg-popover/95 backdrop-blur-xl">
             {PERIOD_OPTIONS.map((o) => (
               <DropdownMenuItem
                 key={o.value}
@@ -450,7 +450,7 @@ function SankeyChart({
       {/* Custom Floating Tooltip */}
       {hoveredLink && (
         <div
-          className="pointer-events-none absolute z-50 rounded-xl border border-white/[0.08] bg-[#1C2128]/95 backdrop-blur-xl p-3.5 shadow-2xl shadow-black/80 text-xs space-y-1.5 min-w-[200px]"
+          className="pointer-events-none absolute z-50 rounded-xl border border-border/60 bg-popover/95 backdrop-blur-xl p-3.5 shadow-2xl shadow-black/80 text-xs space-y-1.5 min-w-[200px]"
           style={{
             left: `${hoveredLink.x + 15}px`,
             top: `${hoveredLink.y + 15}px`,

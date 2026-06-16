@@ -14,13 +14,13 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
       ref={ref}
       data-slot="card"
       className={cn(
-        "border text-card-foreground transition-all duration-300 hover:border-accent/30 hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)] hover:shadow-accent/[0.02] hover:-translate-y-0.5 flex flex-col gap-4",
+        "border border-border text-card-foreground transition-all duration-200 hover:border-hover-border flex flex-col gap-4",
         className,
       )}
       style={{
         borderRadius: "var(--card-radius)",
         borderWidth: "var(--card-border-width)",
-        borderColor: "color-mix(in srgb, var(--border) 50%, transparent)",
+        borderColor: "var(--border)",
         backdropFilter: "blur(var(--card-backdrop-blur))",
         WebkitBackdropFilter: "blur(var(--card-backdrop-blur))",
         backgroundColor: "color-mix(in srgb, var(--card-bg) calc(var(--card-opacity) * 100%), transparent)",

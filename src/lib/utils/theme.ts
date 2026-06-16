@@ -1016,7 +1016,7 @@ export function loadSavedTheme() {
   loadSavedCardStyles();
   loadSavedButtonStyles();
   loadSavedTypographyStyles();
-  const themeId = localStorage.getItem("racks-theme-id") || "nordic-midnight";
+  const themeId = localStorage.getItem("racks-theme-id") || "github-dark";
   const customVarsStr = localStorage.getItem("racks-custom-theme-vars");
   let customVars = undefined;
   if (customVarsStr) {
