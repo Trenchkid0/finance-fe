@@ -75,3 +75,13 @@ export async function deleteTransaction(id: string): Promise<ActionResult<null>>
     return { ok: false, error: getErrorMessage(err, "Gagal menghapus transaksi.") };
   }
 }
+
+export async function restoreTransaction(id: string): Promise<ActionResult<null>> {
+  try {
+    await api.post(`/api/transactions/${id}/restore`, {});
+    window.dispatchEvent(new CustomEvent("refresh-app-data"));
+    return { ok: true };
+  } catch (err: unknown) {
+    return { ok: false, error: getErrorMessage(err, "Gagal mengembalikan transaksi.") };
+  }
+}

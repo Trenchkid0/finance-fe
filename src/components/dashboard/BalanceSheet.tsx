@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ChevronRight, Plus } from "lucide-react";
 import { formatIDR } from "@/lib/utils/formatters";
@@ -59,7 +59,7 @@ interface Props {
   hideEmptyLiabilities?: boolean;
 }
 
-export function BalanceSheet({ assets, liabilities, hideEmptyLiabilities }: Props) {
+export const BalanceSheet = memo(function BalanceSheet({ assets, liabilities, hideEmptyLiabilities }: Props) {
   const showLiabilities = !hideEmptyLiabilities || liabilities.groups.length > 0;
   return (
     <section className={showLiabilities ? "grid grid-cols-1 lg:grid-cols-2 gap-4" : ""}>
@@ -67,7 +67,7 @@ export function BalanceSheet({ assets, liabilities, hideEmptyLiabilities }: Prop
       {showLiabilities ? <BalanceSide {...liabilities} /> : null}
     </section>
   );
-}
+});
 
 function BalanceSide({ title, total, groups }: SideProps) {
   const { language } = useLanguage();

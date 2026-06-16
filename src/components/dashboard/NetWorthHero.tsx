@@ -1,4 +1,4 @@
-import { useMemo, useState, useTransition } from "react";
+import { memo, useMemo, useState, useTransition } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowDown, ArrowUp, ChevronDown, Minus } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from "recharts";
@@ -32,7 +32,7 @@ const getPeriodOptions = (isId: boolean): { value: NetWorthPeriod; label: string
   { value: "5y", label: isId ? "5 Tahun" : "5 Years" },
 ];
 
-export function NetWorthHero({ current, previous, period, series }: Props) {
+export const NetWorthHero = memo(function NetWorthHero({ current, previous, period, series }: Props) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [searchParams] = useSearchParams();
@@ -134,7 +134,8 @@ export function NetWorthHero({ current, previous, period, series }: Props) {
       </div>
     </Card>
   );
-}
+});
+
 
 function DeltaLine({ dir, delta, ratio, hoveredLabel, periodLabel, isId }: {
   dir: "up" | "down" | "flat"; delta: number; ratio: number;

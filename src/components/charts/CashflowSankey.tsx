@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useTransition } from "react";
+import { memo, useEffect, useRef, useState, useTransition } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
   sankey,
@@ -99,7 +99,7 @@ interface SankeyLink extends SankeyExtraProperties {
   color: string;
 }
 
-export function CashflowSankey({ data, period }: Props) {
+export const CashflowSankey = memo(function CashflowSankey({ data, period }: Props) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [searchParams] = useSearchParams();
@@ -191,9 +191,9 @@ export function CashflowSankey({ data, period }: Props) {
       </div>
     </Card>
   );
-}
+});
 
-function SankeyChart({
+const SankeyChart = memo(function SankeyChart({
   data,
   width,
   height,
@@ -471,4 +471,4 @@ function SankeyChart({
       )}
     </div>
   );
-}
+});

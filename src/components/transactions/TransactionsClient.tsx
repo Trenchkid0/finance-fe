@@ -1,6 +1,6 @@
 import { useEffect, useState, useTransition } from "react";
 import { useSearchParams } from "react-router-dom";
-import { ArrowLeftRight, Download, Loader2, Plus, Search, Trash2 } from "lucide-react";
+import { ArrowLeftRight, Download, Loader2, Plus, Search, Trash2, Edit3 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils/cn";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
@@ -214,6 +214,37 @@ export function TransactionsClient({
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
   const [pendingBulk, startTransitionBulk] = useTransition();
 
+  const [openBulkEdit, setOpenBulkEdit] = useState(false);
+  const [bulkAccount, setBulkAccount] = useState("");
+  const [bulkCategory, setBulkCategory] = useState("");
+  const [pendingBulkEdit, setPendingBulkEdit] = useState(false);
+
+  const handleBulkEdit = async () => {
+    try {
+      setPendingBulkEdit(true);
+      const ids = Array.from(selectedIds);
+      const payload: any = { ids };
+      if (bulkAccount) payload.accountId = bulkAccount;
+      if (bulkCategory) payload.categoryId = bulkCategory;
+
+      await api.put("/api/transactions/bulk", payload);
+      toast.success(
+        language === "id"
+          ? `Berhasil memperbarui ${ids.length} transaksi`
+          : `Successfully updated ${ids.length} transactions`
+      );
+      setSelectedIds(new Set());
+      setOpenBulkEdit(false);
+      setBulkAccount("");
+      setBulkCategory("");
+      window.dispatchEvent(new CustomEvent("refresh-app-data"));
+    } catch (err: any) {
+      toast.error(err.message || (language === "id" ? "Gagal memperbarui transaksi" : "Failed to update transactions"));
+    } finally {
+      setPendingBulkEdit(false);
+    }
+  };
+
   const canCreate = accounts.length > 0;
 
   const toggleSelect = (id: string) => {
@@ -253,7 +284,25 @@ export function TransactionsClient({
       try {
         const ids = Array.from(selectedIds);
         await api.delete<unknown>("/api/transactions", { ids });
-        toast.success(`${ids.length} transaksi berhasil dihapus`);
+        toast.success(
+          language === "id"
+            ? `${ids.length} transaksi berhasil dihapus`
+            : `${ids.length} transactions deleted successfully`,
+          {
+            action: {
+              label: language === "id" ? "Urungkan" : "Undo",
+              onClick: async () => {
+                try {
+                  await api.post("/api/transactions/restore", { ids });
+                  toast.success(language === "id" ? "Transaksi dikembalikan" : "Transactions restored");
+                  window.dispatchEvent(new CustomEvent("refresh-app-data"));
+                } catch (err: any) {
+                  toast.error(language === "id" ? "Gagal mengembalikan transaksi" : "Failed to restore transactions");
+                }
+              }
+            }
+          }
+        );
         setSelectedIds(new Set());
         setConfirmBulkDelete(false);
         window.dispatchEvent(new CustomEvent("refresh-app-data"));
@@ -441,9 +490,9 @@ export function TransactionsClient({
       />
 
       {selectedIds.size > 0 && (
-        <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-expense/10 border border-expense/20 animate-fade-in text-sm">
+        <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-accent/5 border border-accent/20 animate-fade-in text-sm">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-expense">
+            <span className="font-semibold text-accent">
               {selectedIds.size} {t("selectedCount")}
             </span>
           </div>
@@ -455,6 +504,15 @@ export function TransactionsClient({
               className="text-xs text-text-muted hover:text-text-primary"
             >
               {t("cancelButton")}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setOpenBulkEdit(true)}
+              className="border-border hover:bg-[#2D333B] text-text-primary text-xs font-semibold gap-1.5 h-8 px-3 rounded-lg"
+            >
+              <Edit3 size={13} />
+              {language === "id" ? "Ubah Kategori/Akun" : "Edit Category/Account"}
             </Button>
             <Button
               variant="destructive"
@@ -595,6 +653,90 @@ export function TransactionsClient({
               >
                 {pendingBulk && <Loader2 className="h-3 w-3 animate-spin" />}
                 {language === "id" ? "Hapus" : "Delete"}
+              </Button>
+            </div>
+          </DialogBody>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirm Bulk Edit */}
+      <Dialog
+        open={openBulkEdit}
+        onOpenChange={(open) => !open && setOpenBulkEdit(false)}
+      >
+        <DialogContent className="rounded-2xl border-white/[0.08] bg-popover/95 backdrop-blur-xl max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-text-primary text-base font-bold">
+              {language === "id" ? "Ubah Massal Transaksi" : "Bulk Edit Transactions"}
+            </DialogTitle>
+          </DialogHeader>
+          <DialogBody className="space-y-4">
+            <p className="text-xs text-text-muted">
+              {language === "id"
+                ? `Ubah kategori atau akun untuk ${selectedIds.size} transaksi terpilih.`
+                : `Update category or account for ${selectedIds.size} selected transactions.`}
+            </p>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs text-text-muted block mb-1">
+                  {language === "id" ? "Akun" : "Account"}
+                </label>
+                <select
+                  value={bulkAccount}
+                  onChange={(e) => setBulkAccount(e.target.value)}
+                  className="w-full bg-[#1C2128] border border-border rounded-xl px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent"
+                >
+                  <option value="">{language === "id" ? "-- Tetap Sama --" : "-- Keep Same --"}</option>
+                  {accounts.map((acc) => (
+                    <option key={acc.id} value={acc.id}>
+                      {acc.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs text-text-muted block mb-1">
+                  {language === "id" ? "Kategori" : "Category"}
+                </label>
+                <select
+                  value={bulkCategory}
+                  onChange={(e) => setBulkCategory(e.target.value)}
+                  className="w-full bg-[#1C2128] border border-border rounded-xl px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent"
+                >
+                  <option value="">{language === "id" ? "-- Tetap Sama --" : "-- Keep Same --"}</option>
+                  <option value="none">{language === "id" ? "Tanpa Kategori" : "No Category"}</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2.5 pt-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setOpenBulkEdit(false);
+                  setBulkAccount("");
+                  setBulkCategory("");
+                }}
+                className="text-xs h-9 px-4 rounded-xl"
+              >
+                {t("cancelButton")}
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                disabled={pendingBulkEdit || (!bulkAccount && !bulkCategory)}
+                onClick={handleBulkEdit}
+                className="bg-accent hover:bg-blue-500 text-white text-xs font-semibold h-9 px-4 rounded-xl gap-1.5"
+              >
+                {pendingBulkEdit && <Loader2 className="h-3 w-3 animate-spin" />}
+                {language === "id" ? "Simpan" : "Save"}
               </Button>
             </div>
           </DialogBody>

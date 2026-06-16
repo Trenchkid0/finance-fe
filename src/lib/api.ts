@@ -42,6 +42,18 @@ async function request<T>(
   const response = await fetch(url, options);
 
   if (!response.ok) {
+    // Global 401 interceptor — redirect ke login jika session expired
+    if (response.status === 401) {
+      const isAuthPage = typeof window !== "undefined" &&
+        ["/login", "/register", "/forgot-password", "/reset-password"].some(
+          (p) => window.location.pathname.startsWith(p)
+        );
+      if (!isAuthPage && typeof window !== "undefined") {
+        window.location.href = "/login";
+      }
+      throw new Error("Unauthorized");
+    }
+
     let errorMessage = `HTTP error! status: ${response.status}`;
     try {
       const errJson = await response.json();

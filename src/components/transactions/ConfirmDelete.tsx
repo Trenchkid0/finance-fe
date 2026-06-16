@@ -1,7 +1,7 @@
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
-import { deleteTransaction } from "@/app/actions/transactions";
+import { deleteTransaction, restoreTransaction } from "@/app/actions/transactions";
 import { formatDateShort, formatIDR } from "@/lib/utils/formatters";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -33,7 +33,22 @@ export function ConfirmDelete({
     startTransition(async () => {
       const result = await deleteTransaction(target.id);
       if (result.ok) {
-        toast.success(language === "id" ? "Transaksi berhasil dihapus" : "Transaction deleted successfully");
+        toast.success(
+          language === "id" ? "Transaksi berhasil dihapus" : "Transaction deleted successfully",
+          {
+            action: {
+              label: language === "id" ? "Urungkan" : "Undo",
+              onClick: async () => {
+                const restoreRes = await restoreTransaction(target.id);
+                if (restoreRes.ok) {
+                  toast.success(language === "id" ? "Transaksi dikembalikan" : "Transaction restored");
+                } else {
+                  toast.error(restoreRes.error || (language === "id" ? "Gagal mengembalikan transaksi" : "Failed to restore transaction"));
+                }
+              }
+            }
+          }
+        );
         onClose();
       } else {
         toast.error(result.error ?? (language === "id" ? "Gagal menghapus transaksi" : "Failed to delete transaction"));

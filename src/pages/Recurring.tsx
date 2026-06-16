@@ -75,6 +75,10 @@ export default function Recurring() {
   const [payingBillId, setPayingBillId] = useState<string | null>(null);
   const [justPaidBillIds, setJustPaidBillIds] = useState<string[]>([]);
 
+  // Auto-Pay History State
+  const [autoPayHistory, setAutoPayHistory] = useState<any[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
   // Calendar Date State (default to current date)
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<number | null>(new Date().getDate());
@@ -86,6 +90,18 @@ export default function Recurring() {
   // Delete Confirm State
   const [deletingBill, setDeletingBill] = useState<RecurringBill | null>(null);
   const [testingTelegram, setTestingTelegram] = useState(false);
+
+  const fetchAutoPayHistory = async () => {
+    try {
+      setLoadingHistory(true);
+      const data = await api.get<any[]>("/api/recurring/auto-pay/history");
+      setAutoPayHistory(data || []);
+    } catch (err) {
+      console.error("Failed to fetch auto-pay history:", err);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
 
   const fetchBills = async () => {
     // ✅ PERF: Check cache first
@@ -112,6 +128,7 @@ export default function Recurring() {
 
   useEffect(() => {
     fetchBills();
+    fetchAutoPayHistory();
   }, []);
 
   const openAddModal = (initialDay?: number) => {
@@ -159,6 +176,7 @@ export default function Recurring() {
       setEditingBill(null);
       cache.delete(CacheKeys.recurring());
       fetchBills();
+      fetchAutoPayHistory();
     } catch (err) {
       console.error(err);
       toast.error(language === "id" ? "Gagal menyimpan tagihan" : "Failed to save bill");
@@ -173,6 +191,7 @@ export default function Recurring() {
       setDeletingBill(null);
       cache.delete(CacheKeys.recurring());
       fetchBills();
+      fetchAutoPayHistory();
     } catch (err) {
       console.error(err);
       toast.error(language === "id" ? "Gagal menghapus tagihan" : "Failed to delete bill");
@@ -187,6 +206,7 @@ export default function Recurring() {
       setJustPaidBillIds((prev) => [...prev, billId]);
       cache.delete(CacheKeys.recurring());
       fetchBills();
+      fetchAutoPayHistory();
       window.dispatchEvent(new CustomEvent("refresh-app-data"));
     } catch (err: unknown) {
       console.error(err);
@@ -662,6 +682,64 @@ export default function Recurring() {
           </Card>
         </div>
       </div>
+
+      {/* Auto-Pay History Card */}
+      <Card className="p-5 gap-0">
+        <h3 className="text-sm font-bold uppercase tracking-wider text-text-primary flex items-center gap-1.5 pb-3 border-b border-border mb-4">
+          <Repeat size={14} className="text-income" />
+          {language === "id" ? "Riwayat Pembayaran Auto-Pay" : "Auto-Pay Payment History"}
+        </h3>
+        <p className="text-xs text-text-muted mb-4">
+          {language === "id"
+            ? "Daftar transaksi yang otomatis dibuat dan dibayarkan oleh sistem Racks Finance."
+            : "List of transactions automatically generated and paid by the Racks Finance system."}
+        </p>
+
+        {loadingHistory ? (
+          <div className="py-6 flex justify-center">
+            <Loader2 className="animate-spin text-accent h-6 w-6" />
+          </div>
+        ) : autoPayHistory.length === 0 ? (
+          <div className="py-8 text-center text-xs text-text-muted">
+            {language === "id" ? "Belum ada riwayat pembayaran otomatis." : "No auto-pay transaction history found yet."}
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs text-left border-collapse">
+              <thead>
+                <tr className="border-b border-border bg-[#1C2128]/30 text-text-muted font-bold uppercase tracking-wider text-[10px]">
+                  <th className="py-2.5 px-3">{language === "id" ? "Tanggal" : "Date"}</th>
+                  <th className="py-2.5 px-3">{language === "id" ? "Deskripsi" : "Description"}</th>
+                  <th className="py-2.5 px-3">{language === "id" ? "Akun" : "Account"}</th>
+                  <th className="py-2.5 px-3">{language === "id" ? "Kategori" : "Category"}</th>
+                  <th className="py-2.5 px-3 text-right">{language === "id" ? "Jumlah" : "Amount"}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/50">
+                {autoPayHistory.map((tx) => (
+                  <tr key={tx.id} className="hover:bg-elevated/20 transition-colors">
+                    <td className="py-3 px-3 font-mono text-text-muted">
+                      {formatDateShort(tx.date)}
+                    </td>
+                    <td className="py-3 px-3 font-semibold text-text-primary">
+                      {tx.description}
+                    </td>
+                    <td className="py-3 px-3 text-text-muted">
+                      {tx.account?.name || "-"}
+                    </td>
+                    <td className="py-3 px-3 text-text-muted">
+                      {tx.category?.name || (language === "id" ? "Tanpa Kategori" : "Uncategorized")}
+                    </td>
+                    <td className="py-3 px-3 text-right font-mono tabular-nums text-expense font-semibold">
+                      -{formatIDR(tx.amount)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
 
       {/* Add / Edit Form */}
       {isModalOpen && (

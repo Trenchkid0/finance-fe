@@ -317,13 +317,13 @@ export default function Dashboard() {
               label={isId ? "Pemasukan" : "Income"}
               value={totalInflow}
               tone="income"
-              hint={isId ? "periode ini" : "this period"}
+              hint={isId ? "" : ""}
             />
             <MiniStatWidget
               label={isId ? "Pengeluaran" : "Expenses"}
               value={totalOutflow}
               tone="expense"
-              hint={isId ? "periode ini" : "this period"}
+              hint={isId ? "" : ""}
             />
             <MiniStatWidget
               label={isId ? "Transaksi" : "Transactions"}
@@ -524,11 +524,11 @@ function DotMatrix({
   dotColor: string;
 }) {
   return (
-    <div className="grid grid-cols-4 gap-1 shrink-0" aria-hidden>
+    <div className="grid grid-cols-4 gap-1 shrink-0 place-items-center" aria-hidden>
       {Array.from({ length: total }).map((_, i) => (
         <span
           key={i}
-          className={`size-1.5 rounded-full transition-colors ${i < filled ? dotColor : "bg-border/40"}`}
+          className={`block size-1.5 rounded-full aspect-square shrink-0 transition-colors ${i < filled ? dotColor : "bg-border/40"}`}
         />
       ))}
     </div>

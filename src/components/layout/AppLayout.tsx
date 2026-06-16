@@ -114,9 +114,16 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             }}
           />
           <SidebarInset>
+            {/* Skip-to-content: muncul saat pertama kali Tab ditekan, untuk aksesibilitas keyboard/screen reader */}
+            <a
+              href="#main-content"
+              className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[200] focus:rounded-xl focus:bg-accent focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white focus:shadow-xl focus:outline-none"
+            >
+              {"Skip to main content"}
+            </a>
             <SiteHeader />
             <div className="flex flex-1 flex-col">
-              <div className="flex flex-col gap-4 p-4 md:gap-6 md:p-6 pb-24 md:pb-6">
+              <div id="main-content" className="flex flex-col gap-4 p-4 md:gap-6 md:p-6 pb-24 md:pb-6" tabIndex={-1}>
                 {children}
               </div>
             </div>
