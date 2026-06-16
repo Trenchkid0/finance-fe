@@ -117,7 +117,6 @@ const DELAY_1: CSSProperties = { animationDelay: "60ms" };
 const DELAY_2: CSSProperties = { animationDelay: "120ms" };
 const DELAY_3: CSSProperties = { animationDelay: "180ms" };
 const DELAY_4: CSSProperties = { animationDelay: "240ms" };
-const DELAY_5: CSSProperties = { animationDelay: "300ms" };
 ​
 export default function Dashboard() {
   const { language } = useLanguage();
