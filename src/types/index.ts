@@ -38,6 +38,8 @@ export interface Account {
   balance: number;
   isActive: boolean;
   transactionCount?: number;
+  color?: string;
+  icon?: string;
 }
 
 export interface Category {
@@ -148,6 +150,7 @@ export interface AssetGroupAccount {
   value: number;
   percent: number;
   initial: string;
+  color?: string;
 }
 
 export interface AssetGroup {

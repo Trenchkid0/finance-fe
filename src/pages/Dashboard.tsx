@@ -18,18 +18,18 @@ import type { SummaryApiResponse, AssetGroup, Period } from "@/types";
 import type { CashflowData } from "@/components/charts/CashflowSankey";
 
 const ASSET_GROUP_COLOR: Record<string, string> = {
-  cash: "var(--income)",
-  wallet: "var(--warning)",
-  bank: "var(--accent)",
-  investment: "var(--progress)",
+  cash: "#79B8FF",
+  wallet: "#79B8FF",
+  bank: "#388BFD",
+  investment: "#1F6FEB",
 };
 
 function buildAssetGroups(
-  rows: { id: string; name: string; type: string; balance: number }[],
+  rows: { id: string; name: string; type: string; balance: number; color?: string }[],
   totalNet: number,
   language: string
 ) {
-  const buckets = new Map<string, { id: string; name: string; value: number; percent: number; initial: string }[]>();
+  const buckets = new Map<string, { id: string; name: string; value: number; percent: number; initial: string; color?: string }[]>();
   const totals = new Map<string, number>();
 
   const assetGroupLabels: Record<string, string> = {
@@ -41,14 +41,14 @@ function buildAssetGroups(
 
   for (const r of rows) {
     if (r.balance === 0) continue;
-    const groupKey =
-      r.type === "investment" ? "investment" : r.type === "bank" ? "bank" : "cash";
+    const groupKey = r.type;
     const acc = {
       id: r.id,
       name: r.name,
       value: r.balance,
       percent: totalNet > 0 ? (r.balance / totalNet) * 100 : 0,
       initial: r.name.charAt(0).toUpperCase() || "?",
+      color: r.color || undefined,
     };
     const list = buckets.get(groupKey) ?? [];
     list.push(acc);
@@ -153,6 +153,7 @@ export default function Dashboard() {
       name: a.name,
       type: a.type,
       balance: Number(a.balance),
+      color: a.color || undefined,
     })),
     netWorthCurrent,
     language

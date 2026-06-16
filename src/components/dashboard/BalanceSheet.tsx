@@ -34,6 +34,7 @@ export interface BalanceAccount {
   percent: number;
   /** Inisial untuk avatar bulat (mis. "B" dari "BNI"). */
   initial: string;
+  color?: string;
 }
 
 export interface BalanceGroup {
@@ -90,11 +91,11 @@ function BalanceSide({ title, total, groups }: SideProps) {
         <>
           {/* Stacked bar */}
           <div className="space-y-3">
-            <div className="h-1.5 w-full bg-border/30 rounded-full overflow-hidden flex">
+            <div className="flex gap-1 w-full">
               {groups.map((g) => (
                 <div
                   key={g.name}
-                  className="h-full transition-all"
+                  className="h-1.5 rounded-sm transition-all"
                   style={{
                     width: `${g.percent}%`,
                     backgroundColor: g.color,
@@ -204,7 +205,7 @@ function GroupRow({ group, isLast }: { group: BalanceGroup; isLast: boolean }) {
         </span>
         <span className="ml-auto flex items-center gap-4 sm:gap-6 text-sm shrink-0">
           <span className="hidden sm:flex w-36 justify-end">
-            <DotWeight percent={group.percent} color={group.color} />
+            <AccountProgressBar percent={group.percent} color={group.color} />
           </span>
           <span className="w-24 sm:w-32 text-right font-mono tabular-nums text-foreground transition-all duration-200 group-hover:scale-105 group-hover:font-bold">
             {formatIDR(group.total)}
@@ -227,9 +228,9 @@ function GroupRow({ group, isLast }: { group: BalanceGroup; isLast: boolean }) {
                 <span
                   className="size-6 rounded-full border flex items-center justify-center text-[10px] font-medium uppercase shrink-0 transition-all duration-200 group-hover/account:scale-110 group-hover/account:shadow-lg"
                   style={{
-                    backgroundColor: `color-mix(in oklab, ${group.color} 12%, transparent)`,
-                    borderColor: `color-mix(in oklab, ${group.color} 30%, transparent)`,
-                    color: group.color,
+                    backgroundColor: `color-mix(in oklab, ${acc.color || group.color} 12%, transparent)`,
+                    borderColor: `color-mix(in oklab, ${acc.color || group.color} 30%, transparent)`,
+                    color: acc.color || group.color,
                   }}
                 >
                   {acc.initial}
@@ -238,7 +239,7 @@ function GroupRow({ group, isLast }: { group: BalanceGroup; isLast: boolean }) {
               </span>
               <span className="ml-auto flex items-center gap-4 sm:gap-6 shrink-0">
                 <span className="hidden sm:flex w-36 justify-end">
-                  <DotWeight percent={acc.percent} color={group.color} />
+                  <AccountProgressBar percent={acc.percent} color={acc.color || group.color} />
                 </span>
                 <span className="w-24 sm:w-32 text-right font-mono tabular-nums text-foreground transition-all duration-200 group-hover/account:scale-105 group-hover/account:font-bold group-hover/account:text-accent">
                   {formatIDR(acc.value)}
@@ -252,31 +253,19 @@ function GroupRow({ group, isLast }: { group: BalanceGroup; isLast: boolean }) {
   );
 }
 
-/**
- * 10-dot weight indicator (Maybe Finance style).
- *
- *   ▮▮▮▮░░░░░░ 42%
- *
- * Dot count = ceil(percent / 10), max 10. Dot inactive di-render dengan
- * opacity 20% dari color yang sama supaya konsisten dengan group.
- */
-function DotWeight({ percent, color }: { percent: number; color: string }) {
-  const filled = Math.min(10, Math.max(0, Math.ceil(percent / 10)));
+function AccountProgressBar({ percent, color }: { percent: number; color: string }) {
   return (
     <span className="flex items-center gap-2">
-      <span className="flex gap-[3px]">
-        {Array.from({ length: 10 }, (_, i) => (
-          <span
-            key={i}
-            className={cn(
-              "w-0.5 h-2.5 rounded-full",
-              i >= filled && "opacity-20",
-            )}
-            style={{ backgroundColor: color }}
-          />
-        ))}
-      </span>
-      <span className="font-mono tabular-nums text-xs text-foreground min-w-[40px] text-right">
+      <div className="h-1.5 w-16 bg-border/30 rounded-full overflow-hidden shrink-0">
+        <div
+          className="h-full rounded-full transition-all duration-500 ease-out"
+          style={{
+            width: `${percent}%`,
+            backgroundColor: color,
+          }}
+        />
+      </div>
+      <span className="font-mono tabular-nums text-xs text-foreground min-w-[40px] text-right shrink-0">
         {percent.toFixed(percent < 10 ? 2 : 1)}%
       </span>
     </span>
