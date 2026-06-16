@@ -123,7 +123,7 @@ export function SiteHeader() {
           </Button>
 
           {/* Dynamic Notifications Bell */}
-          <DropdownMenu>
+          <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
