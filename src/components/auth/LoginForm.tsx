@@ -61,10 +61,8 @@ export function LoginForm() {
           <div className="flex items-center justify-between">
             <Label htmlFor="password">{t("passwordLabel")}</Label>
             <Link
-              to="#"
-              tabIndex={-1}
-              className="text-[11px] text-accent/60 hover:text-accent transition-colors pointer-events-none"
-              aria-disabled
+              to="/forgot-password"
+              className="text-[11px] text-accent/75 hover:text-accent font-medium transition-colors"
             >
               {t("forgotPassword")}
             </Link>
@@ -102,6 +100,19 @@ export function LoginForm() {
           ) : null}
         </div>
 
+        {/* Remember Me */}
+        <div className="flex items-center gap-2.5 py-0.5">
+          <input
+            type="checkbox"
+            id="remember"
+            name="remember"
+            className="size-4 rounded border-border bg-elevated text-accent focus:ring-2 focus:ring-accent/50 focus:ring-offset-0 focus:outline-none transition-all duration-200 accent-accent cursor-pointer"
+          />
+          <Label htmlFor="remember" className="text-xs text-muted-foreground select-none cursor-pointer font-medium hover:text-text-primary transition-colors">
+            {t("rememberMe")}
+          </Label>
+        </div>
+
         {/* Global error */}
         {state?.error && !state.fieldErrors ? (
           <div className="rounded-xl border border-destructive/25 bg-destructive/[0.04] px-4 py-3 flex items-start gap-2.5">
@@ -111,7 +122,7 @@ export function LoginForm() {
         ) : null}
 
         {/* Submit */}
-        <div className="pt-5">
+        {/* <div className="pt-5"> */}
           <Button type="submit" className="w-full h-12 text-[15px] group" disabled={pending}>
             {pending ? (
               <Loader2 size={18} className="animate-spin" />
@@ -122,7 +133,7 @@ export function LoginForm() {
               </>
             )}
           </Button>
-        </div>
+        {/* </div> */}
       </form>
 
 

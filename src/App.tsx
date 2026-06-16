@@ -7,6 +7,8 @@ import { lazy, Suspense, useEffect, useState } from "react";
 // Auth pages — loaded eagerly (entry point)
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
+import ForgotPassword from "@/pages/ForgotPassword";
+import ResetPassword from "@/pages/ResetPassword";
 
 // Dashboard pages — code-split with React.lazy
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
@@ -109,6 +111,8 @@ export default function App() {
           {/* Auth routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
           {/* Protected dashboard routes — shared layout */}
           <Route element={<DashboardLayout />}>

@@ -10,6 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useLanguage } from "@/lib/contexts/LanguageContext";
 
 export interface NetWorthPoint { date: string; value: number; }
 export type NetWorthPeriod = "1d" | "7d" | "30d" | "90d" | "ytd" | "365d" | "5y";
@@ -21,15 +22,14 @@ interface Props {
   series: NetWorthPoint[];
 }
 
-// PERUBAHAN: label yang JELAS untuk pengguna awam (dulu "30H" / "365H" / "5T")
-const PERIOD_OPTIONS: { value: NetWorthPeriod; label: string }[] = [
-  { value: "1d", label: "1 Hari" },
-  { value: "7d", label: "7 Hari" },
-  { value: "30d", label: "30 Hari" },
-  { value: "90d", label: "3 Bulan" },
-  { value: "ytd", label: "Tahun Ini" },
-  { value: "365d", label: "1 Tahun" },
-  { value: "5y", label: "5 Tahun" },
+const getPeriodOptions = (isId: boolean): { value: NetWorthPeriod; label: string }[] => [
+  { value: "1d", label: isId ? "1 Hari" : "1 Day" },
+  { value: "7d", label: isId ? "7 Hari" : "7 Days" },
+  { value: "30d", label: isId ? "30 Hari" : "30 Days" },
+  { value: "90d", label: isId ? "3 Bulan" : "3 Months" },
+  { value: "ytd", label: isId ? "Tahun Ini" : "YTD" },
+  { value: "365d", label: isId ? "1 Tahun" : "1 Year" },
+  { value: "5y", label: isId ? "5 Tahun" : "5 Years" },
 ];
 
 export function NetWorthHero({ current, previous, period, series }: Props) {
@@ -38,6 +38,10 @@ export function NetWorthHero({ current, previous, period, series }: Props) {
   const [searchParams] = useSearchParams();
   const [pending, startTransition] = useTransition();
   const [hoverPoint, setHoverPoint] = useState<NetWorthPoint | null>(null);
+  const { language } = useLanguage();
+  const isId = language === "id";
+
+  const periodOptions = getPeriodOptions(isId);
 
   function setPeriod(next: NetWorthPeriod) {
     const params = new URLSearchParams(searchParams);
@@ -64,33 +68,35 @@ export function NetWorthHero({ current, previous, period, series }: Props) {
   }, [series]);
 
   const lineColor = "var(--accent)";
-  const periodLabel = PERIOD_OPTIONS.find((o) => o.value === period)?.label ?? "";
+  const periodLabel = periodOptions.find((o) => o.value === period)?.label ?? "";
 
   return (
-    <Card className="group overflow-hidden p-0 gap-0" aria-label="Grafik Total Kekayaan" role="region">
+    <Card className="group overflow-hidden p-0 gap-0" aria-label={isId ? "Grafik Total Kekayaan" : "Net Worth Chart"} role="region">
       <div className="flex items-start justify-between gap-4 p-6 pb-1">
         <div className="space-y-2">
-          {/* PERUBAHAN: "Net Worth" -> "Total Kekayaan" */}
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60 transition-colors duration-300 group-hover:text-muted-foreground/80">Total Kekayaan</p>
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60 transition-colors duration-300 group-hover:text-muted-foreground/80">
+            {isId ? "Total Kekayaan" : "Net Worth"}
+          </p>
           <p className="text-3xl font-black font-mono tabular-nums text-foreground transition-all duration-300 group-hover:scale-105 group-hover:text-accent">
             {formatIDR(display.value)}
           </p>
-          <DeltaLine dir={dir} delta={delta} ratio={ratio} hoveredLabel={display.label} periodLabel={periodLabel} />
+          <DeltaLine dir={dir} delta={delta} ratio={ratio} hoveredLabel={display.label} periodLabel={periodLabel} isId={isId} />
         </div>
         <div className="shrink-0">
-          <PeriodSelect value={period} onChange={setPeriod} disabled={pending} />
+          <PeriodSelect value={period} onChange={setPeriod} disabled={pending} isId={isId} />
         </div>
       </div>
 
-      {/* PERUBAHAN: 1 kalimat penjelas grafik */}
       <p className="px-6 pb-2 text-[11px] text-muted-foreground/50 transition-colors duration-300 group-hover:text-muted-foreground/70">
-        Perubahan total kekayaan Anda selama {periodLabel.toLowerCase()} terakhir.
+        {isId 
+          ? `Perubahan total kekayaan Anda selama ${periodLabel.toLowerCase()} terakhir.`
+          : `Your net worth change over the last ${periodLabel.toLowerCase()}.`}
       </p>
 
-      <div className="h-52 px-1 pt-1 pb-3" role="img" aria-label={`Tren total kekayaan selama ${periodLabel}`}>
+      <div className="h-52 px-1 pt-1 pb-3" role="img" aria-label={isId ? `Tren total kekayaan selama ${periodLabel}` : `Net worth trend for ${periodLabel}`}>
         {series.length < 2 ? (
           <div className="h-full flex items-center justify-center text-xs text-muted-foreground">
-            Belum cukup data untuk periode ini.
+            {isId ? "Belum cukup data untuk periode ini." : "Not enough data for this period."}
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
@@ -107,7 +113,6 @@ export function NetWorthHero({ current, previous, period, series }: Props) {
               <XAxis dataKey="date" tickLine={false} axisLine={false}
                 tickFormatter={(d) => formatDateShort(d as string)}
                 fontSize={10} stroke="var(--foreground)" opacity={0.5} interval="preserveStartEnd" />
-              {/* PERUBAHAN: tooltip kini TERLIHAT — tanggal + rupiah penuh */}
               <Tooltip
                 cursor={ { stroke: "var(--accent)", strokeWidth: 1.5, strokeDasharray: "4 4", opacity: 0.3 } }
                 content={({ active, payload }) => {
@@ -131,9 +136,9 @@ export function NetWorthHero({ current, previous, period, series }: Props) {
   );
 }
 
-function DeltaLine({ dir, delta, ratio, hoveredLabel, periodLabel }: {
+function DeltaLine({ dir, delta, ratio, hoveredLabel, periodLabel, isId }: {
   dir: "up" | "down" | "flat"; delta: number; ratio: number;
-  hoveredLabel: string | null; periodLabel: string;
+  hoveredLabel: string | null; periodLabel: string; isId: boolean;
 }) {
   const colorClass = dir === "up" ? "text-income" : dir === "down" ? "text-expense" : "text-muted-foreground";
   const Icon = dir === "up" ? ArrowUp : dir === "down" ? ArrowDown : Minus;
@@ -143,18 +148,20 @@ function DeltaLine({ dir, delta, ratio, hoveredLabel, periodLabel }: {
       <span className="ml-2 inline-flex items-center gap-0.5">
         <Icon size={12} /> {Math.abs(ratio).toFixed(1)}%
       </span>
-      {/* PERUBAHAN: konteks lebih jelas */}
       <span className="ml-2 text-muted-foreground font-sans">
-        {hoveredLabel ? `pada ${hoveredLabel}` : `dibanding ${periodLabel.toLowerCase()} lalu`}
+        {hoveredLabel 
+          ? (isId ? `pada ${hoveredLabel}` : `on ${hoveredLabel}`) 
+          : (isId ? `dibanding ${periodLabel.toLowerCase()} lalu` : `vs last ${periodLabel.toLowerCase()}`)}
       </span>
     </p>
   );
 }
 
-function PeriodSelect({ value, onChange, disabled }: {
-  value: NetWorthPeriod; onChange: (v: NetWorthPeriod) => void; disabled?: boolean;
+function PeriodSelect({ value, onChange, disabled, isId }: {
+  value: NetWorthPeriod; onChange: (v: NetWorthPeriod) => void; disabled?: boolean; isId: boolean;
 }) {
-  const selectedLabel = PERIOD_OPTIONS.find((o) => o.value === value)?.label ?? value;
+  const periodOptions = getPeriodOptions(isId);
+  const selectedLabel = periodOptions.find((o) => o.value === value)?.label ?? value;
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -169,7 +176,7 @@ function PeriodSelect({ value, onChange, disabled }: {
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-[120px] rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl">
-        {PERIOD_OPTIONS.map((o) => (
+        {periodOptions.map((o) => (
           <DropdownMenuItem
             key={o.value}
             className="text-xs font-semibold cursor-pointer"
