@@ -2,12 +2,13 @@ import { Link } from "react-router-dom";
 import { ArrowRight, FolderTree, Plus, Sparkles, Wallet } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/lib/contexts/LanguageContext";
 
 /**
- * First-time onboarding — ditampilkan saat user belum punya akun.
+ * First-time onboarding — shown when user has no accounts yet.
  *
- * Dashboard kosong total (semua chart empty, semua angka 0) bingungin
- * user baru. Tiga step jelas + CTA langsung ke aksi yang dibutuhkan.
+ * An empty dashboard (all charts empty, all numbers 0) confuses new users.
+ * Three clear steps + direct CTA links to required actions.
  */
 
 interface Props {
@@ -15,14 +16,19 @@ interface Props {
 }
 
 export function OnboardingHero({ userName }: Props) {
+  const { language } = useLanguage();
+  const id = language === "id";
+
   return (
     <div className="space-y-8 animate-fade-in-up">
       <header className="space-y-2">
         <h1 className="text-2xl lg:text-[1.75rem] font-extrabold tracking-tight text-foreground">
-          Halo, {userName}
+          {id ? `Halo, ${userName}` : `Hello, ${userName}`}
         </h1>
         <p className="text-sm text-muted-foreground/80">
-          Ayo siapkan akun keuangan Anda — cuma butuh tiga langkah cepat.
+          {id
+            ? "Ayo siapkan akun keuangan Anda — cuma butuh tiga langkah cepat."
+            : "Set up your financial accounts — it only takes three quick steps."}
         </p>
       </header>
 
@@ -33,11 +39,12 @@ export function OnboardingHero({ userName }: Props) {
           </span>
           <div>
             <h2 className="text-base font-medium text-foreground">
-              Mulai pakai Racks Finance
+              {id ? "Mulai pakai Racks Finance" : "Get started with Racks Finance"}
             </h2>
             <p className="text-sm text-muted-foreground mt-0.5">
-              Setelah satu transaksi pertama, dashboard akan langsung
-              menampilkan ringkasan, chart arus kas, dan distribusi aset.
+              {id
+                ? "Setelah satu transaksi pertama, dashboard akan langsung menampilkan ringkasan, chart arus kas, dan distribusi aset."
+                : "After your first transaction, the dashboard will instantly show a summary, cash flow chart, and asset distribution."}
             </p>
           </div>
         </div>
@@ -46,26 +53,38 @@ export function OnboardingHero({ userName }: Props) {
           <Step
             number={1}
             icon={<Wallet size={16} />}
-            title="Tambah akun keuangan"
-            description="Bank, e-wallet, atau dompet tunai. Saldo awal jadi titik mulai net worth Anda."
+            title={id ? "Tambah akun keuangan" : "Add a financial account"}
+            description={
+              id
+                ? "Bank, e-wallet, atau dompet tunai. Saldo awal jadi titik mulai net worth Anda."
+                : "Bank, e-wallet, or cash wallet. Your opening balance becomes the starting point of your net worth."
+            }
             href="/accounts"
-            cta="Tambah akun pertama"
+            cta={id ? "Tambah akun pertama" : "Add your first account"}
           />
           <Step
             number={2}
             icon={<Plus size={16} />}
-            title="Catat transaksi pertama"
-            description="Tekan tombol Tambah di header (atau pintasan N). Bisa scan struk pakai AI."
+            title={id ? "Catat transaksi pertama" : "Record your first transaction"}
+            description={
+              id
+                ? "Tekan tombol Tambah di header (atau pintasan N). Bisa scan struk pakai AI."
+                : "Press the Add button in the header (or shortcut N). You can even scan a receipt with AI."
+            }
             href="/transactions"
-            cta="Buka halaman transaksi"
+            cta={id ? "Buka halaman transaksi" : "Go to transactions"}
           />
           <Step
             number={3}
             icon={<FolderTree size={16} />}
-            title="Atur kategori (opsional)"
-            description="Sudah ada 12 kategori bawaan. Tambah custom Anda di pengaturan."
+            title={id ? "Atur kategori (opsional)" : "Set up categories (optional)"}
+            description={
+              id
+                ? "Sudah ada 12 kategori bawaan. Tambah custom Anda di pengaturan."
+                : "12 default categories are already included. Add your own custom ones in settings."
+            }
             href="/settings"
-            cta="Buka pengaturan"
+            cta={id ? "Buka pengaturan" : "Open settings"}
             secondary
           />
         </ol>

@@ -27,6 +27,7 @@ import {
   SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { NavUser } from "./NavUser";
 import { cn } from "@/lib/utils/cn";
@@ -56,6 +57,12 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 export function AppSidebar({ user, counts, ...props }: AppSidebarProps) {
   const { pathname } = useLocation();
   const { t, language } = useLanguage();
+  const { setOpenMobile, isMobile } = useSidebar();
+
+  // Auto-close sidebar on mobile when route changes
+  React.useEffect(() => {
+    if (isMobile) setOpenMobile(false);
+  }, [pathname, isMobile, setOpenMobile]);
 
   const navMain: NavItem[] = [
     { href: "/", label: t("dashboard"), icon: LayoutDashboard },
@@ -127,12 +134,7 @@ export function AppSidebar({ user, counts, ...props }: AppSidebarProps) {
             <span className="text-sm font-bold tracking-tight text-text-primary leading-tight flex items-center gap-1.5 group-hover/brand:text-accent transition-colors duration-200">
               Racks Finance
             </span>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              {/* Live indicator dot */}
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-              </span>
+            <div className="flex items-center mt-0.5">
               <span className="text-[10px] text-text-muted font-medium tracking-wide">
                 Personal Dashboard
               </span>

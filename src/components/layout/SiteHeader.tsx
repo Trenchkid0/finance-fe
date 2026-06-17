@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Plus, Search, Bell, CheckCheck, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -29,6 +29,35 @@ export function SiteHeader() {
   const { language, setLanguage } = useLanguage();
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [scrolled, setScrolled] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
+
+  // Find nearest scrollable ancestor and listen to its scroll event.
+  // SidebarInset from shadcn uses overflow-y-auto internally, so
+  // window.scrollY is always 0 — we must attach to the right container.
+  const getScrollParent = useCallback((el: HTMLElement | null): HTMLElement | Window => {
+    if (!el) return window;
+    let parent = el.parentElement;
+    while (parent) {
+      const { overflow, overflowY } = window.getComputedStyle(parent);
+      if (/auto|scroll/.test(overflow + overflowY)) return parent;
+      parent = parent.parentElement;
+    }
+    return window;
+  }, []);
+
+  useEffect(() => {
+    const header = headerRef.current;
+    if (!header) return;
+    const container = getScrollParent(header);
+    const onScroll = () => {
+      const scrollTop =
+        container instanceof Window ? window.scrollY : container.scrollTop;
+      setScrolled(scrollTop > 4);
+    };
+    container.addEventListener("scroll", onScroll, { passive: true });
+    return () => container.removeEventListener("scroll", onScroll);
+  }, [getScrollParent]);
 
   const fetchNotifications = async () => {
     try {
@@ -86,7 +115,14 @@ export function SiteHeader() {
   };
 
   return (
-    <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border/30 bg-canvas/80 backdrop-blur-xl sticky top-0 z-30">
+    <header
+      ref={headerRef}
+      className={`flex h-14 shrink-0 items-center gap-2 border-b sticky top-0 z-30 transition-[border-color,background-color,box-shadow] duration-200 backdrop-blur-sm ${
+        scrolled
+          ? "border-border/60 bg-canvas/95 shadow-[0_1px_12px_rgba(0,0,0,0.35)]"
+          : "border-border/30 bg-canvas/80"
+      }`}
+    >
       <div className="flex w-full items-center gap-3 px-4 lg:px-6">
         {/* Sidebar trigger */}
         <SidebarTrigger className="-ml-1 text-muted-foreground/50 hover:text-foreground hover:bg-white/[0.04] transition-all duration-200 rounded-lg" />
@@ -278,5 +314,6 @@ export function SiteHeader() {
         </div>
       </div>
     </header>
+
   );
 }

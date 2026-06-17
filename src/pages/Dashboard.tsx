@@ -17,17 +17,17 @@ import { useCachedApi } from "@/hooks/use-cached-api";
 import { CacheKeys, CacheTTL } from "@/lib/cache";
 import { api } from "@/lib/api";
 import { formatIDR } from "@/lib/utils/formatters";
-​
+
 import type { SummaryApiResponse, AssetGroup, Period } from "@/types";
 import type { CashflowData } from "@/components/charts/CashflowSankey";
-​
+
 const ASSET_GROUP_COLOR: Record<string, string> = {
   cash: "var(--progress)",
   wallet: "color-mix(in srgb, var(--accent) 60%, var(--foreground))",
   bank: "var(--accent)",
   investment: "color-mix(in srgb, var(--accent) 75%, #000000)",
 };
-​
+
 function buildAssetGroups(
   rows: {
     id: string;
@@ -51,14 +51,14 @@ function buildAssetGroups(
     }[]
   >();
   const totals = new Map<string, number>();
-​
+
   const assetGroupLabels: Record<string, string> = {
     cash: language === "id" ? "Tunai" : "Cash",
     wallet: language === "id" ? "E-wallet" : "E-wallet",
     bank: language === "id" ? "Bank" : "Bank",
     investment: language === "id" ? "Investasi" : "Investments",
   };
-​
+
   for (const r of rows) {
     if (r.balance === 0) continue;
     const groupKey = r.type;
@@ -75,7 +75,7 @@ function buildAssetGroups(
     buckets.set(groupKey, list);
     totals.set(groupKey, (totals.get(groupKey) ?? 0) + r.balance);
   }
-​
+
   const groups: AssetGroup[] = [];
   for (const [key, accounts] of buckets) {
     const total = totals.get(key) ?? 0;
@@ -88,16 +88,16 @@ function buildAssetGroups(
       accounts,
     });
   }
-​
+
   groups.sort((a, b) => b.total - a.total);
   return groups;
 }
-​
+
 function capitalize(s: string): string {
   if (!s) return "";
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
-​
+
 function getGreeting(language: string): string {
   const h = new Date().getHours();
   if (language === "en") {
@@ -111,21 +111,21 @@ function getGreeting(language: string): string {
   if (h < 20) return "Selamat sore";
   return "Selamat malam";
 }
-​
+
 // Stagger delays (kept as named consts so no inline double-brace objects).
 const DELAY_1: CSSProperties = { animationDelay: "60ms" };
 const DELAY_2: CSSProperties = { animationDelay: "120ms" };
 const DELAY_3: CSSProperties = { animationDelay: "180ms" };
 const DELAY_4: CSSProperties = { animationDelay: "240ms" };
-​
+
 export default function Dashboard() {
   const { language } = useLanguage();
   const { user, accounts, refresh, loading: appLoading } = useApp();
   const [searchParams] = useSearchParams();
-​
+
   const period = searchParams.get("period") || "30d";
   const cashflowPeriod = searchParams.get("cashflow_period") || "30d";
-​
+
   // CACHED API CALL - Dashboard Summary
   const {
     data: summaryData,
@@ -140,7 +140,7 @@ export default function Dashboard() {
       ),
     ttl: CacheTTL.SHORT, // 2 minutes for financial data
   });
-​
+
   // Listen to refresh events
   useEffect(() => {
     const handleRefresh = () => {
@@ -152,31 +152,31 @@ export default function Dashboard() {
       window.removeEventListener("refresh-app-data", handleRefresh);
     };
   }, [refetch, refresh]);
-​
+
   // Debug cache status in development
   useEffect(() => {
     if (import.meta.env.DEV && isCached) {
       console.log("Dashboard: Cache HIT - instant load!");
     }
   }, [isCached]);
-​
+
   if ((loading || appLoading) && !summaryData) {
     return <SkeletonDashboard />;
   }
-​
+
   const activeAccounts = accounts.filter((a) => a.isActive);
-​
+
   if (activeAccounts.length === 0) {
     const name =
       user?.name?.trim().split(" ")[0] || user?.email?.split("@")[0] || "kamu";
     return <OnboardingHero userName={capitalize(name)} />;
   }
-​
+
   const netWorthCurrent = activeAccounts.reduce(
     (sum, a) => sum + Number(a.balance),
     0,
   );
-​
+
   const assetGroups = buildAssetGroups(
     activeAccounts.map((a) => ({
       id: a.id,
@@ -188,7 +188,7 @@ export default function Dashboard() {
     netWorthCurrent,
     language,
   );
-​
+
   const mappedRecent = (summaryData?.recent || []).map((tx) => ({
     id: String(tx.id),
     description:
@@ -205,17 +205,17 @@ export default function Dashboard() {
     adminFee: Number(tx.adminFee || 0),
     type: tx.type as "income" | "expense" | "transfer",
   }));
-​
+
   const name =
     user?.name?.trim().split(" ")[0] || user?.email?.split("@")[0] || "kamu";
-​
+
   // Net worth delta
   const delta =
     (summaryData?.netWorthCurrent || 0) - (summaryData?.netWorthPrevious || 0);
   const deltaRatio = summaryData?.netWorthPrevious
     ? (delta / summaryData.netWorthPrevious) * 100
     : 0;
-​
+
   // Cashflow-derived stats for the zentra-style widget row
   const cf = summaryData?.cashflow || {
     inflow: [],
@@ -235,8 +235,9 @@ export default function Dashboard() {
     typeof cf.surplus === "number" ? cf.surplus : totalInflow - totalOutflow;
   const savingsRate = totalInflow > 0 ? (surplus / totalInflow) * 100 : 0;
   const txCount = mappedRecent.length;
+  const counts = summaryData?.counts || { income: 0, expense: 0, transfer: 0, total: 0 };
   const isId = language === "id";
-​
+
   // BalanceSheet side props (named consts -> single-brace usage in JSX)
   const assetsSide = {
     title: "Assets" as const,
@@ -248,7 +249,7 @@ export default function Dashboard() {
     total: 0,
     groups: [] as AssetGroup[],
   };
-​
+
   // Cashflow data for the existing Sankey chart
   const cashflowData: CashflowData = {
     total: cf.total,
@@ -266,7 +267,7 @@ export default function Dashboard() {
       color: item.color || "#F85149",
     })),
   };
-​
+
   return (
     <div className="space-y-4 pb-8">
       {/* HEADER - greeting + net worth delta badge */}
@@ -280,7 +281,7 @@ export default function Dashboard() {
           {capitalize(name)}
         </h1>
       </section>
-​
+
       {summaryData && (
         <>
           {/* ROW 1 - Net Worth hero (2/3) + Gross-Volume-style summary (1/3) */}
@@ -307,8 +308,8 @@ export default function Dashboard() {
               />
             </div>
           </section>
-​
-          {/* ROW 2 - Small stat widgets (zentra Transactions/Customers/Insights) */}
+
+          {/* ROW 2 - Small stat widgets */}
           <section
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in-up"
             style={DELAY_2}
@@ -318,12 +319,14 @@ export default function Dashboard() {
               value={totalInflow}
               tone="income"
               hint={isId ? "" : ""}
+              count={counts.income}
             />
             <MiniStatWidget
               label={isId ? "Pengeluaran" : "Expenses"}
               value={totalOutflow}
               tone="expense"
               hint={isId ? "" : ""}
+              count={counts.expense}
             />
             <MiniStatWidget
               label={isId ? "Transaksi" : "Transactions"}
@@ -331,6 +334,7 @@ export default function Dashboard() {
               tone="neutral"
               isCurrency={false}
               hint={isId ? "terbaru" : "recent"}
+              count={counts.total}
             />
             <InsightWidget ratio={savingsRate} surplus={surplus} isId={isId} />
           </section>
@@ -386,9 +390,9 @@ export default function Dashboard() {
     </div>
   );
 }
-​
-/* ZENTRA-STYLE WIDGETS (dark theme, existing color tokens) */
-​
+
+/* ─── WIDGETS ─────────────────────────────────────────────────────────────── */
+
 function AssetSummaryWidget({
   total,
   deltaRatio,
@@ -425,7 +429,7 @@ function AssetSummaryWidget({
           {formatIDR(total)}
         </p>
       </div>
-​
+
       <div className="flex flex-col gap-3.5 mt-auto">
         {groups.length === 0 ? (
           <p className="text-xs text-muted-foreground/60">
@@ -463,19 +467,21 @@ function AssetSummaryWidget({
     </Card>
   );
 }
-​
+
 function MiniStatWidget({
   label,
   value,
   tone,
   hint,
   isCurrency = true,
+  count = 0,
 }: {
   label: string;
   value: number;
   tone: "income" | "expense" | "neutral";
   hint: string;
   isCurrency?: boolean;
+  count?: number;
 }) {
   const valueColor =
     tone === "income"
@@ -489,11 +495,7 @@ function MiniStatWidget({
       : tone === "expense"
         ? "bg-expense"
         : "bg-accent";
-  const filled = Math.min(
-    28,
-    Math.max(6, Math.round(((value % 100) / 100) * 28) + 8),
-  );
-​
+
   return (
     <Card className="p-5 flex flex-col gap-3">
       <div className="flex items-start justify-between gap-3">
@@ -508,33 +510,50 @@ function MiniStatWidget({
           </p>
           <p className="text-[11px] text-muted-foreground/50">{hint}</p>
         </div>
-        <DotMatrix filled={filled} total={28} dotColor={dotColor} />
+        <DotMatrix count={count} value={value} dotColor={dotColor} />
       </div>
     </Card>
   );
 }
-​
+
+const DOT_TOTAL = 28;
+
 function DotMatrix({
-  filled,
-  total,
+  count,
+  value,
   dotColor,
 }: {
-  filled: number;
-  total: number;
+  count: number;
+  value: number;
   dotColor: string;
 }) {
+  // No data at all — hide entirely
+  if (count <= 0 && value <= 0) return null;
+
+  const filled = count > 0 ? Math.min(count, DOT_TOTAL) : DOT_TOTAL;
+  const overflow = count > DOT_TOTAL ? count - DOT_TOTAL : 0;
+
   return (
-    <div className="grid grid-cols-4 gap-1 shrink-0 place-items-center" aria-hidden>
-      {Array.from({ length: total }).map((_, i) => (
-        <span
-          key={i}
-          className={`block size-1.5 rounded-full aspect-square shrink-0 transition-colors ${i < filled ? dotColor : "bg-border/40"}`}
-        />
-      ))}
+    <div className="shrink-0 space-y-1" aria-label={`${count} transactions`}>
+      <div className="grid grid-cols-4 gap-1 place-items-center">
+        {Array.from({ length: DOT_TOTAL }).map((_, i) => (
+          <span
+            key={i}
+            className={`block size-1.5 rounded-full aspect-square shrink-0 ${
+              i < filled ? dotColor : "bg-border/30"
+            }`}
+          />
+        ))}
+      </div>
+      {overflow > 0 && (
+        <p className="text-[8px] text-muted-foreground/60 font-medium tabular-nums leading-none text-center">
+          +{overflow}
+        </p>
+      )}
     </div>
   );
 }
-​
+
 function InsightWidget({
   ratio,
   surplus,
@@ -579,4 +598,3 @@ function InsightWidget({
     </Card>
   );
 }
-​

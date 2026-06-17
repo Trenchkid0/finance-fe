@@ -108,6 +108,12 @@ export interface SummaryApiResponse {
     total: number;
     surplus: number;
   };
+  counts: {
+    income: number;
+    expense: number;
+    transfer: number;
+    total: number;
+  };
   recent: TransactionApiItem[];
 }
 

@@ -150,21 +150,23 @@ export function TransactionForm({
 
   // Handle success callback
   useEffect(() => {
-    if (!state?.ok) return;
+    if (state?.ok) {
+      invalidateCache.afterTransactionChange();
 
-    invalidateCache.afterTransactionChange();
-
-    toast.success(
-      mode === "create"
-        ? isId
-          ? "Transaksi ditambahkan"
-          : "Transaction added"
-        : isId
-          ? "Transaksi diperbarui"
-          : "Transaction updated"
-    );
-    onSuccess?.();
-    onClose();
+      toast.success(
+        mode === "create"
+          ? isId
+            ? "Transaksi ditambahkan"
+            : "Transaction added"
+          : isId
+            ? "Transaksi diperbarui"
+            : "Transaction updated"
+      );
+      onSuccess?.();
+      onClose();
+    } else if (state && !state.ok && state.error) {
+      toast.error(state.error);
+    }
   }, [state, mode, isId, onSuccess, onClose]);
 
   // Esc + lock scroll

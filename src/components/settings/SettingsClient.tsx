@@ -175,23 +175,25 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
 
       {/* Tab navigation */}
       <div>
-        <div className="flex gap-1 border-b border-border mb-6">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors duration-150",
-                activeTab === tab.id
-                  ? "border-accent text-accent"
-                  : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
-              )}
-            >
-              {tab.icon}
-              {tab.label}
-            </button>
-          ))}
+        <div className="overflow-x-auto -mx-1 px-1 scrollbar-none">
+          <div className="flex gap-1 border-b border-border mb-6 min-w-max">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors duration-150 shrink-0 whitespace-nowrap",
+                  activeTab === tab.id
+                    ? "border-accent text-accent"
+                    : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
+                )}
+              >
+                {tab.icon}
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Tab Content */}
