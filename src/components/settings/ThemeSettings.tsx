@@ -17,6 +17,7 @@ import {
 } from "@/lib/utils/theme";
 import { cn } from "@/lib/utils/cn";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
+import { savePreferences, getCurrentPreferences, type NotificationSettings } from "@/lib/preferences";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
@@ -161,105 +162,58 @@ export function ThemeSettings() {
   const { language } = useLanguage();
   const [activeSubTab, setActiveSubTab] = useState<"colors" | "typography" | "cards" | "buttons" | "notifications">("colors");
 
-  const [activePresetId, setActivePresetId] = useState(() => {
-    if (typeof window === "undefined") return "nordic-midnight";
-    return localStorage.getItem("racks-theme-id") || "nordic-midnight";
-  });
+  // Initialize from the centralized preferences service (which is loaded from backend on app init)
+  const [activePresetId, setActivePresetId] = useState(() => getCurrentPreferences().themeId);
 
-  const [customVars, setCustomVars] = useState<Partial<ThemeVariables>>(() => {
-    if (typeof window === "undefined") return {};
-    const stored = localStorage.getItem("racks-custom-theme-vars");
-    try {
-      return stored ? JSON.parse(stored) : {};
-    } catch {
-      return {};
-    }
-  });
+  const [customVars, setCustomVars] = useState<Partial<ThemeVariables>>(() => getCurrentPreferences().customThemeVars);
 
-  const [typographyStyles, setTypographyStyles] = useState<TypographyStyles>(() => {
-    const defaults: TypographyStyles = {
-      normal: "400",
-      medium: "500",
-      semibold: "600",
-      bold: "700",
-    };
-    if (typeof window === "undefined") return defaults;
-    const stored = localStorage.getItem("racks-typography-styles");
-    try {
-      return stored ? { ...defaults, ...JSON.parse(stored) } : defaults;
-    } catch {
-      return defaults;
-    }
-  });
+  const [typographyStyles, setTypographyStyles] = useState<TypographyStyles>(() => getCurrentPreferences().typographyStyles);
 
-  const [notificationSettings, setNotificationSettings] = useState(() => {
-    const defaults = {
-      position: "top-right",
-      theme: "dark",
-      duration: 4000,
-      expand: false,
-    };
-    if (typeof window === "undefined") return defaults;
-    const stored = localStorage.getItem("racks-notification-settings");
-    try {
-      return stored ? { ...defaults, ...JSON.parse(stored) } : defaults;
-    } catch {
-      return defaults;
-    }
-  });
+  const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(() => getCurrentPreferences().notificationSettings);
 
-  const [activeFontId, setActiveFontId] = useState(() => {
-    if (typeof window === "undefined") return "jakarta";
-    return localStorage.getItem("racks-font-family") || "jakarta";
-  });
+  const [activeFontId, setActiveFontId] = useState(() => getCurrentPreferences().fontId);
 
-  const [cardStyles, setCardStyles] = useState<CardStyles>(() => {
-    const defaults: CardStyles = {
-      radius: "16px",
-      borderWidth: "1px",
-      blur: "12px",
-      opacity: "0.75",
-      dropdownRadius: "9999px",
-    };
-    if (typeof window === "undefined") return defaults;
-    const stored = localStorage.getItem("racks-card-styles");
-    try {
-      return stored ? { ...defaults, ...JSON.parse(stored) } : defaults;
-    } catch {
-      return defaults;
-    }
-  });
+  const [cardStyles, setCardStyles] = useState<CardStyles>(() => getCurrentPreferences().cardStyles);
 
-  const [buttonStyles, setButtonStyles] = useState<ButtonStyles>(() => {
-    const defaults: ButtonStyles = {
-      radius: "12px",
-      size: "default",
-      weight: "semibold",
-    };
-    if (typeof window === "undefined") return defaults;
-    const stored = localStorage.getItem("racks-button-styles");
-    try {
-      return stored ? { ...defaults, ...JSON.parse(stored) } : defaults;
-    } catch {
-      return defaults;
-    }
-  });
+  const [buttonStyles, setButtonStyles] = useState<ButtonStyles>(() => getCurrentPreferences().buttonStyles);
+
+  /** Persist current state to backend (debounced). Call after any change. */
+  const persistPreferences = () => {
+    savePreferences({
+      themeId: activePresetId,
+      customThemeVars: customVars,
+      fontId: activeFontId,
+      cardStyles,
+      buttonStyles,
+      typographyStyles,
+      notificationSettings,
+      language: getCurrentPreferences().language,
+    });
+  };
 
   const handleCardStyleChange = (key: keyof CardStyles, value: string) => {
     const updated = { ...cardStyles, [key]: value };
     setCardStyles(updated);
     applyCardStyles(updated);
+    // Persist after state update
+    setTimeout(() => persistPreferences(), 0);
   };
 
   const handleButtonStyleChange = (key: keyof ButtonStyles, value: string) => {
     const updated = { ...buttonStyles, [key]: value };
     setButtonStyles(updated);
     applyButtonStyles(updated);
+    setTimeout(() => persistPreferences(), 0);
   };
 
   const handleFontChange = (id: string) => {
     setActiveFontId(id);
     applyFont(id);
+    // Need to use callback form since state isn't updated yet
+    savePreferences({
+      ...getCurrentPreferences(),
+      fontId: id,
+    });
     toast.success(
       language === "id"
         ? `Gaya font berhasil diubah ke ${FONT_OPTIONS.find((f) => f.id === id)?.name}`
@@ -271,6 +225,9 @@ export function ThemeSettings() {
     const updated = { ...typographyStyles, [key]: value };
     setTypographyStyles(updated);
     applyTypographyStyles(updated);
+    // Persist with updated typography
+    const current = getCurrentPreferences();
+    savePreferences({ ...current, typographyStyles: updated });
     toast.success(
       language === "id"
         ? "Ketebalan huruf berhasil diperbarui!"
@@ -278,10 +235,12 @@ export function ThemeSettings() {
     );
   };
 
-  const handleNotificationChange = (key: string, value: any) => {
+  const handleNotificationChange = (key: string, value: string | number | boolean) => {
     const updated = { ...notificationSettings, [key]: value };
     setNotificationSettings(updated);
-    localStorage.setItem("racks-notification-settings", JSON.stringify(updated));
+    // Persist via centralized service (writes to localStorage + backend)
+    const current = getCurrentPreferences();
+    savePreferences({ ...current, notificationSettings: updated });
     window.dispatchEvent(new Event("notification-settings-changed"));
   };
 
@@ -314,6 +273,9 @@ export function ThemeSettings() {
     setActivePresetId(id);
     setCustomVars({});
     applyTheme(id);
+    // Persist theme change to backend
+    const current = getCurrentPreferences();
+    savePreferences({ ...current, themeId: id, customThemeVars: {} });
     toast.success(
       language === "id"
         ? `Tema warna berhasil diubah ke ${THEME_PRESETS.find((p) => p.id === id)?.name}`
@@ -325,6 +287,9 @@ export function ThemeSettings() {
     const updated = { ...customVars, [key]: value };
     setCustomVars(updated);
     applyTheme(activePresetId, updated);
+    // Persist custom theme var change to backend
+    const current = getCurrentPreferences();
+    savePreferences({ ...current, customThemeVars: updated });
   };
 
   const radiusOptions = [

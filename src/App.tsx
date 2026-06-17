@@ -4,13 +4,13 @@ import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { Toaster } from "sonner";
 import { lazy, Suspense, useEffect, useState } from "react";
 
-// Auth pages — loaded eagerly (entry point)
+// Auth pages - loaded eagerly (entry point)
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
 
-// Dashboard pages — code-split with React.lazy
+// Dashboard pages - code-split with React.lazy
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
 const Accounts = lazy(() => import("@/pages/Accounts"));
 const AccountDetail = lazy(() => import("@/pages/AccountDetail"));
@@ -26,8 +26,9 @@ const Investments = lazy(() => import("@/pages/Investments"));
 
 import { LanguageProvider } from "@/lib/contexts/LanguageContext";
 import { loadSavedTheme } from "@/lib/utils/theme";
+import { loadPreferences, getCurrentPreferences } from "@/lib/preferences";
 
-/** Layout wrapper — renders AppLayout + child routes via <Outlet /> */
+/** Layout wrapper - renders AppLayout + child routes via <Outlet /> */
 function DashboardLayout() {
   return (
     <AppLayout>
@@ -70,7 +71,7 @@ export default function App() {
           position: parsed.position || "top-right",
           theme: parsed.theme || "dark",
           duration: parsed.duration || 4000,
-          expand: parsed.expand !== undefined ? parsed.expand : false,
+          expand: parsed.expand != null ? parsed.expand : false,
         };
       }
     } catch (e) {}
@@ -83,20 +84,21 @@ export default function App() {
   });
 
   useEffect(() => {
+    // Load preferences from backend (falls back to localStorage if offline)
+    loadPreferences();
+    // Also keep the legacy theme loader as a safety net for auth pages
     loadSavedTheme();
 
     const handleUpdate = () => {
       try {
-        const saved = localStorage.getItem("racks-notification-settings");
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          setToastSettings({
-            position: parsed.position || "top-right",
-            theme: parsed.theme || "dark",
-            duration: parsed.duration || 4000,
-            expand: parsed.expand !== undefined ? parsed.expand : false,
-          });
-        }
+        const prefs = getCurrentPreferences();
+        const ns = prefs.notificationSettings;
+        setToastSettings({
+          position: (ns.position || "top-right") as "top-right",
+          theme: (ns.theme || "dark") as "dark",
+          duration: ns.duration || 4000,
+          expand: ns.expand ?? false,
+        });
       } catch (e) {}
     };
 
@@ -114,7 +116,7 @@ export default function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
 
-          {/* Protected dashboard routes — shared layout */}
+          {/* Protected dashboard routes - shared layout */}
           <Route element={<DashboardLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="accounts" element={<Accounts />} />

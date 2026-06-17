@@ -10,6 +10,7 @@ import { QuickAddFab } from "@/components/transactions/QuickAddFab";
 import { QuickAddProvider } from "@/components/transactions/QuickAddProvider";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
+import { loadPreferences } from "@/lib/preferences";
 import type { User, Account, Category } from "@/types";
 
 interface AppContextType {
@@ -47,7 +48,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       const me = await api.get<User>("/api/auth/me");
       setUser(me);
 
-      // 2. Fetch layout data
+      // 2. Fetch preferences from backend (applies theme/language)
+      await loadPreferences();
+
+      // 3. Fetch layout data
       const accList = await api.get<Account[]>("/api/accounts?status=all");
       const catList = await api.get<Category[]>("/api/categories");
       

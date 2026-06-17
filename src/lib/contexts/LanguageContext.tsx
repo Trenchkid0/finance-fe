@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from "react";
+import { updatePreference } from "@/lib/preferences";
 
 export const translations = {
   id: {
@@ -502,6 +503,12 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     setLanguageState(lang);
     if (typeof window !== "undefined") {
       localStorage.setItem("app-language", lang);
+      // Sync language preference to backend for cross-device persistence
+      try {
+        updatePreference("language", lang);
+      } catch {
+        // Silent fail — localStorage already has the data
+      }
     }
   };
 

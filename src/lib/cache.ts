@@ -167,6 +167,7 @@ export const CacheKeys = {
   },
   goals: () => 'goals:list',
   recurring: () => 'recurring:list',
+  preferences: () => 'user:preferences',
 } as const;
 
 // Invalidation helpers
@@ -194,6 +195,9 @@ export const invalidateCache = {
   
   /** Invalidate recurring */
   recurring: () => cache.delete(CacheKeys.recurring()),
+  
+  /** Invalidate user preferences */
+  preferences: () => cache.delete(CacheKeys.preferences()),
   
   /** 
    * Invalidate after transaction changes 
