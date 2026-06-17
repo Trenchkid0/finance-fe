@@ -196,11 +196,10 @@ export default function Register() {
                   {["1H", "1M", "3B", "1T", "YTD", "ALL"].map((label, i) => (
                     <span
                       key={label}
-                      className={`text-[10px] font-semibold px-2.5 py-1 rounded-full transition-all ${
-                        i === 3
+                      className={`text-[10px] font-semibold px-2.5 py-1 rounded-full transition-all ${i === 3
                           ? "bg-accent/15 text-accent border border-accent/30"
                           : "text-text-muted hover:text-text-primary hover:bg-hover-surface"
-                      }`}
+                        }`}
                     >
                       {label}
                     </span>
