@@ -514,18 +514,18 @@ export function TransactionsClient({
       />
 
       {selectedIds.size > 0 && (
-        <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-accent/5 border border-accent/20 animate-fade-in text-sm">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-4 py-3 rounded-xl bg-accent/5 border border-accent/20 animate-fade-in text-sm">
           <div className="flex items-center gap-2">
             <span className="font-semibold text-accent">
               {selectedIds.size} {t("selectedCount")}
             </span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setSelectedIds(new Set())}
-              className="text-xs text-text-muted hover:text-text-primary"
+              className="text-xs text-text-muted hover:text-text-primary flex-1 sm:flex-initial"
             >
               {t("cancelButton")}
             </Button>
@@ -533,19 +533,19 @@ export function TransactionsClient({
               variant="outline"
               size="sm"
               onClick={() => setOpenBulkEdit(true)}
-              className="border-border hover:bg-[#2D333B] text-text-primary text-xs font-semibold gap-1.5 h-8 px-3 rounded-lg"
+              className="border-border hover:bg-[#2D333B] text-text-primary text-xs font-semibold gap-1.5 h-8 px-2 sm:px-3 rounded-lg flex-1 sm:flex-initial min-w-0"
             >
               <Edit3 size={13} />
-              {language === "id" ? "Ubah Kategori/Akun" : "Edit Category/Account"}
+              <span className="truncate">{language === "id" ? "Ubah" : "Edit"}</span>
             </Button>
             <Button
               variant="destructive"
               size="sm"
               onClick={() => setConfirmBulkDelete(true)}
-              className="bg-expense hover:bg-red-600 text-white text-xs font-semibold gap-1.5 h-8 px-3 rounded-lg"
+              className="bg-expense hover:bg-red-600 text-white text-xs font-semibold gap-1.5 h-8 px-2 sm:px-3 rounded-lg flex-1 sm:flex-initial min-w-0"
             >
               <Trash2 size={13} />
-              {t("deleteSelected")}
+              <span className="truncate">{t("deleteSelected")}</span>
             </Button>
           </div>
         </div>

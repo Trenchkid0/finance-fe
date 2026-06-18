@@ -113,8 +113,6 @@ export default function Budget() {
         year: currentYear,
         month: currentMonthNum,
         yearOptions,
-        isCurrentMonth:
-          currentYear === now.getFullYear() && currentMonthNum === now.getMonth() + 1,
         categories: mappedCategories,
         totalSpent,
         uncategorizedSpent,
@@ -156,7 +154,6 @@ export default function Budget() {
       year={budgetData.year}
       month={budgetData.month}
       yearOptions={budgetData.yearOptions}
-      isCurrentMonth={budgetData.isCurrentMonth}
       categories={budgetData.categories}
       totalSpent={budgetData.totalSpent}
       uncategorizedSpent={budgetData.uncategorizedSpent}

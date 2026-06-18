@@ -27,7 +27,6 @@ interface Props {
   /** 1..12 */
   month: number;
   yearOptions: number[];
-  isCurrentMonth: boolean;
   categories: BudgetCategoryData[];
   totalSpent: number;
   uncategorizedSpent: number;
@@ -50,7 +49,6 @@ export function BudgetClient({
   year,
   month,
   yearOptions,
-  isCurrentMonth,
   categories,
   totalSpent,
   uncategorizedSpent,
@@ -130,14 +128,9 @@ export function BudgetClient({
           year={year}
           month={month}
           yearOptions={yearOptions}
-          isCurrentMonth={isCurrentMonth}
           onPrev={() => shiftMonth(-1)}
           onNext={() => shiftMonth(1)}
           onPick={navigateToMonth}
-          onJumpToday={() => {
-            const now = new Date();
-            navigateToMonth(now.getFullYear(), now.getMonth() + 1);
-          }}
           pending={pending}
         />
       </Card>

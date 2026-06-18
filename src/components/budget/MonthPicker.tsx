@@ -10,11 +10,9 @@ interface MonthPickerProps {
   year: number;
   month: number;
   yearOptions: number[];
-  isCurrentMonth: boolean;
   onPrev: () => void;
   onNext: () => void;
   onPick: (y: number, m: number) => void;
-  onJumpToday: () => void;
   pending: boolean;
 }
 
@@ -23,11 +21,9 @@ export function MonthPicker({
   year,
   month,
   yearOptions,
-  isCurrentMonth,
   onPrev,
   onNext,
   onPick,
-  onJumpToday,
   pending,
 }: MonthPickerProps) {
   const { language } = useLanguage();
@@ -159,18 +155,6 @@ export function MonthPicker({
       >
         <ChevronRight size={16} />
       </Button>
-
-      {!isCurrentMonth && (
-        <Button
-          variant="secondary"
-          size="sm"
-          className="h-8 text-xs font-medium px-2.5 ml-1.5"
-          onClick={onJumpToday}
-          disabled={pending}
-        >
-          {language === "id" ? "Hari ini" : "Today"}
-        </Button>
-      )}
     </div>
   );
 }

@@ -234,7 +234,6 @@ export default function Dashboard() {
   const surplus =
     typeof cf.surplus === "number" ? cf.surplus : totalInflow - totalOutflow;
   const savingsRate = totalInflow > 0 ? (surplus / totalInflow) * 100 : 0;
-  const txCount = mappedRecent.length;
   const counts = summaryData?.counts || { income: 0, expense: 0, transfer: 0, total: 0 };
   const isId = language === "id";
 
@@ -330,10 +329,10 @@ export default function Dashboard() {
             />
             <MiniStatWidget
               label={isId ? "Transaksi" : "Transactions"}
-              value={txCount}
+              value={counts.total}
               tone="neutral"
               isCurrency={false}
-              hint={isId ? "terbaru" : "recent"}
+              hint={isId ? "total" : "total"}
               count={counts.total}
             />
             <InsightWidget ratio={savingsRate} surplus={surplus} isId={isId} />
@@ -508,7 +507,13 @@ function MiniStatWidget({
           >
             {isCurrency ? formatIDR(value) : value.toLocaleString("id-ID")}
           </p>
-          <p className="text-[11px] text-muted-foreground/50">{hint}</p>
+          <p className="text-[11px] text-muted-foreground/50">
+            {count > 0 && (
+              <span className="font-semibold tabular-nums">{count} <span className="font-sans font-normal">tx</span></span>
+            )}
+            {hint && count > 0 && <span className="mx-1">·</span>}
+            {hint}
+          </p>
         </div>
         <DotMatrix count={count} value={value} dotColor={dotColor} />
       </div>

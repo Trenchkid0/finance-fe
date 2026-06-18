@@ -72,7 +72,7 @@ export function NetWorthHero({ current, previous, period, series }: Props) {
 
   return (
     <Card className="group overflow-hidden p-0 gap-0" aria-label={isId ? "Grafik Total Kekayaan" : "Net Worth Chart"} role="region">
-      <div className="flex items-start justify-between gap-4 p-6 pb-1">
+      <div className="flex items-start justify-between gap-4 px-5 pt-5 pb-3">
         <div className="space-y-2">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60 transition-colors duration-300 group-hover:text-muted-foreground/80">
             {isId ? "Total Kekayaan" : "Net Worth"}
@@ -87,7 +87,7 @@ export function NetWorthHero({ current, previous, period, series }: Props) {
         </div>
       </div>
 
-      <p className="px-6 pb-2 text-[11px] text-muted-foreground/50 transition-colors duration-300 group-hover:text-muted-foreground/70">
+      <p className="px-5 pb-3 text-[11px] text-muted-foreground/50 transition-colors duration-300 group-hover:text-muted-foreground/70">
         {isId 
           ? `Perubahan total kekayaan Anda selama ${periodLabel.toLowerCase()} terakhir.`
           : `Your net worth change over the last ${periodLabel.toLowerCase()}.`}

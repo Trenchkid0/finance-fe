@@ -105,10 +105,12 @@ export const CashflowSankey = memo(function CashflowSankey({ data, period }: Pro
   const [searchParams] = useSearchParams();
   const [pending, startTransition] = useTransition();
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const [width, setWidth] = useState<number>(940);
   const { language } = useLanguage();
   const isId = language === "id";
   const periodOptions = getPeriodOptions(isId);
+
+  // Chart dimensions
+  const chartHeight = Math.max(320, (data?.outflow || []).length * 40);
 
   // Resize observer — sankey butuh width fixed, jadi kita observe dan
   // re-render saat container berubah (mis. user collapse sidebar).
@@ -117,12 +119,14 @@ export const CashflowSankey = memo(function CashflowSankey({ data, period }: Pro
     const ro = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const w = entry.contentRect.width;
-        if (w > 0) setWidth(w);
+        if (w > 0) setChartWidth(Math.max(300, w));
       }
     });
     ro.observe(containerRef.current);
     return () => ro.disconnect();
   }, []);
+
+  const [chartWidth, setChartWidth] = useState<number>(940);
 
   function setPeriod(next: Props["period"]) {
     const params = new URLSearchParams(searchParams);
@@ -170,6 +174,9 @@ export const CashflowSankey = memo(function CashflowSankey({ data, period }: Pro
         </DropdownMenu>
       </div>
 
+      {/* Scrollable wrapper for mobile */}
+      <div className="overflow-x-auto -mx-5 px-5">
+        <div className="min-w-[600px]">
       <div
         ref={containerRef}
         className="w-full"
@@ -180,7 +187,7 @@ export const CashflowSankey = memo(function CashflowSankey({ data, period }: Pro
         }
       >
         {hasData ? (
-          <SankeyChart data={data} width={width} height={Math.max(320, (data.outflow || []).length * 40)} />
+          <SankeyChart data={data} width={chartWidth} height={chartHeight} />
         ) : (
           <div className="h-64 flex items-center justify-center text-center">
             <div>
@@ -195,6 +202,8 @@ export const CashflowSankey = memo(function CashflowSankey({ data, period }: Pro
             </div>
           </div>
         )}
+      </div>
+        </div>
       </div>
     </Card>
   );

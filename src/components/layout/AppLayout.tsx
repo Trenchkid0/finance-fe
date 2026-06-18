@@ -127,7 +127,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </a>
             <SiteHeader />
             <div className="flex flex-1 flex-col">
-              <div id="main-content" className="flex flex-col gap-4 p-4 md:gap-6 md:p-6 pb-24 md:pb-6" tabIndex={-1}>
+              <div id="main-content" className="flex flex-col gap-4 p-4 md:gap-6 md:p-6 pb-24 md:pb-6 overflow-x-hidden" tabIndex={-1}>
                 {children}
               </div>
             </div>
