@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useSyncExternalStore } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { cache, CacheTTL } from '@/lib/cache';
 
 interface UseCachedApiOptions<T> {
@@ -55,13 +55,6 @@ export function useCachedApi<T>({
   const [error, setError] = useState<Error | null>(null);
   const [isCached, setIsCached] = useState<boolean>(!!data);
 
-  // Subscribe to cache changes for this key
-  const cacheSnapshot = useSyncExternalStore(
-    cache.subscribe.bind(cache),
-    () => cache.get<T>(cacheKey),
-    () => null
-  );
-
   const fetchData = useCallback(async (force = false) => {
     // Check cache first (unless forced or skipCache)
     if (!force && !skipCache) {
@@ -108,14 +101,6 @@ export function useCachedApi<T>({
       fetchData();
     }
   }, [fetchData, refetchOnMount]);
-
-  // Update data when cache changes externally
-  useEffect(() => {
-    if (cacheSnapshot !== null && cacheSnapshot !== undefined) {
-      setData(cacheSnapshot);
-      setIsCached(true);
-    }
-  }, [cacheSnapshot]);
 
   return {
     data,

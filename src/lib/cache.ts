@@ -235,5 +235,5 @@ export const cacheDebug = {
 
 // Expose to window for debugging (development only)
 if (typeof window !== 'undefined' && import.meta.env.DEV) {
-  (window as any).cache = cacheDebug;
+  (window as unknown as { cache: typeof cacheDebug }).cache = cacheDebug;
 }

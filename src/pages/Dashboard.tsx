@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { useSearchParams } from "react-router-dom";
 import { TrendingUp, TrendingDown, Clock, Sparkles } from "lucide-react";
@@ -17,6 +17,8 @@ import { useCachedApi } from "@/hooks/use-cached-api";
 import { CacheKeys, CacheTTL } from "@/lib/cache";
 import { api } from "@/lib/api";
 import { formatIDR } from "@/lib/utils/formatters";
+
+import { getCurrentPreferences } from "@/lib/preferences";
 
 import type { SummaryApiResponse, AssetGroup, Period } from "@/types";
 import type { CashflowData } from "@/components/charts/CashflowSankey";
@@ -120,18 +122,25 @@ const DELAY_4: CSSProperties = { animationDelay: "240ms" };
 
 export default function Dashboard() {
   const { language } = useLanguage();
-  const { user, accounts, refresh, loading: appLoading } = useApp();
+  const { user, accounts, refresh, loading: appLoading, setCounts } = useApp();
   const [searchParams] = useSearchParams();
 
   const period = searchParams.get("period") || "30d";
   const cashflowPeriod = searchParams.get("cashflow_period") || "30d";
+
+  // Re-read layout preference when it changes in Settings
+  const [, setPrefsRev] = useState(0);
+  useEffect(() => {
+    const onPrefsChanged = () => setPrefsRev((r) => r + 1);
+    window.addEventListener("preferences-changed", onPrefsChanged);
+    return () => window.removeEventListener("preferences-changed", onPrefsChanged);
+  }, []);
 
   // CACHED API CALL - Dashboard Summary
   const {
     data: summaryData,
     isLoading: loading,
     refetch,
-    isCached,
   } = useCachedApi({
     cacheKey: CacheKeys.summary() + `:${period}:${cashflowPeriod}`,
     fetcher: () =>
@@ -140,6 +149,91 @@ export default function Dashboard() {
       ),
     ttl: CacheTTL.SHORT, // 2 minutes for financial data
   });
+
+  // Memoize active accounts + net worth
+  const activeAccounts = useMemo(() => accounts.filter((a) => a.isActive), [accounts]);
+  const netWorthCurrent = useMemo(
+    () => activeAccounts.reduce((sum, a) => sum + Number(a.balance), 0),
+    [activeAccounts],
+  );
+  const name = useMemo(() => {
+    const n =
+      user?.name?.trim().split(" ")[0] || user?.email?.split("@")?.[0] || "kamu";
+    return capitalize(n);
+  }, [user]);
+
+  // Memoize asset groups
+  const assetGroups = useMemo(() => {
+    if (activeAccounts.length === 0) return [];
+    return buildAssetGroups(
+      activeAccounts.map((a) => ({
+        id: a.id,
+        name: a.name,
+        type: a.type,
+        balance: Number(a.balance),
+        color: a.color || undefined,
+      })),
+      netWorthCurrent,
+      language,
+    );
+  }, [activeAccounts, netWorthCurrent, language]);
+
+  // Memoize recent transactions
+  const mappedRecent = useMemo(
+    () =>
+      (summaryData?.recent || []).map((tx) => ({
+        id: String(tx.id),
+        description:
+          tx.description ||
+          tx.category?.name ||
+          (language === "id" ? "Transaksi" : "Transaction"),
+        categoryName: tx.category?.name ?? null,
+        categoryIcon: tx.category?.icon ?? null,
+        accountName:
+          tx.account?.name || (language === "id" ? "Akun Utama" : "Main Account"),
+        transferToName: tx.transferTo?.name ?? null,
+        date: tx.date,
+        amount: Number(tx.amount),
+        adminFee: Number(tx.adminFee || 0),
+        type: tx.type as "income" | "expense" | "transfer",
+      })),
+    [summaryData?.recent, language],
+  );
+
+  // Cashflow-derived stats (memoized)
+  const { totalInflow, totalOutflow, surplus, savingsRate, counts, isId, delta, deltaRatio, assetsSide, liabilitiesSide, cashflowData } = useMemo(() => {
+    const cf = summaryData?.cashflow || { inflow: [], outflow: [], total: 0, surplus: 0 };
+    const inflow = (cf.inflow || []).reduce((s, i) => s + Number(i.value || 0), 0);
+    const outflow = (cf.outflow || []).reduce((s, i) => s + Number(i.value || 0), 0);
+    const surp = typeof cf.surplus === "number" ? cf.surplus : inflow - outflow;
+    const rate = inflow > 0 ? (surp / inflow) * 100 : 0;
+    const cnts = summaryData?.counts || { income: 0, expense: 0, transfer: 0, total: 0 };
+    const langIsId = language === "id";
+    const d = (summaryData?.netWorthCurrent || 0) - (summaryData?.netWorthPrevious || 0);
+    const dRatio = summaryData?.netWorthPrevious ? (d / summaryData.netWorthPrevious) * 100 : 0;
+    return {
+      totalInflow: inflow,
+      totalOutflow: outflow,
+      surplus: surp,
+      savingsRate: rate,
+      counts: cnts,
+      isId: langIsId,
+      delta: d,
+      deltaRatio: dRatio,
+      assetsSide: { title: "Assets" as const, total: netWorthCurrent, groups: assetGroups },
+      liabilitiesSide: { title: "Liabilities" as const, total: 0, groups: [] as AssetGroup[] },
+      cashflowData: {
+        total: cf.total,
+        surplus: cf.surplus,
+        inflow: (cf.inflow || []).map((item) => ({
+          name: item.name, value: item.value, side: "source" as const, color: item.color || "#388BFD",
+        })),
+        outflow: (cf.outflow || []).map((item) => ({
+          name: item.name, value: item.value, side: "target" as const, color: item.color || "#F85149",
+        })),
+      } as CashflowData,
+    };
+  }, [summaryData, language, netWorthCurrent, assetGroups]);
 
   // Listen to refresh events
   useEffect(() => {
@@ -153,237 +247,162 @@ export default function Dashboard() {
     };
   }, [refetch, refresh]);
 
-  // Debug cache status in development
+  // Sync transaction counts from summary to global app context
   useEffect(() => {
-    if (import.meta.env.DEV && isCached) {
-      console.log("Dashboard: Cache HIT - instant load!");
+    if (summaryData?.counts) {
+      setCounts((prev) => ({
+        ...prev,
+        transactions: summaryData.counts.total,
+      }));
     }
-  }, [isCached]);
+  }, [summaryData?.counts, setCounts]);
 
   if ((loading || appLoading) && !summaryData) {
     return <SkeletonDashboard />;
   }
 
-  const activeAccounts = accounts.filter((a) => a.isActive);
-
   if (activeAccounts.length === 0) {
-    const name =
-      user?.name?.trim().split(" ")[0] || user?.email?.split("@")[0] || "kamu";
-    return <OnboardingHero userName={capitalize(name)} />;
+    return <OnboardingHero userName={name} />;
   }
 
-  const netWorthCurrent = activeAccounts.reduce(
-    (sum, a) => sum + Number(a.balance),
-    0,
+  const dashboardLayout = getCurrentPreferences().dashboardLayout || "default";
+
+  // Shared JSX sections (reused across layouts)
+  const statsRow = (
+    <section className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in-up" style={DELAY_2}>
+      <MiniStatWidget label={isId ? "Pemasukan" : "Income"} value={totalInflow} tone="income" hint="" count={counts.income} />
+      <MiniStatWidget label={isId ? "Pengeluaran" : "Expenses"} value={totalOutflow} tone="expense" hint="" count={counts.expense} />
+      <MiniStatWidget label={isId ? "Transaksi" : "Transactions"} value={counts.total} tone="neutral" isCurrency={false} hint={isId ? "total" : "total"} count={counts.total} />
+      <InsightWidget ratio={savingsRate} surplus={surplus} isId={isId} />
+    </section>
   );
 
-  const assetGroups = buildAssetGroups(
-    activeAccounts.map((a) => ({
-      id: a.id,
-      name: a.name,
-      type: a.type,
-      balance: Number(a.balance),
-      color: a.color || undefined,
-    })),
-    netWorthCurrent,
-    language,
+  const tabbedCharts = (
+    <Tabs defaultValue="cashflow" className="w-full">
+      <div className="flex items-center justify-between border-b border-border/30 pb-2 mb-2">
+        <TabsList>
+          <TabsTrigger value="cashflow">{isId ? "Analisis Arus Kas" : "Cash Flow Analysis"}</TabsTrigger>
+          <TabsTrigger value="assets">{isId ? "Distribusi Aset" : "Asset Distribution"}</TabsTrigger>
+        </TabsList>
+      </div>
+      <TabsContent value="cashflow" className="animate-fade-in-up" style={DELAY_3}>
+        <InlineErrorBoundary label="Cash Flow Chart">
+          <CashflowSankey data={cashflowData} period={cashflowPeriod as Period} />
+        </InlineErrorBoundary>
+      </TabsContent>
+      <TabsContent value="assets" className="animate-fade-in-up" style={DELAY_3}>
+        <InlineErrorBoundary label="Asset Distribution">
+          <BalanceSheet assets={assetsSide} liabilities={liabilitiesSide} hideEmptyLiabilities />
+        </InlineErrorBoundary>
+      </TabsContent>
+    </Tabs>
   );
 
-  const mappedRecent = (summaryData?.recent || []).map((tx) => ({
-    id: String(tx.id),
-    description:
-      tx.description ||
-      tx.category?.name ||
-      (language === "id" ? "Transaksi" : "Transaction"),
-    categoryName: tx.category?.name ?? null,
-    categoryIcon: tx.category?.icon ?? null,
-    accountName:
-      tx.account?.name || (language === "id" ? "Akun Utama" : "Main Account"),
-    transferToName: tx.transferTo?.name ?? null,
-    date: tx.date,
-    amount: Number(tx.amount),
-    adminFee: Number(tx.adminFee || 0),
-    type: tx.type as "income" | "expense" | "transfer",
-  }));
-
-  const name =
-    user?.name?.trim().split(" ")[0] || user?.email?.split("@")[0] || "kamu";
-
-  // Net worth delta
-  const delta =
-    (summaryData?.netWorthCurrent || 0) - (summaryData?.netWorthPrevious || 0);
-  const deltaRatio = summaryData?.netWorthPrevious
-    ? (delta / summaryData.netWorthPrevious) * 100
-    : 0;
-
-  // Cashflow-derived stats for the zentra-style widget row
-  const cf = summaryData?.cashflow || {
-    inflow: [],
-    outflow: [],
-    total: 0,
-    surplus: 0,
-  };
-  const totalInflow = (cf.inflow || []).reduce(
-    (s, i) => s + Number(i.value || 0),
-    0,
+  const recentTxSection = (
+    <section className="space-y-3 animate-fade-in-up" style={DELAY_4}>
+      <div className="flex items-center gap-2">
+        <div className="h-1 w-1 rounded-full bg-pink" />
+        <h2 className="text-heading-sm text-foreground font-semibold">
+          {isId ? "Transaksi Terbaru" : "Recent Transactions"}
+        </h2>
+      </div>
+      <InlineErrorBoundary label="Recent Transactions">
+        <RecentTransactions transactions={mappedRecent} />
+      </InlineErrorBoundary>
+    </section>
   );
-  const totalOutflow = (cf.outflow || []).reduce(
-    (s, i) => s + Number(i.value || 0),
-    0,
-  );
-  const surplus =
-    typeof cf.surplus === "number" ? cf.surplus : totalInflow - totalOutflow;
-  const savingsRate = totalInflow > 0 ? (surplus / totalInflow) * 100 : 0;
-  const counts = summaryData?.counts || { income: 0, expense: 0, transfer: 0, total: 0 };
-  const isId = language === "id";
-
-  // BalanceSheet side props (named consts -> single-brace usage in JSX)
-  const assetsSide = {
-    title: "Assets" as const,
-    total: netWorthCurrent,
-    groups: assetGroups,
-  };
-  const liabilitiesSide = {
-    title: "Liabilities" as const,
-    total: 0,
-    groups: [] as AssetGroup[],
-  };
-
-  // Cashflow data for the existing Sankey chart
-  const cashflowData: CashflowData = {
-    total: cf.total,
-    surplus: cf.surplus,
-    inflow: (cf.inflow || []).map((item) => ({
-      name: item.name,
-      value: item.value,
-      side: "source" as const,
-      color: item.color || "#388BFD",
-    })),
-    outflow: (cf.outflow || []).map((item) => ({
-      name: item.name,
-      value: item.value,
-      side: "target" as const,
-      color: item.color || "#F85149",
-    })),
-  };
 
   return (
     <div className="space-y-4 pb-8">
-      {/* HEADER - greeting + net worth delta badge */}
+      {/* HEADER */}
       <section className="flex items-center gap-2.5 animate-fade-in-up">
         <div className="flex items-center gap-2 text-body-sm text-muted-foreground">
           <Clock size={15} className="text-accent/70" />
           <span>{getGreeting(language)}</span>
         </div>
         <div className="h-1 w-1 rounded-full bg-border" />
-        <h1 className="text-heading-lg text-foreground font-semibold">
-          {capitalize(name)}
-        </h1>
+        <h1 className="text-heading-lg text-foreground font-semibold">{capitalize(name)}</h1>
       </section>
 
       {summaryData && (
         <>
-          {/* ROW 1 - Net Worth hero (2/3) + Gross-Volume-style summary (1/3) */}
-          <section
-            className="grid grid-cols-1 lg:grid-cols-3 gap-4 animate-fade-in-up"
-            style={DELAY_1}
-          >
-            <div className="lg:col-span-2">
-              <InlineErrorBoundary label="Net Worth Chart">
-                <NetWorthHero
-                  current={summaryData.netWorthCurrent || 0}
-                  previous={summaryData.netWorthPrevious || 0}
-                  series={summaryData.netWorthSeries || []}
-                  period={period as Period}
-                />
-              </InlineErrorBoundary>
-            </div>
-            <div className="lg:col-span-1">
-              <AssetSummaryWidget
-                total={netWorthCurrent}
-                deltaRatio={deltaRatio}
-                groups={assetGroups}
-                isId={isId}
-              />
-            </div>
-          </section>
-
-          {/* ROW 2 - Small stat widgets */}
-          <section
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in-up"
-            style={DELAY_2}
-          >
-            <MiniStatWidget
-              label={isId ? "Pemasukan" : "Income"}
-              value={totalInflow}
-              tone="income"
-              hint={isId ? "" : ""}
-              count={counts.income}
-            />
-            <MiniStatWidget
-              label={isId ? "Pengeluaran" : "Expenses"}
-              value={totalOutflow}
-              tone="expense"
-              hint={isId ? "" : ""}
-              count={counts.expense}
-            />
-            <MiniStatWidget
-              label={isId ? "Transaksi" : "Transactions"}
-              value={counts.total}
-              tone="neutral"
-              isCurrency={false}
-              hint={isId ? "total" : "total"}
-              count={counts.total}
-            />
-            <InsightWidget ratio={savingsRate} surplus={surplus} isId={isId} />
-          </section>
-
-          {/* ROW 3 - Detailed analyses (Tabbed) */}
-          <div className="space-y-4">
-            <Tabs defaultValue="cashflow" className="w-full">
-              <div className="flex items-center justify-between border-b border-border/30 pb-2 mb-2">
-                <TabsList>
-                  <TabsTrigger value="cashflow">
-                    {isId ? "Analisis Arus Kas" : "Cash Flow Analysis"}
-                  </TabsTrigger>
-                  <TabsTrigger value="assets">
-                    {isId ? "Distribusi Aset" : "Asset Distribution"}
-                  </TabsTrigger>
-                </TabsList>
+          {dashboardLayout === "default" && (
+            <>
+              <section className="grid grid-cols-1 lg:grid-cols-3 gap-4 animate-fade-in-up" style={DELAY_1}>
+                <div className="lg:col-span-2">
+                  <InlineErrorBoundary label="Net Worth Chart"><NetWorthHero current={summaryData.netWorthCurrent || 0} previous={summaryData.netWorthPrevious || 0} series={summaryData.netWorthSeries || []} period={period as Period} /></InlineErrorBoundary>
+                </div>
+                <div className="lg:col-span-1"><AssetSummaryWidget total={netWorthCurrent} deltaRatio={deltaRatio} groups={assetGroups} isId={isId} /></div>
+              </section>
+              {statsRow}
+              <div className="space-y-4">
+                {tabbedCharts}
+                {recentTxSection}
               </div>
+            </>
+          )}
 
-              <TabsContent value="cashflow" className="animate-fade-in-up" style={DELAY_3}>
+          {dashboardLayout === "analytics" && (
+            <>
+              <section className="animate-fade-in-up" style={DELAY_1}>
                 <InlineErrorBoundary label="Cash Flow Chart">
-                  <CashflowSankey
-                    data={cashflowData}
-                    period={cashflowPeriod as Period}
-                  />
+                  <CashflowSankey data={cashflowData} period={cashflowPeriod as Period} />
                 </InlineErrorBoundary>
-              </TabsContent>
-
-              <TabsContent value="assets" className="animate-fade-in-up" style={DELAY_3}>
+              </section>
+              <section className="grid grid-cols-1 lg:grid-cols-3 gap-4 animate-fade-in-up" style={DELAY_2}>
+                <div className="lg:col-span-2">
+                  <InlineErrorBoundary label="Net Worth Chart"><NetWorthHero current={summaryData.netWorthCurrent || 0} previous={summaryData.netWorthPrevious || 0} series={summaryData.netWorthSeries || []} period={period as Period} /></InlineErrorBoundary>
+                </div>
+                <div className="lg:col-span-1"><AssetSummaryWidget total={netWorthCurrent} deltaRatio={deltaRatio} groups={assetGroups} isId={isId} /></div>
+              </section>
+              <section className="grid grid-cols-1 lg:grid-cols-3 gap-4 animate-fade-in-up" style={DELAY_3}>
+                <MiniStatWidget label={isId ? "Pemasukan" : "Income"} value={totalInflow} tone="income" hint="" count={counts.income} />
+                <MiniStatWidget label={isId ? "Pengeluaran" : "Expenses"} value={totalOutflow} tone="expense" hint="" count={counts.expense} />
+                <InsightWidget ratio={savingsRate} surplus={surplus} isId={isId} />
+              </section>
+              <section className="grid grid-cols-1 lg:grid-cols-2 gap-4 animate-fade-in-up" style={DELAY_4}>
+                {recentTxSection}
                 <InlineErrorBoundary label="Asset Distribution">
-                  <BalanceSheet
-                    assets={assetsSide}
-                    liabilities={liabilitiesSide}
-                    hideEmptyLiabilities
-                  />
+                  <BalanceSheet assets={assetsSide} liabilities={liabilitiesSide} hideEmptyLiabilities />
                 </InlineErrorBoundary>
-              </TabsContent>
-            </Tabs>
+              </section>
+            </>
+          )}
 
-            <section className="space-y-3 animate-fade-in-up" style={DELAY_4}>
-              <div className="flex items-center gap-2">
-                <div className="h-1 w-1 rounded-full bg-pink" />
-                <h2 className="text-heading-sm text-foreground font-semibold">
-                  {isId ? "Transaksi Terbaru" : "Recent Transactions"}
-                </h2>
+          {dashboardLayout === "compact" && (
+            <>
+              <section className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in-up" style={DELAY_1}>
+                <InlineErrorBoundary label="Net Worth Chart"><NetWorthHero current={summaryData.netWorthCurrent || 0} previous={summaryData.netWorthPrevious || 0} series={summaryData.netWorthSeries || []} period={period as Period} /></InlineErrorBoundary>
+                <AssetSummaryWidget total={netWorthCurrent} deltaRatio={deltaRatio} groups={assetGroups} isId={isId} />
+              </section>
+              {statsRow}
+              <section className="animate-fade-in-up" style={DELAY_3}>
+                {tabbedCharts}
+              </section>
+              {recentTxSection}
+            </>
+          )}
+
+          {dashboardLayout === "hero" && (
+            <>
+              <section className="animate-fade-in-up [&_.h-52]:!h-72" style={DELAY_1}>
+                <InlineErrorBoundary label="Net Worth Chart"><NetWorthHero current={summaryData.netWorthCurrent || 0} previous={summaryData.netWorthPrevious || 0} series={summaryData.netWorthSeries || []} period={period as Period} /></InlineErrorBoundary>
+              </section>
+              <section className="grid grid-cols-1 lg:grid-cols-2 gap-4 animate-fade-in-up" style={DELAY_2}>
+                <AssetSummaryWidget total={netWorthCurrent} deltaRatio={deltaRatio} groups={assetGroups} isId={isId} />
+                <div className="grid grid-cols-2 gap-3">
+                  <MiniStatWidget label={isId ? "Pemasukan" : "Income"} value={totalInflow} tone="income" hint="" count={counts.income} />
+                  <MiniStatWidget label={isId ? "Pengeluaran" : "Expenses"} value={totalOutflow} tone="expense" hint="" count={counts.expense} />
+                  <MiniStatWidget label={isId ? "Transaksi" : "Transactions"} value={counts.total} tone="neutral" isCurrency={false} hint="total" count={counts.total} />
+                  <InsightWidget ratio={savingsRate} surplus={surplus} isId={isId} />
+                </div>
+              </section>
+              <div className="space-y-4">
+                {tabbedCharts}
+                {recentTxSection}
               </div>
-              <InlineErrorBoundary label="Recent Transactions">
-                <RecentTransactions transactions={mappedRecent} />
-              </InlineErrorBoundary>
-            </section>
-          </div>
+            </>
+          )}
         </>
       )}
     </div>

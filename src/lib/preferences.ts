@@ -31,6 +31,8 @@ export interface NotificationSettings {
   expand: boolean;
 }
 
+export type DashboardLayout = "default" | "analytics" | "compact" | "hero";
+
 export interface UserPreferences {
   themeId: string;
   customThemeVars: Record<string, string>;
@@ -40,6 +42,7 @@ export interface UserPreferences {
   typographyStyles: TypographyStyles;
   notificationSettings: NotificationSettings;
   language: string;
+  dashboardLayout: DashboardLayout;
 }
 
 // ─── Defaults ─────────────────────────────────────────────────────────────────
@@ -73,6 +76,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
     expand: false,
   },
   language: "id",
+  dashboardLayout: "default",
 };
 
 // ─── Local Storage Keys (match existing keys used by theme.ts / LanguageContext)
@@ -86,6 +90,7 @@ const LS_KEYS = {
   typographyStyles: "racks-typography-styles",
   notificationSettings: "racks-notification-settings",
   language: "app-language",
+  dashboardLayout: "racks-dashboard-layout",
 } as const;
 
 // ─── Local Storage Helpers ────────────────────────────────────────────────────
@@ -125,6 +130,7 @@ function readFromLocalStorage(): UserPreferences {
       DEFAULT_PREFERENCES.notificationSettings
     ),
     language: localStorage.getItem(LS_KEYS.language) || DEFAULT_PREFERENCES.language,
+    dashboardLayout: (localStorage.getItem(LS_KEYS.dashboardLayout) || DEFAULT_PREFERENCES.dashboardLayout) as DashboardLayout,
   };
 }
 
@@ -142,6 +148,7 @@ function writeToLocalStorage(prefs: UserPreferences): void {
   localStorage.setItem(LS_KEYS.typographyStyles, JSON.stringify(prefs.typographyStyles));
   localStorage.setItem(LS_KEYS.notificationSettings, JSON.stringify(prefs.notificationSettings));
   localStorage.setItem(LS_KEYS.language, prefs.language);
+  localStorage.setItem(LS_KEYS.dashboardLayout, prefs.dashboardLayout);
 }
 
 // ─── Apply to UI ──────────────────────────────────────────────────────────────
@@ -155,6 +162,8 @@ export function applyPreferences(prefs: UserPreferences): void {
   applyTypographyStyles(prefs.typographyStyles);
   // Notify about notification settings change (for Toaster in App.tsx)
   window.dispatchEvent(new Event("notification-settings-changed"));
+  // Notify components that depend on preferences (e.g. Dashboard layout)
+  window.dispatchEvent(new Event("preferences-changed"));
 }
 
 // ─── In-memory state ──────────────────────────────────────────────────────────
@@ -177,15 +186,16 @@ export function getCurrentPreferences(): UserPreferences {
  */
 export async function loadPreferences(): Promise<UserPreferences> {
   try {
-    const cached = cache.get<UserPreferences>(CacheKeys.preferences());
-    if (cached) {
+    const cachedRaw = cache.get<UserPreferences>(CacheKeys.preferences());
+    if (cachedRaw) {
+      const cached = { ...DEFAULT_PREFERENCES, ...cachedRaw };
       _currentPrefs = cached;
       applyPreferences(cached);
       writeToLocalStorage(cached);
       return cached;
     }
 
-    const prefs = await api.get<UserPreferences>("/api/preferences");
+    const prefs = { ...DEFAULT_PREFERENCES, ...(await api.get<UserPreferences>("/api/preferences")) };
     _currentPrefs = prefs;
     _isAuthenticated = true;
 
@@ -265,9 +275,10 @@ async function _performSave(prefs: UserPreferences): Promise<void> {
 
   try {
     const result = await api.put<UserPreferences>("/api/preferences", prefs);
-    // Update cache with server response
-    cache.set(CacheKeys.preferences(), result, CacheTTL.LONG);
-    _currentPrefs = result;
+    // Merge: defaults → API response → locally-set fields (preserves new fields backend doesn't echo)
+    const merged = { ...DEFAULT_PREFERENCES, ...result, ...prefs };
+    cache.set(CacheKeys.preferences(), merged, CacheTTL.LONG);
+    _currentPrefs = merged;
   } catch (err) {
     console.error("[preferences] Failed to sync preferences to backend:", err);
     // Silent fail — localStorage already has the data, will retry on next change

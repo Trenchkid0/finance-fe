@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
+import { cache, CacheKeys, CacheTTL } from "@/lib/cache";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
@@ -21,6 +22,7 @@ interface AppContextType {
     accounts: number;
     transactions: number;
   };
+  setCounts: (counts: { accounts: number; transactions: number }) => void;
   refresh: () => Promise<void>;
   loading: boolean;
 }
@@ -51,19 +53,25 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       // 2. Fetch preferences from backend (applies theme/language)
       await loadPreferences();
 
-      // 3. Fetch layout data
-      const accList = await api.get<Account[]>("/api/accounts?status=all");
-      const catList = await api.get<Category[]>("/api/categories");
-      
-      // Fetch transactions count via transactions API with limit 1
-      const txData = await api.get<{ total?: number }>("/api/transactions?limit=1");
+      // 3. Fetch layout data (with cache for accounts/categories)
+      let accList = cache.get<Account[]>(CacheKeys.accounts());
+      if (!accList) {
+        accList = await api.get<Account[]>("/api/accounts?status=all");
+        cache.set(CacheKeys.accounts(), accList, CacheTTL.LONG);
+      }
+
+      let catList = cache.get<Category[]>(CacheKeys.categories());
+      if (!catList) {
+        catList = await api.get<Category[]>("/api/categories");
+        cache.set(CacheKeys.categories(), catList, CacheTTL.LONG);
+      }
 
       setAccounts(accList);
       setCategories(catList);
-      setCounts({
+      setCounts((prev) => ({
+        ...prev,
         accounts: accList.length,
-        transactions: txData?.total || 0,
-      });
+      }));
     } catch (err) {
       console.error("App initialization failed", err);
       // Redirect to login if unauthorized
@@ -98,7 +106,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const canCreate = accounts.length > 0;
 
   return (
-    <AppContext.Provider value={{ user, accounts, categories, counts, refresh, loading }}>
+    <AppContext.Provider value={{ user, accounts, categories, counts, setCounts, refresh, loading }}>
       <SidebarProvider
         style={
           {

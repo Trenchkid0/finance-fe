@@ -4,5 +4,5 @@ import { AccountsClient } from "@/components/accounts/AccountsClient";
 export default function Accounts() {
   const { accounts } = useApp();
 
-  return <AccountsClient accounts={accounts as any} />;
+  return <AccountsClient accounts={accounts} />;
 }

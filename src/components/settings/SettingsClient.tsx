@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Key, Palette, Shapes, User, Database, Download, Upload, ShieldAlert, Loader2 } from "lucide-react";
+import { Key, Palette, Shapes, User, Database, Download, Upload, ShieldAlert, Loader2, LayoutGrid } from "lucide-react";
 import { ApiKeysCard } from "./ApiKeysCard";
 import { CategoriesSettings, type CategoryItem } from "./CategoriesSettings";
 import { ThemeSettings } from "./ThemeSettings";
+import { DashboardGridSettings } from "./DashboardGridSettings";
 import type { ApiKeyListItem } from "@/app/actions/api-keys";
 import { cn } from "@/lib/utils/cn";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
@@ -19,7 +20,7 @@ interface Props {
   apiKeys: ApiKeyListItem[];
 }
 
-type Tab = "categories" | "api" | "theme" | "data";
+type Tab = "categories" | "api" | "theme" | "data" | "dashboard";
 
 const getBaseUrl = () => {
   let url = import.meta.env.VITE_API_URL || "";
@@ -46,6 +47,7 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
     { id: "categories", label: language === "id" ? "Kategori" : "Categories", icon: <Shapes size={14} /> },
     { id: "api", label: language === "id" ? "API & Integrasi" : "API & Integrations", icon: <Key size={14} /> },
     { id: "theme", label: language === "id" ? "Kustomisasi Warna" : "Color Customization", icon: <Palette size={14} /> },
+    { id: "dashboard", label: language === "id" ? "Tata Letak Dashboard" : "Dashboard Layout", icon: <LayoutGrid size={14} /> },
     { id: "data", label: language === "id" ? "Manajemen Data" : "Data Management", icon: <Database size={14} /> },
   ];
 
@@ -207,6 +209,10 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
 
         {activeTab === "theme" && (
           <ThemeSettings />
+        )}
+
+        {activeTab === "dashboard" && (
+          <DashboardGridSettings />
         )}
 
         {activeTab === "data" && (

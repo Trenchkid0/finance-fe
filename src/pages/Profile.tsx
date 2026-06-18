@@ -34,7 +34,7 @@ export default function Profile() {
         .slice(0, 2)
     : "U";
 
-  const signupDate = (user as any).createdAt || new Date().toISOString();
+  const signupDate = user?.createdAt || new Date().toISOString();
   
   // Calculate specific account type counts and total value
   const activeAccountsList = accounts.filter((a) => a.isActive);
