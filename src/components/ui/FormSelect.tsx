@@ -87,7 +87,7 @@ export function FormSelect({
         ref={triggerRef}
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex h-11 w-full items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-2 text-sm text-foreground hover:border-white/[0.12] hover:bg-white/[0.05] focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50 focus:bg-white/[0.04] transition-all duration-300 ease-out text-left"
+        className="flex h-11 w-full items-center justify-between rounded-xl border border-border bg-elevated/50 px-4 py-2 text-sm text-foreground hover:border-hover-border hover:bg-elevated focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50 focus:bg-elevated transition-all duration-300 ease-out text-left"
       >
         <span className={value ? "" : "text-muted-foreground/50"}>{selectedLabel}</span>
         <ChevronDown size={14} className="opacity-60 shrink-0 ml-2" />
@@ -102,14 +102,14 @@ export function FormSelect({
             left: "0",
             borderRadius: "12px",
           }}
-          className="p-1 border border-white/[0.08] bg-popover/95 backdrop-blur-xl flex flex-col text-text-primary shadow-2xl z-[100000] max-h-[300px] overflow-y-auto"
+          className="p-1 border border-border bg-popover backdrop-blur-xl flex flex-col text-foreground shadow-2xl shadow-black/10 dark:shadow-black/45 z-[100000] max-h-[300px] overflow-y-auto"
         >
           {options.map((opt) => (
             <button
               key={opt.value}
               type="button"
-              className={`relative flex w-full cursor-pointer select-none items-center rounded-lg py-2.5 px-4 text-xs font-semibold outline-none transition-colors duration-200 text-left hover:bg-white/[0.06] ${
-                opt.value === value ? "bg-white/[0.04] text-foreground font-semibold" : "text-muted-foreground"
+              className={`relative flex w-full cursor-pointer select-none items-center rounded-lg py-2.5 px-4 text-xs font-semibold outline-none transition-colors duration-200 text-left hover:bg-hover-surface ${
+                opt.value === value ? "bg-elevated text-foreground font-semibold" : "text-muted-foreground"
               }`}
               onClick={() => {
                 onChange(opt.value);

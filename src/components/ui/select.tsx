@@ -17,10 +17,10 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex h-11 w-full items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-2 text-sm text-foreground",
+      "flex h-11 w-full items-center justify-between rounded-xl border border-border bg-elevated/50 px-4 py-2 text-sm text-foreground",
       "placeholder:text-muted-foreground/60 [&>span]:line-clamp-1",
-      "hover:border-white/[0.12] hover:bg-white/[0.05]",
-      "focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50 focus:bg-white/[0.04]",
+      "hover:border-hover-border hover:bg-elevated",
+      "focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50 focus:bg-elevated",
       "transition-all duration-300 ease-out",
       "disabled:cursor-not-allowed disabled:opacity-60",
       "aria-[invalid=true]:border-destructive/60 aria-[invalid=true]:focus:ring-destructive/30",
@@ -74,7 +74,7 @@ const SelectContent = React.forwardRef<
       ref={ref}
       position={position}
       className={cn(
-        "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-2xl border border-white/[0.08] bg-popover/95 backdrop-blur-xl text-popover-foreground shadow-2xl shadow-black/45",
+        "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-2xl border border-border bg-popover backdrop-blur-xl text-popover-foreground shadow-2xl shadow-black/10 dark:shadow-black/45",
         "data-[state=open]:animate-in data-[state=closed]:animate-out",
         "data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0",
         "data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95",
@@ -120,8 +120,8 @@ const SelectItem = React.forwardRef<
     ref={ref}
     className={cn(
       "relative flex w-full cursor-default select-none items-center rounded-lg py-2.5 pl-9 pr-3 text-sm outline-none transition-colors duration-200",
-      "focus:bg-white/[0.06] focus:text-foreground",
-      "data-[state=checked]:bg-white/[0.04] data-[state=checked]:text-foreground data-[state=checked]:font-semibold",
+      "focus:bg-hover-surface focus:text-foreground",
+      "data-[state=checked]:bg-elevated data-[state=checked]:text-foreground data-[state=checked]:font-semibold",
       "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       className,
     )}

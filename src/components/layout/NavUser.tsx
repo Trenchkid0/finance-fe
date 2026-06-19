@@ -48,11 +48,17 @@ export function NavUser({ user }: NavUserProps) {
               data-size="lg"
               className="peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left ring-sidebar-ring outline-hidden transition-[width,height,padding] group-has-data-[sidebar=menu-action]/menu-item:pr-8 group-data-[collapsible=icon]:!size-8 focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground h-12 text-sm group-data-[collapsible=icon]:!p-0 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <Avatar className="rounded-lg text-[10px] font-bold bg-gradient-to-br from-accent/20 to-indigo-500/20 text-accent">
+              <Avatar className="rounded-lg text-[10px] font-bold">
                 {user.image ? (
                   <AvatarImage src={user.image} alt={user.name ?? "User"} />
                 ) : null}
-                <AvatarFallback className="rounded-lg text-[10px] font-bold bg-gradient-to-br from-accent/20 to-indigo-500/20 text-accent">
+                <AvatarFallback
+                  className="rounded-lg text-[10px] font-black text-white border"
+                  style={{
+                    background: `linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 80%, #000) 100%)`,
+                    borderColor: 'color-mix(in srgb, var(--accent) 30%, transparent)',
+                  }}
+                >
                   {initials}
                 </AvatarFallback>
               </Avatar>
@@ -82,7 +88,13 @@ export function NavUser({ user }: NavUserProps) {
                     {user.image ? (
                       <AvatarImage src={user.image} alt={user.name ?? "User"} />
                     ) : null}
-                    <AvatarFallback className="rounded-lg text-[10px] font-bold bg-gradient-to-br from-accent/20 to-indigo-500/20 text-accent">
+                    <AvatarFallback
+                      className="rounded-lg text-[10px] font-black text-white border"
+                      style={{
+                        background: `linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 80%, #000) 100%)`,
+                        borderColor: 'color-mix(in srgb, var(--accent) 30%, transparent)',
+                      }}
+                    >
                       {initials}
                     </AvatarFallback>
                   </Avatar>

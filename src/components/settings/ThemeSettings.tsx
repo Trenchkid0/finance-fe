@@ -113,7 +113,7 @@ function SettingsSelect<T extends string | number | boolean>({
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "flex h-9 w-full items-center justify-between rounded-lg border border-border bg-elevated px-3 text-xs text-foreground hover:bg-white/[0.04] transition-all outline-none text-left",
+          "flex h-9 w-full items-center justify-between rounded-lg border border-border bg-elevated px-3 text-xs text-foreground hover:bg-hover-surface transition-all outline-none text-left",
           className
         )}
         style={{ borderRadius: "var(--button-radius)" }}
@@ -133,15 +133,15 @@ function SettingsSelect<T extends string | number | boolean>({
             width: minWidth,
             borderRadius: "var(--custom-dropdown-menu-radius, 12px)",
           }}
-          className="p-1 border border-white/[0.08] bg-popover/95 backdrop-blur-xl flex flex-col text-text-primary shadow-2xl z-[100000] max-h-[300px] overflow-y-auto"
+          className="p-1 border border-border bg-popover backdrop-blur-xl flex flex-col text-foreground shadow-2xl shadow-black/10 dark:shadow-black/45 z-[100000] max-h-[300px] overflow-y-auto"
         >
           {options.map((opt) => (
             <button
               key={String(opt.value)}
               type="button"
               className={cn(
-                "relative flex w-full cursor-pointer select-none items-center rounded-lg py-1.5 px-2.5 text-xs font-semibold outline-none transition-colors duration-200 text-left hover:bg-white/[0.06] text-text-primary",
-                opt.value === value ? "bg-white/[0.04] text-foreground font-semibold" : "text-muted-foreground"
+                "relative flex w-full cursor-pointer select-none items-center rounded-lg py-1.5 px-2.5 text-xs font-semibold outline-none transition-colors duration-200 text-left hover:bg-hover-surface text-foreground",
+                opt.value === value ? "bg-elevated text-foreground font-semibold" : "text-muted-foreground"
               )}
               onClick={() => {
                 onChange(opt.value);
@@ -387,7 +387,7 @@ export function ThemeSettings() {
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-150",
                 activeSubTab === tab.id
                   ? "bg-accent/10 border-accent text-accent"
-                  : "border-transparent text-muted-foreground hover:text-foreground hover:bg-white/[0.02]"
+                  : "border-transparent text-muted-foreground hover:text-foreground hover:bg-elevated/50"
               )}
             >
               {tab.icon}
@@ -441,13 +441,13 @@ export function ThemeSettings() {
 
                   {/* Color Preview Strip */}
                   <div className="flex gap-1.5 mt-4 w-full">
-                    <div className="w-5 h-5 rounded-md border border-white/[0.08] shrink-0" style={{ backgroundColor: preset.variables.background }} title="Background" />
-                    <div className="w-5 h-5 rounded-md border border-white/[0.08] shrink-0" style={{ backgroundColor: preset.variables.surface }} title="Card/Surface" />
-                    <div className="w-5 h-5 rounded-md border border-white/[0.08] shrink-0" style={{ backgroundColor: preset.variables.elevated }} title="Popover/Elevated" />
-                    <div className="w-5 h-5 rounded-md border border-white/[0.08] shrink-0" style={{ backgroundColor: preset.variables.border }} title="Border" />
-                    <div className="w-5 h-5 rounded-md border border-white/[0.08] shrink-0" style={{ backgroundColor: preset.variables.accent }} title="Accent" />
-                    <div className="w-5 h-5 rounded-md border border-white/[0.08] shrink-0 ml-auto" style={{ backgroundColor: preset.variables.income }} title="Income" />
-                    <div className="w-5 h-5 rounded-md border border-white/[0.08] shrink-0" style={{ backgroundColor: preset.variables.expense }} title="Expense" />
+                    <div className="w-5 h-5 rounded-md border border-border shrink-0" style={{ backgroundColor: preset.variables.background }} title="Background" />
+                    <div className="w-5 h-5 rounded-md border border-border shrink-0" style={{ backgroundColor: preset.variables.surface }} title="Card/Surface" />
+                    <div className="w-5 h-5 rounded-md border border-border shrink-0" style={{ backgroundColor: preset.variables.elevated }} title="Popover/Elevated" />
+                    <div className="w-5 h-5 rounded-md border border-border shrink-0" style={{ backgroundColor: preset.variables.border }} title="Border" />
+                    <div className="w-5 h-5 rounded-md border border-border shrink-0" style={{ backgroundColor: preset.variables.accent }} title="Accent" />
+                    <div className="w-5 h-5 rounded-md border border-border shrink-0 ml-auto" style={{ backgroundColor: preset.variables.income }} title="Income" />
+                    <div className="w-5 h-5 rounded-md border border-border shrink-0" style={{ backgroundColor: preset.variables.expense }} title="Expense" />
                   </div>
                 </button>
               );
@@ -495,7 +495,7 @@ export function ThemeSettings() {
                     <button
                       type="button"
                       onClick={() => handleCustomVarChange("accent", def)}
-                      className="text-[9px] px-1.5 py-0.5 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.1] hover:border-white/[0.15] hover:text-foreground rounded transition-all"
+                      className="text-[9px] px-1.5 py-0.5 bg-elevated border border-border hover:bg-hover-elevated hover:border-hover-border hover:text-foreground rounded transition-all"
                     >
                       {language === "id" ? `Bawaan: ${def}` : `Default: ${def}`}
                     </button>
@@ -538,7 +538,7 @@ export function ThemeSettings() {
                     <button
                       type="button"
                       onClick={() => handleCustomVarChange("background", def)}
-                      className="text-[9px] px-1.5 py-0.5 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.1] hover:border-white/[0.15] hover:text-foreground rounded transition-all"
+                      className="text-[9px] px-1.5 py-0.5 bg-elevated border border-border hover:bg-hover-elevated hover:border-hover-border hover:text-foreground rounded transition-all"
                     >
                       {language === "id" ? `Bawaan: ${def}` : `Default: ${def}`}
                     </button>
@@ -581,7 +581,7 @@ export function ThemeSettings() {
                     <button
                       type="button"
                       onClick={() => handleCustomVarChange("card-bg", def)}
-                      className="text-[9px] px-1.5 py-0.5 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.1] hover:border-white/[0.15] hover:text-foreground rounded transition-all"
+                      className="text-[9px] px-1.5 py-0.5 bg-elevated border border-border hover:bg-hover-elevated hover:border-hover-border hover:text-foreground rounded transition-all"
                     >
                       {language === "id" ? `Bawaan: ${def}` : `Default: ${def}`}
                     </button>
@@ -624,7 +624,7 @@ export function ThemeSettings() {
                     <button
                       type="button"
                       onClick={() => handleCustomVarChange("elevated", def)}
-                      className="text-[9px] px-1.5 py-0.5 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.1] hover:border-white/[0.15] hover:text-foreground rounded transition-all"
+                      className="text-[9px] px-1.5 py-0.5 bg-elevated border border-border hover:bg-hover-elevated hover:border-hover-border hover:text-foreground rounded transition-all"
                     >
                       {language === "id" ? `Bawaan: ${def}` : `Default: ${def}`}
                     </button>
@@ -667,7 +667,7 @@ export function ThemeSettings() {
                     <button
                       type="button"
                       onClick={() => handleCustomVarChange("border", def)}
-                      className="text-[9px] px-1.5 py-0.5 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.1] hover:border-white/[0.15] hover:text-foreground rounded transition-all"
+                      className="text-[9px] px-1.5 py-0.5 bg-elevated border border-border hover:bg-hover-elevated hover:border-hover-border hover:text-foreground rounded transition-all"
                     >
                       {language === "id" ? `Bawaan: ${def}` : `Default: ${def}`}
                     </button>
@@ -710,7 +710,7 @@ export function ThemeSettings() {
                     <button
                       type="button"
                       onClick={() => handleCustomVarChange("progress", def)}
-                      className="text-[9px] px-1.5 py-0.5 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.1] hover:border-white/[0.15] hover:text-foreground rounded transition-all"
+                      className="text-[9px] px-1.5 py-0.5 bg-elevated border border-border hover:bg-hover-elevated hover:border-hover-border hover:text-foreground rounded transition-all"
                     >
                       {language === "id" ? `Bawaan: ${def}` : `Default: ${def}`}
                     </button>
@@ -753,7 +753,7 @@ export function ThemeSettings() {
                     <button
                       type="button"
                       onClick={() => handleCustomVarChange("foreground", def)}
-                      className="text-[9px] px-1.5 py-0.5 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.1] hover:border-white/[0.15] hover:text-foreground rounded transition-all"
+                      className="text-[9px] px-1.5 py-0.5 bg-elevated border border-border hover:bg-hover-elevated hover:border-hover-border hover:text-foreground rounded transition-all"
                     >
                       {language === "id" ? `Bawaan: ${def}` : `Default: ${def}`}
                     </button>
@@ -796,7 +796,7 @@ export function ThemeSettings() {
                     <button
                       type="button"
                       onClick={() => handleCustomVarChange("muted-foreground", def)}
-                      className="text-[9px] px-1.5 py-0.5 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.1] hover:border-white/[0.15] hover:text-foreground rounded transition-all"
+                      className="text-[9px] px-1.5 py-0.5 bg-elevated border border-border hover:bg-hover-elevated hover:border-hover-border hover:text-foreground rounded transition-all"
                     >
                       {language === "id" ? `Bawaan: ${def}` : `Default: ${def}`}
                     </button>
@@ -839,7 +839,7 @@ export function ThemeSettings() {
                     <button
                       type="button"
                       onClick={() => handleCustomVarChange("income", def)}
-                      className="text-[9px] px-1.5 py-0.5 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.1] hover:border-white/[0.15] hover:text-foreground rounded transition-all"
+                      className="text-[9px] px-1.5 py-0.5 bg-elevated border border-border hover:bg-hover-elevated hover:border-hover-border hover:text-foreground rounded transition-all"
                     >
                       {language === "id" ? `Bawaan: ${def}` : `Default: ${def}`}
                     </button>
@@ -882,7 +882,7 @@ export function ThemeSettings() {
                     <button
                       type="button"
                       onClick={() => handleCustomVarChange("expense", def)}
-                      className="text-[9px] px-1.5 py-0.5 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.1] hover:border-white/[0.15] hover:text-foreground rounded transition-all"
+                      className="text-[9px] px-1.5 py-0.5 bg-elevated border border-border hover:bg-hover-elevated hover:border-hover-border hover:text-foreground rounded transition-all"
                     >
                       {language === "id" ? `Bawaan: ${def}` : `Default: ${def}`}
                     </button>
@@ -925,7 +925,7 @@ export function ThemeSettings() {
                     <button
                       type="button"
                       onClick={() => handleCustomVarChange("warning", def)}
-                      className="text-[9px] px-1.5 py-0.5 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.1] hover:border-white/[0.15] hover:text-foreground rounded transition-all"
+                      className="text-[9px] px-1.5 py-0.5 bg-elevated border border-border hover:bg-hover-elevated hover:border-hover-border hover:text-foreground rounded transition-all"
                     >
                       {language === "id" ? `Bawaan: ${def}` : `Default: ${def}`}
                     </button>

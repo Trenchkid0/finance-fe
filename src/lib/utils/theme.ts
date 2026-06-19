@@ -849,6 +849,10 @@ export const FONT_OPTIONS = [
   { id: "inter", name: "Inter (Standar Fintech)", nameEn: "Inter (Fintech Standard)", value: "'Inter', -apple-system, sans-serif" },
   { id: "outfit", name: "Outfit (Elegans & Geometris)", nameEn: "Outfit (Elegant & Geometric)", value: "'Outfit', -apple-system, sans-serif" },
   { id: "jakarta", name: "Plus Jakarta Sans (Dinamis)", nameEn: "Plus Jakarta Sans (Dynamic Sans)", value: "'Plus Jakarta Sans', -apple-system, sans-serif" },
+  { id: "geist", name: "Geist (Linear & Modern)", nameEn: "Geist (Linear & Modern)", value: "'Geist', 'Inter', -apple-system, sans-serif" },
+  { id: "manrope", name: "Manrope (Modern & Seimbang)", nameEn: "Manrope (Modern & Balanced)", value: "'Manrope', -apple-system, sans-serif" },
+  { id: "sora", name: "Sora (Fintech & Geometris)", nameEn: "Sora (Fintech & Geometric)", value: "'Sora', -apple-system, sans-serif" },
+  { id: "ibm-plex", name: "IBM Plex Sans (Teknis & Terstruktur)", nameEn: "IBM Plex Sans (Technical & Structured)", value: "'IBM Plex Sans', -apple-system, sans-serif" },
   { id: "jetbrains", name: "JetBrains Mono (Teknikal Tabular)", nameEn: "JetBrains Mono (Technical Tabular)", value: "'JetBrains Mono', monospace" }
 ];
 

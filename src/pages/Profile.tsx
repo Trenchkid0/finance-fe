@@ -1,372 +1,600 @@
-import { Calendar, Mail, Receipt, ShieldCheck, User, Lock, CheckCircle2, ChevronRight, Activity, Wallet } from "lucide-react";
-import { useApp } from "@/components/layout/AppLayout";
-import { formatDate, formatIDR } from "@/lib/utils/formatters";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
+import {
+	Calendar,
+	Mail,
+	Receipt,
+	ShieldCheck,
+	User,
+	Lock,
+	CheckCircle2,
+	ChevronRight,
+	Activity,
+	Wallet,
+	ArrowUpRight,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 
+import { useApp } from "@/components/layout/AppLayout";
+import { formatDate, formatIDR } from "@/lib/utils/formatters";
+import { EditProfileModal } from "@/components/profile/EditProfileModal";
+
 export default function Profile() {
-  const { user, counts, accounts } = useApp();
+	const { user, counts, accounts } = useApp();
+	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  if (!user) {
-    return (
-      <div className="flex h-[50vh] items-center justify-center">
-        <Card className="p-8 text-center max-w-md border-border bg-surface">
-          <User size={48} className="mx-auto text-text-muted mb-4" />
-          <p className="text-base font-medium text-text-primary mb-2">
-            Profil tidak ditemukan
-          </p>
-          <p className="text-sm text-text-muted">
-            Silakan login kembali untuk melihat profil Anda.
-          </p>
-        </Card>
-      </div>
-    );
-  }
+	if (!user) {
+		return (
+			<div className="flex h-[50vh] items-center justify-center">
+				<div className="relative max-w-md border border-border bg-background p-8 text-center">
+					<CornerMarks />
 
-  const userInitials = user.name
-    ? user.name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
-    : "U";
+					<User size={48} className="mx-auto mb-4 text-text-muted" />
 
-  const signupDate = user?.createdAt || new Date().toISOString();
-  
-  // Calculate specific account type counts and total value
-  const activeAccountsList = accounts.filter((a) => a.isActive);
-  const inactiveAccountsCount = accounts.length - activeAccountsList.length;
-  
-  const totalBalance = activeAccountsList.reduce((sum, a) => sum + a.balance, 0);
+					<p className="mb-2 text-base font-medium text-text-primary">
+						Profil tidak ditemukan
+					</p>
+					<p className="text-sm text-text-muted">
+						Silakan login kembali untuk melihat profil Anda.
+					</p>
+				</div>
+			</div>
+		);
+	}
 
-  const bankAccounts = activeAccountsList.filter((a) => a.type === "bank");
-  const walletAccounts = activeAccountsList.filter((a) => a.type === "wallet");
-  const cashAccounts = activeAccountsList.filter((a) => a.type === "cash");
-  const investmentAccounts = activeAccountsList.filter((a) => a.type === "investment");
+	const userInitials = user.name
+		? user.name
+				.split(" ")
+				.map((n) => n[0])
+				.join("")
+				.toUpperCase()
+				.slice(0, 2)
+		: "U";
 
-  return (
-    <div className="space-y-6 max-w-6xl mx-auto">
-      {/* Page Header */}
-      <header className="space-y-1">
-        <h1 className="text-2xl lg:text-3xl font-semibold text-text-primary tracking-tight">
-          Profil Akun
-        </h1>
-        <p className="text-sm text-text-muted">
-          Ringkasan identitas, konfigurasi portofolio, dan keamanan data Anda.
-        </p>
-      </header>
+	const signupDate = user.createdAt || new Date().toISOString();
 
-      {/* Grid Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Left Column: Identity Card */}
-        <div className="space-y-6 lg:col-span-1">
-          <Card className="border-border bg-surface overflow-hidden">
-            {/* Top decorative gradient banner */}
-            <div className="h-16 w-full bg-gradient-to-r from-accent/30 via-income/20 to-accent/10" />
-            
-            <CardContent className="pt-0 px-6 pb-6 relative">
-              {/* Profile Avatar with overlap */}
-              <div className="flex justify-center -mt-10 mb-4">
-                {user.image ? (
-                  <div className="relative p-1 bg-surface rounded-full border border-border">
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-accent to-income opacity-30 blur-sm" />
-                    <img
-                      src={user.image}
-                      alt={user.name ?? "Avatar"}
-                      className="relative w-20 h-20 rounded-full object-cover border border-border"
-                    />
-                  </div>
-                ) : (
-                  <div className="relative p-1 bg-surface rounded-full border border-border">
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-accent to-income opacity-20 blur-sm" />
-                    <div className="relative w-20 h-20 rounded-full bg-elevated border border-border text-accent font-bold text-2xl flex items-center justify-center">
-                      {userInitials}
-                    </div>
-                  </div>
-                )}
-              </div>
+	const activeAccountsList = accounts.filter((a) => a.isActive);
+	const inactiveAccountsCount = accounts.length - activeAccountsList.length;
 
-              {/* Identity Details */}
-              <div className="text-center space-y-1">
-                <h2 className="text-lg font-semibold text-text-primary truncate">
-                  {user.name ?? "Pengguna"}
-                </h2>
-                <p className="text-xs text-text-muted flex items-center justify-center gap-1">
-                  <Mail size={12} className="shrink-0" />
-                  <span className="truncate max-w-[200px]">{user.email}</span>
-                </p>
-                <div className="pt-2 flex justify-center">
-                  <Badge variant="outline" className="bg-income/10 text-income border-income/30 text-[10px] font-medium px-2 py-0.5 rounded-full flex items-center gap-1">
-                    <ShieldCheck size={12} />
-                    Terverifikasi
-                  </Badge>
-                </div>
-              </div>
+	const totalBalance = activeAccountsList.reduce((sum, a) => sum + a.balance, 0);
+	const activityRate =
+		accounts.length > 0
+			? Math.round((activeAccountsList.length / accounts.length) * 100)
+			: 0;
 
-              <Separator className="my-5 bg-border" />
+	const bankAccounts = activeAccountsList.filter((a) => a.type === "bank");
+	const walletAccounts = activeAccountsList.filter((a) => a.type === "wallet");
+	const cashAccounts = activeAccountsList.filter((a) => a.type === "cash");
+	const investmentAccounts = activeAccountsList.filter(
+		(a) => a.type === "investment",
+	);
 
-              {/* Meta information */}
-              <div className="space-y-3 text-xs text-text-muted">
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <Calendar size={13} />
-                    Mendaftar
-                  </span>
-                  <span className="font-medium text-text-primary">
-                    {formatDate(signupDate)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <Activity size={13} />
-                    Status Akun
-                  </span>
-                  <span className="font-medium text-income flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-income animate-pulse" />
-                    Aktif
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <Lock size={13} />
-                    Enkripsi Data
-                  </span>
-                  <span className="font-medium text-text-primary">AES-256</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          {/* Quick Stats Summary Widget */}
-          <Card className="border-border bg-surface">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-xs font-semibold uppercase tracking-wider text-text-muted">
-                Portofolio Aktif
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6 pb-8">
-              <div className="space-y-1">
-                <p className="text-2xl font-bold font-mono tabular-nums text-text-primary">
-                  {formatIDR(totalBalance)}
-                </p>
-                <p className="text-[10px] text-text-muted">
-                  Estimasi nilai bersih di {activeAccountsList.length} akun aktif
-                </p>
-              </div>
+	return (
+		<div className="mx-auto max-w-6xl space-y-8">
+			<header className="flex flex-col gap-2 border-b border-border pb-5">
+				<div className="flex items-center gap-3">
+					<span className="font-mono text-sm tracking-[-0.2em] text-text-muted/50">
+						//
+					</span>
+					<p className="font-mono text-xs uppercase tracking-widest text-accent">
+						Account Profile
+					</p>
+				</div>
 
-              <Separator className="bg-border" />
+				<div>
+					<h1 className="text-2xl font-semibold tracking-tight text-text-primary lg:text-3xl">
+						Profil Akun
+					</h1>
+					<p className="mt-1 text-sm text-text-muted">
+						Ringkasan identitas, struktur portofolio, aktivitas pencatatan,
+						dan keamanan data Anda.
+					</p>
+				</div>
+			</header>
 
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs">
-                  <span className="text-text-muted">Tingkat Aktivitas</span>
-                  <span className="font-medium text-text-primary">
-                    {accounts.length > 0
-                      ? `${Math.round((activeAccountsList.length / accounts.length) * 100)}%`
-                      : "0%"}
-                  </span>
-                </div>
-                <div className="h-1.5 bg-elevated rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-accent rounded-full"
-                    style={{
-                      width: `${accounts.length > 0 ? (activeAccountsList.length / accounts.length) * 100 : 0}%`,
-                    }}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+			<div className="grid grid-cols-1 gap-8 lg:grid-cols-[280px_1fr]">
+				{/* Left profile rail */}
+				<aside className="space-y-6">
+					<div className="space-y-4">
+						<div className="group relative shrink-0">
+							<div className="relative flex aspect-square w-full items-center justify-center overflow-hidden border border-border bg-muted">
+								<CornerMarks size="lg" />
 
-        {/* Right Column: Portfolio Breakdown & Activity */}
-        <div className="space-y-6 lg:col-span-2">
-          
-          {/* Account Portfolio Breakdown */}
-          <Card className="border-border bg-surface">
-            <CardHeader className="p-6 pb-2">
-              <CardTitle className="text-base font-semibold text-text-primary">
-                Struktur Rekening & Wallet
-              </CardTitle>
-              <CardDescription className="text-sm text-text-muted">
-                Distribusi penyimpanan aset finansial terdaftar Anda
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="px-6 pb-6 space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <PortfolioSegmentCard
-                  label="Bank"
-                  count={bankAccounts.length}
-                  total={bankAccounts.reduce((sum, a) => sum + a.balance, 0)}
-                  accentColor="#388BFD"
-                />
-                <PortfolioSegmentCard
-                  label="E-Wallet"
-                  count={walletAccounts.length}
-                  total={walletAccounts.reduce((sum, a) => sum + a.balance, 0)}
-                  accentColor="#D29922"
-                />
-                <PortfolioSegmentCard
-                  label="Tunai"
-                  count={cashAccounts.length}
-                  total={cashAccounts.reduce((sum, a) => sum + a.balance, 0)}
-                  accentColor="#2EA043"
-                />
-                <PortfolioSegmentCard
-                  label="Investasi"
-                  count={investmentAccounts.length}
-                  total={investmentAccounts.reduce((sum, a) => sum + a.balance, 0)}
-                  accentColor="#A371F7"
-                />
-              </div>
+								{user.image ? (
+									<img
+										src={user.image}
+										alt={user.name ?? "Avatar"}
+										className="h-full w-full object-cover"
+									/>
+								) : (
+									<div className="flex h-full w-full items-center justify-center bg-elevated">
+										<div className="flex h-24 w-24 items-center justify-center border border-border bg-background font-mono text-3xl font-semibold text-accent">
+											{userInitials}
+										</div>
+									</div>
+								)}
 
-              {inactiveAccountsCount > 0 && (
-                <div className="p-4 rounded-xl bg-warning/5 border border-warning/20 flex items-center justify-between text-sm mt-4">
-                  <span className="text-warning font-medium flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-warning animate-pulse" />
-                    Terdapat {inactiveAccountsCount} akun yang sedang dinonaktifkan sementara.
-                  </span>
-                  <Link to="/accounts" className="text-accent hover:underline flex items-center font-medium gap-0.5 shrink-0">
-                    Kelola
-                    <ChevronRight size={14} />
-                  </Link>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+								<div className="pointer-events-none absolute inset-0 h-10 bg-gradient-to-b from-transparent via-accent/10 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+							</div>
+						</div>
 
-          {/* Activity Logs & Audit metrics */}
-          <Card className="border-border bg-surface">
-            <CardHeader className="p-6 pb-2">
-              <CardTitle className="text-base font-semibold text-text-primary">
-                Aktivitas & Metrik Pencatatan
-              </CardTitle>
-              <CardDescription className="text-sm text-text-muted">
-                Statistik volume dan tingkat keterisian data transaksi Anda
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="px-6 pb-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <Card className="hover:border-accent/40 transition-all duration-200">
-                  <CardContent className="p-6 space-y-3">
-                    <div className="flex items-center gap-2 text-accent">
-                      <Receipt size={20} />
-                      <span className="text-xs font-bold uppercase tracking-wider text-text-muted">
-                        Catatan Transaksi
-                      </span>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-3xl font-bold font-mono tabular-nums text-text-primary">
-                        {counts.transactions}
-                      </p>
-                      <p className="text-xs text-text-muted">
-                        Total baris data riwayat transaksi tersimpan di server lokal Anda.
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
+						<div className="space-y-4">
+							<div>
+								<h2 className="truncate text-xl font-semibold text-text-primary">
+									{user.name ?? "Pengguna"}
+								</h2>
+								<p className="mt-1 flex items-center gap-2 truncate font-mono text-xs text-text-muted">
+									<Mail size={14} className="shrink-0" />
+									<span className="truncate">{user.email}</span>
+								</p>
+							</div>
 
-                <Card className="hover:border-accent/40 transition-all duration-200">
-                  <CardContent className="p-6 space-y-3">
-                    <div className="flex items-center gap-2 text-income">
-                      <Wallet size={20} />
-                      <span className="text-xs font-bold uppercase tracking-wider text-text-muted">
-                        Konektivitas Aset
-                      </span>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-3xl font-bold font-mono tabular-nums text-text-primary">
-                        {accounts.length}
-                      </p>
-                      <p className="text-xs text-text-muted">
-                        Akun keuangan terintegrasi dalam sistem dashboard saat ini.
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </CardContent>
-          </Card>
+							<button
+								type="button"
+								onClick={() => setIsEditModalOpen(true)}
+								className="block w-full border border-border bg-muted px-4 py-2 text-center text-sm font-medium text-text-primary transition-colors hover:bg-muted/70"
+							>
+								Edit profile
+							</button>
 
-          {/* Data Security & Integration info */}
-          <Card className="border-border bg-surface">
-            <CardHeader className="p-6 pb-2">
-              <CardTitle className="text-base font-semibold text-text-primary flex items-center gap-2">
-                <Lock size={18} className="text-accent" />
-                Tata Kelola & Keamanan Data
-              </CardTitle>
-              <CardDescription className="text-sm text-text-muted">
-                Standar perlindungan privasi dan akses programatik pihak ketiga
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-6 pt-2">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="space-y-3.5">
-                  <SecurityPoint text="Data terenkripsi penuh menggunakan AES-256 pada database lokal." />
-                  <SecurityPoint text="Autentikasi sesi menggunakan token JWT aman." />
-                </div>
-                <div className="space-y-3.5">
-                  <SecurityPoint text="Akses pihak ketiga ditolak secara default kecuali jika token API dibuat." />
-                  <div className="flex items-start gap-2.5 text-xs text-text-muted pl-6">
-                    <Link
-                      to="/settings"
-                      className="text-accent hover:underline flex items-center gap-0.5 font-medium"
-                    >
-                      Buka Pengaturan API
-                      <ChevronRight size={12} />
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-        </div>
-      </div>
-    </div>
-  );
+							<div className="inline-flex items-center gap-2 border border-income/30 bg-income/10 px-2.5 py-1 font-mono text-[10px] uppercase tracking-widest text-income">
+								<ShieldCheck size={13} />
+								Terverifikasi
+							</div>
+
+							<div className="space-y-3 border-t border-border pt-4 text-sm">
+								<ProfileMeta
+									icon={<Calendar size={15} />}
+									label="Mendaftar"
+									value={formatDate(signupDate)}
+								/>
+								<ProfileMeta
+									icon={<Activity size={15} />}
+									label="Status"
+									value={
+										<span className="flex items-center gap-1.5 text-income">
+											<span className="h-1.5 w-1.5 rounded-full bg-income" />
+											Aktif
+										</span>
+									}
+								/>
+								<ProfileMeta
+									icon={<Lock size={15} />}
+									label="Enkripsi"
+									value="AES-256"
+								/>
+							</div>
+						</div>
+					</div>
+
+					{/* Active portfolio mini widget */}
+					<Panel>
+						<PanelHeader
+							kicker="Portfolio"
+							title="Portofolio Aktif"
+							actionCode={`${activeAccountsList.length}/${accounts.length || 0}`}
+						/>
+
+						<div className="space-y-5 p-4">
+							<div>
+								<p className="font-mono text-2xl font-semibold tabular-nums text-text-primary">
+									{formatIDR(totalBalance)}
+								</p>
+								<p className="mt-1 text-xs text-text-muted">
+									Estimasi nilai bersih dari {activeAccountsList.length} akun
+									aktif.
+								</p>
+							</div>
+
+							<div className="space-y-2">
+								<div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-widest">
+									<span className="text-text-muted">Activity rate</span>
+									<span className="text-text-primary">{activityRate}%</span>
+								</div>
+
+								<div className="h-1.5 overflow-hidden bg-muted">
+									<div
+										className="h-full bg-accent transition-all"
+										style={{ width: `${activityRate}%` }}
+									/>
+								</div>
+							</div>
+						</div>
+					</Panel>
+				</aside>
+
+				{/* Main content */}
+				<main className="space-y-6">
+					<section>
+						<SectionTitle
+							title="Struktur Rekening & Wallet"
+							description="Distribusi penyimpanan aset finansial terdaftar Anda."
+						/>
+
+						<div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+							<PortfolioSegmentCard
+								label="Bank"
+								count={bankAccounts.length}
+								total={bankAccounts.reduce((sum, a) => sum + a.balance, 0)}
+								accentClass="bg-blue-400"
+							/>
+							<PortfolioSegmentCard
+								label="E-Wallet"
+								count={walletAccounts.length}
+								total={walletAccounts.reduce((sum, a) => sum + a.balance, 0)}
+								accentClass="bg-amber-400"
+							/>
+							<PortfolioSegmentCard
+								label="Tunai"
+								count={cashAccounts.length}
+								total={cashAccounts.reduce((sum, a) => sum + a.balance, 0)}
+								accentClass="bg-income"
+							/>
+							<PortfolioSegmentCard
+								label="Investasi"
+								count={investmentAccounts.length}
+								total={investmentAccounts.reduce((sum, a) => sum + a.balance, 0)}
+								accentClass="bg-purple-400"
+							/>
+						</div>
+
+						{inactiveAccountsCount > 0 && (
+							<div className="mt-4 flex items-center justify-between border border-warning/20 bg-warning/5 p-4 text-sm">
+								<span className="flex items-center gap-2 font-medium text-warning">
+									<span className="h-2 w-2 rounded-full bg-warning" />
+									{inactiveAccountsCount} akun sedang dinonaktifkan sementara.
+								</span>
+
+								<Link
+									to="/accounts"
+									className="flex shrink-0 items-center gap-0.5 font-medium text-accent hover:underline"
+								>
+									Kelola
+									<ChevronRight size={14} />
+								</Link>
+							</div>
+						)}
+					</section>
+
+					<Panel>
+						<PanelHeader
+							kicker="Metrics"
+							title="Aktivitas & Metrik Pencatatan"
+							actionCode="LIVE"
+						/>
+
+						<div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2">
+							<MetricCard
+								icon={<Receipt size={18} />}
+								label="Catatan Transaksi"
+								value={counts.transactions}
+								description="Total baris data riwayat transaksi tersimpan di server lokal Anda."
+								tone="accent"
+							/>
+
+							<MetricCard
+								icon={<Wallet size={18} />}
+								label="Konektivitas Aset"
+								value={accounts.length}
+								description="Akun keuangan terintegrasi dalam sistem dashboard saat ini."
+								tone="income"
+							/>
+						</div>
+					</Panel>
+
+					<Panel>
+						<PanelHeader
+							kicker="Security"
+							title="Tata Kelola & Keamanan Data"
+							action={
+								<Link
+									to="/settings"
+									className="flex items-center gap-1 font-mono text-xs text-text-muted transition-colors hover:text-text-primary"
+								>
+									Settings
+									<ArrowUpRight size={13} />
+								</Link>
+							}
+						/>
+
+						<div className="grid grid-cols-1 gap-6 p-4 sm:grid-cols-2">
+							<div className="space-y-3.5">
+								<SecurityPoint text="Data terenkripsi penuh menggunakan AES-256 pada database lokal." />
+								<SecurityPoint text="Autentikasi sesi menggunakan token JWT aman." />
+							</div>
+
+							<div className="space-y-3.5">
+								<SecurityPoint text="Akses pihak ketiga ditolak secara default kecuali token API dibuat." />
+
+								<Link
+									to="/settings"
+									className="ml-6 flex w-fit items-center gap-0.5 text-xs font-medium text-accent hover:underline"
+								>
+									Buka Pengaturan API
+									<ChevronRight size={12} />
+								</Link>
+							</div>
+						</div>
+					</Panel>
+
+					<Panel>
+						<PanelHeader
+							kicker="Audit"
+							title="Recent Activity"
+							actionCode={`TX-${counts.transactions}`}
+						/>
+
+						<div className="divide-y divide-border">
+							<ActivityItem
+								index="01"
+								icon={<User size={14} />}
+								title="Profil akun dimuat"
+								description="Identitas dan konfigurasi akun berhasil dibaca dari sesi aktif."
+								time="Sekarang"
+							/>
+							<ActivityItem
+								index="02"
+								icon={<Wallet size={14} />}
+								title="Portofolio tersinkron"
+								description={`${activeAccountsList.length} akun aktif tersedia untuk kalkulasi nilai bersih.`}
+								time="Realtime"
+							/>
+							<ActivityItem
+								index="03"
+								icon={<Receipt size={14} />}
+								title="Transaksi tersedia"
+								description={`${counts.transactions} catatan transaksi tersimpan di sistem.`}
+								time="Realtime"
+							/>
+						</div>
+					</Panel>
+				</main>
+			</div>
+
+			<EditProfileModal
+				open={isEditModalOpen}
+				onClose={() => setIsEditModalOpen(false)}
+				user={user}
+			/>
+		</div>
+	);
 }
 
-// Sub-components for better organization & spacing
+function SectionTitle({
+	title,
+	description,
+}: {
+	title: string;
+	description: string;
+}) {
+	return (
+		<div className="flex items-start justify-between gap-4">
+			<div>
+				<div className="mb-2 flex items-center gap-3">
+					<span className="font-mono text-sm tracking-[-0.2em] text-text-muted/50">
+						//
+					</span>
+					<h2 className="font-mono text-sm font-medium uppercase tracking-wide text-text-primary">
+						{title}
+					</h2>
+				</div>
+				<p className="text-sm text-text-muted">{description}</p>
+			</div>
+		</div>
+	);
+}
+
+function Panel({
+	children,
+	className = "",
+}: {
+	children: React.ReactNode;
+	className?: string;
+}) {
+	return (
+		<div
+			className={`group relative overflow-hidden border border-border bg-background ${className}`}
+		>
+			<CornerMarks />
+
+			<div className="absolute left-0 top-0 h-full w-0.5 bg-transparent transition-colors duration-200 group-hover:bg-accent/40" />
+			<div className="pointer-events-none absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-accent/5 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+
+			{children}
+		</div>
+	);
+}
+
+function PanelHeader({
+	kicker,
+	title,
+	action,
+	actionCode,
+}: {
+	kicker: string;
+	title: string;
+	action?: React.ReactNode;
+	actionCode?: string;
+}) {
+	return (
+		<div className="border-b border-border p-4">
+			<div className="flex items-center justify-between gap-4">
+				<div className="flex items-center gap-3">
+					<span className="font-mono text-sm tracking-[-0.2em] text-text-muted/50">
+						//
+					</span>
+					<div>
+						<p className="font-mono text-[10px] uppercase tracking-widest text-text-muted">
+							{kicker}
+						</p>
+						<h3 className="font-mono text-sm font-medium uppercase tracking-wide text-text-primary">
+							{title}
+						</h3>
+					</div>
+				</div>
+
+				{action ??
+					(actionCode ? (
+						<span className="border border-border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-widest text-text-muted">
+							{actionCode}
+						</span>
+					) : null)}
+			</div>
+		</div>
+	);
+}
 
 function PortfolioSegmentCard({
-  label,
-  count,
-  total,
-  accentColor,
+	label,
+	count,
+	total,
+	accentClass,
 }: {
-  label: string;
-  count: number;
-  total: number;
-  accentColor: string;
+	label: string;
+	count: number;
+	total: number;
+	accentClass: string;
 }) {
-  return (
-    <Card className="hover:border-accent/40 transition-all duration-200">
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">{label}</span>
-          <span
-            className="w-2 h-2 rounded-full"
-            style={{ backgroundColor: accentColor }}
-          />
-        </div>
-        <p className="text-xl font-bold font-mono tabular-nums text-text-primary truncate">
-          {formatIDR(total)}
-        </p>
-        <p className="text-xs text-text-muted mt-1.5">{count} rekening aktif</p>
-      </CardContent>
-    </Card>
-  );
+	return (
+		<div className="group relative overflow-hidden border border-border bg-background p-5 transition-colors hover:border-accent/40">
+			<CornerMarks />
+
+			<div className="mb-4 flex items-center justify-between">
+				<span className="font-mono text-xs font-medium uppercase tracking-widest text-text-muted">
+					{label}
+				</span>
+				<span className={`h-2.5 w-2.5 ${accentClass}`} />
+			</div>
+
+			<p className="truncate font-mono text-xl font-semibold tabular-nums text-text-primary">
+				{formatIDR(total)}
+			</p>
+			<p className="mt-1.5 text-xs text-text-muted">{count} rekening aktif</p>
+		</div>
+	);
+}
+
+function MetricCard({
+	icon,
+	label,
+	value,
+	description,
+	tone,
+}: {
+	icon: React.ReactNode;
+	label: string;
+	value: number;
+	description: string;
+	tone: "accent" | "income";
+}) {
+	const toneClass = tone === "income" ? "text-income" : "text-accent";
+
+	return (
+		<div className="relative border border-border bg-background p-5 transition-colors hover:border-accent/40">
+			<CornerMarks />
+
+			<div className={`mb-4 flex items-center gap-2 ${toneClass}`}>
+				{icon}
+				<span className="font-mono text-[10px] font-bold uppercase tracking-widest text-text-muted">
+					{label}
+				</span>
+			</div>
+
+			<p className="font-mono text-3xl font-semibold tabular-nums text-text-primary">
+				{value}
+			</p>
+			<p className="mt-2 text-xs leading-relaxed text-text-muted">
+				{description}
+			</p>
+		</div>
+	);
+}
+
+function ActivityItem({
+	index,
+	icon,
+	title,
+	description,
+	time,
+}: {
+	index: string;
+	icon: React.ReactNode;
+	title: string;
+	description: string;
+	time: string;
+}) {
+	return (
+		<div className="group relative flex items-start gap-3 overflow-hidden p-4 transition-colors hover:bg-muted/30">
+			<div className="absolute left-0 top-0 h-full w-0.5 bg-transparent transition-colors group-hover:bg-accent/40" />
+
+			<div className="mt-1 text-text-muted transition-colors group-hover:text-accent">
+				{icon}
+			</div>
+
+			<div className="min-w-0 flex-1">
+				<p className="text-sm text-text-primary">
+					<span className="font-mono font-medium">{title}</span>
+				</p>
+				<p className="mt-1 text-xs leading-relaxed text-text-muted">
+					{description}
+				</p>
+				<p className="mt-2 font-mono text-[10px] uppercase tracking-widest text-text-muted/60">
+					{time}
+				</p>
+			</div>
+
+			<span className="font-mono text-[10px] tabular-nums text-text-muted/40">
+				[{index}]
+			</span>
+		</div>
+	);
+}
+
+function ProfileMeta({
+	icon,
+	label,
+	value,
+}: {
+	icon: React.ReactNode;
+	label: string;
+	value: React.ReactNode;
+}) {
+	return (
+		<div className="flex items-center justify-between gap-3 text-text-muted">
+			<span className="flex items-center gap-2">
+				{icon}
+				{label}
+			</span>
+			<span className="font-medium text-text-primary">{value}</span>
+		</div>
+	);
 }
 
 function SecurityPoint({ text }: { text: React.ReactNode }) {
-  return (
-    <div className="flex items-start gap-2.5 text-xs text-text-muted">
-      <CheckCircle2 size={15} className="text-income shrink-0 mt-0.5" />
-      <span>{text}</span>
-    </div>
-  );
+	return (
+		<div className="flex items-start gap-2.5 text-xs leading-relaxed text-text-muted">
+			<CheckCircle2 size={15} className="mt-0.5 shrink-0 text-income" />
+			<span>{text}</span>
+		</div>
+	);
+}
+
+function CornerMarks({ size = "sm" }: { size?: "sm" | "lg" }) {
+	const cornerSize = size === "lg" ? "h-3 w-3" : "h-2 w-2";
+
+	return (
+		<>
+			<div
+				className={`absolute -left-px -top-px z-10 border-l-2 border-t-2 border-text-muted/20 ${cornerSize}`}
+			/>
+			<div
+				className={`absolute -right-px -top-px z-10 border-r-2 border-t-2 border-text-muted/20 ${cornerSize}`}
+			/>
+			<div
+				className={`absolute -bottom-px -left-px z-10 border-b-2 border-l-2 border-text-muted/20 ${cornerSize}`}
+			/>
+			<div
+				className={`absolute -bottom-px -right-px z-10 border-b-2 border-r-2 border-text-muted/20 ${cornerSize}`}
+			/>
+		</>
+	);
 }

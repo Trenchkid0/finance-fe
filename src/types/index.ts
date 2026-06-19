@@ -29,6 +29,7 @@ export interface User {
   name: string;
   email: string;
   image?: string;
+  telegramChatId?: string;
   createdAt?: string;
 }
 

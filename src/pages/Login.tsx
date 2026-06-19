@@ -24,12 +24,12 @@ export default function Login() {
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="h-8 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-text-primary hover:bg-white/[0.04] transition-all bg-elevated border border-border"
+                className="h-8 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-text-primary hover:bg-hover-surface transition-all bg-elevated border border-border"
               >
                 <span>{language === "id" ? "Bahasa Indonesia" : "English (US)"}</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[150px] rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl">
+            <DropdownMenuContent align="end" className="min-w-[150px] rounded-xl border border-border bg-popover backdrop-blur-xl shadow-lg shadow-black/10 dark:shadow-black/45">
               <DropdownMenuItem
                 className="text-xs font-semibold cursor-pointer"
                 onSelect={() => setLanguage("id")}

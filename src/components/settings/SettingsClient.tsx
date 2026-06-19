@@ -306,7 +306,7 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
               open={confirmRestore}
               onOpenChange={(open) => !open && !restoring && setConfirmRestore(false)}
             >
-              <DialogContent className="rounded-2xl border-white/[0.08] bg-popover/95 backdrop-blur-xl max-w-sm">
+              <DialogContent className="rounded-2xl border border-border bg-popover backdrop-blur-xl max-w-sm shadow-2xl shadow-black/10 dark:shadow-black/45">
                 <DialogHeader>
                   <DialogTitle className="text-text-primary text-base font-bold flex items-center gap-2">
                     <ShieldAlert className="text-expense" size={18} />

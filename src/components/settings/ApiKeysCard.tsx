@@ -1,4 +1,5 @@
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
+import { createPortal } from "react-dom";
 import {
   Check,
   Copy,
@@ -265,58 +266,143 @@ function ApiKeyRow({ item }: { item: ApiKeyListItem }) {
         </Button>
       </div>
 
-      <Dialog
-        open={confirmAction !== null}
-        onOpenChange={(open) => !open && setConfirmAction(null)}
+      {confirmAction && (
+        <ConfirmApiKeyAction
+          open={confirmAction !== null}
+          action={confirmAction}
+          item={item}
+          pending={pending}
+          onClose={() => setConfirmAction(null)}
+          onConfirm={handleConfirm}
+        />
+      )}
+    </li>
+  );
+}
+
+// --- Confirm API Key Action (Premium Dialog) ------------------------------
+
+interface ConfirmApiKeyActionProps {
+  open: boolean;
+  action: "revoke" | "delete";
+  item: ApiKeyListItem;
+  pending: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}
+
+function ConfirmApiKeyAction({
+  open,
+  action,
+  item,
+  pending,
+  onClose,
+  onConfirm,
+}: ConfirmApiKeyActionProps) {
+  const { language } = useLanguage();
+  const isId = language === "id";
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  const isDelete = action === "delete";
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6 backdrop-blur-sm"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        className="flex max-h-[calc(100dvh-48px)] w-full max-w-[420px] flex-col overflow-hidden rounded-[22px] border border-border bg-surface shadow-2xl"
+        role="dialog"
+        aria-modal="true"
       >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {confirmAction === "delete"
-                ? (language === "id" ? "Hapus kunci" : "Delete key")
-                : (language === "id" ? "Cabut kunci" : "Revoke key")}
-            </DialogTitle>
-            <DialogDescription>
-              {confirmAction === "delete"
-                ? (language === "id"
+        {/* Sticky Header */}
+        <div className="flex items-start gap-4 border-b border-border px-7 py-5">
+          <div
+            className={cn(
+              "flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-white shadow-lg",
+              isDelete
+                ? "bg-gradient-to-br from-expense to-expense/60"
+                : "bg-gradient-to-br from-warning to-warning/60"
+            )}
+          >
+            {isDelete ? <Trash2 className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
+          </div>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-[17px] font-semibold leading-tight text-foreground">
+              {isDelete
+                ? (isId ? "Hapus Kunci API" : "Delete API Key")
+                : (isId ? "Cabut Kunci API" : "Revoke API Key")}
+            </h2>
+            <p className="mt-0.5 text-[13px] text-muted-foreground/70 leading-normal">
+              {isDelete
+                ? (isId
                   ? "Kunci akan dihapus permanen dari sistem. Aksi ini tidak bisa dibatalkan."
                   : "The key will be permanently deleted from the system. This action cannot be undone.")
-                : (language === "id"
+                : (isId
                   ? "Kunci akan langsung tidak valid. Anda bisa menghapusnya sepenuhnya nanti."
                   : "The key will immediately become invalid. You can delete it fully later.")}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogBody>
-            <p className="text-sm text-foreground">
-              <span className="font-medium">{item.name}</span>{" "}
-              <span className="text-muted-foreground font-mono">
-                ({item.prefix}…)
-              </span>
             </p>
-          </DialogBody>
-          <DialogFooter>
-            <Button
-              variant="secondary"
-              onClick={() => setConfirmAction(null)}
-              disabled={pending}
-            >
-              {language === "id" ? "Batal" : "Cancel"}
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleConfirm}
-              disabled={pending}
-            >
-              {pending
-                ? (language === "id" ? "Memproses…" : "Processing...")
-                : confirmAction === "delete"
-                  ? (language === "id" ? "Hapus" : "Delete")
-                  : (language === "id" ? "Cabut" : "Revoke")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </li>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto px-7 py-6">
+          <Card className="px-4 py-3 gap-0 border border-border bg-white/[0.02] rounded-xl">
+            <p className="text-sm font-semibold text-foreground">
+              {item.name}
+            </p>
+            <p className="text-xs text-muted-foreground font-mono mt-1.5 break-all select-all">
+              {item.prefix}
+            </p>
+          </Card>
+        </div>
+
+        {/* Sticky Footer */}
+        <div className="flex items-center justify-end gap-2.5 border-t border-border px-7 py-4">
+          <Button variant="secondary" onClick={onClose} disabled={pending} className="rounded-xl">
+            {isId ? "Batal" : "Cancel"}
+          </Button>
+          <Button
+            variant={isDelete ? "destructive" : "default"}
+            onClick={onConfirm}
+            disabled={pending}
+            className={cn(
+              "rounded-xl font-semibold gap-1.5",
+              !isDelete && "bg-warning text-black hover:bg-warning/80"
+            )}
+          >
+            {pending ? (
+              <>
+                <Loader2 size={13} className="animate-spin" />
+                {isId ? "Memproses..." : "Processing..."}
+              </>
+            ) : isDelete ? (
+              isId ? "Hapus" : "Delete"
+            ) : (
+              isId ? "Cabut" : "Revoke"
+            )}
+          </Button>
+        </div>
+      </div>
+    </div>,
+    document.body
   );
 }
 
