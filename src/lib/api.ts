@@ -68,7 +68,7 @@ async function request<T>(
     // Global 401 interceptor — redirect ke login jika session expired
     if (response.status === 401) {
       const isAuthPage = typeof window !== "undefined" &&
-        ["/login", "/register", "/forgot-password", "/reset-password"].some(
+        ["/login", "/register", "/forgot-password", "/reset-password", "/status"].some(
           (p) => window.location.pathname.startsWith(p)
         );
       if (!isAuthPage && typeof window !== "undefined") {

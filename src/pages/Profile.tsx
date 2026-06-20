@@ -22,7 +22,6 @@ import {
 	CornerMarks,
 	ProfileCard,
 	ProfileCardHeader,
-	ProfileCardContent,
 	ProfileSectionTitle,
 	ProfileActivityItem,
 } from "@/components/ui/profile-card";

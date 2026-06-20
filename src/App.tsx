@@ -23,6 +23,7 @@ const Profile = lazy(() => import("@/pages/Profile"));
 const Goals = lazy(() => import("@/pages/Goals"));
 const Recurring = lazy(() => import("@/pages/Recurring"));
 const Investments = lazy(() => import("@/pages/Investments"));
+const Status = lazy(() => import("@/pages/Status"));
 
 import { LanguageProvider } from "@/lib/contexts/LanguageContext";
 import { loadSavedTheme } from "@/lib/utils/theme";
@@ -115,6 +116,13 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+
+          {/* Public status page */}
+          <Route path="/status" element={
+            <Suspense fallback={<PageLoadingFallback />}>
+              <Status />
+            </Suspense>
+          } />
 
           {/* Protected dashboard routes - shared layout */}
           <Route element={<DashboardLayout />}>

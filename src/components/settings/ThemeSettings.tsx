@@ -9,7 +9,6 @@ import {
   applyFont,
   type ThemeVariables,
   type CardStyles,
-  type CardType,
   applyCardStyles,
   type ButtonStyles,
   applyButtonStyles,
