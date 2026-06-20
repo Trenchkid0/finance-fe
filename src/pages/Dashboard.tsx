@@ -1,22 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { useSearchParams } from "react-router-dom";
-import { TrendingUp, TrendingDown, Clock, Sparkles } from "lucide-react";
+import { Clock } from "lucide-react";
 import { NetWorthHero } from "@/components/dashboard/NetWorthHero";
 import { OnboardingHero } from "@/components/dashboard/OnboardingHero";
 import { BalanceSheet } from "@/components/dashboard/BalanceSheet";
+import { AssetSummaryWidget } from "@/components/dashboard/AssetSummaryWidget";
+import { MiniStatWidget } from "@/components/dashboard/MiniStatWidget";
+import { InsightWidget } from "@/components/dashboard/InsightWidget";
 import { CashflowSankey } from "@/components/charts/CashflowSankey";
 import { RecentTransactions } from "@/components/dashboard/RecentTransactions";
 import { SkeletonDashboard } from "@/components/ui/skeleton-loader";
 import { InlineErrorBoundary } from "@/components/ui/error-boundary";
-import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useApp } from "@/components/layout/AppLayout";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 import { useCachedApi } from "@/hooks/use-cached-api";
 import { CacheKeys, CacheTTL } from "@/lib/cache";
 import { api } from "@/lib/api";
-import { formatIDR } from "@/lib/utils/formatters";
 
 import { getCurrentPreferences } from "@/lib/preferences";
 
@@ -409,216 +410,3 @@ export default function Dashboard() {
   );
 }
 
-/* ─── WIDGETS ─────────────────────────────────────────────────────────────── */
-
-function AssetSummaryWidget({
-  total,
-  deltaRatio,
-  groups,
-  isId,
-}: {
-  total: number;
-  deltaRatio: number;
-  groups: AssetGroup[];
-  isId: boolean;
-}) {
-  const up = deltaRatio >= 0;
-  const badgeClass = up
-    ? "text-income bg-income/10"
-    : "text-expense bg-expense/10";
-  return (
-    <Card className="h-full p-6 flex flex-col gap-5">
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">
-            {isId ? "Total Kekayaan" : "Net Worth"}
-          </p>
-          {deltaRatio !== 0 && (
-            <span
-              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold ${badgeClass}`}
-            >
-              {up ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
-              {up ? "+" : ""}
-              {deltaRatio.toFixed(1)}%
-            </span>
-          )}
-        </div>
-        <p className="text-3xl font-black font-mono tabular-nums text-foreground">
-          {formatIDR(total)}
-        </p>
-      </div>
-
-      <div className="flex flex-col gap-3.5 mt-auto">
-        {groups.length === 0 ? (
-          <p className="text-xs text-muted-foreground/60">
-            {isId ? "Belum ada aset." : "No assets yet."}
-          </p>
-        ) : (
-          groups.slice(0, 4).map((g) => {
-            const dotStyle: CSSProperties = { backgroundColor: g.color };
-            const barStyle: CSSProperties = {
-              width: `${Math.max(g.percent, 2)}%`,
-              backgroundColor: g.color,
-            };
-            return (
-              <div key={g.name} className="space-y-1.5">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="flex items-center gap-2 text-muted-foreground">
-                    <span className="size-2 rounded-full" style={dotStyle} />
-                    {g.name}
-                  </span>
-                  <span className="font-mono tabular-nums font-semibold text-foreground">
-                    {formatIDR(g.total)}
-                  </span>
-                </div>
-                <div className="h-1.5 w-full rounded-full bg-border/30 overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-500 ease-out"
-                    style={barStyle}
-                  />
-                </div>
-              </div>
-            );
-          })
-        )}
-      </div>
-    </Card>
-  );
-}
-
-function MiniStatWidget({
-  label,
-  value,
-  tone,
-  hint,
-  isCurrency = true,
-  count = 0,
-}: {
-  label: string;
-  value: number;
-  tone: "income" | "expense" | "neutral";
-  hint: string;
-  isCurrency?: boolean;
-  count?: number;
-}) {
-  const valueColor =
-    tone === "income"
-      ? "text-income"
-      : tone === "expense"
-        ? "text-expense"
-        : "text-foreground";
-  const dotColor =
-    tone === "income"
-      ? "bg-income"
-      : tone === "expense"
-        ? "bg-expense"
-        : "bg-accent";
-
-  return (
-    <Card className="p-5 flex flex-col gap-3">
-      <div className="flex items-start justify-between gap-3">
-        <div className="space-y-1.5 min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">
-            {label}
-          </p>
-          <p
-            className={`text-2xl font-black font-mono tabular-nums truncate ${valueColor}`}
-          >
-            {isCurrency ? formatIDR(value) : value.toLocaleString("id-ID")}
-          </p>
-          <p className="text-[11px] text-muted-foreground/50">
-            {count > 0 && (
-              <span className="font-semibold tabular-nums">{count} <span className="font-sans font-normal">tx</span></span>
-            )}
-            {hint && count > 0 && <span className="mx-1">·</span>}
-            {hint}
-          </p>
-        </div>
-        <DotMatrix count={count} value={value} dotColor={dotColor} />
-      </div>
-    </Card>
-  );
-}
-
-const DOT_TOTAL = 28;
-
-function DotMatrix({
-  count,
-  value,
-  dotColor,
-}: {
-  count: number;
-  value: number;
-  dotColor: string;
-}) {
-  // No data at all — hide entirely
-  if (count <= 0 && value <= 0) return null;
-
-  const filled = count > 0 ? Math.min(count, DOT_TOTAL) : DOT_TOTAL;
-  const overflow = count > DOT_TOTAL ? count - DOT_TOTAL : 0;
-
-  return (
-    <div className="shrink-0 space-y-1" aria-label={`${count} transactions`}>
-      <div className="grid grid-cols-4 gap-1 place-items-center">
-        {Array.from({ length: DOT_TOTAL }).map((_, i) => (
-          <span
-            key={i}
-            className={`block size-1.5 rounded-full aspect-square shrink-0 ${
-              i < filled ? dotColor : "bg-border/30"
-            }`}
-          />
-        ))}
-      </div>
-      {overflow > 0 && (
-        <p className="text-[8px] text-muted-foreground/60 font-medium tabular-nums leading-none text-center">
-          +{overflow}
-        </p>
-      )}
-    </div>
-  );
-}
-
-function InsightWidget({
-  ratio,
-  surplus,
-  isId,
-}: {
-  ratio: number;
-  surplus: number;
-  isId: boolean;
-}) {
-  const pct = Math.max(0, Math.min(100, ratio));
-  const positive = surplus >= 0;
-  const progressStyle: CSSProperties = {
-    width: `${pct}%`,
-    backgroundColor: "var(--accent)",
-  };
-  return (
-    <Card className="relative overflow-hidden p-5 flex flex-col justify-between">
-      <div className="relative flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest text-accent">
-        <Sparkles size={13} />
-        {isId ? "Wawasan" : "Insights"}
-      </div>
-      <div className="relative mt-2">
-        <p className="text-3xl font-black font-mono tabular-nums text-foreground">
-          {pct.toFixed(0)}%
-        </p>
-        <p className="text-[11px] text-muted-foreground/70 mt-1 leading-snug">
-          {positive
-            ? isId
-              ? `Anda menabung ${pct.toFixed(0)}% dari pemasukan periode ini.`
-              : `You saved ${pct.toFixed(0)}% of income this period.`
-            : isId
-              ? "Pengeluaran melebihi pemasukan periode ini."
-              : "Spending exceeded income this period."}
-        </p>
-      </div>
-      <div className="relative mt-3 h-1.5 w-full rounded-full bg-border/30 overflow-hidden">
-        <div
-          className="h-full rounded-full transition-all duration-700 ease-out"
-          style={progressStyle}
-        />
-      </div>
-    </Card>
-  );
-}

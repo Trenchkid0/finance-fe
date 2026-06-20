@@ -1,6 +1,7 @@
 import { api } from "@/lib/api";
 import { loginSchema, registerSchema, forgotPasswordSchema, resetPasswordSchema } from "@/lib/utils/validators";
 import type { ActionResult } from "@/types";
+import { getErrorMessage } from "@/types";
 
 export async function login(
   _prevState: ActionResult<null> | undefined,
@@ -23,10 +24,10 @@ export async function login(
     // Successful login -> reload page to let AppLayout context initialize
     window.location.href = "/";
     return { ok: true };
-  } catch (err: any) {
+  } catch (err: unknown) {
     return {
       ok: false,
-      error: err.message || "Email atau kata sandi salah.",
+      error: getErrorMessage(err, "Email atau kata sandi salah."),
     };
   }
 }
@@ -53,10 +54,10 @@ export async function register(
     // The register Go backend automatically sets cookie and returns user!
     window.location.href = "/";
     return { ok: true };
-  } catch (err: any) {
+  } catch (err: unknown) {
     return {
       ok: false,
-      error: err.message || "Gagal mendaftar. Coba lagi.",
+      error: getErrorMessage(err, "Gagal mendaftar. Coba lagi."),
     };
   }
 }
@@ -91,10 +92,10 @@ export async function forgotPassword(
       ok: true,
       data: { resetUrl: res.resetUrl },
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     return {
       ok: false,
-      error: err.message || "Email tidak ditemukan atau terjadi kesalahan.",
+      error: getErrorMessage(err, "Email tidak ditemukan atau terjadi kesalahan."),
     };
   }
 }
@@ -118,10 +119,10 @@ export async function resetPassword(
   try {
     await api.post("/api/auth/reset-password", parsed.data);
     return { ok: true };
-  } catch (err: any) {
+  } catch (err: unknown) {
     return {
       ok: false,
-      error: err.message || "Gagal mereset kata sandi. Silakan coba lagi.",
+      error: getErrorMessage(err, "Gagal mereset kata sandi. Silakan coba lagi."),
     };
   }
 }

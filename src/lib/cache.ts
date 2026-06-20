@@ -33,6 +33,17 @@ class SimpleCache {
   }
 
   /**
+   * Get cached data even if expired (for SWR pattern).
+   * Returns { data, isStale } — stale data is returned but flagged.
+   */
+  getStale<T>(key: string): { data: T; isStale: boolean } | null {
+    const entry = this.cache.get(key);
+    if (!entry) return null;
+    const isStale = Date.now() > entry.expiresAt;
+    return { data: entry.data as T, isStale };
+  }
+
+  /**
    * Set cache with TTL (Time To Live)
    * @param key - Cache key
    * @param data - Data to cache

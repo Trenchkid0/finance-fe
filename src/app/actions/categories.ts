@@ -2,6 +2,7 @@ import { api } from "@/lib/api";
 import { createCategorySchema } from "@/lib/utils/validators";
 import type { ActionResult } from "@/types";
 import { getErrorMessage } from "@/types";
+import { invalidateCache } from "@/lib/cache";
 
 function getString(fd: FormData, name: string): string | undefined {
   const v = fd.get(name);
@@ -30,6 +31,7 @@ export async function createCategory(
       type: parsed.data.type,
       icon: parsed.data.icon || "📂",
     });
+    invalidateCache.categories();
     window.dispatchEvent(new CustomEvent("refresh-app-data"));
     return { ok: true };
   } catch (err: unknown) {
@@ -40,6 +42,7 @@ export async function createCategory(
 export async function deleteCategory(id: string): Promise<ActionResult<null>> {
   try {
     await api.delete(`/api/categories/${id}`);
+    invalidateCache.categories();
     window.dispatchEvent(new CustomEvent("refresh-app-data"));
     return { ok: true };
   } catch (err: unknown) {

@@ -3,6 +3,7 @@ import { createAccountSchema, updateAccountSchema } from "@/lib/utils/validators
 import type { ActionResult } from "@/types";
 import { getErrorMessage } from "@/types";
 import { cleanMoneyString } from "@/lib/utils/formatters";
+import { invalidateCache } from "@/lib/cache";
 
 export async function createAccount(
   _prev: ActionResult<null> | undefined,
@@ -35,6 +36,7 @@ export async function createAccount(
       icon: parsed.data.icon,
       balance: parsed.data.startingBalance,
     });
+    invalidateCache.afterAccountChange();
     window.dispatchEvent(new CustomEvent("refresh-app-data"));
     return { ok: true };
   } catch (err: unknown) {
@@ -77,6 +79,7 @@ export async function updateAccount(
       isActive: parsed.data.isActive,
       balance: parsed.data.balance,
     });
+    invalidateCache.afterAccountChange();
     window.dispatchEvent(new CustomEvent("refresh-app-data"));
     return { ok: true };
   } catch (err: unknown) {
@@ -92,6 +95,7 @@ export async function toggleAccountActive(id: string): Promise<ActionResult<null
       ...current,
       isActive: nextActive,
     });
+    invalidateCache.afterAccountChange();
     window.dispatchEvent(new CustomEvent("refresh-app-data"));
     return { ok: true };
   } catch (err: unknown) {
@@ -102,6 +106,7 @@ export async function toggleAccountActive(id: string): Promise<ActionResult<null
 export async function deleteAccount(id: string): Promise<ActionResult<null>> {
   try {
     await api.delete(`/api/accounts/${id}`);
+    invalidateCache.afterAccountChange();
     window.dispatchEvent(new CustomEvent("refresh-app-data"));
     return { ok: true };
   } catch (err: unknown) {

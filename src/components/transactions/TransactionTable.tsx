@@ -74,17 +74,21 @@ export function TransactionsList({
 
       <div className="space-y-4">
         {groups.map((group) => (
-          <DateGroup
+          <div
             key={group.date}
-            group={group}
-            categories={categories}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            onDuplicate={onDuplicate}
-            selectedIds={selectedIds}
-            toggleSelect={toggleSelect}
-            filters={filters}
-          />
+            style={{ contentVisibility: "auto", containIntrinsicSize: "auto 200px" }}
+          >
+            <DateGroup
+              group={group}
+              categories={categories}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onDuplicate={onDuplicate}
+              selectedIds={selectedIds}
+              toggleSelect={toggleSelect}
+              filters={filters}
+            />
+          </div>
         ))}
       </div>
     </div>

@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils/cn";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 import { api } from "@/lib/api";
 import { formatIDR } from "@/lib/utils/formatters";
+import { invalidateCache } from "@/lib/cache";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { FormSelect } from "@/components/ui/FormSelect";
@@ -225,7 +226,7 @@ export function TransactionsClient({
     try {
       setPendingBulkEdit(true);
       const ids = Array.from(selectedIds);
-      const payload: any = { ids };
+      const payload: { ids: string[]; accountId?: string; categoryId?: string } = { ids };
       if (bulkAccount) payload.accountId = bulkAccount;
       if (bulkCategory) payload.categoryId = bulkCategory;
 
@@ -239,9 +240,11 @@ export function TransactionsClient({
       setOpenBulkEdit(false);
       setBulkAccount("");
       setBulkCategory("");
+      invalidateCache.afterTransactionChange();
       window.dispatchEvent(new CustomEvent("refresh-app-data"));
-    } catch (err: any) {
-      toast.error(err.message || (language === "id" ? "Gagal memperbarui transaksi" : "Failed to update transactions"));
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : (language === "id" ? "Gagal memperbarui transaksi" : "Failed to update transactions");
+      toast.error(msg);
     } finally {
       setPendingBulkEdit(false);
     }
@@ -307,10 +310,12 @@ export function TransactionsClient({
                     return next;
                   });
                   await api.post("/api/transactions/restore", { ids });
+                  invalidateCache.afterTransactionChange();
                   toast.success(language === "id" ? "Transaksi dikembalikan" : "Transactions restored");
                   window.dispatchEvent(new CustomEvent("refresh-app-data"));
-                } catch (err: any) {
-                  toast.error(language === "id" ? "Gagal mengembalikan transaksi" : "Failed to restore transactions");
+                } catch (err: unknown) {
+                  const restoreMsg = err instanceof Error ? err.message : (language === "id" ? "Gagal mengembalikan transaksi" : "Failed to restore transactions");
+                  toast.error(restoreMsg);
                 }
               }
             }
@@ -325,6 +330,7 @@ export function TransactionsClient({
             ids.forEach((id) => next.delete(id));
             return next;
           });
+          invalidateCache.afterTransactionChange();
           window.dispatchEvent(new CustomEvent("refresh-app-data"));
         }, 4000);
       } catch (err: unknown) {

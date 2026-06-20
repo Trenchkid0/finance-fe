@@ -1,6 +1,7 @@
 import { api } from "@/lib/api";
 import type { ActionResult, BudgetApiItem } from "@/types";
 import { getErrorMessage } from "@/types";
+import { invalidateCache } from "@/lib/cache";
 
 export async function setBudgetLimit(
   categoryId: string,
@@ -22,6 +23,7 @@ export async function setBudgetLimit(
       await api.post("/api/budgets", { categoryId, limit });
     }
 
+    invalidateCache.budgets();
     window.dispatchEvent(new CustomEvent("refresh-app-data"));
     return { ok: true };
   } catch (err: unknown) {

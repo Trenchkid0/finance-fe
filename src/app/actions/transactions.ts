@@ -2,6 +2,7 @@ import { api } from "@/lib/api";
 import type { ActionResult } from "@/types";
 import { getErrorMessage } from "@/types";
 import { cleanMoneyString } from "@/lib/utils/formatters";
+import { invalidateCache } from "@/lib/cache";
 
 function getString(fd: FormData, name: string): string | undefined {
   const v = fd.get(name);
@@ -30,6 +31,7 @@ export async function createTransaction(
   };
   try {
     await api.post("/api/transactions", payload);
+    invalidateCache.afterTransactionChange();
     window.dispatchEvent(new CustomEvent("refresh-app-data"));
     return { ok: true };
   } catch (err: unknown) {
@@ -59,6 +61,7 @@ export async function updateTransaction(
 
   try {
     await api.put(`/api/transactions/${id}`, payload);
+    invalidateCache.afterTransactionChange();
     window.dispatchEvent(new CustomEvent("refresh-app-data"));
     return { ok: true };
   } catch (err: unknown) {
@@ -69,6 +72,7 @@ export async function updateTransaction(
 export async function deleteTransaction(id: string): Promise<ActionResult<null>> {
   try {
     await api.delete(`/api/transactions/${id}`);
+    invalidateCache.afterTransactionChange();
     window.dispatchEvent(new CustomEvent("refresh-app-data"));
     return { ok: true };
   } catch (err: unknown) {
@@ -79,6 +83,7 @@ export async function deleteTransaction(id: string): Promise<ActionResult<null>>
 export async function restoreTransaction(id: string): Promise<ActionResult<null>> {
   try {
     await api.post(`/api/transactions/${id}/restore`, {});
+    invalidateCache.afterTransactionChange();
     window.dispatchEvent(new CustomEvent("refresh-app-data"));
     return { ok: true };
   } catch (err: unknown) {

@@ -1,5 +1,18 @@
 import { api } from "@/lib/api";
 import type { ActionResult } from "@/types";
+import { getErrorMessage } from "@/types";
+import { invalidateCache } from "@/lib/cache";
+
+interface TransactionDetail {
+  accountId: string;
+  categoryId: string | null;
+  type: string;
+  amount: number;
+  description: string | null;
+  note: string | null;
+  date: string;
+  transferToId: string | null;
+}
 
 export async function updateTransactionCategory(
   id: string,
@@ -7,7 +20,7 @@ export async function updateTransactionCategory(
 ): Promise<ActionResult<null>> {
   try {
     // Fetch current details first
-    const current = await api.get<any>(`/api/transactions/${id}`);
+    const current = await api.get<TransactionDetail>(`/api/transactions/${id}`);
 
     // Perform PUT with updated categoryId
     await api.put(`/api/transactions/${id}`, {
@@ -21,9 +34,10 @@ export async function updateTransactionCategory(
       transferToId: current.transferToId,
     });
 
+    invalidateCache.afterTransactionChange();
     window.dispatchEvent(new CustomEvent("refresh-app-data"));
     return { ok: true };
-  } catch (err: any) {
-    return { ok: false, error: err.message || "Gagal memperbarui kategori." };
+  } catch (err: unknown) {
+    return { ok: false, error: getErrorMessage(err, "Gagal memperbarui kategori.") };
   }
 }
