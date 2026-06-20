@@ -1,6 +1,7 @@
-import { useEffect, useRef, memo } from "react";
+import { useEffect, useRef, useState, memo } from "react";
 import { ArrowLeftRight, Copy, MoreHorizontal, Pencil, Receipt, Trash2, Wallet } from "lucide-react";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
+import { normalizeImageUrl } from "@/lib/api";
 import { formatIDR } from "@/lib/utils/formatters";
 import { cn } from "@/lib/utils/cn";
 import { Card } from "@/components/ui/card";
@@ -12,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { InlineCategoryPicker } from "./InlineCategoryPicker";
+import { ReceiptPreview } from "./ReceiptPreview";
 import type { TransactionRowData, TransactionFiltersState } from "./TransactionsClient";
 import type { CategoryOption } from "./TransactionForm";
 
@@ -331,6 +333,7 @@ const TransactionRow = memo(function TransactionRow({
   onToggleSelect: () => void;
 }) {
   const { t, language } = useLanguage();
+  const [showReceipt, setShowReceipt] = useState(false);
   const initial =
     (tx.description ?? tx.categoryName ?? "T").trim().charAt(0).toUpperCase() || "T";
 
@@ -343,7 +346,7 @@ const TransactionRow = memo(function TransactionRow({
   return (
     <div
       className={cn(
-        "relative flex items-center gap-3 pl-4 pr-3 py-2.5 transition-colors duration-150 group",
+        "relative flex items-center gap-3 pl-4 pr-3 py-2.5 transition-colors duration-150 group/row",
         isSelected ? "bg-accent/[0.06]" : "hover:bg-elevated/40",
       )}
     >
@@ -353,13 +356,13 @@ const TransactionRow = memo(function TransactionRow({
         onChange={onToggleSelect}
         className={cn(
           "rounded border-white/20 bg-white/[0.04] text-accent focus:ring-accent/50 focus:ring-offset-canvas h-3.5 w-3.5 cursor-pointer shrink-0 transition-opacity",
-          isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100 focus-within:opacity-100",
+          isSelected ? "opacity-100" : "opacity-0 group-hover/row:opacity-100 focus-within:opacity-100",
         )}
       />
 
       <div
         className={cn(
-          "size-9 rounded-xl border flex items-center justify-center text-sm font-bold uppercase shrink-0 font-mono transition-transform duration-200 group-hover:scale-105",
+          "size-9 rounded-xl border flex items-center justify-center text-sm font-bold uppercase shrink-0 font-mono transition-transform duration-200 group-hover/row:scale-105",
           style.chip,
         )}
       >
@@ -377,7 +380,7 @@ const TransactionRow = memo(function TransactionRow({
           {tx.receiptImageUrl && (
             <button
               type="button"
-              onClick={() => window.open(tx.receiptImageUrl!, "_blank")}
+              onClick={() => setShowReceipt(true)}
               title={t("viewReceipt")}
               className="shrink-0 text-text-muted/50 hover:text-accent transition-colors"
             >
@@ -454,7 +457,7 @@ const TransactionRow = memo(function TransactionRow({
           <button
             type="button"
             aria-label={language === "id" ? "Opsi transaksi" : "Transaction options"}
-            className="h-8 w-8 shrink-0 text-text-muted hover:text-text-primary hover:bg-white/[0.12] transition-all duration-150 opacity-60 group-hover:opacity-100 flex items-center justify-center border border-transparent hover:border-white/[0.15]"
+            className="h-8 w-8 shrink-0 text-text-muted hover:text-text-primary hover:bg-white/[0.12] transition-all duration-150 opacity-60 group-hover/row:opacity-100 flex items-center justify-center border border-transparent hover:border-white/[0.15]"
             style={{ borderRadius: 'var(--dropdown-radius, 8px)' }}
           >
             <MoreHorizontal size={15} />
@@ -470,7 +473,7 @@ const TransactionRow = memo(function TransactionRow({
             {t("duplicateOption")}
           </DropdownMenuItem>
           {tx.receiptImageUrl && (
-            <DropdownMenuItem onSelect={() => window.open(tx.receiptImageUrl!, "_blank")} className="gap-2">
+            <DropdownMenuItem onSelect={() => setShowReceipt(true)} className="gap-2">
               <Receipt size={13} />
               {t("viewReceipt")}
             </DropdownMenuItem>
@@ -482,6 +485,15 @@ const TransactionRow = memo(function TransactionRow({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {/* Receipt Preview Modal */}
+      {showReceipt && tx.receiptImageUrl && (
+        <ReceiptPreview
+          imageUrl={normalizeImageUrl(tx.receiptImageUrl) ?? tx.receiptImageUrl}
+          transactionDescription={tx.description || tx.categoryName || undefined}
+          onClose={() => setShowReceipt(false)}
+        />
+      )}
     </div>
   );
 });

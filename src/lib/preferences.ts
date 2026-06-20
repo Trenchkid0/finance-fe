@@ -16,7 +16,6 @@ import {
   applyCardStyles,
   applyButtonStyles,
   applyTypographyStyles,
-  type ThemeVariables,
   type CardStyles,
   type ButtonStyles,
   type TypographyStyles,
@@ -57,6 +56,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
     blur: "12px",
     opacity: "0.75",
     dropdownRadius: "9999px",
+    cardType: "default",
   },
   buttonStyles: {
     radius: "12px",

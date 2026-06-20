@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils/cn";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Dialog, DialogBody, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface Props {
@@ -143,15 +144,7 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
       </div>
 
       {/* Profile Section */}
-      <div
-        className="p-6 border rounded-xl space-y-3"
-        style={{
-          borderRadius: 'var(--card-radius)',
-          borderWidth: 'var(--card-border-width)',
-          borderColor: 'var(--border)',
-          backgroundColor: 'color-mix(in srgb, var(--card-bg) calc(var(--card-opacity) * 100%), transparent)',
-        }}
-      >
+      <Card className="p-6 space-y-3">
         <h2 className="text-sm font-medium text-foreground flex items-center gap-2">
           <User size={14} className="text-muted-foreground" />
           {language === "id" ? "Profil pengguna" : "User profile"}
@@ -173,7 +166,7 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
             {language === "id" ? "Gagal memuat profil pengguna." : "Failed to load user profile."}
           </p>
         )}
-      </div>
+      </Card>
 
       {/* Tab navigation */}
       <div>
@@ -218,7 +211,7 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
         {activeTab === "data" && (
           <div className="space-y-6">
             {/* Backup Card */}
-            <div className="p-6 border rounded-xl bg-surface border-border flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <Card className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="space-y-1">
                 <h3 className="text-sm font-medium text-text-primary flex items-center gap-2">
                   <Download size={14} className="text-accent" />
@@ -237,10 +230,10 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
               >
                 {language === "id" ? "Unduh Database" : "Download Database"}
               </Button>
-            </div>
+            </Card>
 
             {/* Export Card */}
-            <div className="p-6 border rounded-xl bg-surface border-border flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <Card className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="space-y-1">
                 <h3 className="text-sm font-medium text-text-primary flex items-center gap-2">
                   <Download size={14} className="text-income" />
@@ -259,10 +252,10 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
               >
                 {language === "id" ? "Ekspor JSON" : "Export JSON"}
               </Button>
-            </div>
+            </Card>
 
             {/* Restore Card */}
-            <div className="p-6 border rounded-xl bg-surface border-border/40 space-y-4">
+            <Card className="p-6 space-y-4">
               <div className="space-y-1">
                 <h3 className="text-sm font-medium text-expense flex items-center gap-2">
                   <Upload size={14} />
@@ -299,7 +292,7 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
                   {language === "id" ? "Unggah & Pulihkan" : "Upload & Restore"}
                 </Button>
               </div>
-            </div>
+            </Card>
 
             {/* Confirm Restore Dialog */}
             <Dialog

@@ -1,6 +1,6 @@
 import { useState, useLayoutEffect, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { ChevronDown, Palette, Plus, Settings, Type, CreditCard, Square, Bell } from "lucide-react";
+import { ChevronDown, Palette, Plus, Settings, Type, CreditCard, Square, Bell, Check, LayoutGrid, CornerDownRight } from "lucide-react";
 import { toast } from "sonner";
 import {
   applyTheme,
@@ -9,6 +9,7 @@ import {
   applyFont,
   type ThemeVariables,
   type CardStyles,
+  type CardType,
   applyCardStyles,
   type ButtonStyles,
   applyButtonStyles,
@@ -177,9 +178,9 @@ export function ThemeSettings() {
 
   const [buttonStyles, setButtonStyles] = useState<ButtonStyles>(() => getCurrentPreferences().buttonStyles);
 
-  /** Persist current state to backend (debounced). Call after any change. */
   const persistPreferences = () => {
     savePreferences({
+      ...getCurrentPreferences(),
       themeId: activePresetId,
       customThemeVars: customVars,
       fontId: activeFontId,
@@ -187,7 +188,6 @@ export function ThemeSettings() {
       buttonStyles,
       typographyStyles,
       notificationSettings,
-      language: getCurrentPreferences().language,
     });
   };
 
@@ -195,8 +195,17 @@ export function ThemeSettings() {
     const updated = { ...cardStyles, [key]: value };
     setCardStyles(updated);
     applyCardStyles(updated);
-    // Persist after state update
-    setTimeout(() => persistPreferences(), 0);
+    // Persist immediately — triggers preferences-changed event for CardTypeProvider
+    savePreferences({
+      ...getCurrentPreferences(),
+      themeId: activePresetId,
+      customThemeVars: customVars,
+      fontId: activeFontId,
+      cardStyles: updated,
+      buttonStyles,
+      typographyStyles,
+      notificationSettings,
+    });
   };
 
   const handleButtonStyleChange = (key: keyof ButtonStyles, value: string) => {
@@ -1318,6 +1327,115 @@ export function ThemeSettings() {
               <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                 {language === "id" ? "Gaya & Tampilan Kartu" : "Card Styles & Appearance"}
               </h3>
+
+              {/* ── Card Type Picker ── */}
+              <div className="space-y-3">
+                <label className="text-xs font-semibold text-foreground">
+                  {language === "id" ? "Jenis Kartu" : "Card Type"}
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Default */}
+                  <button
+                    type="button"
+                    onClick={() => handleCardStyleChange("cardType", "default")}
+                    className={cn(
+                      "relative text-left p-4 rounded-xl border transition-all duration-200",
+                      cardStyles.cardType === "default"
+                        ? "border-accent ring-1 ring-accent/30 bg-accent/5"
+                        : "border-border bg-elevated/30 hover:border-hover-border hover:bg-elevated/50",
+                    )}
+                  >
+                    {cardStyles.cardType === "default" && (
+                      <span className="absolute top-3 right-3 z-20 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-white shadow-sm">
+                        <Check size={12} />
+                      </span>
+                    )}
+                    {/* Mini preview */}
+                    <div
+                      className="mb-3 h-20 w-full border border-border/50 p-3 flex flex-col justify-between"
+                      style={{
+                        borderRadius: cardStyles.radius || "16px",
+                        borderWidth: cardStyles.borderWidth || "1px",
+                        backdropFilter: `blur(${cardStyles.blur || "12px"})`,
+                        backgroundColor: `color-mix(in srgb, var(--card-bg) calc(${cardStyles.opacity || "0.75"} * 100%), transparent)`,
+                      }}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="h-1.5 w-12 rounded bg-muted-foreground/30" />
+                          <div className="mt-1.5 h-3 w-20 rounded bg-foreground/40" />
+                        </div>
+                        <div className="h-4 w-10 rounded bg-income/20 border border-income/20" />
+                      </div>
+                      <div className="h-1.5 w-3/4 rounded-full bg-border/30">
+                        <div className="h-full w-2/3 rounded-full bg-accent/50" />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <LayoutGrid size={14} className="text-accent" />
+                      <span className="text-sm font-semibold text-foreground">
+                        {language === "id" ? "Default" : "Default"}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      {language === "id"
+                        ? "Sudut melengkung, efek kaca buram, dan transparansi. Cocok untuk dashboard modern."
+                        : "Rounded corners, glassmorphism blur, and transparency. Great for modern dashboards."}
+                    </p>
+                  </button>
+
+                  {/* Blueprint */}
+                  <button
+                    type="button"
+                    onClick={() => handleCardStyleChange("cardType", "blueprint")}
+                    className={cn(
+                      "relative text-left p-4 rounded-xl border transition-all duration-200",
+                      cardStyles.cardType === "blueprint"
+                        ? "border-accent ring-1 ring-accent/30 bg-accent/5"
+                        : "border-border bg-elevated/30 hover:border-hover-border hover:bg-elevated/50",
+                    )}
+                  >
+                    {cardStyles.cardType === "blueprint" && (
+                      <span className="absolute top-3 right-3 z-20 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-white shadow-sm">
+                        <Check size={12} />
+                      </span>
+                    )}
+                    {/* Mini preview — blueprint style */}
+                    <div className="relative mb-3 h-20 w-full border border-border bg-background p-3 flex flex-col justify-between overflow-hidden">
+                      {/* Corner marks */}
+                      <div className="absolute -left-px -top-px h-2 w-2 border-l-2 border-t-2 border-text-muted/20" />
+                      <div className="absolute -right-px -top-px h-2 w-2 border-r-2 border-t-2 border-text-muted/20" />
+                      <div className="absolute -bottom-px -left-px h-2 w-2 border-b-2 border-l-2 border-text-muted/20" />
+                      <div className="absolute -bottom-px -right-px h-2 w-2 border-b-2 border-r-2 border-text-muted/20" />
+                      {/* Left accent bar */}
+                      <div className="absolute left-0 top-0 h-full w-0.5 bg-accent/40" />
+                      <div className="flex justify-between items-start relative z-10">
+                        <div>
+                          <div className="h-1.5 w-12 rounded bg-muted-foreground/30" />
+                          <div className="mt-1.5 h-3 w-20 rounded bg-foreground/40" />
+                        </div>
+                        <div className="h-4 w-10 border border-border flex items-center justify-center">
+                          <span className="text-[7px] font-mono text-muted-foreground">LIVE</span>
+                        </div>
+                      </div>
+                      <div className="h-1.5 w-3/4 rounded bg-muted-foreground/10 relative z-10">
+                        <div className="h-full w-2/3 rounded bg-accent/50" />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <CornerDownRight size={14} className="text-accent" />
+                      <span className="text-sm font-semibold text-foreground">
+                        {language === "id" ? "Blueprint" : "Blueprint"}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      {language === "id"
+                        ? "Sudut tajam, tanda sudut dekoratif, dan efek cahaya aksen. Gaya teknis & presisi."
+                        : "Sharp corners, decorative corner marks, and accent hover glow. Technical & precise feel."}
+                    </p>
+                  </button>
+                </div>
+              </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
             {/* Card Roundedness */}
             <div className="space-y-2 flex flex-col">
@@ -1387,13 +1505,26 @@ export function ThemeSettings() {
 
           {/* Real-time Preview */}
           <div
-            className="mt-6 p-5 rounded-2xl border border-border/30 bg-white/[0.01]"
-            style={{
+            className={cn(
+              "mt-6 p-5 border transition-all duration-300",
+              cardStyles.cardType === "blueprint"
+                ? "border-border bg-background overflow-hidden relative"
+                : "rounded-2xl border-border/30 bg-white/[0.01]",
+            )}
+            style={cardStyles.cardType !== "blueprint" ? {
               borderRadius: 'var(--card-radius)',
               borderWidth: 'var(--card-border-width)',
               backgroundColor: 'color-mix(in srgb, var(--card-bg) calc(var(--card-opacity) * 100%), transparent)',
-            }}
+            } : undefined}
           >
+            {cardStyles.cardType === "blueprint" && (
+              <>
+                <div className="absolute -left-px -top-px h-3 w-3 border-l-2 border-t-2 border-text-muted/20" />
+                <div className="absolute -right-px -top-px h-3 w-3 border-r-2 border-t-2 border-text-muted/20" />
+                <div className="absolute -bottom-px -left-px h-3 w-3 border-b-2 border-l-2 border-text-muted/20" />
+                <div className="absolute -bottom-px -right-px h-3 w-3 border-b-2 border-r-2 border-text-muted/20" />
+              </>
+            )}
             <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">
               {language === "id" ? "Pratinjau Kartu Terkustomisasi" : "Customized Card Preview"}
             </p>
@@ -1401,17 +1532,32 @@ export function ThemeSettings() {
             <div className="flex flex-col lg:flex-row gap-6 items-center lg:items-stretch">
               {/* The actual Card Preview */}
               <div
-                className="w-full lg:w-[360px] p-6 border text-card-foreground flex flex-col justify-between gap-4 transition-all duration-300"
-                style={{
+                className={cn(
+                  "w-full lg:w-[360px] p-6 border text-card-foreground flex flex-col justify-between gap-4 transition-all duration-300 relative overflow-hidden",
+                  cardStyles.cardType === "blueprint" && "group hover:border-accent/40",
+                )}
+                style={cardStyles.cardType !== "blueprint" ? {
                   borderRadius: cardStyles.radius,
                   borderWidth: cardStyles.borderWidth,
                   borderColor: "color-mix(in srgb, var(--border) 50%, transparent)",
                   backdropFilter: `blur(${cardStyles.blur})`,
                   WebkitBackdropFilter: `blur(${cardStyles.blur})`,
                   backgroundColor: `color-mix(in srgb, var(--card-bg) calc(${cardStyles.opacity} * 100%), transparent)`,
+                } : {
+                  borderColor: "var(--border)",
+                  backgroundColor: "var(--background)",
                 }}
               >
-                <div className="space-y-4">
+                {cardStyles.cardType === "blueprint" && (
+                  <>
+                    <div className="absolute -left-px -top-px h-2 w-2 border-l-2 border-t-2 border-text-muted/20" />
+                    <div className="absolute -right-px -top-px h-2 w-2 border-r-2 border-t-2 border-text-muted/20" />
+                    <div className="absolute -bottom-px -left-px h-2 w-2 border-b-2 border-l-2 border-text-muted/20" />
+                    <div className="absolute -bottom-px -right-px h-2 w-2 border-b-2 border-r-2 border-text-muted/20" />
+                    <div className="absolute left-0 top-0 h-full w-0.5 bg-accent/40" />
+                  </>
+                )}
+                <div className="space-y-4 relative z-10">
                   {/* Card Header */}
                   <div className="flex justify-between items-start">
                     <div>
@@ -1422,9 +1568,15 @@ export function ThemeSettings() {
                         Rp 150.250.000
                       </h4>
                     </div>
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-income/10 text-income border border-income/20">
-                      +12.4%
-                    </span>
+                    {cardStyles.cardType === "blueprint" ? (
+                      <span className="text-[10px] font-bold font-mono px-1.5 py-0.5 border border-border text-muted-foreground">
+                        LIVE
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-income/10 text-income border border-income/20">
+                        +12.4%
+                      </span>
+                    )}
                   </div>
 
                   {/* Card Inner Content - mini progress indicator */}
@@ -1433,18 +1585,34 @@ export function ThemeSettings() {
                       <span>{language === "id" ? "Target Investasi" : "Investment Target"}</span>
                       <span>75%</span>
                     </div>
-                    <div className="h-1.5 w-full bg-border/20 rounded-full overflow-hidden">
-                      <div className="h-full bg-accent rounded-full transition-all duration-500" style={{ width: "75%" }} />
+                    <div className={cn(
+                      "h-1.5 w-full overflow-hidden",
+                      cardStyles.cardType === "blueprint" ? "bg-muted-foreground/10" : "bg-border/20 rounded-full",
+                    )}>
+                      <div className={cn(
+                        "h-full bg-accent transition-all duration-500",
+                        cardStyles.cardType !== "blueprint" && "rounded-full",
+                      )} style={{ width: "75%" }} />
                     </div>
                   </div>
                 </div>
 
                 {/* Card Footer Action */}
-                <div className="flex justify-end gap-2 pt-3 border-t border-border/20">
-                  <button type="button" className="px-2.5 py-1.5 border border-border text-[10px] font-semibold text-muted-foreground hover:text-foreground hover:bg-white/[0.03] transition-all" style={{ borderRadius: 'var(--button-radius)' }}>
+                <div className={cn(
+                  "flex justify-end gap-2 pt-3 border-t relative z-10",
+                  cardStyles.cardType === "blueprint" ? "border-border/30" : "border-border/20",
+                )}>
+                  <button type="button" className={cn(
+                    "px-2.5 py-1.5 border text-[10px] font-semibold text-muted-foreground hover:text-foreground transition-all",
+                    cardStyles.cardType === "blueprint"
+                      ? "border-border hover:bg-muted/30"
+                      : "border-border hover:bg-white/[0.03]",
+                  )} style={cardStyles.cardType !== "blueprint" ? { borderRadius: 'var(--button-radius)' } : undefined}>
                     {language === "id" ? "Batal" : "Cancel"}
                   </button>
-                  <button type="button" className="px-2.5 py-1.5 bg-accent text-white text-[10px] font-semibold hover:bg-accent/80 transition-all" style={{ borderRadius: 'var(--button-radius)' }}>
+                  <button type="button" className={cn(
+                    "px-2.5 py-1.5 bg-accent text-white text-[10px] font-semibold hover:bg-accent/80 transition-all",
+                  )} style={cardStyles.cardType !== "blueprint" ? { borderRadius: 'var(--button-radius)' } : undefined}>
                     {language === "id" ? "Terapkan" : "Apply"}
                   </button>
                 </div>
@@ -1452,29 +1620,53 @@ export function ThemeSettings() {
 
               {/* Explanatory notes */}
               <div
-                className="flex-1 p-5 border flex flex-col justify-center text-left text-xs text-muted-foreground space-y-2.5"
-                style={{
+                className={cn(
+                  "flex-1 p-5 border flex flex-col justify-center text-left text-xs text-muted-foreground space-y-2.5 relative overflow-hidden",
+                  cardStyles.cardType === "blueprint" && "group",
+                )}
+                style={cardStyles.cardType !== "blueprint" ? {
                   borderRadius: 'var(--card-radius)',
                   borderWidth: 'var(--card-border-width)',
                   borderColor: 'var(--border)',
                   backgroundColor: 'color-mix(in srgb, var(--card-bg) calc(var(--card-opacity) * 100%), transparent)',
+                } : {
+                  borderColor: 'var(--border)',
+                  backgroundColor: 'var(--background)',
                 }}
               >
-                <p className="font-semibold text-foreground text-sm">
+                {cardStyles.cardType === "blueprint" && (
+                  <>
+                    <div className="absolute -left-px -top-px h-2 w-2 border-l-2 border-t-2 border-text-muted/20" />
+                    <div className="absolute -right-px -top-px h-2 w-2 border-r-2 border-t-2 border-text-muted/20" />
+                    <div className="absolute -bottom-px -left-px h-2 w-2 border-b-2 border-l-2 border-text-muted/20" />
+                    <div className="absolute -bottom-px -right-px h-2 w-2 border-b-2 border-r-2 border-text-muted/20" />
+                  </>
+                )}
+                <p className="font-semibold text-foreground text-sm relative z-10">
                   {language === "id" ? "Detail Penerapan Gaya Kartu:" : "Card Styling Properties Applied:"}
                 </p>
-                <ul className="list-disc pl-4 space-y-1.5">
+                <ul className="list-disc pl-4 space-y-1.5 relative z-10">
                   <li>
-                    <strong>{language === "id" ? "Sudut Kelengkungan" : "Corner Radius"}:</strong> {language === "id" ? `Tepi luar kotak kartu melengkung sebesar ${cardStyles.radius}` : `Card corner radius set to ${cardStyles.radius}`}.
+                    <strong>{language === "id" ? "Jenis Kartu" : "Card Type"}:</strong> {cardStyles.cardType === "blueprint"
+                      ? (language === "id" ? "Blueprint — sudut tajam, tanda dekoratif, efek cahaya aksen" : "Blueprint — sharp corners, decorative marks, accent hover glow")
+                      : (language === "id" ? "Default — sudut melengkung, efek kaca buram" : "Default — rounded corners, glassmorphism")
+                    }.
                   </li>
+                  {cardStyles.cardType !== "blueprint" && (
+                    <>
+                      <li>
+                        <strong>{language === "id" ? "Sudut Kelengkungan" : "Corner Radius"}:</strong> {language === "id" ? `Tepi luar kotak kartu melengkung sebesar ${cardStyles.radius}` : `Card corner radius set to ${cardStyles.radius}`}.
+                      </li>
+                      <li>
+                        <strong>{language === "id" ? "Kekaburan Latar" : "Backdrop Blur"}:</strong> {language === "id" ? `Efek kaca buram (blur) di latar belakang diatur ke ${cardStyles.blur}` : `Glass backdrop frosted blur is ${cardStyles.blur}`}.
+                      </li>
+                      <li>
+                        <strong>{language === "id" ? "Tingkat Transparansi" : "Card Transparency"}:</strong> {language === "id" ? `Kepadatan latar kartu diatur ke ${Math.round(parseFloat(cardStyles.opacity) * 100)}%` : `Card surface color opacity is ${Math.round(parseFloat(cardStyles.opacity) * 100)}%`}.
+                      </li>
+                    </>
+                  )}
                   <li>
                     <strong>{language === "id" ? "Ketebalan Garis" : "Border Thickness"}:</strong> {language === "id" ? `Garis pembatas luar berukuran ${cardStyles.borderWidth}` : `Outer outlines stroke is ${cardStyles.borderWidth}`}.
-                  </li>
-                  <li>
-                    <strong>{language === "id" ? "Kekaburan Latar" : "Backdrop Blur"}:</strong> {language === "id" ? `Efek kaca buram (blur) di latar belakang diatur ke ${cardStyles.blur}` : `Glass backdrop frosted blur is ${cardStyles.blur}`}.
-                  </li>
-                  <li>
-                    <strong>{language === "id" ? "Tingkat Transparansi" : "Card Transparency"}:</strong> {language === "id" ? `Kepadatan latar kartu diatur ke ${Math.round(parseFloat(cardStyles.opacity) * 100)}%` : `Card surface color opacity is ${Math.round(parseFloat(cardStyles.opacity) * 100)}%`}.
                   </li>
                   <li>
                     <strong>{language === "id" ? "Kelengkungan Dropdown" : "Dropdown Roundedness"}:</strong> {language === "id" ? `Sudut kelengkungan tombol pilihan (dropdown) diatur ke ${cardStyles.dropdownRadius || "9999px"}` : `Dropdown triggers corner radius set to ${cardStyles.dropdownRadius || "9999px"}`}.

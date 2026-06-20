@@ -15,6 +15,29 @@ const getApiBaseUrl = () => {
 
 const API_BASE_URL = getApiBaseUrl();
 
+/**
+ * Normalize image URLs to relative paths so they work from any host
+ * (localhost, LAN IP, domain, etc.).
+ *
+ * - "http://localhost:8081/uploads/avatars/x.webp" → "/uploads/avatars/x.webp"
+ * - "http://192.168.1.5:8081/uploads/receipts/y.jpg" → "/uploads/receipts/y.jpg"
+ * - "/uploads/avatars/x.webp" → unchanged
+ * - "https://external.com/photo.jpg" → unchanged (external URLs pass through)
+ * - null/undefined/"" → null
+ */
+export function normalizeImageUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  // Already relative
+  if (url.startsWith("/")) return url;
+  // Absolute URL — extract pathname
+  try {
+    const parsed = new URL(url);
+    return parsed.pathname;
+  } catch {
+    return url;
+  }
+}
+
 
 async function request<T>(
   method: string,

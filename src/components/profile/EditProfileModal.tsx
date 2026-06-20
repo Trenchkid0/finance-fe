@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
-import { api } from "@/lib/api";
+import { api, normalizeImageUrl } from "@/lib/api";
 import { useApp } from "@/components/layout/AppLayout";
 import { AvatarCropper } from "./AvatarCropper";
 import type { User } from "@/types";
@@ -27,7 +27,7 @@ export function EditProfileModal({ open, onClose, user, onSuccess }: EditProfile
 	// Form field states
 	const [name, setName] = useState(user.name || "");
 	const [telegramChatId, setTelegramChatId] = useState(user.telegramChatId || "");
-	const [avatarPreview, setAvatarPreview] = useState<string | null>(user.image || null);
+	const [avatarPreview, setAvatarPreview] = useState<string | null>(normalizeImageUrl(user.image) || null);
 	
 	// Upload & Crop states
 	const [selectedImageSrc, setSelectedImageSrc] = useState<string | null>(null);
@@ -43,7 +43,7 @@ export function EditProfileModal({ open, onClose, user, onSuccess }: EditProfile
 		if (open) {
 			setName(user.name || "");
 			setTelegramChatId(user.telegramChatId || "");
-			setAvatarPreview(user.image || null);
+			setAvatarPreview(normalizeImageUrl(user.image) || null);
 			setSelectedImageSrc(null);
 			setCroppedBlob(null);
 		}
@@ -107,7 +107,7 @@ export function EditProfileModal({ open, onClose, user, onSuccess }: EditProfile
 
 		setPending(true);
 		try {
-			let finalAvatarUrl = user.image || "";
+			let finalAvatarUrl = normalizeImageUrl(user.image) || "";
 
 			// 1. Upload avatar if changed
 			if (croppedBlob) {

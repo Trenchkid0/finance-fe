@@ -9,6 +9,7 @@ import { CommandPalette } from "@/components/command-palette/CommandPalette";
 import { QuickAddDialog } from "@/components/transactions/QuickAddDialog";
 import { QuickAddFab } from "@/components/transactions/QuickAddFab";
 import { QuickAddProvider } from "@/components/transactions/QuickAddProvider";
+import { CardTypeProvider } from "@/components/ui/card";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 import { loadPreferences } from "@/lib/preferences";
@@ -22,7 +23,7 @@ interface AppContextType {
     accounts: number;
     transactions: number;
   };
-  setCounts: (counts: { accounts: number; transactions: number }) => void;
+  setCounts: React.Dispatch<React.SetStateAction<{ accounts: number; transactions: number }>>;
   refresh: () => Promise<void>;
   loading: boolean;
 }
@@ -107,6 +108,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <AppContext.Provider value={{ user, accounts, categories, counts, setCounts, refresh, loading }}>
+      <CardTypeProvider>
       <SidebarProvider
         style={
           {
@@ -152,6 +154,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <MobileBottomNav />
         </QuickAddProvider>
       </SidebarProvider>
+      </CardTypeProvider>
     </AppContext.Provider>
   );
 }

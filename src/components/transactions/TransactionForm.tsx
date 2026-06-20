@@ -22,7 +22,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils/cn";
 import { formatInputRupiah, formatIDR, cleanMoneyString } from "@/lib/utils/formatters";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
-import { api } from "@/lib/api";
+import { api, normalizeImageUrl } from "@/lib/api";
 
 import {
   createTransaction,
@@ -111,8 +111,8 @@ export function TransactionForm({
 
   // ---- receipt states ----
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
-  const [receiptImage, setReceiptImage] = useState<string | null>(initial.receiptImageUrl || null);
-  const [receiptUrl, setReceiptUrl] = useState<string | null>(initial.receiptImageUrl || null);
+  const [receiptImage, setReceiptImage] = useState<string | null>(normalizeImageUrl(initial.receiptImageUrl) || null);
+  const [receiptUrl, setReceiptUrl] = useState<string | null>(normalizeImageUrl(initial.receiptImageUrl) || null);
   const [uploading, setUploading] = useState(false);
 
   // ---- server action ----
@@ -144,8 +144,8 @@ export function TransactionForm({
     setTab("manual");
     setScanning(false);
     setReceiptFile(null);
-    setReceiptImage(initial.receiptImageUrl || null);
-    setReceiptUrl(initial.receiptImageUrl || null);
+    setReceiptImage(normalizeImageUrl(initial.receiptImageUrl) || null);
+    setReceiptUrl(normalizeImageUrl(initial.receiptImageUrl) || null);
   }, [open, initial]);
 
   // Handle success callback

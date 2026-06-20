@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/sidebar";
 
 import { useLanguage } from "@/lib/contexts/LanguageContext";
+import { normalizeImageUrl } from "@/lib/api";
 import { logout } from "@/app/actions/auth";
 
 interface NavUserProps {
@@ -50,7 +51,7 @@ export function NavUser({ user }: NavUserProps) {
             >
               <Avatar className="rounded-lg text-[10px] font-bold">
                 {user.image ? (
-                  <AvatarImage src={user.image} alt={user.name ?? "User"} />
+                  <AvatarImage src={normalizeImageUrl(user.image) ?? ""} alt={user.name ?? "User"} />
                 ) : null}
                 <AvatarFallback
                   className="rounded-lg text-[10px] font-black text-white border"
@@ -86,7 +87,7 @@ export function NavUser({ user }: NavUserProps) {
                 <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                   <Avatar className="h-8 w-8 rounded-lg">
                     {user.image ? (
-                      <AvatarImage src={user.image} alt={user.name ?? "User"} />
+                      <AvatarImage src={normalizeImageUrl(user.image) ?? ""} alt={user.name ?? "User"} />
                     ) : null}
                     <AvatarFallback
                       className="rounded-lg text-[10px] font-black text-white border"

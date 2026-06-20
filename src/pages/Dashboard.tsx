@@ -201,7 +201,7 @@ export default function Dashboard() {
   );
 
   // Cashflow-derived stats (memoized)
-  const { totalInflow, totalOutflow, surplus, savingsRate, counts, isId, delta, deltaRatio, assetsSide, liabilitiesSide, cashflowData } = useMemo(() => {
+  const { totalInflow, totalOutflow, surplus, savingsRate, counts, isId, deltaRatio, assetsSide, liabilitiesSide, cashflowData } = useMemo(() => {
     const cf = summaryData?.cashflow || { inflow: [], outflow: [], total: 0, surplus: 0 };
     const inflow = (cf.inflow || []).reduce((s, i) => s + Number(i.value || 0), 0);
     const outflow = (cf.outflow || []).reduce((s, i) => s + Number(i.value || 0), 0);

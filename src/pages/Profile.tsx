@@ -15,8 +15,17 @@ import {
 import { Link } from "react-router-dom";
 
 import { useApp } from "@/components/layout/AppLayout";
+import { normalizeImageUrl } from "@/lib/api";
 import { formatDate, formatIDR } from "@/lib/utils/formatters";
 import { EditProfileModal } from "@/components/profile/EditProfileModal";
+import {
+	CornerMarks,
+	ProfileCard,
+	ProfileCardHeader,
+	ProfileCardContent,
+	ProfileSectionTitle,
+	ProfileActivityItem,
+} from "@/components/ui/profile-card";
 
 export default function Profile() {
 	const { user, counts, accounts } = useApp();
@@ -101,7 +110,7 @@ export default function Profile() {
 
 								{user.image ? (
 									<img
-										src={user.image}
+										src={normalizeImageUrl(user.image) ?? ""}
 										alt={user.name ?? "Avatar"}
 										className="h-full w-full object-cover"
 									/>
@@ -167,8 +176,8 @@ export default function Profile() {
 					</div>
 
 					{/* Active portfolio mini widget */}
-					<Panel>
-						<PanelHeader
+					<ProfileCard>
+						<ProfileCardHeader
 							kicker="Portfolio"
 							title="Portofolio Aktif"
 							actionCode={`${activeAccountsList.length}/${accounts.length || 0}`}
@@ -199,13 +208,13 @@ export default function Profile() {
 								</div>
 							</div>
 						</div>
-					</Panel>
+					</ProfileCard>
 				</aside>
 
 				{/* Main content */}
 				<main className="space-y-6">
 					<section>
-						<SectionTitle
+						<ProfileSectionTitle
 							title="Struktur Rekening & Wallet"
 							description="Distribusi penyimpanan aset finansial terdaftar Anda."
 						/>
@@ -255,8 +264,8 @@ export default function Profile() {
 						)}
 					</section>
 
-					<Panel>
-						<PanelHeader
+					<ProfileCard>
+						<ProfileCardHeader
 							kicker="Metrics"
 							title="Aktivitas & Metrik Pencatatan"
 							actionCode="LIVE"
@@ -279,10 +288,10 @@ export default function Profile() {
 								tone="income"
 							/>
 						</div>
-					</Panel>
+					</ProfileCard>
 
-					<Panel>
-						<PanelHeader
+					<ProfileCard>
+						<ProfileCardHeader
 							kicker="Security"
 							title="Tata Kelola & Keamanan Data"
 							action={
@@ -314,31 +323,31 @@ export default function Profile() {
 								</Link>
 							</div>
 						</div>
-					</Panel>
+					</ProfileCard>
 
-					<Panel>
-						<PanelHeader
+					<ProfileCard>
+						<ProfileCardHeader
 							kicker="Audit"
 							title="Recent Activity"
 							actionCode={`TX-${counts.transactions}`}
 						/>
 
 						<div className="divide-y divide-border">
-							<ActivityItem
+							<ProfileActivityItem
 								index="01"
 								icon={<User size={14} />}
 								title="Profil akun dimuat"
 								description="Identitas dan konfigurasi akun berhasil dibaca dari sesi aktif."
 								time="Sekarang"
 							/>
-							<ActivityItem
+							<ProfileActivityItem
 								index="02"
 								icon={<Wallet size={14} />}
 								title="Portofolio tersinkron"
 								description={`${activeAccountsList.length} akun aktif tersedia untuk kalkulasi nilai bersih.`}
 								time="Realtime"
 							/>
-							<ActivityItem
+							<ProfileActivityItem
 								index="03"
 								icon={<Receipt size={14} />}
 								title="Transaksi tersedia"
@@ -346,7 +355,7 @@ export default function Profile() {
 								time="Realtime"
 							/>
 						</div>
-					</Panel>
+					</ProfileCard>
 				</main>
 			</div>
 
@@ -355,90 +364,6 @@ export default function Profile() {
 				onClose={() => setIsEditModalOpen(false)}
 				user={user}
 			/>
-		</div>
-	);
-}
-
-function SectionTitle({
-	title,
-	description,
-}: {
-	title: string;
-	description: string;
-}) {
-	return (
-		<div className="flex items-start justify-between gap-4">
-			<div>
-				<div className="mb-2 flex items-center gap-3">
-					<span className="font-mono text-sm tracking-[-0.2em] text-text-muted/50">
-						//
-					</span>
-					<h2 className="font-mono text-sm font-medium uppercase tracking-wide text-text-primary">
-						{title}
-					</h2>
-				</div>
-				<p className="text-sm text-text-muted">{description}</p>
-			</div>
-		</div>
-	);
-}
-
-function Panel({
-	children,
-	className = "",
-}: {
-	children: React.ReactNode;
-	className?: string;
-}) {
-	return (
-		<div
-			className={`group relative overflow-hidden border border-border bg-background ${className}`}
-		>
-			<CornerMarks />
-
-			<div className="absolute left-0 top-0 h-full w-0.5 bg-transparent transition-colors duration-200 group-hover:bg-accent/40" />
-			<div className="pointer-events-none absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-accent/5 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-
-			{children}
-		</div>
-	);
-}
-
-function PanelHeader({
-	kicker,
-	title,
-	action,
-	actionCode,
-}: {
-	kicker: string;
-	title: string;
-	action?: React.ReactNode;
-	actionCode?: string;
-}) {
-	return (
-		<div className="border-b border-border p-4">
-			<div className="flex items-center justify-between gap-4">
-				<div className="flex items-center gap-3">
-					<span className="font-mono text-sm tracking-[-0.2em] text-text-muted/50">
-						//
-					</span>
-					<div>
-						<p className="font-mono text-[10px] uppercase tracking-widest text-text-muted">
-							{kicker}
-						</p>
-						<h3 className="font-mono text-sm font-medium uppercase tracking-wide text-text-primary">
-							{title}
-						</h3>
-					</div>
-				</div>
-
-				{action ??
-					(actionCode ? (
-						<span className="border border-border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-widest text-text-muted">
-							{actionCode}
-						</span>
-					) : null)}
-			</div>
 		</div>
 	);
 }
@@ -455,9 +380,7 @@ function PortfolioSegmentCard({
 	accentClass: string;
 }) {
 	return (
-		<div className="group relative overflow-hidden border border-border bg-background p-5 transition-colors hover:border-accent/40">
-			<CornerMarks />
-
+		<ProfileCard className="p-5">
 			<div className="mb-4 flex items-center justify-between">
 				<span className="font-mono text-xs font-medium uppercase tracking-widest text-text-muted">
 					{label}
@@ -469,7 +392,7 @@ function PortfolioSegmentCard({
 				{formatIDR(total)}
 			</p>
 			<p className="mt-1.5 text-xs text-text-muted">{count} rekening aktif</p>
-		</div>
+		</ProfileCard>
 	);
 }
 
@@ -489,7 +412,7 @@ function MetricCard({
 	const toneClass = tone === "income" ? "text-income" : "text-accent";
 
 	return (
-		<div className="relative border border-border bg-background p-5 transition-colors hover:border-accent/40">
+		<ProfileCard className="p-5" corners={false}>
 			<CornerMarks />
 
 			<div className={`mb-4 flex items-center gap-2 ${toneClass}`}>
@@ -505,47 +428,7 @@ function MetricCard({
 			<p className="mt-2 text-xs leading-relaxed text-text-muted">
 				{description}
 			</p>
-		</div>
-	);
-}
-
-function ActivityItem({
-	index,
-	icon,
-	title,
-	description,
-	time,
-}: {
-	index: string;
-	icon: React.ReactNode;
-	title: string;
-	description: string;
-	time: string;
-}) {
-	return (
-		<div className="group relative flex items-start gap-3 overflow-hidden p-4 transition-colors hover:bg-muted/30">
-			<div className="absolute left-0 top-0 h-full w-0.5 bg-transparent transition-colors group-hover:bg-accent/40" />
-
-			<div className="mt-1 text-text-muted transition-colors group-hover:text-accent">
-				{icon}
-			</div>
-
-			<div className="min-w-0 flex-1">
-				<p className="text-sm text-text-primary">
-					<span className="font-mono font-medium">{title}</span>
-				</p>
-				<p className="mt-1 text-xs leading-relaxed text-text-muted">
-					{description}
-				</p>
-				<p className="mt-2 font-mono text-[10px] uppercase tracking-widest text-text-muted/60">
-					{time}
-				</p>
-			</div>
-
-			<span className="font-mono text-[10px] tabular-nums text-text-muted/40">
-				[{index}]
-			</span>
-		</div>
+		</ProfileCard>
 	);
 }
 
@@ -575,26 +458,5 @@ function SecurityPoint({ text }: { text: React.ReactNode }) {
 			<CheckCircle2 size={15} className="mt-0.5 shrink-0 text-income" />
 			<span>{text}</span>
 		</div>
-	);
-}
-
-function CornerMarks({ size = "sm" }: { size?: "sm" | "lg" }) {
-	const cornerSize = size === "lg" ? "h-3 w-3" : "h-2 w-2";
-
-	return (
-		<>
-			<div
-				className={`absolute -left-px -top-px z-10 border-l-2 border-t-2 border-text-muted/20 ${cornerSize}`}
-			/>
-			<div
-				className={`absolute -right-px -top-px z-10 border-r-2 border-t-2 border-text-muted/20 ${cornerSize}`}
-			/>
-			<div
-				className={`absolute -bottom-px -left-px z-10 border-b-2 border-l-2 border-text-muted/20 ${cornerSize}`}
-			/>
-			<div
-				className={`absolute -bottom-px -right-px z-10 border-b-2 border-r-2 border-text-muted/20 ${cornerSize}`}
-			/>
-		</>
 	);
 }

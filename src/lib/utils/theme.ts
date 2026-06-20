@@ -896,12 +896,15 @@ export function applyTheme(themeId: string, customVars?: Partial<ThemeVariables>
   }
 }
 
+export type CardType = "default" | "blueprint";
+
 export interface CardStyles {
   radius: string;      // "0px" | "8px" | "16px" | "24px"
   borderWidth: string; // "0px" | "1px" | "2px" | "3px"
   blur: string;        // "0px" | "12px" | "24px"
   opacity: string;     // "1" | "0.75" | "0.5"
   dropdownRadius: string; // "0px" | "8px" | "12px" | "16px" | "24px" | "9999px"
+  cardType: CardType;  // "default" | "blueprint"
 }
 
 export interface ButtonStyles {
@@ -913,10 +916,14 @@ export interface ButtonStyles {
 export function applyCardStyles(styles: CardStyles) {
   if (typeof window === "undefined") return;
   const root = document.documentElement;
+  const cardType = styles.cardType || "default";
   root.style.setProperty("--card-radius", styles.radius);
   root.style.setProperty("--card-border-width", styles.borderWidth);
   root.style.setProperty("--card-backdrop-blur", styles.blur);
   root.style.setProperty("--card-opacity", styles.opacity);
+  root.style.setProperty("--card-type", cardType);
+  // Set data attribute for global CSS blueprint overrides
+  root.setAttribute("data-card-type", cardType);
   
   const dr = styles.dropdownRadius || "9999px";
   root.style.setProperty("--dropdown-radius", dr);
@@ -945,6 +952,7 @@ export function loadSavedCardStyles() {
     blur: "12px",
     opacity: "0.75",
     dropdownRadius: "9999px",
+    cardType: "default",
   };
   const savedStr = localStorage.getItem("racks-card-styles");
   let styles = defaults;

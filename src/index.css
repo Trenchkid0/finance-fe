@@ -211,3 +211,22 @@ html {
   color: var(--warning) !important;
 }
 
+/* ── Blueprint Mode: Global CSS Overrides ──────────────────────
+   When data-card-type="blueprint" is set on <html>, all elements
+   using card CSS vars get forced to blueprint treatment:
+   - Sharp corners (radius: 0)
+   - No backdrop blur
+   - Full opacity (no glassmorphism)
+   This ensures raw <div>/<button> elements also respond to blueprint.
+────────────────────────────────────────────────────────────── */
+[data-card-type="blueprint"] {
+  --card-radius: 0px !important;
+  --card-backdrop-blur: 0px !important;
+  --card-opacity: 1 !important;
+  --card-border-width: 1px !important;
+  --dropdown-radius: 0px !important;
+  --dropdown-menu-radius: 0px !important;
+  --custom-dropdown-radius: 0px !important;
+  --custom-dropdown-menu-radius: 0px !important;
+}
+
