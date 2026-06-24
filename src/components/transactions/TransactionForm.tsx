@@ -1,4 +1,4 @@
-import { useActionState, useEffect, useState, useMemo } from "react";
+import { useActionState, useEffect, useState, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import {
   ArrowLeftRight,
@@ -89,8 +89,25 @@ export function TransactionForm({
   const { language } = useLanguage();
   const isId = language === "id";
 
+  // Memoize `initial` so the reset effect only fires when the editing ID
+  // actually changes or the modal opens — not on every parent re-render
+  // (the parent passes a freshly-created object each render).
+  const prevInitialRef = useRef(initial);
+  const prevOpenRef = useRef(open);
+  const stableInitial = useMemo(() => {
+    // Update stored initial only when modal opens or id changes
+    if (open && (!prevOpenRef.current || prevInitialRef.current.id !== initial.id)) {
+      prevInitialRef.current = initial;
+    }
+    if (!open) {
+      prevInitialRef.current = initial;
+    }
+    prevOpenRef.current = open;
+    return prevInitialRef.current;
+  }, [open, initial]);
+
   // ---- state field ----
-  const [type, setType] = useState<TransactionTypeInput>(initial.type);
+  const [type, setType] = useState<TransactionTypeInput>(stableInitial.type);
   const [amount, setAmount] = useState(
     initial.amount ? formatInputRupiah(String(initial.amount)) : ""
   );
@@ -132,21 +149,21 @@ export function TransactionForm({
   // Reset modal state when open changes
   useEffect(() => {
     if (!open) return;
-    setType(initial.type);
-    setAmount(initial.amount ? formatInputRupiah(String(initial.amount)) : "");
-    setAdminFee(initial.adminFee ? formatInputRupiah(String(initial.adminFee)) : "");
-    setDate(initial.date);
-    setAccountId(initial.accountId);
-    setCategoryId(initial.categoryId);
-    setTransferToId(initial.transferToId);
-    setDescription(initial.description);
-    setNote(initial.note);
+    setType(stableInitial.type);
+    setAmount(stableInitial.amount ? formatInputRupiah(String(stableInitial.amount)) : "");
+    setAdminFee(stableInitial.adminFee ? formatInputRupiah(String(stableInitial.adminFee)) : "");
+    setDate(stableInitial.date);
+    setAccountId(stableInitial.accountId);
+    setCategoryId(stableInitial.categoryId);
+    setTransferToId(stableInitial.transferToId);
+    setDescription(stableInitial.description);
+    setNote(stableInitial.note);
     setTab("manual");
     setScanning(false);
     setReceiptFile(null);
-    setReceiptImage(normalizeImageUrl(initial.receiptImageUrl) || null);
-    setReceiptUrl(normalizeImageUrl(initial.receiptImageUrl) || null);
-  }, [open, initial]);
+    setReceiptImage(normalizeImageUrl(stableInitial.receiptImageUrl) || null);
+    setReceiptUrl(normalizeImageUrl(stableInitial.receiptImageUrl) || null);
+  }, [open, stableInitial]);
 
   // Handle success callback
   useEffect(() => {
