@@ -211,7 +211,17 @@ export function ThemeSettings() {
     const updated = { ...buttonStyles, [key]: value };
     setButtonStyles(updated);
     applyButtonStyles(updated);
-    setTimeout(() => persistPreferences(), 0);
+    // Persist immediately with the updated value — avoid stale closure
+    savePreferences({
+      ...getCurrentPreferences(),
+      themeId: activePresetId,
+      customThemeVars: customVars,
+      fontId: activeFontId,
+      cardStyles,
+      buttonStyles: updated,
+      typographyStyles,
+      notificationSettings,
+    });
   };
 
   const handleFontChange = (id: string) => {

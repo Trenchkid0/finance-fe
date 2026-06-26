@@ -4,8 +4,6 @@ import {
   TrendingDown,
   Wallet,
   Download,
-  Filter,
-  Calendar,
   Layers,
   Inbox,
   Loader2,
@@ -26,8 +24,6 @@ import {
   Pie,
   Cell,
   Tooltip as ChartTooltip,
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -99,7 +95,7 @@ export default function Reports() {
   // Report data states
   const [data, setData] = useState<ReportsResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [pending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
 
   // Populate options on mount
   useEffect(() => {
@@ -386,6 +382,7 @@ export default function Reports() {
             <FormSelect
               value={datePreset}
               onChange={setDatePreset}
+              placeholder={isId ? "Pilih periode" : "Select period"}
               options={[
                 { value: "30d", label: isId ? "30 Hari Terakhir" : "Last 30 Days" },
                 { value: "ytd", label: isId ? "Tahun Ini (YTD)" : "Year to Date" },
@@ -404,6 +401,7 @@ export default function Reports() {
             <FormSelect
               value={groupBy}
               onChange={setGroupBy}
+              placeholder={isId ? "Pilih kelompok" : "Select grouping"}
               options={[
                 { value: "category", label: isId ? "Kategori" : "Category" },
                 { value: "account", label: isId ? "Akun" : "Account" },
@@ -419,6 +417,7 @@ export default function Reports() {
             <FormSelect
               value={reportType}
               onChange={setReportType}
+              placeholder={isId ? "Pilih tipe" : "Select type"}
               options={[
                 { value: "all", label: isId ? "Semua Tipe" : "All Types" },
                 { value: "expense", label: isId ? "Hanya Pengeluaran" : "Expenses Only" },
@@ -432,7 +431,7 @@ export default function Reports() {
             <label className="text-[10px] font-bold text-muted-foreground/75 uppercase tracking-wider">
               {isId ? "Filter Akun" : "Account Filter"}
             </label>
-            <FormSelect value={accountId} onChange={setAccountId} options={accounts} />
+            <FormSelect value={accountId} onChange={setAccountId} placeholder={isId ? "Semua akun" : "All accounts"} options={accounts} />
           </div>
 
           {/* Category Filter */}
@@ -440,7 +439,7 @@ export default function Reports() {
             <label className="text-[10px] font-bold text-muted-foreground/75 uppercase tracking-wider">
               {isId ? "Filter Kategori" : "Category Filter"}
             </label>
-            <FormSelect value={categoryId} onChange={setCategoryId} options={categories} />
+            <FormSelect value={categoryId} onChange={setCategoryId} placeholder={isId ? "Semua kategori" : "All categories"} options={categories} />
           </div>
         </div>
 
