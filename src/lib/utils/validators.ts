@@ -67,6 +67,7 @@ const transactionFields = z.object({
   note: z.string().trim().max(2000).optional(),
   categoryId: z.string().trim().optional(),
   transferToId: z.string().trim().optional(),
+  taxDeductible: z.boolean().optional(),
 });
 
 /**
@@ -155,6 +156,7 @@ export const createCategorySchema = z.object({
   name: requiredString("Nama kategori"),
   type: categoryTypeEnum,
   icon: z.string().trim().max(10).optional().or(z.literal("")),
+  taxDeductible: z.boolean().optional(),
 });
 
 export type CreateCategoryInput = z.infer<typeof createCategorySchema>;

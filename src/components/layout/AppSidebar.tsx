@@ -12,6 +12,7 @@ import {
   CalendarRange,
   Target,
   Briefcase,
+  BarChart,
   type LucideIcon,
 } from "lucide-react";
 
@@ -101,6 +102,11 @@ export function AppSidebar({ user, counts, ...props }: AppSidebarProps) {
       href: "/recurring",
       label: language === "id" ? "Tagihan Berulang" : "Recurring Bills",
       icon: CalendarRange,
+    },
+    {
+      href: "/reports",
+      label: language === "id" ? "Laporan & Pajak" : "Reports & Tax",
+      icon: BarChart,
     },
   ];
 

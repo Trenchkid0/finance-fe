@@ -19,6 +19,7 @@ export async function createCategory(
     name: getString(formData, "name"),
     type: getString(formData, "type"),
     icon: getString(formData, "icon"),
+    taxDeductible: formData.get("taxDeductible") === "true",
   });
 
   if (!parsed.success) {
@@ -30,6 +31,7 @@ export async function createCategory(
       name: parsed.data.name,
       type: parsed.data.type,
       icon: parsed.data.icon || "📂",
+      taxDeductible: parsed.data.taxDeductible || false,
     });
     invalidateCache.categories();
     window.dispatchEvent(new CustomEvent("refresh-app-data"));

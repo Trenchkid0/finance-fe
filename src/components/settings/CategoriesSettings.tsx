@@ -320,6 +320,19 @@ export function CategoriesSettings({ categories }: CategoriesSettingsProps) {
                   </div>
                 </div>
 
+                <div className="flex items-center gap-2 pt-1">
+                  <input
+                    type="checkbox"
+                    id="taxDeductible"
+                    name="taxDeductible"
+                    value="true"
+                    className="h-4 w-4 rounded border-border bg-elevated text-accent focus:ring-accent"
+                  />
+                  <Label htmlFor="taxDeductible" className="text-xs font-medium text-foreground cursor-pointer select-none">
+                    {language === "id" ? "Deduktibel Pajak (Donasi, operasional, dll.)" : "Tax Deductible (Donations, operational, etc.)"}
+                  </Label>
+                </div>
+
                 {state?.error && !state.fieldErrors ? (
                   <p className="text-xs text-destructive">{state.error}</p>
                 ) : null}

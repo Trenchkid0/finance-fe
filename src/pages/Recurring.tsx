@@ -28,14 +28,7 @@ import {
   CardDescription,
   CardAction,
 } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { ConfirmDeleteRecurring } from "@/components/recurring/ConfirmDeleteRecurring";
 import { RecurringForm } from "@/components/recurring/RecurringForm";
 
 interface RecurringBill {
@@ -183,20 +176,7 @@ export default function Recurring() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!deletingBill) return;
-    try {
-      await api.delete(`/api/recurring/${deletingBill.id}`);
-      toast.success(language === "id" ? "Tagihan berhasil dihapus" : "Bill deleted successfully");
-      setDeletingBill(null);
-      cache.delete(CacheKeys.recurring());
-      fetchBills();
-      fetchAutoPayHistory();
-    } catch (err) {
-      console.error(err);
-      toast.error(language === "id" ? "Gagal menghapus tagihan" : "Failed to delete bill");
-    }
-  };
+
 
   const handlePay = async (billId: string) => {
     try {
@@ -756,40 +736,15 @@ export default function Recurring() {
         />
       )}
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={!!deletingBill} onOpenChange={(open) => !open && setDeletingBill(null)}>
-        <DialogContent className="bg-elevated border-border text-foreground">
-          <DialogHeader>
-            <DialogTitle className="text-base font-bold">
-              {language === "id" ? "Hapus Tagihan Berulang?" : "Delete Recurring Bill?"}
-            </DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground">
-              {language === "id"
-                ? "Tindakan ini permanen dan akan menghapus pelacakan tagihan rutin."
-                : "This action is permanent and will stop tracking this constant schedule."}
-            </DialogDescription>
-          </DialogHeader>
-
-          <DialogFooter className="pt-2">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => setDeletingBill(null)}
-              className="h-8 rounded-lg text-xs font-semibold"
-            >
-              {language === "id" ? "Batal" : "Cancel"}
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={handleDelete}
-              className="bg-expense hover:bg-red-600 text-white h-8 rounded-lg text-xs font-semibold"
-            >
-              {language === "id" ? "Hapus" : "Delete"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Delete Confirmation Modal */}
+      <ConfirmDeleteRecurring
+        target={deletingBill}
+        onClose={() => setDeletingBill(null)}
+        onDeleted={() => {
+          fetchBills();
+          fetchAutoPayHistory();
+        }}
+      />
     </div>
   );
 }

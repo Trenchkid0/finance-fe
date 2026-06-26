@@ -50,6 +50,7 @@ export interface Category {
   type: "income" | "expense";
   icon: string;
   isDefault?: boolean;
+  taxDeductible?: boolean;
 }
 
 // --- API Response Types --------------------------------------------------
@@ -68,7 +69,7 @@ export interface TransactionApiItem {
   accountId: string;
   account?: { id: string; name: string };
   categoryId: string | null;
-  category?: { id: string; name: string; icon: string | null } | null;
+  category?: { id: string; name: string; icon: string | null; taxDeductible?: boolean } | null;
   transferToId: string | null;
   transferTo?: { id: string; name: string } | null;
   amount: number;
@@ -77,6 +78,7 @@ export interface TransactionApiItem {
   description: string | null;
   note: string | null;
   receiptImageUrl: string | null;
+  taxDeductible?: boolean;
 }
 
 /** Shape returned by `GET /api/budgets` */
@@ -168,6 +170,8 @@ export interface AssetGroup {
   percent: number;
   accounts: AssetGroupAccount[];
 }
+
+
 
 // --- Error Utility ----------------------------------------------------------
 

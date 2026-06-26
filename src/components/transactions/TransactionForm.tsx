@@ -63,6 +63,7 @@ export type TransactionFormInitial = {
   description: string;
   note: string;
   receiptImageUrl?: string | null;
+  taxDeductible?: boolean;
 };
 
 export type TransactionModalProps = {
@@ -122,6 +123,7 @@ export function TransactionForm({
   );
   const [description, setDescription] = useState(initial.description);
   const [note, setNote] = useState(initial.note);
+  const [taxDeductible, setTaxDeductible] = useState(!!stableInitial.taxDeductible);
 
   const [tab, setTab] = useState<"manual" | "scan">("manual");
   const [scanning, setScanning] = useState(false);
@@ -158,6 +160,7 @@ export function TransactionForm({
     setTransferToId(stableInitial.transferToId);
     setDescription(stableInitial.description);
     setNote(stableInitial.note);
+    setTaxDeductible(!!stableInitial.taxDeductible);
     setTab("manual");
     setScanning(false);
     setReceiptFile(null);
@@ -496,6 +499,22 @@ export function TransactionForm({
         />
       </div>
 
+      {/* Deduktibel Pajak */}
+      {type !== "transfer" && (
+        <div className="flex items-center gap-2 pt-1">
+          <input
+            type="checkbox"
+            id="taxDeductible"
+            checked={taxDeductible}
+            onChange={(e) => setTaxDeductible(e.target.checked)}
+            className="h-4 w-4 rounded border-border bg-elevated text-accent focus:ring-accent"
+          />
+          <Label htmlFor="taxDeductible" className="text-xs font-medium text-foreground cursor-pointer select-none">
+            {isId ? "Deduktibel Pajak (Donasi, operasional, dll.)" : "Tax Deductible (Donations, operational, etc.)"}
+          </Label>
+        </div>
+      )}
+
       {/* Lampiran Struk */}
       <ReceiptAttachment
         receiptFile={receiptFile}
@@ -611,6 +630,7 @@ export function TransactionForm({
             <input type="hidden" name="description" value={description} />
             <input type="hidden" name="note" value={note} />
             <input type="hidden" name="receiptImageUrl" value={receiptUrl || ""} />
+            <input type="hidden" name="taxDeductible" value={String(taxDeductible)} />
           </form>
 
           {state && !state.ok && state.error ? (

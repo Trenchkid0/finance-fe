@@ -24,6 +24,7 @@ const Goals = lazy(() => import("@/pages/Goals"));
 const Recurring = lazy(() => import("@/pages/Recurring"));
 const Investments = lazy(() => import("@/pages/Investments"));
 const Status = lazy(() => import("@/pages/Status"));
+const Reports = lazy(() => import("@/pages/Reports"));
 
 import { LanguageProvider } from "@/lib/contexts/LanguageContext";
 import { loadSavedTheme } from "@/lib/utils/theme";
@@ -136,6 +137,7 @@ export default function App() {
             <Route path="goals" element={<Goals />} />
             <Route path="recurring" element={<Recurring />} />
             <Route path="investments" element={<Investments />} />
+            <Route path="reports" element={<Reports />} />
             <Route path="settings" element={<Settings />} />
             <Route path="profile" element={<Profile />} />
           </Route>

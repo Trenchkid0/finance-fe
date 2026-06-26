@@ -28,6 +28,7 @@ export async function createTransaction(
     categoryId: getString(formData, "categoryId") || null,
     transferToId: getString(formData, "transferToId") || null,
     receiptImageUrl: getString(formData, "receiptImageUrl") || null,
+    taxDeductible: formData.get("taxDeductible") === "true",
   };
   try {
     await api.post("/api/transactions", payload);
@@ -57,6 +58,7 @@ export async function updateTransaction(
     categoryId: getString(formData, "categoryId") || null,
     transferToId: getString(formData, "transferToId") || null,
     receiptImageUrl: getString(formData, "receiptImageUrl") || null,
+    taxDeductible: formData.get("taxDeductible") === "true",
   };
 
   try {
