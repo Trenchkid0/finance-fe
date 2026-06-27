@@ -1,11 +1,11 @@
-import { useActionState, useState } from "react";
+import { useActionState, useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { AlertCircle, Eye, EyeOff, Info, Loader2, Mail, Lock, ArrowRight } from "lucide-react";
 import { login } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
+import { toast } from "sonner";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 
 const isDev = import.meta.env.DEV && import.meta.env.VITE_SHOW_DEMO !== "false";
@@ -17,6 +17,20 @@ export function LoginForm() {
 
   const demoEmail = isDev ? "demo@maybe.local" : "";
   const demoPassword = isDev ? "password123" : "";
+  const [email, setEmail] = useState(demoEmail);
+  const [shaking, setShaking] = useState(false);
+  const prevErrorRef = useRef<string | undefined>(undefined);
+
+  // Trigger shake + toast when a new global error appears
+  useEffect(() => {
+    const currentError = state?.error && !state.fieldErrors ? state.error : undefined;
+    if (currentError && currentError !== prevErrorRef.current) {
+      setShaking(true);
+      toast.error(currentError);
+      setTimeout(() => setShaking(false), 500);
+    }
+    prevErrorRef.current = currentError;
+  }, [state]);
 
   return (
     <div className="space-y-7">
@@ -30,7 +44,7 @@ export function LoginForm() {
         </div>
       ) : null}
 
-      <form action={formAction} className="space-y-5" noValidate>
+      <form action={formAction} className={`space-y-5 ${shaking ? "animate-shake" : ""}`} noValidate>
         {/* Email */}
         <div className="space-y-2.5">
           <Label htmlFor="email">{t("emailLabel")}</Label>
@@ -42,7 +56,8 @@ export function LoginForm() {
               type="email"
               autoComplete="email"
               required
-              defaultValue={demoEmail}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="nama@email.com"
               className="pl-11"
               aria-invalid={!!state?.fieldErrors?.email}
@@ -113,16 +128,7 @@ export function LoginForm() {
           </Label>
         </div>
 
-        {/* Global error */}
-        {state?.error && !state.fieldErrors ? (
-          <div className="rounded-xl border border-destructive/25 bg-destructive/[0.04] px-4 py-3 flex items-start gap-2.5">
-            <AlertCircle size={14} className="text-destructive mt-0.5 shrink-0" />
-            <p className="text-xs text-destructive">{state.error}</p>
-          </div>
-        ) : null}
-
         {/* Submit */}
-        {/* <div className="pt-5"> */}
           <Button type="submit" className="w-full h-12 text-[15px] group" disabled={pending}>
             {pending ? (
               <Loader2 size={18} className="animate-spin" />
@@ -133,9 +139,7 @@ export function LoginForm() {
               </>
             )}
           </Button>
-        {/* </div> */}
       </form>
-
 
       {/* Register link */}
       <p className="text-[13px] text-muted-foreground text-center pt-1">

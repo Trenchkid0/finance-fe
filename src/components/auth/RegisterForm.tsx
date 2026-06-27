@@ -1,4 +1,4 @@
-import { useActionState, useState } from "react";
+import { useActionState, useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { AlertCircle, Eye, EyeOff, Loader2, User, Mail, Lock, ArrowRight } from "lucide-react";
 import { register } from "@/app/actions/auth";
@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 /**
  * Score kekuatan password 0..4 — heuristik ringan, dependency-free.
@@ -45,13 +46,26 @@ export function RegisterForm() {
   const [state, formAction, pending] = useActionState(register, undefined);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [shaking, setShaking] = useState(false);
+  const prevErrorRef = useRef<string | undefined>(undefined);
+
+  // Trigger shake + toast when a new global error appears
+  useEffect(() => {
+    const currentError = state?.error && !state.fieldErrors ? state.error : undefined;
+    if (currentError && currentError !== prevErrorRef.current) {
+      setShaking(true);
+      toast.error(currentError);
+      setTimeout(() => setShaking(false), 500);
+    }
+    prevErrorRef.current = currentError;
+  }, [state]);
 
   const score = scorePassword(password);
   const meta = STRENGTH_META[score];
 
   return (
     <div className="space-y-7">
-      <form action={formAction} className="space-y-5" noValidate>
+      <form action={formAction} className={`space-y-5 ${shaking ? "animate-shake" : ""}`} noValidate>
         {/* Name */}
         <div className="space-y-2.5">
           <Label htmlFor="name">{t("fullNameLabel")}</Label>
@@ -178,14 +192,6 @@ export function RegisterForm() {
             </p>
           ) : null}
         </div>
-
-        {/* Global error */}
-        {state?.error && !state.fieldErrors ? (
-          <div className="rounded-xl border border-destructive/25 bg-destructive/[0.04] px-4 py-3 flex items-start gap-2.5">
-            <AlertCircle size={14} className="text-destructive mt-0.5 shrink-0" />
-            <p className="text-xs text-destructive">{state.error}</p>
-          </div>
-        ) : null}
 
         {/* Submit */}
         <Button type="submit" className="w-full h-12 text-[15px] group" disabled={pending}>
