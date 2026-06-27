@@ -1,33 +1,28 @@
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Check, RefreshCw, X } from "lucide-react";
+import { Check, Trash2, X } from "lucide-react";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
-import { formatInputRupiahDecimal } from "@/lib/utils/formatters";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
 import type { AssetHolding } from "./types";
 
-interface UpdateAssetPriceModalProps {
+interface DeleteAssetModalProps {
   open: boolean;
   onClose: () => void;
   selectedHolding: AssetHolding | null;
-  updatePriceValue: string;
-  setUpdatePriceValue: (v: string) => void;
+  deletingPending: boolean;
   onSubmit: (e: React.FormEvent) => void;
 }
 
-export function UpdateAssetPriceModal({
+export function DeleteAssetModal({
   open,
   onClose,
   selectedHolding,
-  updatePriceValue,
-  setUpdatePriceValue,
+  deletingPending,
   onSubmit,
-}: UpdateAssetPriceModalProps) {
+}: DeleteAssetModalProps) {
   const { language } = useLanguage();
   const isId = language === "id";
-  const labelCls = "text-xs font-bold text-muted-foreground/70 uppercase tracking-wider";
 
   useEffect(() => {
     if (!open) return;
@@ -50,17 +45,17 @@ export function UpdateAssetPriceModal({
       <div className="flex max-h-[calc(100dvh-48px)] w-full max-w-[500px] flex-col overflow-hidden rounded-[22px] border border-border bg-surface shadow-2xl">
         {/* STICKY HEADER */}
         <div className="flex items-start gap-4 border-b border-border px-7 py-5">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-accent to-accent/60 text-white shadow-lg">
-            <RefreshCw className="h-5 w-5" />
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-expense to-expense/60 text-white shadow-lg">
+            <Trash2 className="h-5 w-5" />
           </div>
           <div className="min-w-0 flex-1">
             <h2 className="text-[17px] font-semibold leading-tight text-foreground">
-              {isId ? `Perbarui Harga ${selectedHolding?.symbol}` : `Update Price: ${selectedHolding?.symbol}`}
+              {isId ? `Hapus ${selectedHolding?.symbol}` : `Delete Asset: ${selectedHolding?.symbol}`}
             </h2>
             <p className="mt-0.5 text-[13px] text-muted-foreground/70">
               {isId
-                ? "Masukkan harga pasar terkini per unit aset."
-                : "Enter the latest unit price quote for this holding."}
+                ? "Tindakan ini akan menghapus aset ini secara permanen dari portofolio Anda."
+                : "This will permanently remove this asset from your portfolio."}
             </p>
           </div>
           <button
@@ -75,21 +70,23 @@ export function UpdateAssetPriceModal({
 
         {/* SCROLLABLE BODY */}
         <div className="flex-1 overflow-y-auto px-7 py-6">
-          <form onSubmit={onSubmit} className="space-y-[18px]">
-            <div className="space-y-2.5">
-              <Label className={labelCls}>{isId ? "Harga per Unit Sekarang (IDR)" : "Current Price per Unit (IDR)"}</Label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-muted-foreground/70">Rp</span>
-                <Input
-                  inputMode="numeric"
-                  value={updatePriceValue}
-                  onChange={(e) => setUpdatePriceValue(formatInputRupiahDecimal(e.target.value))}
-                  placeholder="0"
-                  className="h-11 pl-10 font-mono font-semibold"
-                />
-              </div>
+          {selectedHolding && (
+            <div className="space-y-4">
+              <Card className="p-4 gap-0 bg-white/[0.02] border-white/[0.06]">
+                <p className="text-sm font-semibold text-foreground">
+                  {selectedHolding.symbol} - {selectedHolding.name}
+                </p>
+                <p className="text-xs text-muted-foreground/60 mt-1 font-mono tabular-nums">
+                  {isId ? "Jumlah Kepemilikan: " : "Owned Quantity: "} {selectedHolding.quantity.toFixed(4)}
+                </p>
+              </Card>
+              <p className="text-xs text-muted-foreground/80 leading-relaxed">
+                {isId
+                  ? "Apakah Anda yakin ingin menghapus seluruh kepemilikan investasi ini? Tindakan ini tidak dapat dibatalkan."
+                  : "Are you sure you want to delete all holding records for this investment? This action cannot be undone."}
+              </p>
             </div>
-          </form>
+          )}
         </div>
 
         {/* STICKY FOOTER */}
@@ -99,16 +96,20 @@ export function UpdateAssetPriceModal({
             variant="ghost"
             onClick={onClose}
             className="h-10 text-[13px]"
+            disabled={deletingPending}
           >
             {isId ? "Batal" : "Cancel"}
           </Button>
           <Button
-            type="submit"
+            type="button"
             onClick={onSubmit}
-            className="h-10 gap-1.5 text-[13px]"
+            className="h-10 gap-1.5 text-[13px] bg-expense hover:bg-red-600 text-white border-0"
+            disabled={deletingPending}
           >
             <Check className="h-4 w-4" />
-            {isId ? "Perbarui Harga" : "Update Price"}
+            {deletingPending
+              ? (isId ? "Menghapus..." : "Deleting...")
+              : (isId ? "Hapus" : "Delete")}
           </Button>
         </div>
       </div>

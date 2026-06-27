@@ -97,3 +97,71 @@ export function formatInputRupiah(val: string): string {
   const formatted = new Intl.NumberFormat("id-ID").format(Number(digits));
   return isNegative ? `-${formatted}` : formatted;
 }
+
+/**
+ * Format raw string input with dots as thousands separators and up to 2 decimal digits after a comma.
+ * Used for real-time formatting in input fields that support decimal prices (like crypto or fractional units).
+ */
+export function formatInputRupiahDecimal(val: string): string {
+  if (!val) return "";
+
+  const isNegative = val.startsWith("-");
+  
+  // Clean all characters except digits, minus, and comma/dot
+  let clean = val.replace(/[^-0-9.,]/g, "");
+
+  let decimalSeparator = "";
+  if (clean.includes(",")) {
+    decimalSeparator = ",";
+  } else if (clean.includes(".")) {
+    const dotCount = (clean.match(/\./g) || []).length;
+    if (dotCount === 1) {
+      const parts = clean.split(".");
+      if (parts[1].length <= 2) {
+        decimalSeparator = ".";
+      }
+    }
+  }
+
+  let integerPart = "";
+  let decimalPart = "";
+
+  if (decimalSeparator) {
+    const parts = clean.split(decimalSeparator);
+    integerPart = parts[0].replace(/\D/g, "");
+    decimalPart = parts[1].replace(/\D/g, "").slice(0, 2); // limit to 2 decimal digits
+  } else {
+    integerPart = clean.replace(/\D/g, "");
+  }
+
+  if (!integerPart && !decimalPart) return isNegative ? "-" : "";
+
+  let formattedInteger = "";
+  if (integerPart) {
+    formattedInteger = new Intl.NumberFormat("id-ID").format(Number(integerPart));
+  } else if (isNegative) {
+    formattedInteger = "0";
+  }
+
+  let result = isNegative ? `-${formattedInteger}` : formattedInteger;
+  
+  if (val.includes(",") || (decimalSeparator === "." && val.includes("."))) {
+    result += "," + decimalPart;
+  }
+
+  return result;
+}
+
+/**
+ * Parse localized Indonesian number format (dots as thousands, comma as decimal) back to JS float.
+ */
+export function parseLocalizedFloat(val: string): number {
+  if (!val) return 0;
+  // Remove all dots (thousands separators)
+  let clean = val.replace(/\./g, "");
+  // Replace comma with dot (decimal separator)
+  clean = clean.replace(/,/g, ".");
+  // Parse float
+  return parseFloat(clean) || 0;
+}
+

@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Check, MinusCircle, X } from "lucide-react";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
-import { formatIDR, formatInputRupiah } from "@/lib/utils/formatters";
+import { formatIDR, formatInputRupiahDecimal, parseLocalizedFloat } from "@/lib/utils/formatters";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,7 +44,7 @@ export function SellAssetModal({
 
   // Calculate total proceeds
   const qty = parseFloat(sellForm.quantity) || 0;
-  const priceNum = parseFloat(sellForm.price.replace(/\D/g, "")) || 0;
+  const priceNum = parseLocalizedFloat(sellForm.price);
   const totalProceeds = qty * priceNum;
 
   useEffect(() => {
@@ -117,7 +117,7 @@ export function SellAssetModal({
                 <Input
                   inputMode="numeric"
                   value={sellForm.price}
-                  onChange={(e) => setSellForm((prev) => ({ ...prev, price: formatInputRupiah(e.target.value) }))}
+                  onChange={(e) => setSellForm((prev) => ({ ...prev, price: formatInputRupiahDecimal(e.target.value) }))}
                   placeholder="0"
                   className="h-11 pl-10 font-mono font-semibold"
                 />

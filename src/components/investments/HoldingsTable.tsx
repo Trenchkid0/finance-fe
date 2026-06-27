@@ -1,4 +1,4 @@
-import { Briefcase, MinusCircle, RefreshCw } from "lucide-react";
+import { Briefcase, MinusCircle, RefreshCw, Trash2 } from "lucide-react";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 import { formatIDR } from "@/lib/utils/formatters";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ interface HoldingsTableProps {
   loading: boolean;
   onUpdatePriceClick: (holding: AssetHolding) => void;
   onSellClick: (holding: AssetHolding) => void;
+  onDeleteClick: (holding: AssetHolding) => void;
   onBuyFirstClick: () => void;
 }
 
@@ -18,10 +19,31 @@ export function HoldingsTable({
   loading,
   onUpdatePriceClick,
   onSellClick,
+  onDeleteClick,
   onBuyFirstClick,
 }: HoldingsTableProps) {
   const { language } = useLanguage();
   const isId = language === "id";
+
+  const getTypeBadge = (type: string) => {
+    const t = type || "stock";
+    switch (t) {
+      case "mutual_fund":
+        return { label: isId ? "Reksadana" : "Mutual Fund", color: "bg-purple-500/10 text-purple-400 border-purple-500/20" };
+      case "bond":
+        return { label: isId ? "Obligasi" : "Bond", color: "bg-blue-500/10 text-blue-400 border-blue-500/20" };
+      case "crypto":
+        return { label: isId ? "Kripto" : "Crypto", color: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20" };
+      case "gold":
+        return { label: isId ? "Emas" : "Gold", color: "bg-amber-500/10 text-amber-400 border-amber-500/20" };
+      case "p2p":
+        return { label: isId ? "P2P" : "P2P", color: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" };
+      case "property":
+        return { label: isId ? "Properti" : "Property", color: "bg-pink-500/10 text-pink-400 border-pink-500/20" };
+      default: // "stock"
+        return { label: isId ? "Saham" : "Stock", color: "bg-cyan-500/10 text-cyan-400 border-cyan-500/20" };
+    }
+  };
 
   return (
     <Card className="p-0 overflow-hidden gap-0">
@@ -86,10 +108,17 @@ export function HoldingsTable({
                 const pnl = marketVal - costBasis;
                 const pnlPct = costBasis > 0 ? (pnl / costBasis) * 100 : 0;
 
+                const badge = getTypeBadge(h.type);
+
                 return (
                   <tr key={h.id} className="hover:bg-elevated/20 transition-colors duration-150">
                     <td className="p-3 pl-4">
-                      <div className="font-bold text-text-primary text-xs">{h.symbol}</div>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="font-bold text-text-primary text-xs">{h.symbol}</span>
+                        <span className={`text-[8px] font-bold px-1 py-0.5 rounded border leading-none shrink-0 ${badge.color}`}>
+                          {badge.label}
+                        </span>
+                      </div>
                       <div className="text-[10px] text-text-muted truncate max-w-[150px]">{h.name}</div>
                       {h.account && (
                         <div className="text-[9px] text-accent/80 font-mono mt-0.5">{h.account.name}</div>
@@ -128,6 +157,13 @@ export function HoldingsTable({
                           title={isId ? "Jual Aset" : "Sell Asset"}
                         >
                           <MinusCircle size={13} />
+                        </button>
+                        <button
+                          onClick={() => onDeleteClick(h)}
+                          className="p-1.5 rounded hover:bg-expense/10 text-text-muted hover:text-expense transition-colors"
+                          title={isId ? "Hapus Kepemilikan" : "Delete Holding"}
+                        >
+                          <Trash2 size={13} />
                         </button>
                       </div>
                     </td>

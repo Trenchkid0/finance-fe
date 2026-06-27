@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useApp } from "@/components/layout/AppLayout";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 import { api } from "@/lib/api";
-import { formatIDR, formatInputRupiah } from "@/lib/utils/formatters";
+import { formatIDR, formatInputRupiahDecimal, parseLocalizedFloat } from "@/lib/utils/formatters";
 import { toast } from "sonner";
 import { Briefcase, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/card";
 import { BuyAssetModal } from "@/components/investments/BuyAssetModal";
 import { SellAssetModal } from "@/components/investments/SellAssetModal";
 import { UpdateAssetPriceModal } from "@/components/investments/UpdateAssetPriceModal";
+import { DeleteAssetModal } from "@/components/investments/DeleteAssetModal";
 import { HoldingsTable } from "@/components/investments/HoldingsTable";
 import type { AssetHolding } from "@/components/investments/types";
 import { SkeletonInvestments } from "@/components/ui/skeleton-loader";
@@ -27,10 +28,13 @@ export default function Investments() {
 
   // Selected asset for selling/updating price
   const [selectedHolding, setSelectedHolding] = useState<AssetHolding | null>(null);
+  const [deletingHolding, setDeletingHolding] = useState<AssetHolding | null>(null);
+  const [deletingPending, setDeletingPending] = useState(false);
 
   // Form states
   const [buyForm, setBuyForm] = useState({
     accountId: "",
+    type: "stock",
     symbol: "",
     name: "",
     quantity: "",
@@ -79,19 +83,21 @@ export default function Investments() {
 
   const handleBuySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!buyForm.accountId || !buyForm.symbol || !buyForm.name || !buyForm.quantity || !buyForm.price) {
+    const showQty = !["p2p", "property"].includes(buyForm.type);
+    if (!buyForm.accountId || !buyForm.symbol || !buyForm.name || (showQty && !buyForm.quantity) || !buyForm.price) {
       toast.error(isId ? "Harap isi semua kolom wajib" : "Please fill in all required fields");
       return;
     }
 
     try {
-      const priceNum = parseFloat(buyForm.price.replace(/\D/g, "")) || 0;
+      const priceNum = parseLocalizedFloat(buyForm.price);
 
       const payload = {
         accountId: buyForm.accountId,
+        type: buyForm.type,
         symbol: buyForm.symbol.toUpperCase(),
         name: buyForm.name,
-        quantity: parseFloat(buyForm.quantity),
+        quantity: parseFloat(buyForm.quantity) || 1,
         price: priceNum,
         date: buyForm.date,
         note: buyForm.note,
@@ -104,6 +110,7 @@ export default function Investments() {
       // Reset form
       setBuyForm({
         accountId: accounts[0]?.id || "",
+        type: "stock",
         symbol: "",
         name: "",
         quantity: "",
@@ -135,7 +142,7 @@ export default function Investments() {
     }
 
     try {
-      const priceNum = parseFloat(sellForm.price.replace(/\D/g, "")) || 0;
+      const priceNum = parseLocalizedFloat(sellForm.price);
       const payload = {
         holdingId: selectedHolding.id,
         quantity: sellQty,
@@ -166,7 +173,7 @@ export default function Investments() {
     if (!selectedHolding || !updatePriceValue) return;
 
     try {
-      const priceNum = parseFloat(updatePriceValue.replace(/\D/g, "")) || 0;
+      const priceNum = parseLocalizedFloat(updatePriceValue);
       const payload = {
         holdingId: selectedHolding.id,
         currentPrice: priceNum,
@@ -182,6 +189,24 @@ export default function Investments() {
       console.error(err);
       const message = err instanceof Error ? err.message : "";
       toast.error(message || (isId ? "Gagal memperbarui harga" : "Failed to update price"));
+    }
+  };
+
+  const handleDeleteHolding = async () => {
+    if (!deletingHolding) return;
+    try {
+      setDeletingPending(true);
+      await api.delete(`/api/investments/${deletingHolding.id}`);
+      toast.success(isId ? "Aset berhasil dihapus!" : "Asset deleted successfully!");
+      setDeletingHolding(null);
+      fetchHoldings();
+      window.dispatchEvent(new CustomEvent("refresh-app-data"));
+    } catch (err: unknown) {
+      console.error(err);
+      const message = err instanceof Error ? err.message : "";
+      toast.error(message || (isId ? "Gagal menghapus aset" : "Failed to delete asset"));
+    } finally {
+      setDeletingPending(false);
     }
   };
 
@@ -265,18 +290,19 @@ export default function Investments() {
         loading={loading}
         onUpdatePriceClick={(h) => {
           setSelectedHolding(h);
-          setUpdatePriceValue(formatInputRupiah(String(h.currentPrice)));
+          setUpdatePriceValue(formatInputRupiahDecimal(String(h.currentPrice)));
           setIsUpdatePriceOpen(true);
         }}
         onSellClick={(h) => {
           setSelectedHolding(h);
           setSellForm({
             quantity: String(h.quantity),
-            price: formatInputRupiah(String(h.currentPrice)),
+            price: formatInputRupiahDecimal(String(h.currentPrice)),
             addToAccountId: "none",
           });
           setIsSellModalOpen(true);
         }}
+        onDeleteClick={(h) => setDeletingHolding(h)}
         onBuyFirstClick={() => setIsBuyModalOpen(true)}
       />
 
@@ -313,6 +339,15 @@ export default function Investments() {
         updatePriceValue={updatePriceValue}
         setUpdatePriceValue={setUpdatePriceValue}
         onSubmit={handleUpdatePriceSubmit}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <DeleteAssetModal
+        open={deletingHolding !== null}
+        onClose={() => setDeletingHolding(null)}
+        selectedHolding={deletingHolding}
+        deletingPending={deletingPending}
+        onSubmit={handleDeleteHolding}
       />
     </div>
   );

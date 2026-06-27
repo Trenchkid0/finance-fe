@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Check, TrendingUp, X } from "lucide-react";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
-import { formatIDR, formatInputRupiah } from "@/lib/utils/formatters";
+import { formatIDR, formatInputRupiahDecimal, parseLocalizedFloat } from "@/lib/utils/formatters";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +16,7 @@ interface BuyAssetModalProps {
   accounts: { id: string; name: string; balance: number }[];
   buyForm: {
     accountId: string;
+    type: string;
     symbol: string;
     name: string;
     quantity: string;
@@ -27,6 +28,7 @@ interface BuyAssetModalProps {
   setBuyForm: React.Dispatch<
     React.SetStateAction<{
       accountId: string;
+      type: string;
       symbol: string;
       name: string;
       quantity: string;
@@ -51,9 +53,101 @@ export function BuyAssetModal({
   const isId = language === "id";
   const labelCls = "text-xs font-bold text-muted-foreground/70 uppercase tracking-wider";
 
+  const getFieldLabels = (type: string) => {
+    switch (type) {
+      case "mutual_fund":
+        return {
+          symbol: isId ? "Kode Reksa Dana (Opsional)" : "Fund Ticker / Code (Optional)",
+          symbolPl: "e.g. RDPU, SEF",
+          name: isId ? "Nama Reksa Dana" : "Mutual Fund Name",
+          namePl: "e.g. Sucorinvest Equity Fund",
+          quantity: isId ? "Jumlah Unit Penyertaan" : "Quantity (Units)",
+          quantityPl: "0.0000",
+          price: isId ? "Harga per Unit (NAB)" : "NAV per Unit",
+          pricePl: "0",
+          showQty: true,
+        };
+      case "bond":
+        return {
+          symbol: isId ? "Seri Obligasi" : "Bond Series",
+          symbolPl: "e.g. ORI021, SBR011",
+          name: isId ? "Nama Obligasi" : "Bond Name",
+          namePl: "e.g. Obligasi Negara Ritel Seri 021",
+          quantity: isId ? "Jumlah Unit / Nominal" : "Quantity / Units",
+          quantityPl: "0",
+          price: isId ? "Harga per Unit / Nominal" : "Price per Unit / Nominal",
+          pricePl: "0",
+          showQty: true,
+        };
+      case "crypto":
+        return {
+          symbol: isId ? "Simbol Koin" : "Coin Ticker",
+          symbolPl: "e.g. BTC, ETH",
+          name: isId ? "Nama Koin" : "Coin Name",
+          namePl: "e.g. Bitcoin, Ethereum",
+          quantity: isId ? "Jumlah Koin" : "Quantity (Coins)",
+          quantityPl: "0.0000",
+          price: isId ? "Harga Beli per Koin" : "Price per Coin",
+          pricePl: "0",
+          showQty: true,
+        };
+      case "gold":
+        return {
+          symbol: isId ? "Merek / Kode (Opsional)" : "Brand / Code (Optional)",
+          symbolPl: "e.g. ANTAM, UBS",
+          name: isId ? "Nama Aset" : "Asset Name",
+          namePl: "e.g. Emas Logam Mulia",
+          quantity: isId ? "Berat (Gram)" : "Weight (Grams)",
+          quantityPl: "0.00",
+          price: isId ? "Harga per Gram" : "Price per Gram",
+          pricePl: "0",
+          showQty: true,
+        };
+      case "p2p":
+        return {
+          symbol: isId ? "Platform (Opsional)" : "Platform Name (Optional)",
+          symbolPl: "e.g. KOINWORKS, AMARTHA",
+          name: isId ? "Nama Pinjaman / Kampanye" : "Loan Name / Campaign",
+          namePl: "e.g. Pendanaan UMKM Jaya",
+          quantity: "",
+          quantityPl: "",
+          price: isId ? "Nominal Pendanaan" : "Funding Amount",
+          pricePl: "0",
+          showQty: false,
+        };
+      case "property":
+        return {
+          symbol: isId ? "Kode Properti (Opsional)" : "Property Code (Optional)",
+          symbolPl: "e.g. RUMAH-BSD, APT-SDR",
+          name: isId ? "Nama Properti / Lokasi" : "Property Name / Location",
+          namePl: "e.g. Rumah Tinggal BSD Sector 1",
+          quantity: "",
+          quantityPl: "",
+          price: isId ? "Harga Beli Properti" : "Purchase Price",
+          pricePl: "0",
+          showQty: false,
+        };
+      default: // "stock" or fallback
+        return {
+          symbol: isId ? "Simbol Saham" : "Stock Symbol",
+          symbolPl: "e.g. BBCA, AAPL",
+          name: isId ? "Nama Perusahaan" : "Company Full Name",
+          namePl: "e.g. Bank Central Asia, Apple Inc.",
+          quantity: isId ? "Kuantitas (Lembar / Unit)" : "Quantity (Shares)",
+          quantityPl: "0",
+          price: isId ? "Harga Beli per Saham" : "Price per Share",
+          pricePl: "0",
+          showQty: true,
+        };
+    }
+  };
+
+  const fields = getFieldLabels(buyForm.type);
+  const showQty = fields.showQty;
+
   // Calculate total investment
-  const qty = parseFloat(buyForm.quantity) || 0;
-  const priceNum = parseFloat(buyForm.price.replace(/\D/g, "")) || 0;
+  const qty = showQty ? (parseFloat(buyForm.quantity) || 0) : 1;
+  const priceNum = parseLocalizedFloat(buyForm.price);
   const totalInvest = qty * priceNum;
 
   useEffect(() => {
@@ -118,6 +212,25 @@ export function BuyAssetModal({
               />
             </div>
 
+            {/* Tipe Investasi */}
+            <div className="space-y-2.5">
+              <Label className={labelCls}>{isId ? "Tipe Aset" : "Asset Type"}</Label>
+              <FormSelect
+                value={buyForm.type}
+                onChange={(v) => setBuyForm((prev) => ({ ...prev, type: v }))}
+                options={[
+                  { value: "stock", label: isId ? "Saham (Stock)" : "Stock" },
+                  { value: "mutual_fund", label: isId ? "Reksa Dana (Mutual Fund)" : "Mutual Fund" },
+                  { value: "bond", label: isId ? "Obligasi (Bond)" : "Bond" },
+                  { value: "crypto", label: isId ? "Aset Kripto (Crypto)" : "Cryptocurrency" },
+                  { value: "gold", label: isId ? "Emas / Logam Mulia (Gold)" : "Gold & Metals" },
+                  { value: "p2p", label: isId ? "P2P Lending" : "P2P Lending" },
+                  { value: "property", label: isId ? "Properti (Real Estate)" : "Real Estate / Property" },
+                ]}
+                placeholder={isId ? "Pilih tipe aset" : "Select asset type"}
+              />
+            </div>
+
             {/* Tanggal */}
             <div className="space-y-2.5">
               <Label className={labelCls}>{isId ? "Tanggal Beli" : "Purchase Date"}</Label>
@@ -130,51 +243,59 @@ export function BuyAssetModal({
             {/* Simbol + Nama */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2.5">
-                <Label className={labelCls}>{isId ? "Simbol Aset" : "Asset Symbol"}</Label>
+                <Label className={labelCls}>{fields.symbol}</Label>
                 <Input
                   value={buyForm.symbol}
                   onChange={(e) => setBuyForm((prev) => ({ ...prev, symbol: e.target.value.toUpperCase() }))}
-                  placeholder="e.g. BBCA, AAPL, BTC"
+                  placeholder={fields.symbolPl}
                   className="h-11 uppercase font-semibold tracking-wider"
                 />
               </div>
               <div className="space-y-2.5">
-                <Label className={labelCls}>{isId ? "Nama Lengkap Aset" : "Asset Full Name"}</Label>
+                <Label className={labelCls}>{fields.name}</Label>
                 <Input
                   value={buyForm.name}
                   onChange={(e) => setBuyForm((prev) => ({ ...prev, name: e.target.value }))}
-                  placeholder="e.g. Bank Central Asia"
+                  placeholder={fields.namePl}
                   className="h-11"
                 />
               </div>
             </div>
 
             {/* Kuantitas + Harga */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className={showQty ? "grid grid-cols-1 sm:grid-cols-2 gap-4" : "grid grid-cols-1 gap-4"}>
+              {showQty && (
+                <div className="space-y-2.5">
+                  <Label className={labelCls}>{fields.quantity}</Label>
+                  <Input
+                    inputMode="decimal"
+                    value={buyForm.quantity}
+                    onChange={(e) => setBuyForm((prev) => ({ ...prev, quantity: e.target.value }))}
+                    placeholder={fields.quantityPl}
+                    className="h-11 font-mono font-semibold"
+                  />
+                </div>
+              )}
               <div className="space-y-2.5">
-                <Label className={labelCls}>{isId ? "Kuantitas (Unit)" : "Quantity"}</Label>
-                <Input
-                  inputMode="decimal"
-                  value={buyForm.quantity}
-                  onChange={(e) => setBuyForm((prev) => ({ ...prev, quantity: e.target.value }))}
-                  placeholder="0.00"
-                  className="h-11 font-mono font-semibold"
-                />
-              </div>
-              <div className="space-y-2.5">
-                <Label className={labelCls}>{isId ? "Harga Beli per Unit" : "Price per Unit"}</Label>
+                <Label className={labelCls}>{fields.price}</Label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-muted-foreground/70">Rp</span>
                   <Input
                     inputMode="numeric"
                     value={buyForm.price}
-                    onChange={(e) => setBuyForm((prev) => ({ ...prev, price: formatInputRupiah(e.target.value) }))}
-                    placeholder="0"
+                    onChange={(e) => setBuyForm((prev) => ({ ...prev, price: formatInputRupiahDecimal(e.target.value) }))}
+                    placeholder={fields.pricePl}
                     className="h-11 pl-10 font-mono font-semibold"
                   />
                 </div>
               </div>
             </div>
+
+            {!showQty && (
+              <p className="text-[11px] text-muted-foreground/60 italic leading-none">
+                {isId ? "* Kuantitas otomatis diatur ke 1 untuk tipe investasi ini." : "* Quantity is automatically set to 1 for this asset type."}
+              </p>
+            )}
 
             {/* Total Nilai */}
             {qty > 0 && priceNum > 0 && (
