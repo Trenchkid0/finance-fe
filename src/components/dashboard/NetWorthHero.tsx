@@ -1,14 +1,7 @@
-import { lazy, Suspense, useMemo, useState, useTransition } from "react";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowDown, ArrowUp, ChevronDown, Minus } from "lucide-react";
+import { lazy, Suspense, useMemo, useState } from "react";
+import { ArrowDown, ArrowUp, Minus } from "lucide-react";
 import { formatDateShort, formatIDR } from "@/lib/utils/formatters";
 import { Card } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 
 // Lazy-load Recharts (~170KB gzipped) — only fetched when chart is visible
@@ -37,23 +30,11 @@ const getPeriodOptions = (isId: boolean): { value: NetWorthPeriod; label: string
 ];
 
 export function NetWorthHero({ current, previous, period, series }: Props) {
-  const navigate = useNavigate();
-  const { pathname } = useLocation();
-  const [searchParams] = useSearchParams();
-  const [pending, startTransition] = useTransition();
   const [hoverPoint, setHoverPoint] = useState<NetWorthPoint | null>(null);
   const { language } = useLanguage();
   const isId = language === "id";
 
   const periodOptions = getPeriodOptions(isId);
-
-  function setPeriod(next: NetWorthPeriod) {
-    const params = new URLSearchParams(searchParams);
-    if (next === "30d") params.delete("period");
-    else params.set("period", next);
-    const qs = params.toString();
-    startTransition(() => navigate(qs ? `${pathname}?${qs}` : pathname));
-  }
 
   const delta = current - previous;
   const ratio = previous === 0 ? 0 : (delta / previous) * 100;
@@ -85,9 +66,6 @@ export function NetWorthHero({ current, previous, period, series }: Props) {
             {formatIDR(display.value)}
           </p>
           <DeltaLine dir={dir} delta={delta} ratio={ratio} hoveredLabel={display.label} periodLabel={periodLabel} isId={isId} />
-        </div>
-        <div className="shrink-0">
-          <PeriodSelect value={period} onChange={setPeriod} disabled={pending} isId={isId} />
         </div>
       </div>
 
@@ -131,38 +109,5 @@ function DeltaLine({ dir, delta, ratio, hoveredLabel, periodLabel, isId }: {
           : (isId ? `dibanding ${periodLabel.toLowerCase()} lalu` : `vs last ${periodLabel.toLowerCase()}`)}
       </span>
     </p>
-  );
-}
-
-function PeriodSelect({ value, onChange, disabled, isId }: {
-  value: NetWorthPeriod; onChange: (v: NetWorthPeriod) => void; disabled?: boolean; isId: boolean;
-}) {
-  const periodOptions = getPeriodOptions(isId);
-  const selectedLabel = periodOptions.find((o) => o.value === value)?.label ?? value;
-  return (
-    <DropdownMenu modal={false}>
-      <DropdownMenuTrigger asChild>
-        <button
-          type="button"
-          disabled={disabled}
-          className="h-8 gap-1.5 px-2.5 text-xs font-semibold text-foreground hover:bg-white/[0.04] bg-elevated border border-border transition-all flex items-center justify-center disabled:opacity-50 disabled:pointer-events-none"
-          style={{ borderRadius: 'var(--dropdown-radius, 9999px)' }}
-        >
-          <span>{selectedLabel}</span>
-          <ChevronDown size={13} className="opacity-60 shrink-0 ml-1.5" />
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-[120px] rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl">
-        {periodOptions.map((o) => (
-          <DropdownMenuItem
-            key={o.value}
-            className="text-xs font-semibold cursor-pointer"
-            onClick={() => onChange(o.value)}
-          >
-            {o.label}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
   );
 }

@@ -1,5 +1,4 @@
-import { memo, useEffect, useRef, useState, useTransition } from "react";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { memo, useEffect, useRef, useState } from "react";
 import {
   sankey,
   sankeyLinkHorizontal,
@@ -7,14 +6,7 @@ import {
 } from "d3-sankey";
 import { formatIDR } from "@/lib/utils/formatters";
 import { Card } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
-import { ChevronDown } from "lucide-react";
 
 /**
  * Cashflow sankey — pola Maybe Finance asli.
@@ -54,19 +46,7 @@ export interface CashflowData {
 
 interface Props {
   data: CashflowData;
-  /** Periode aktif (sinkron dengan NetWorthHero), URL param `cashflow_period`. */
-  period: "1d" | "7d" | "30d" | "90d" | "ytd" | "365d" | "5y";
 }
-
-const getPeriodOptions = (isId: boolean): { value: Props["period"]; label: string }[] => [
-  { value: "1d", label: isId ? "1H" : "1D" },
-  { value: "7d", label: isId ? "7H" : "7D" },
-  { value: "30d", label: isId ? "30H" : "30D" },
-  { value: "90d", label: isId ? "90H" : "90D" },
-  { value: "ytd", label: "YTD" },
-  { value: "365d", label: isId ? "365H" : "365D" },
-  { value: "5y", label: isId ? "5T" : "5Y" },
-];
 
 const SUCCESS_COLOR = "var(--income)";
 const PRIMARY_BLUE = "var(--accent)";
@@ -99,15 +79,10 @@ interface SankeyLink extends SankeyExtraProperties {
   color: string;
 }
 
-export const CashflowSankey = memo(function CashflowSankey({ data, period }: Props) {
-  const navigate = useNavigate();
-  const { pathname } = useLocation();
-  const [searchParams] = useSearchParams();
-  const [pending, startTransition] = useTransition();
+export const CashflowSankey = memo(function CashflowSankey({ data }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const { language } = useLanguage();
   const isId = language === "id";
-  const periodOptions = getPeriodOptions(isId);
 
   // Chart dimensions
   const chartHeight = Math.max(320, (data?.outflow || []).length * 40);
@@ -128,14 +103,6 @@ export const CashflowSankey = memo(function CashflowSankey({ data, period }: Pro
 
   const [chartWidth, setChartWidth] = useState<number>(940);
 
-  function setPeriod(next: Props["period"]) {
-    const params = new URLSearchParams(searchParams);
-    if (next === "30d") params.delete("cashflow_period");
-    else params.set("cashflow_period", next);
-    const qs = params.toString();
-    startTransition(() => navigate(qs ? `${pathname}?${qs}` : pathname));
-  }
-
   const hasData = (data?.inflow || []).length > 0 || (data?.outflow || []).length > 0;
 
   return (
@@ -148,30 +115,6 @@ export const CashflowSankey = memo(function CashflowSankey({ data, period }: Pro
         <h2 className="text-base font-medium text-foreground transition-colors duration-300 group-hover:text-accent">
           {isId ? "Arus kas" : "Cash flow"}
         </h2>
-        <DropdownMenu modal={false}>
-          <DropdownMenuTrigger asChild>
-            <button
-              type="button"
-              disabled={pending}
-              className="h-8 gap-1.5 px-2.5 text-xs font-semibold text-foreground hover:bg-hover-elevated bg-elevated border border-border transition-all flex items-center justify-center disabled:opacity-50 disabled:pointer-events-none"
-              style={{ borderRadius: 'var(--dropdown-radius, 9999px)' }}
-            >
-              <span>{periodOptions.find((o) => o.value === period)?.label ?? period}</span>
-              <ChevronDown size={13} className="opacity-60 shrink-0 ml-1.5" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="min-w-[120px] rounded-xl border-border/60 bg-popover/95 backdrop-blur-xl">
-            {periodOptions.map((o) => (
-              <DropdownMenuItem
-                key={o.value}
-                className="text-xs font-semibold cursor-pointer"
-                onSelect={() => setPeriod(o.value)}
-              >
-                {o.label}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
 
       {/* Scrollable wrapper for mobile */}

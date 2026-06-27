@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import type { CSSProperties } from "react";
-import { useSearchParams } from "react-router-dom";
-import { Clock } from "lucide-react";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { Clock, ChevronDown } from "lucide-react";
 import { NetWorthHero } from "@/components/dashboard/NetWorthHero";
 import { OnboardingHero } from "@/components/dashboard/OnboardingHero";
 import { BalanceSheet } from "@/components/dashboard/BalanceSheet";
@@ -18,6 +18,12 @@ import { useLanguage } from "@/lib/contexts/LanguageContext";
 import { useCachedApi } from "@/hooks/use-cached-api";
 import { CacheKeys, CacheTTL } from "@/lib/cache";
 import { api } from "@/lib/api";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 import { getCurrentPreferences } from "@/lib/preferences";
 
@@ -121,13 +127,81 @@ const DELAY_2: CSSProperties = { animationDelay: "120ms" };
 const DELAY_3: CSSProperties = { animationDelay: "180ms" };
 const DELAY_4: CSSProperties = { animationDelay: "240ms" };
 
+const getPeriodOptions = (isId: boolean): { value: Period; label: string }[] => [
+  { value: "1d", label: isId ? "1 Hari" : "1 Day" },
+  { value: "7d", label: isId ? "7 Hari" : "7 Days" },
+  { value: "30d", label: isId ? "30 Hari" : "30 Days" },
+  { value: "90d", label: isId ? "3 Bulan" : "3 Months" },
+  { value: "ytd", label: isId ? "Tahun Ini" : "YTD" },
+  { value: "365d", label: isId ? "1 Tahun" : "1 Year" },
+  { value: "5y", label: isId ? "5 Tahun" : "5 Years" },
+];
+
+function PeriodSelect({
+  value,
+  onChange,
+  disabled,
+  isId,
+}: {
+  value: Period;
+  onChange: (v: Period) => void;
+  disabled?: boolean;
+  isId: boolean;
+}) {
+  const periodOptions = getPeriodOptions(isId);
+  const selectedLabel = periodOptions.find((o) => o.value === value)?.label ?? value;
+  return (
+    <DropdownMenu modal={false}>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          disabled={disabled}
+          className="h-8 gap-1.5 px-2.5 text-xs font-semibold text-foreground hover:bg-white/[0.04] bg-elevated border border-border transition-all flex items-center justify-center disabled:opacity-50 disabled:pointer-events-none"
+          style={{ borderRadius: 'var(--dropdown-radius, 9999px)' }}
+        >
+          <span>{selectedLabel}</span>
+          <ChevronDown size={13} className="opacity-60 shrink-0 ml-1.5" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-[120px] rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl">
+        {periodOptions.map((o) => (
+          <DropdownMenuItem
+            key={o.value}
+            className="text-xs font-semibold cursor-pointer"
+            onClick={() => onChange(o.value)}
+          >
+            {o.label}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 export default function Dashboard() {
   const { language } = useLanguage();
+  const isId = language === "id";
   const { user, accounts, refresh, loading: appLoading, setCounts } = useApp();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const [pending, startTransition] = useTransition();
 
   const period = searchParams.get("period") || "30d";
-  const cashflowPeriod = searchParams.get("cashflow_period") || "30d";
+  const cashflowPeriod = searchParams.get("cashflow_period") || period;
+
+  function setGlobalPeriod(next: Period) {
+    const params = new URLSearchParams(searchParams);
+    if (next === "30d") {
+      params.delete("period");
+      params.delete("cashflow_period");
+    } else {
+      params.set("period", next);
+      params.set("cashflow_period", next);
+    }
+    const qs = params.toString();
+    startTransition(() => navigate(qs ? `${pathname}?${qs}` : pathname));
+  }
 
   // Re-read layout preference when it changes in Settings
   const [, setPrefsRev] = useState(0);
@@ -202,14 +276,13 @@ export default function Dashboard() {
   );
 
   // Cashflow-derived stats (memoized)
-  const { totalInflow, totalOutflow, surplus, savingsRate, counts, isId, deltaRatio, assetsSide, liabilitiesSide, cashflowData } = useMemo(() => {
+  const { totalInflow, totalOutflow, surplus, savingsRate, counts, deltaRatio, assetsSide, liabilitiesSide, cashflowData } = useMemo(() => {
     const cf = summaryData?.cashflow || { inflow: [], outflow: [], total: 0, surplus: 0 };
     const inflow = (cf.inflow || []).reduce((s, i) => s + Number(i.value || 0), 0);
     const outflow = (cf.outflow || []).reduce((s, i) => s + Number(i.value || 0), 0);
     const surp = typeof cf.surplus === "number" ? cf.surplus : inflow - outflow;
     const rate = inflow > 0 ? (surp / inflow) * 100 : 0;
     const cnts = summaryData?.counts || { income: 0, expense: 0, transfer: 0, total: 0 };
-    const langIsId = language === "id";
     const d = (summaryData?.netWorthCurrent || 0) - (summaryData?.netWorthPrevious || 0);
     const dRatio = summaryData?.netWorthPrevious ? (d / summaryData.netWorthPrevious) * 100 : 0;
     return {
@@ -218,7 +291,6 @@ export default function Dashboard() {
       surplus: surp,
       savingsRate: rate,
       counts: cnts,
-      isId: langIsId,
       delta: d,
       deltaRatio: dRatio,
       assetsSide: { title: "Assets" as const, total: netWorthCurrent, groups: assetGroups },
@@ -288,7 +360,7 @@ export default function Dashboard() {
       </div>
       <TabsContent value="cashflow" className="animate-fade-in-up" style={DELAY_3}>
         <InlineErrorBoundary label="Cash Flow Chart">
-          <CashflowSankey data={cashflowData} period={cashflowPeriod as Period} />
+          <CashflowSankey data={cashflowData} />
         </InlineErrorBoundary>
       </TabsContent>
       <TabsContent value="assets" className="animate-fade-in-up" style={DELAY_3}>
@@ -316,13 +388,18 @@ export default function Dashboard() {
   return (
     <div className="space-y-4 pb-8">
       {/* HEADER */}
-      <section className="flex items-center gap-2.5 animate-fade-in-up">
-        <div className="flex items-center gap-2 text-body-sm text-muted-foreground">
-          <Clock size={15} className="text-accent/70" />
-          <span>{getGreeting(language)}</span>
+      <section className="flex items-center justify-between animate-fade-in-up">
+        <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 text-body-sm text-muted-foreground">
+            <Clock size={15} className="text-accent/70" />
+            <span>{getGreeting(language)}</span>
+          </div>
+          <div className="h-1 w-1 rounded-full bg-border" />
+          <h1 className="text-heading-lg text-foreground font-semibold">{capitalize(name)}</h1>
         </div>
-        <div className="h-1 w-1 rounded-full bg-border" />
-        <h1 className="text-heading-lg text-foreground font-semibold">{capitalize(name)}</h1>
+        <div className="shrink-0">
+          <PeriodSelect value={period as Period} onChange={setGlobalPeriod} disabled={pending} isId={isId} />
+        </div>
       </section>
 
       {summaryData && (
@@ -347,7 +424,7 @@ export default function Dashboard() {
             <>
               <section className="animate-fade-in-up" style={DELAY_1}>
                 <InlineErrorBoundary label="Cash Flow Chart">
-                  <CashflowSankey data={cashflowData} period={cashflowPeriod as Period} />
+                  <CashflowSankey data={cashflowData} />
                 </InlineErrorBoundary>
               </section>
               <section className="grid grid-cols-1 lg:grid-cols-3 gap-4 animate-fade-in-up" style={DELAY_2}>

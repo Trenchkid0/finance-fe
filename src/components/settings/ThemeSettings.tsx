@@ -177,19 +177,6 @@ export function ThemeSettings() {
 
   const [buttonStyles, setButtonStyles] = useState<ButtonStyles>(() => getCurrentPreferences().buttonStyles);
 
-  const persistPreferences = () => {
-    savePreferences({
-      ...getCurrentPreferences(),
-      themeId: activePresetId,
-      customThemeVars: customVars,
-      fontId: activeFontId,
-      cardStyles,
-      buttonStyles,
-      typographyStyles,
-      notificationSettings,
-    });
-  };
-
   const handleCardStyleChange = (key: keyof CardStyles, value: string) => {
     const updated = { ...cardStyles, [key]: value };
     setCardStyles(updated);

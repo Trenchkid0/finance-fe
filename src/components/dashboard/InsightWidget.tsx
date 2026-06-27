@@ -18,16 +18,24 @@ export function InsightWidget({
     backgroundColor: "var(--accent)",
   };
   return (
-    <Card className="relative overflow-hidden p-5 flex flex-col justify-between">
-      <div className="relative flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest text-accent">
-        <Sparkles size={13} />
-        {isId ? "Wawasan" : "Insights"}
+    <Card className="relative overflow-hidden p-4 sm:p-5 flex flex-col justify-between">
+      <div className="relative flex items-center gap-1.5 text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest text-accent truncate">
+        <Sparkles size={13} className="shrink-0" />
+        <span className="truncate">{isId ? "Wawasan" : "Insights"}</span>
       </div>
       <div className="relative mt-2">
-        <p className="text-3xl font-black font-mono tabular-nums text-foreground">
+        <p className="text-xl sm:text-3xl font-black font-mono tabular-nums text-foreground truncate">
           {pct.toFixed(0)}%
         </p>
-        <p className="text-[11px] text-muted-foreground/70 mt-1 leading-snug">
+        <p className="text-[10px] sm:text-[11px] text-muted-foreground/70 mt-1 leading-snug line-clamp-2" title={
+          positive
+            ? isId
+              ? `Anda menabung ${pct.toFixed(0)}% dari pemasukan periode ini.`
+              : `You saved ${pct.toFixed(0)}% of income this period.`
+            : isId
+              ? "Pengeluaran melebihi pemasukan periode ini."
+              : "Spending exceeded income this period."
+        }>
           {positive
             ? isId
               ? `Anda menabung ${pct.toFixed(0)}% dari pemasukan periode ini.`

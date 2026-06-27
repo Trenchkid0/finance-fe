@@ -67,19 +67,23 @@ export function MiniStatWidget({
         ? "bg-expense"
         : "bg-accent";
 
+  const fullValStr = isCurrency ? formatIDR(value) : value.toLocaleString("id-ID");
+  const displayValStr = isCurrency ? formatIDR(value, { compact: true }) : value.toLocaleString("id-ID");
+
   return (
-    <Card className="p-5 flex flex-col gap-3">
+    <Card className="p-4 sm:p-5 flex flex-col gap-3">
       <div className="flex items-start justify-between gap-3">
-        <div className="space-y-1.5 min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+        <div className="space-y-1.5 min-w-0 flex-1">
+          <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60 truncate" title={label}>
             {label}
           </p>
           <p
-            className={`text-2xl font-black font-mono tabular-nums truncate ${valueColor}`}
+            className={`text-lg sm:text-2xl font-black font-mono tabular-nums truncate ${valueColor}`}
+            title={fullValStr}
           >
-            {isCurrency ? formatIDR(value) : value.toLocaleString("id-ID")}
+            {displayValStr}
           </p>
-          <p className="text-[11px] text-muted-foreground/50">
+          <p className="text-[10px] sm:text-[11px] text-muted-foreground/50 truncate" title={hint}>
             {count > 0 && (
               <span className="font-semibold tabular-nums">{count} <span className="font-sans font-normal">tx</span></span>
             )}
