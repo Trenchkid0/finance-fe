@@ -190,9 +190,6 @@ export function TransactionFilters({
                 {t("resetFilter")}
               </Button>
             ) : null}
-            <Button type="submit" size="sm" disabled={pending}>
-              {t("applyFilter")}
-            </Button>
           </div>
         </div>
       </form>

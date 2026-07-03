@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeftRight, Calendar, ChevronLeft, ChevronRight, Loader2, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeftRight, Calendar, ChevronLeft, ChevronRight, Inbox, Loader2, Pencil, Trash2 } from "lucide-react";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 import { formatIDR } from "@/lib/utils/formatters";
 import { cn } from "@/lib/utils/cn";
@@ -299,7 +299,7 @@ export function TransactionCalendar({
 
                 {dayTxs.length === 0 ? (
                   <div className="flex flex-col items-center justify-center flex-1 py-8 text-center text-text-muted">
-                    <Loader2 size={22} className="mb-2 opacity-30" />
+                    <Inbox size={22} className="mb-2 opacity-30" />
                     <p className="text-xs">
                       {language === "id"
                         ? "Tidak ada transaksi pada tanggal ini."
