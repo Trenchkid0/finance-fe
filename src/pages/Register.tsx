@@ -9,7 +9,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export default function Register() {
+interface RegisterProps {
+  isSetupMode?: boolean;
+}
+
+export default function Register({ isSetupMode = false }: RegisterProps) {
   const { language, setLanguage } = useLanguage();
 
   return (
@@ -72,7 +76,19 @@ export default function Register() {
           {/* Heading */}
           <div className="space-y-3">
             <h1 className="text-[2rem] leading-[1.15] font-extrabold tracking-tight text-foreground">
-              {language === "id" ? (
+              {isSetupMode ? (
+                language === "id" ? (
+                  <>
+                    Siapkan akun<br />
+                    <span className="bg-gradient-to-r from-accent to-indigo-400 bg-clip-text text-transparent">Racks Finance Anda.</span>
+                  </>
+                ) : (
+                  <>
+                    Set up<br />
+                    <span className="bg-gradient-to-r from-accent to-indigo-400 bg-clip-text text-transparent">your Racks Finance account.</span>
+                  </>
+                )
+              ) : language === "id" ? (
                 <>
                   Buat akun<br />
                   <span className="bg-gradient-to-r from-accent to-indigo-400 bg-clip-text text-transparent">Anda sekarang.</span>
@@ -85,14 +101,20 @@ export default function Register() {
               )}
             </h1>
             <p className="text-[13px] text-muted-foreground leading-relaxed max-w-[300px]">
-              {language === "id"
-                ? "Mulailah mengelola aset, melacak pengeluaran, dan merencanakan masa depan finansial Anda."
-                : "Start managing assets, tracking expenses, and planning your financial future."}
+              {isSetupMode ? (
+                language === "id"
+                  ? "Atur kredensial akun utama/admin Anda untuk mulai menggunakan aplikasi."
+                  : "Set up your primary/admin account credentials to start using the application."
+              ) : (
+                language === "id"
+                  ? "Mulailah mengelola aset, melacak pengeluaran, dan merencanakan masa depan finansial Anda."
+                  : "Start managing assets, tracking expenses, and planning your financial future."
+              )}
             </p>
           </div>
 
           {/* Form — no card wrapper */}
-          <RegisterForm />
+          <RegisterForm isSetupMode={isSetupMode} />
 
           {/* Trust badges */}
           <div className="flex items-center gap-5 pt-2">

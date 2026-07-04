@@ -41,7 +41,7 @@ const STRENGTH_META: Record<
 
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 
-export function RegisterForm() {
+export function RegisterForm({ isSetupMode = false }: { isSetupMode?: boolean }) {
   const { t, language } = useLanguage();
   const [state, formAction, pending] = useActionState(register, undefined);
   const [password, setPassword] = useState("");
@@ -199,7 +199,11 @@ export function RegisterForm() {
             <Loader2 size={18} className="animate-spin" />
           ) : (
             <>
-              {t("registerButton")}
+              {isSetupMode ? (
+                language === "id" ? "Selesaikan Penyiapan" : "Complete Setup"
+              ) : (
+                t("registerButton")
+              )}
               <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
             </>
           )}
@@ -209,12 +213,14 @@ export function RegisterForm() {
 
 
       {/* Login link */}
-      <p className="text-[13px] text-muted-foreground text-center pt-1">
-        {t("alreadyHaveAccount")}{" "}
-        <Link to="/login" className="text-accent hover:text-accent/80 font-semibold transition-colors">
-          {t("loginHere")}
-        </Link>
-      </p>
+      {!isSetupMode && (
+        <p className="text-[13px] text-muted-foreground text-center pt-1">
+          {t("alreadyHaveAccount")}{" "}
+          <Link to="/login" className="text-accent hover:text-accent/80 font-semibold transition-colors">
+            {t("loginHere")}
+          </Link>
+        </p>
+      )}
     </div>
   );
 }
