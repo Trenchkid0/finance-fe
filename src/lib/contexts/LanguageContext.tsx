@@ -27,7 +27,7 @@ export const translations = {
     registerTitle: "Buat Akun Baru",
     registerSubtitle: "Mulai perjalanan finansial Anda hari ini",
     fullNameLabel: "Nama Lengkap",
-    fullNamePlaceholder: "Mis. Caesa Putra",
+    fullNamePlaceholder: "Madison Beer",
     registerButton: "Buat Akun Saya",
     alreadyHaveAccount: "Sudah punya akun?",
     loginHere: "Masuk",
