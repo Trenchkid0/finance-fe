@@ -1,11 +1,12 @@
-import { useActionState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { AlertCircle, ArrowLeft, Mail, Loader2, ArrowRight, TrendingUp, Wallet, PiggyBank, BarChart3 } from "lucide-react";
+import { useActionState, useState } from "react";
+import { Link } from "react-router-dom";
+import { AlertCircle, ArrowLeft, Mail, Loader2, ArrowRight, TrendingUp, Wallet, PiggyBank, BarChart3, CheckCircle, Lock, Eye, EyeOff } from "lucide-react";
 import { forgotPassword } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
+import { cn } from "@/lib/utils/cn";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,16 +14,62 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+function scorePassword(pw: string): number {
+  if (pw.length < 8) return 0;
+  let score = 1;
+  const hasLower = /[a-z]/.test(pw);
+  const hasUpper = /[A-Z]/.test(pw);
+  const hasDigit = /\d/.test(pw);
+  const hasSymbol = /[^A-Za-z0-9]/.test(pw);
+
+  const variety = [hasLower, hasUpper, hasDigit, hasSymbol].filter(Boolean).length;
+
+  if (pw.length >= 12 || variety >= 2) score = 2;
+  if (variety >= 3) score = 3;
+  if (pw.length >= 16 && variety === 4) score = 4;
+
+  return score;
+}
+
+const STRENGTH_META: Record<
+  number,
+  { label: string; tone: string; color: string }
+> = {
+  0: { label: "Terlalu pendek", tone: "text-muted-foreground/60", color: "bg-transparent" },
+  1: { label: "Lemah", tone: "text-destructive", color: "bg-destructive" },
+  2: { label: "Cukup", tone: "text-warning", color: "bg-warning" },
+  3: { label: "Kuat", tone: "text-income", color: "bg-income" },
+  4: { label: "Sangat kuat", tone: "text-income", color: "bg-income" },
+};
+
 export default function ForgotPassword() {
   const { t, language, setLanguage } = useLanguage();
-  const navigate = useNavigate();
   const [state, formAction, pending] = useActionState(forgotPassword, undefined);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [localError, setLocalError] = useState("");
 
-  useEffect(() => {
-    if (state?.ok && state?.data?.resetUrl) {
-      navigate(state.data.resetUrl);
+  const score = scorePassword(password);
+  const meta = STRENGTH_META[score];
+
+  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const formData = new FormData(e.currentTarget);
+    const newPw = formData.get("password")?.toString() || "";
+    
+    if (newPw !== confirmPassword) {
+      e.preventDefault();
+      setLocalError(
+        language === "id"
+          ? "Konfirmasi kata sandi baru tidak cocok."
+          : "New password confirmation does not match."
+      );
+      return;
     }
-  }, [state, navigate]);
+    setLocalError("");
+  };
 
   return (
     <div className="grid min-h-screen w-full lg:grid-cols-[2fr_3fr] overflow-hidden bg-canvas font-sans">
@@ -55,7 +102,7 @@ export default function ForgotPassword() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-
+ 
         {/* Subtle ambient glow */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
           <div className="absolute -top-32 -left-32 w-[400px] h-[400px] bg-accent/[0.04] rounded-full blur-[100px]" />
@@ -82,62 +129,211 @@ export default function ForgotPassword() {
           {/* Heading */}
           <div className="space-y-3">
             <h1 className="text-[2rem] leading-[1.15] font-extrabold tracking-tight text-foreground">
-              {t("forgotPasswordTitle")}
+              {language === "id" ? "Ubah Kata Sandi" : "Change Password"}
             </h1>
             <p className="text-[13px] text-muted-foreground leading-relaxed">
-              {t("forgotPasswordSubtitle")}
+              {language === "id"
+                ? "Masukkan email, kata sandi lama, dan kata sandi baru Anda untuk memperbarui akun."
+                : "Enter your email, old password, and new password to update your account."}
             </p>
           </div>
 
           {/* Form */}
           <div className="space-y-7">
-            <form action={formAction} className="space-y-5" noValidate>
-              {/* Email */}
-              <div className="space-y-2.5">
-                <Label htmlFor="email">{t("emailLabel")}</Label>
-                <div className="relative group">
-                  <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40 group-focus-within:text-accent/70 transition-colors duration-300 pointer-events-none" />
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    placeholder="nama@email.com"
-                    className="pl-11"
-                    aria-invalid={!!state?.fieldErrors?.email}
-                  />
-                </div>
-                {state?.fieldErrors?.email?.[0] ? (
-                  <p className="text-xs text-destructive flex items-center gap-1.5">
-                    <AlertCircle size={12} className="shrink-0" />
-                    {state.fieldErrors.email[0]}
+            {state?.ok ? (
+              <div className="rounded-xl border border-income/20 bg-income/[0.04] p-5 space-y-4 text-center flex flex-col items-center">
+                <CheckCircle size={40} className="text-income" />
+                <div className="space-y-1.5">
+                  <h3 className="text-sm font-bold text-text-primary">
+                    {language === "id" ? "Kata Sandi Berhasil Diperbarui" : "Password Updated"}
+                  </h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {language === "id"
+                      ? "Kata sandi akun Anda telah sukses diperbarui. Silakan gunakan kata sandi baru Anda untuk masuk."
+                      : "Your account password has been successfully updated. Please use your new password to log in."}
                   </p>
-                ) : null}
-              </div>
-
-              {/* Global error */}
-              {state?.error && !state.fieldErrors ? (
-                <div className="rounded-xl border border-destructive/25 bg-destructive/[0.04] px-4 py-3 flex items-start gap-2.5">
-                  <AlertCircle size={14} className="text-destructive mt-0.5 shrink-0" />
-                  <p className="text-xs text-destructive">{state.error}</p>
                 </div>
-              ) : null}
-
-              {/* Submit */}
-              <div className="pt-2">
-                <Button type="submit" className="w-full h-12 text-[15px] group" disabled={pending}>
-                  {pending ? (
-                    <Loader2 size={18} className="animate-spin" />
-                  ) : (
-                    <>
-                      {language === "id" ? "Lanjutkan" : "Continue"}
-                      <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
-                    </>
-                  )}
+                <Button asChild className="w-full bg-accent hover:bg-accent/80 text-white text-xs h-10 mt-2">
+                  <Link to="/login">
+                    {language === "id" ? "Masuk ke Akun Sekarang" : "Log In Now"}
+                    <ArrowRight size={14} className="ml-1.5" />
+                  </Link>
                 </Button>
               </div>
-            </form>
+            ) : (
+              <form onSubmit={handleFormSubmit} action={formAction} className="space-y-5" noValidate>
+                {/* Email */}
+                <div className="space-y-2.5">
+                  <Label htmlFor="email">{t("emailLabel")}</Label>
+                  <div className="relative group">
+                    <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40 group-focus-within:text-accent/70 transition-colors duration-300 pointer-events-none" />
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      required
+                      placeholder="nama@email.com"
+                      className="pl-11"
+                      aria-invalid={!!state?.fieldErrors?.email}
+                    />
+                  </div>
+                  {state?.fieldErrors?.email?.[0] ? (
+                    <p className="text-xs text-destructive flex items-center gap-1.5">
+                      <AlertCircle size={12} className="shrink-0" />
+                      {state.fieldErrors.email[0]}
+                    </p>
+                  ) : null}
+                </div>
+
+                {/* Old Password */}
+                <div className="space-y-2.5">
+                  <Label htmlFor="oldPassword">{language === "id" ? "Kata Sandi Lama" : "Old Password"}</Label>
+                  <div className="relative group">
+                    <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40 group-focus-within:text-accent/70 transition-colors duration-300 pointer-events-none" />
+                    <Input
+                      id="oldPassword"
+                      name="oldPassword"
+                      type={showOldPassword ? "text" : "password"}
+                      required
+                      placeholder="••••••••"
+                      className="pl-11 pr-12"
+                      aria-invalid={!!state?.fieldErrors?.oldPassword}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowOldPassword((v) => !v)}
+                      tabIndex={-1}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-muted-foreground/40 hover:text-foreground hover:bg-white/[0.06] transition-all duration-200"
+                    >
+                      {showOldPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                    </button>
+                  </div>
+                  {state?.fieldErrors?.oldPassword?.[0] ? (
+                    <p className="text-xs text-destructive flex items-center gap-1.5">
+                      <AlertCircle size={12} className="shrink-0" />
+                      {state.fieldErrors.oldPassword[0]}
+                    </p>
+                  ) : null}
+                </div>
+
+                {/* New Password */}
+                <div className="space-y-2.5">
+                  <Label htmlFor="password">{language === "id" ? "Kata Sandi Baru" : "New Password"}</Label>
+                  <div className="relative group">
+                    <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40 group-focus-within:text-accent/70 transition-colors duration-300 pointer-events-none" />
+                    <Input
+                      id="password"
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder={language === "id" ? "Minimal 8 karakter" : "Minimum 8 characters"}
+                      className="pl-11 pr-12"
+                      aria-invalid={!!state?.fieldErrors?.password}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      tabIndex={-1}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-muted-foreground/40 hover:text-foreground hover:bg-white/[0.06] transition-all duration-200"
+                    >
+                      {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                    </button>
+                  </div>
+
+                  {/* Strength meter */}
+                  <div className="space-y-2 pt-0.5">
+                    <div className="flex gap-1">
+                      {[1, 2, 3, 4].map((segment) => (
+                        <div
+                          key={segment}
+                          className={cn(
+                            "h-1 flex-1 rounded-full transition-all duration-500",
+                            score >= segment ? meta.color : "bg-white/[0.06]"
+                          )}
+                        />
+                      ))}
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span
+                        className={cn("text-[11px] font-medium", password ? meta.tone : "text-muted-foreground/40")}
+                      >
+                        {password ? (
+                          (() => {
+                            const labels: Record<number, Record<"id" | "en", string>> = {
+                              0: { id: "Terlalu pendek", en: "Too short" },
+                              1: { id: "Lemah", en: "Weak" },
+                              2: { id: "Cukup", en: "Fair" },
+                              3: { id: "Kuat", en: "Strong" },
+                              4: { id: "Sangat kuat", en: "Very strong" }
+                            };
+                            return labels[score]?.[language] || labels[score]?.["id"] || "";
+                          })()
+                        ) : (
+                          language === "id" ? "Minimal 8 karakter" : "Minimum 8 characters"
+                        )}
+                      </span>
+                    </div>
+                  </div>
+
+                  {state?.fieldErrors?.password?.[0] ? (
+                    <p className="text-xs text-destructive flex items-center gap-1.5">
+                      <AlertCircle size={12} className="shrink-0" />
+                      {state.fieldErrors.password[0]}
+                    </p>
+                  ) : null}
+                </div>
+
+                {/* Confirm Password */}
+                <div className="space-y-2.5">
+                  <Label htmlFor="confirmPassword">{language === "id" ? "Konfirmasi Kata Sandi Baru" : "Confirm New Password"}</Label>
+                  <div className="relative group">
+                    <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40 group-focus-within:text-accent/70 transition-colors duration-300 pointer-events-none" />
+                    <Input
+                      id="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      required
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder={language === "id" ? "Minimal 8 karakter" : "Minimum 8 characters"}
+                      className="pl-11 pr-12"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword((v) => !v)}
+                      tabIndex={-1}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-muted-foreground/40 hover:text-foreground hover:bg-white/[0.06] transition-all duration-200"
+                    >
+                      {showConfirmPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Global error */}
+                {(state?.error && !state.fieldErrors) || localError ? (
+                  <div className="rounded-xl border border-destructive/25 bg-destructive/[0.04] px-4 py-3 flex items-start gap-2.5">
+                    <AlertCircle size={14} className="text-destructive mt-0.5 shrink-0" />
+                    <p className="text-xs text-destructive">{localError || state?.error}</p>
+                  </div>
+                ) : null}
+
+                {/* Submit */}
+                <div className="pt-2">
+                  <Button type="submit" className="w-full h-12 text-[15px] group" disabled={pending}>
+                    {pending ? (
+                      <Loader2 size={18} className="animate-spin" />
+                    ) : (
+                      <>
+                        {language === "id" ? "Perbarui Kata Sandi" : "Update Password"}
+                        <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
+            )}
           </div>
 
           {/* Back to Login link */}
