@@ -73,14 +73,12 @@ export async function logout() {
 }
 
 export async function forgotPassword(
-  _prevState: ActionResult<null> | undefined,
+  _prevState: ActionResult<{ resetUrl?: string }> | undefined,
   formData: FormData
-): Promise<ActionResult<null>> {
+): Promise<ActionResult<{ resetUrl?: string }>> {
   const email = formData.get("email")?.toString() || "";
-  const oldPassword = formData.get("oldPassword")?.toString() || "";
-  const password = formData.get("password")?.toString() || "";
 
-  const parsed = forgotPasswordSchema.safeParse({ email, oldPassword, password });
+  const parsed = forgotPasswordSchema.safeParse({ email });
   if (!parsed.success) {
     return {
       ok: false,
@@ -89,14 +87,15 @@ export async function forgotPassword(
   }
 
   try {
-    await api.post("/api/auth/forgot-password", parsed.data);
+    const res = await api.post<{ resetUrl?: string }>("/api/auth/forgot-password", parsed.data);
     return {
       ok: true,
+      data: { resetUrl: res.resetUrl },
     };
   } catch (err: unknown) {
     return {
       ok: false,
-      error: getErrorMessage(err, "Gagal memperbarui kata sandi. Periksa kembali email dan kata sandi lama Anda."),
+      error: getErrorMessage(err, "Email tidak ditemukan atau terjadi kesalahan."),
     };
   }
 }

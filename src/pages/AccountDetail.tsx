@@ -269,6 +269,12 @@ function formatGroupDateInfo(iso: string, language: "id" | "en") {
   return { label, weekday, relative };
 }
 
+const normalizeColor = (col: string | null | undefined) => {
+  if (!col) return "var(--accent)";
+  if (col === "#388BFD" || col === "#3B82F6") return "var(--accent)";
+  return col;
+};
+
 export default function AccountDetail() {
   const { t, language } = useLanguage();
   const { id } = useParams<{ id: string }>();
@@ -541,9 +547,9 @@ export default function AccountDetail() {
             <div 
               className="size-9 rounded-xl flex items-center justify-center border text-lg"
               style={{ 
-                backgroundColor: `${account.color || "#388BFD"}12`, 
-                color: account.color || "#388BFD",
-                borderColor: `${account.color || "#388BFD"}20`
+                backgroundColor: `color-mix(in srgb, ${normalizeColor(account.color)} 12%, transparent)`, 
+                color: normalizeColor(account.color),
+                borderColor: `color-mix(in srgb, ${normalizeColor(account.color)} 20%, transparent)`
               }}
             >
               {account.icon || "🏦"}
@@ -624,7 +630,7 @@ export default function AccountDetail() {
         {/* Card 1: Balance */}
         <Card 
           className="p-5 relative overflow-hidden bg-card border-border/80 gap-0"
-          style={{ borderLeft: `3px solid ${account.color || "#388BFD"}` }}
+          style={{ borderLeft: `3px solid ${normalizeColor(account.color)}` }}
         >
           <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-2">
             {language === "id" ? "Saldo Saat Ini" : "Current Balance"}

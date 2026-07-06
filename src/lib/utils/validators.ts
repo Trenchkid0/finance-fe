@@ -48,8 +48,6 @@ export const registerSchema = z.object({
 
 export const forgotPasswordSchema = z.object({
   email: z.string().trim().email(msg("Format email tidak valid", "Invalid email format")),
-  oldPassword: z.string().min(1, msg("Kata sandi lama wajib diisi", "Old password is required")),
-  password: z.string().min(8, msg("Kata sandi baru minimal 8 karakter", "Password must be at least 8 characters")).max(72),
 });
 
 export const resetPasswordSchema = z.object({

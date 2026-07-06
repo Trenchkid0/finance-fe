@@ -36,8 +36,14 @@ interface Props {
   onSuccess: () => void;
 }
 
+const normalizeColor = (col: string | null | undefined) => {
+  if (!col) return "var(--accent)";
+  if (col === "#388BFD" || col === "#3B82F6") return "var(--accent)";
+  return col;
+};
+
 const COLOR_SWATCHES = [
-  "#388BFD",
+  "var(--accent)",
   "#2EA043",
   "#D29922",
   "#F85149",
@@ -48,7 +54,7 @@ const COLOR_SWATCHES = [
 
 export function AccountForm({ open, onClose, mode, initial, onSuccess }: Props) {
   const { language } = useLanguage();
-  const [color, setColor] = useState<string>(initial.color ?? COLOR_SWATCHES[0]);
+  const [color, setColor] = useState<string>(normalizeColor(initial.color));
   const [type, setType] = useState<AccountTypeInput>(initial.type);
   const [icon, setIcon] = useState<string>(initial.icon && initial.icon !== "" ? initial.icon : "none");
   const [startingBalance, setStartingBalance] = useState<string>(
@@ -256,7 +262,7 @@ export function AccountForm({ open, onClose, mode, initial, onSuccess }: Props) 
                       style={{ 
                         background: c,
                         boxShadow: color === c 
-                          ? `0 0 0 2px #121214, 0 0 0 4px ${c}, 0 4px 10px ${c}50` 
+                          ? `0 0 0 2px #121214, 0 0 0 4px ${c}, 0 4px 10px color-mix(in srgb, ${c} 50%, transparent)` 
                           : "0 2px 4px rgba(0,0,0,0.2)"
                       }}
                     />

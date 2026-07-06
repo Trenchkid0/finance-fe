@@ -3,7 +3,6 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { Toaster } from "sonner";
 import { lazy, Suspense, useEffect, useState } from "react";
-import { api } from "@/lib/api";
 
 // Auth pages - loaded eagerly (entry point)
 import Login from "@/pages/Login";
@@ -86,18 +85,11 @@ export default function App() {
     };
   });
 
-  const [isSetupComplete, setIsSetupComplete] = useState<boolean | null>(null);
-
   useEffect(() => {
     // Load preferences from backend (falls back to localStorage if offline)
     loadPreferences();
     // Also keep the legacy theme loader as a safety net for auth pages
     loadSavedTheme();
-
-    api.get<{ isSetupComplete: boolean }>("/api/auth/setup-status")
-      .then((res) => setIsSetupComplete(res.isSetupComplete))
-      .catch(() => setIsSetupComplete(true)); // fallback to true to prevent blocking if backend is unreachable
-
 
     const handleUpdate = () => {
       try {
@@ -116,19 +108,15 @@ export default function App() {
     return () => window.removeEventListener("notification-settings-changed", handleUpdate);
   }, []);
 
-  if (isSetupComplete === null) {
-    return <PageLoadingFallback />;
-  }
-
   return (
     <LanguageProvider>
       <BrowserRouter>
         <Routes>
           {/* Auth routes */}
-          <Route path="/login" element={isSetupComplete ? <Login /> : <Navigate to="/register" replace />} />
-          <Route path="/register" element={isSetupComplete ? <Navigate to="/login" replace /> : <Register isSetupMode={true} />} />
-          <Route path="/forgot-password" element={isSetupComplete ? <ForgotPassword /> : <Navigate to="/register" replace />} />
-          <Route path="/reset-password" element={isSetupComplete ? <ResetPassword /> : <Navigate to="/register" replace />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
           {/* Public status page */}
           <Route path="/status" element={
@@ -138,7 +126,7 @@ export default function App() {
           } />
 
           {/* Protected dashboard routes - shared layout */}
-          <Route element={isSetupComplete ? <DashboardLayout /> : <Navigate to="/register" replace />}>
+          <Route element={<DashboardLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="accounts" element={<Accounts />} />
             <Route path="accounts/:id" element={<AccountDetail />} />

@@ -94,7 +94,7 @@ export default function Budget() {
         id: cat.id,
         name: cat.name,
         icon: cat.icon,
-        color: "#388BFD", // Default theme color
+        color: "var(--accent)", // Default theme color
         spent: spentMap.get(cat.id) || 0,
         limit: limitsMap.get(cat.id) ?? null,
       }));

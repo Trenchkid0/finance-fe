@@ -191,7 +191,7 @@ export function AccountsClient({ accounts }: Props) {
           initial={{
             name: "",
             type: "bank",
-            color: "#388BFD",
+            color: "var(--accent)",
             icon: "",
             isActive: true,
           }}
@@ -223,6 +223,12 @@ export function AccountsClient({ accounts }: Props) {
   );
 }
 
+const normalizeColor = (col: string | null | undefined) => {
+  if (!col) return "var(--accent)";
+  if (col === "#388BFD" || col === "#3B82F6") return "var(--accent)";
+  return col;
+};
+
 // --- Account Card Component (Physical Card Mockup) ------------------------
 
 function AccountCard({
@@ -245,7 +251,7 @@ function AccountCard({
     });
   }
 
-  const swatch = account.color ?? "#388BFD";
+  const swatch = normalizeColor(account.color);
   const isNegative = account.balance < 0;
   const maskedNumber = `•••• •••• •••• ${account.id.slice(-4)}`;
 
@@ -304,9 +310,9 @@ function AccountCard({
               <span
                 className="inline-flex items-center px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider border backdrop-blur-sm transition-all duration-300 group-hover:scale-105"
                 style={{
-                  backgroundColor: `${swatch}15`,
+                  backgroundColor: `color-mix(in srgb, ${swatch} 15%, transparent)`,
                   color: swatch,
-                  borderColor: `${swatch}30`
+                  borderColor: `color-mix(in srgb, ${swatch} 30%, transparent)`
                 }}
               >
                 {typeLabel[account.type]}

@@ -71,13 +71,14 @@ function buildAssetGroups(
   for (const r of rows) {
     if (r.balance === 0) continue;
     const groupKey = r.type;
+    const isDefaultColor = r.color === "#388BFD" || r.color === "#3B82F6" || !r.color;
     const acc = {
       id: r.id,
       name: r.name,
       value: r.balance,
       percent: totalNet > 0 ? (r.balance / totalNet) * 100 : 0,
       initial: r.name.charAt(0).toUpperCase() || "?",
-      color: r.color || undefined,
+      color: isDefaultColor ? "var(--accent)" : r.color,
     };
     const list = buckets.get(groupKey) ?? [];
     list.push(acc);
@@ -299,7 +300,7 @@ export default function Dashboard() {
         total: cf.total,
         surplus: cf.surplus,
         inflow: (cf.inflow || []).map((item) => ({
-          name: item.name, value: item.value, side: "source" as const, color: item.color || "#388BFD",
+          name: item.name, value: item.value, side: "source" as const, color: item.color === "#388BFD" || item.color === "#3B82F6" || !item.color ? "var(--accent)" : item.color,
         })),
         outflow: (cf.outflow || []).map((item) => ({
           name: item.name, value: item.value, side: "target" as const, color: item.color || "#F85149",
