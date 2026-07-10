@@ -225,10 +225,7 @@ export function AccountForm({ open, onClose, mode, initial, onSuccess }: Props) 
                         key={opt.value || "empty"}
                         value={opt.value}
                       >
-                        <span className="flex items-center gap-2">
-                          {opt.emoji && <span className="text-base" aria-hidden>{opt.emoji}</span>}
-                          <span>{opt.label}</span>
-                        </span>
+                        {opt.emoji ? `${opt.emoji} ${opt.label}` : opt.label}
                       </SelectItem>
                     ))}
                   </SelectContent>

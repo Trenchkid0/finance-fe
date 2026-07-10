@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { formatIDR } from "@/lib/utils/formatters";
+import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +35,7 @@ import { AccountForm } from "@/components/accounts/AccountForm";
 import { deleteAccount, toggleAccountActive } from "@/app/actions/accounts";
 import { TransactionForm } from "@/components/transactions/TransactionForm";
 import { ConfirmDelete as ConfirmDeleteTransaction } from "@/components/transactions/ConfirmDelete";
+import { CustomDateRangePicker } from "@/components/transactions/CustomDateRangePicker";
 
 import {
   Dialog,
@@ -291,6 +293,8 @@ export default function AccountDetail() {
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<"all" | "income" | "expense" | "transfer">("all");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [sortBy, setSortBy] = useState<"date-desc" | "date-asc" | "amount-desc" | "amount-asc">("date-desc");
 
   // Account actions state
@@ -316,7 +320,10 @@ export default function AccountDetail() {
     try {
       setLoading(true);
       const acc = await api.get<AccountDetailData>(`/api/accounts/${id}`);
-      const txResponse = await api.get<TransactionsApiResponse>(`/api/transactions?accountId=${id}&limit=50`);
+      let url = `/api/transactions?accountId=${id}&limit=50`;
+      if (startDate) url += `&startDate=${startDate}`;
+      if (endDate) url += `&endDate=${endDate}`;
+      const txResponse = await api.get<TransactionsApiResponse>(url);
       setAccount(acc);
       setTransactions(txResponse.transactions || []);
       setTotalIncome(txResponse.income || 0);
@@ -331,7 +338,7 @@ export default function AccountDetail() {
 
   useEffect(() => {
     fetchData();
-  }, [id]);
+  }, [id, startDate, endDate]);
 
   useEffect(() => {
     const handleRefresh = () => {
@@ -341,7 +348,7 @@ export default function AccountDetail() {
     return () => {
       window.removeEventListener("refresh-app-data", handleRefresh);
     };
-  }, [id]);
+  }, [id, startDate, endDate]);
 
   // Handle Account deactivation/activation
   const handleToggleActive = () => {
@@ -501,7 +508,7 @@ export default function AccountDetail() {
     });
   };
 
-  if (loading) {
+  if (loading && !account) {
     return <SkeletonAnalytics />;
   }
 
@@ -552,7 +559,7 @@ export default function AccountDetail() {
                 borderColor: `color-mix(in srgb, ${normalizeColor(account.color)} 20%, transparent)`
               }}
             >
-              {account.icon || "🏦"}
+              {account.icon && account.icon !== "none" ? account.icon : "🏦"}
             </div>
             <h1 className="text-2xl font-black tracking-tight text-foreground">
               {account.name}
@@ -769,11 +776,42 @@ export default function AccountDetail() {
               />
             </div>
           </div>
+
+          {/* Date range row */}
+          <div className="px-5 py-3.5 bg-white/[0.01] border-t border-white/[0.04] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-semibold text-text-muted shrink-0">
+                {language === "id" ? "Rentang Tanggal" : "Date Range"}
+              </span>
+              <CustomDateRangePicker
+                startDate={startDate}
+                endDate={endDate}
+                onPick={(range) => {
+                  setStartDate(range.start);
+                  setEndDate(range.end);
+                }}
+              />
+            </div>
+            {(startDate || endDate) ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setStartDate("");
+                  setEndDate("");
+                }}
+                className="text-xs text-text-muted hover:text-text-primary h-7 px-2.5 self-end sm:self-auto"
+              >
+                {language === "id" ? "Reset Filter" : "Reset Filters"}
+              </Button>
+            ) : null}
+          </div>
         </Card>
 
         {/* Transactions list grouped by date (consistent with Transactions page table) */}
         {filteredAndSortedTransactions.length === 0 ? (
-          <Card className="gap-0 border-border/80">
+          <Card className={cn("gap-0 border-border/80 transition-opacity duration-200", loading && "opacity-50 pointer-events-none")}>
             <EmptyState
               icon={Inbox}
               title={language === "id" ? "Tidak ada transaksi" : "No transactions found"}
@@ -786,7 +824,7 @@ export default function AccountDetail() {
             />
           </Card>
         ) : (
-          <div className="space-y-4">
+          <div className={cn("space-y-4 transition-opacity duration-200", loading && "opacity-50 pointer-events-none")}>
             {groupedTransactions.map((group) => {
               const netColor =
                 group.net > 0 ? "text-income" : group.net < 0 ? "text-expense" : "text-text-primary";

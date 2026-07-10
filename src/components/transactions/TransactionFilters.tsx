@@ -225,16 +225,16 @@ export function FilterStatusIndicator({ filters }: { filters: TransactionFilters
           <div className="flex items-center gap-2 text-xs text-text-muted font-mono tabular-nums">
             {filters.startDate && (
               <span className="bg-elevated/60 px-1.5 py-0.5 rounded border border-border/50">
-                Mulai: {formatFriendlyDate(filters.startDate)}
+                {language === "id" ? "Mulai: " : "Start: "}{formatFriendlyDate(filters.startDate, language)}
               </span>
             )}
             {filters.endDate && (
               <span className="bg-elevated/60 px-1.5 py-0.5 rounded border border-border/50">
-                Sampai: {formatFriendlyDate(filters.endDate)}
+                {language === "id" ? "Sampai: " : "End: "}{formatFriendlyDate(filters.endDate, language)}
               </span>
             )}
             {!filters.startDate && !filters.endDate && (
-              <span>Semua tanggal</span>
+              <span>{language === "id" ? "Semua tanggal" : "All dates"}</span>
             )}
           </div>
         </div>

@@ -132,7 +132,7 @@ const accountFields = z.object({
   color: z
     .string()
     .trim()
-    .regex(/^#[0-9a-fA-F]{6}$/, msg("Format warna tidak valid", "Invalid color format"))
+    .regex(/^(#[0-9a-fA-F]{6}|var\(--[a-zA-Z0-9-]+\))$/, msg("Format warna tidak valid", "Invalid color format"))
     .optional(),
   /** Single emoji or short token used as the account avatar. */
   icon: z.string().trim().max(8).optional(),

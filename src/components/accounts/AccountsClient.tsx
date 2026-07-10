@@ -291,7 +291,7 @@ function AccountCard({
           {/* Card Header: Icon/Chip & Status */}
           <div className="flex items-start justify-between mb-4 relative z-10">
             {/* Institution Icon or EMV Chip */}
-            {account.icon ? (
+            {account.icon && account.icon !== "none" ? (
               <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-white/[0.04] border border-white/[0.08] backdrop-blur-sm transition-all duration-300 group-hover:bg-white/[0.08] group-hover:border-white/[0.12] group-hover:scale-105">
                 <span className="text-xl">{account.icon}</span>
               </div>

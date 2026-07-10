@@ -3,12 +3,13 @@ import { createPortal } from "react-dom";
 import { Calendar, ChevronDown, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
+import { useLanguage } from "@/lib/contexts/LanguageContext";
 
-export function formatFriendlyDate(iso: string): string {
+export function formatFriendlyDate(iso: string, language: string = "id"): string {
   if (!iso) return "";
   const d = new Date(`${iso}T00:00:00`);
   if (isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString("id-ID", {
+  return d.toLocaleDateString(language === "en" ? "en-US" : "id-ID", {
     day: "numeric",
     month: "short",
   });
@@ -25,6 +26,7 @@ export function CustomDateRangePicker({
   endDate,
   onPick,
 }: CustomDateRangePickerProps) {
+  const { language } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -163,20 +165,32 @@ export function CustomDateRangePicker({
     }
   };
 
-  let label = "Pilih Tanggal";
+  let label = language === "en" ? "Select Date" : "Pilih Tanggal";
   if (startDate && endDate) {
     if (startDate === endDate) {
-      label = formatFriendlyDate(startDate);
+      label = formatFriendlyDate(startDate, language);
     } else {
-      label = `${formatFriendlyDate(startDate)} — ${formatFriendlyDate(endDate)}`;
+      label = `${formatFriendlyDate(startDate, language)} — ${formatFriendlyDate(endDate, language)}`;
     }
   } else if (startDate) {
-    label = `Mulai ${formatFriendlyDate(startDate)}`;
+    label = language === "en" ? `From ${formatFriendlyDate(startDate, language)}` : `Mulai ${formatFriendlyDate(startDate, language)}`;
   } else if (endDate) {
-    label = `Sampai ${formatFriendlyDate(endDate)}`;
+    label = language === "en" ? `To ${formatFriendlyDate(endDate, language)}` : `Sampai ${formatFriendlyDate(endDate, language)}`;
   } else {
-    label = "Semua Waktu";
+    label = language === "en" ? "All Time" : "Semua Waktu";
   }
+
+  const monthsList = language === "en"
+    ? ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+    : ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+  
+  const shortMonthsList = language === "en"
+    ? ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    : ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+
+  const weekdaysList = language === "en"
+    ? ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]
+    : ["Sn", "Sl", "Rb", "Km", "Jm", "Sb", "Mg"];
 
   return (
     <div className="relative z-50">
@@ -239,10 +253,7 @@ export function CustomDateRangePicker({
                       viewMode === "months" && "bg-white/[0.08] text-accent hover:text-accent"
                     )}
                   >
-                    {[
-                      "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-                      "Juli", "Agustus", "September", "Oktober", "November", "Desember"
-                    ][month].substring(0, 3)}
+                    {monthsList[month].substring(0, 3)}
                   </button>
                   <button
                     type="button"
@@ -282,7 +293,7 @@ export function CustomDateRangePicker({
             <>
               {/* Weekday headers */}
               <div className="grid grid-cols-7 text-center">
-                {["Sn", "Sl", "Rb", "Km", "Jm", "Sb", "Mg"].map((day, idx) => (
+                {weekdaysList.map((day, idx) => (
                   <span key={idx} className="text-[9px] font-bold text-text-muted uppercase">
                     {day}
                   </span>
@@ -344,7 +355,7 @@ export function CustomDateRangePicker({
                   }}
                   className="py-2 text-[11px] font-medium rounded hover:bg-white/[0.06] hover:text-text-primary text-text-muted transition-colors"
                 >
-                  {["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"][mIdx]}
+                  {shortMonthsList[mIdx]}
                 </button>
               ))}
             </div>
@@ -382,3 +393,4 @@ export function CustomDateRangePicker({
     </div>
   );
 }
+
