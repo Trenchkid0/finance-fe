@@ -1,4 +1,4 @@
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { ArrowLeftRight } from "lucide-react";
@@ -59,6 +59,15 @@ export function InlineCategoryPicker({
     name: categoryName,
     icon: categoryIcon,
   });
+
+  // Sync optimistic state with props when they change (e.g. updated via Edit Modal)
+  useEffect(() => {
+    setOptimistic({
+      id: categoryId,
+      name: categoryName,
+      icon: categoryIcon,
+    });
+  }, [categoryId, categoryName, categoryIcon]);
 
   // Transfer tidak punya kategori — render badge polos read-only.
   if (type === "transfer") {

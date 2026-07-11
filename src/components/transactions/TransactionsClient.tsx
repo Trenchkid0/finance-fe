@@ -143,6 +143,8 @@ export function TransactionsClient({
   const [calendarLoading, setCalendarLoading] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isExportCsvModalOpen, setIsExportCsvModalOpen] = useState(false);
+  const [pendingExport, startTransitionExport] = useTransition();
 
   useEffect(() => {
     if (viewMode !== "calendar") return;
@@ -221,6 +223,27 @@ export function TransactionsClient({
   const [bulkCategory, setBulkCategory] = useState("");
   const [pendingBulkEdit, setPendingBulkEdit] = useState(false);
   const [pendingDeleteIds, setPendingDeleteIds] = useState<Set<string>>(new Set());
+
+  // Esc key & body scroll lock for inline modals
+  useEffect(() => {
+    const anyModalOpen = confirmBulkDelete || openBulkEdit || isExportCsvModalOpen;
+    if (!anyModalOpen) return;
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setConfirmBulkDelete(false);
+        setOpenBulkEdit(false);
+        setIsExportCsvModalOpen(false);
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [confirmBulkDelete, openBulkEdit, isExportCsvModalOpen]);
 
   const handleBulkEdit = async () => {
     try {
@@ -377,6 +400,31 @@ export function TransactionsClient({
     return qs ? `${base}?${qs}` : base;
   }
 
+  const handleExportCSV = () => {
+    startTransitionExport(async () => {
+      try {
+        const csvText = await api.get<string>(exportHref());
+        const blob = new Blob([csvText], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", `transactions_export_${new Date().toISOString().slice(0, 10)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success(
+          language === "id"
+            ? "Berhasil mengekspor CSV"
+            : "Successfully exported CSV"
+        );
+        setIsExportCsvModalOpen(false);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : (language === "id" ? "Gagal mengekspor CSV" : "Failed to export CSV");
+        toast.error(msg);
+      }
+    });
+  };
+
   function downloadJSON() {
     try {
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(transactions, null, 2));
@@ -446,10 +494,8 @@ export function TransactionsClient({
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="bg-surface border-border z-[99999]">
-              <DropdownMenuItem asChild>
-                <a href={exportHref()} download className="cursor-pointer w-full flex items-center gap-2">
-                  <span>CSV Format (Export)</span>
-                </a>
+              <DropdownMenuItem onClick={() => setIsExportCsvModalOpen(true)} className="cursor-pointer flex items-center gap-2">
+                <span>CSV Format (Export)</span>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={downloadJSON} className="cursor-pointer flex items-center gap-2">
                 <span>JSON Format (Export)</span>
@@ -714,6 +760,66 @@ export function TransactionsClient({
               >
                 {pendingBulk && <Loader2 className="h-3 w-3 animate-spin" />}
                 {language === "id" ? "Hapus" : "Delete"}
+              </Button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Confirm Export CSV - Portal Modal */}
+      {isExportCsvModalOpen && createPortal(
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6 backdrop-blur-sm"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setIsExportCsvModalOpen(false);
+          }}
+        >
+          <div
+            className="flex max-h-[calc(100dvh-48px)] w-full max-w-[420px] flex-col overflow-hidden rounded-[22px] border border-border bg-surface shadow-2xl"
+            role="dialog"
+            aria-modal="true"
+          >
+            {/* Sticky Header */}
+            <div className="flex items-start gap-4 border-b border-border px-7 py-5">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-accent to-accent/60 text-white shadow-lg">
+                <Download className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-[17px] font-semibold leading-tight text-foreground">
+                  {language === "id" ? "Ekspor Transaksi" : "Export Transactions"}
+                </h2>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto px-7 py-6">
+              <p className="text-sm text-text-muted">
+                {language === "id"
+                  ? "Apakah Anda yakin ingin mengekspor data transaksi ke format CSV? Semua filter pencarian dan tanggal yang sedang aktif akan diterapkan pada data yang diekspor."
+                  : "Are you sure you want to export the transaction data to CSV format? All currently active search and date filters will be applied to the exported data."}
+              </p>
+            </div>
+
+            {/* Sticky Footer */}
+            <div className="flex items-center justify-end gap-2.5 border-t border-border px-7 py-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsExportCsvModalOpen(false)}
+                className="text-xs h-10 px-5 rounded-xl"
+              >
+                {t("cancelButton")}
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                disabled={pendingExport}
+                onClick={handleExportCSV}
+                className="bg-accent hover:bg-blue-500 text-white text-xs font-semibold h-10 px-5 rounded-xl gap-1.5"
+              >
+                {pendingExport && <Loader2 className="h-3 w-3 animate-spin" />}
+                {language === "id" ? "Ekspor" : "Export"}
               </Button>
             </div>
           </div>
