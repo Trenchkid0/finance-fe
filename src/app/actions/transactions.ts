@@ -92,3 +92,17 @@ export async function restoreTransaction(id: string): Promise<ActionResult<null>
     return { ok: false, error: getErrorMessage(err, "Gagal mengembalikan transaksi.") };
   }
 }
+
+export async function createBulkTransactions(
+  payloads: any[]
+): Promise<ActionResult<null>> {
+  try {
+    await api.post("/api/transactions/bulk", { transactions: payloads });
+    invalidateCache.afterTransactionChange();
+    window.dispatchEvent(new CustomEvent("refresh-app-data"));
+    return { ok: true };
+  } catch (err: unknown) {
+    return { ok: false, error: getErrorMessage(err, "Gagal membuat transaksi massal.") };
+  }
+}
+
