@@ -48,6 +48,13 @@ import type { AIScanCandidate } from "@/app/actions/ai";
 
 const FORM_ID = "transaction-modal-form";
 
+const getLocalDateString = (d: Date = new Date()) => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 export type AccountOption = { id: string; name: string; balance?: number };
 export type CategoryOption = {
   id: string;
@@ -133,7 +140,7 @@ export function TransactionForm({
     type: init?.type ?? "expense",
     amount: init?.amount ? formatInputRupiah(String(init.amount)) : "",
     adminFee: init?.adminFee ? formatInputRupiah(String(init.adminFee)) : "",
-    date: init?.date ?? new Date().toISOString().split("T")[0],
+    date: init?.date ?? getLocalDateString(),
     accountId: init?.accountId ?? accounts[0]?.id ?? "",
     categoryId: init?.categoryId ?? null,
     transferToId: init?.transferToId ?? null,
@@ -299,6 +306,15 @@ export function TransactionForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setCustomError(null);
+
+    const todayStr = getLocalDateString();
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].date > todayStr) {
+        setCustomError(isId ? "Tanggal transaksi tidak boleh di masa depan" : "Transaction date cannot be in the future");
+        return;
+      }
+    }
+
     setSubmitting(true);
 
     try {
@@ -490,6 +506,7 @@ export function TransactionForm({
           <div className="space-y-2.5">
             <Label className={labelCls}>{isId ? "Tanggal" : "Date"}</Label>
             <CustomSingleDatePicker value={item.date} onChange={(v) => updateField(idx, "date", v)} />
+            {fieldErrors.date?.[0] ? <ErrText msg={fieldErrors.date[0]} /> : null}
           </div>
           {item.type === "transfer" && (
             <div className="space-y-2.5 sm:col-span-2">

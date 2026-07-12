@@ -71,16 +71,11 @@ export function AppSidebar({ user, counts, ...props }: AppSidebarProps) {
       href: "/accounts",
       label: language === "id" ? "Rekening" : t("accounts"),
       icon: Wallet,
-      badge: counts?.accounts && counts.accounts > 0 ? counts.accounts : undefined,
     },
     {
       href: "/transactions",
       label: t("transactions"),
       icon: ArrowLeftRight,
-      badge:
-        counts?.transactions && counts.transactions > 0
-          ? counts.transactions
-          : undefined,
     },
     {
       href: "/investments",

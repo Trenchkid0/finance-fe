@@ -9,6 +9,13 @@ interface CustomSingleDatePickerProps {
   onChange: (val: string) => void;
 }
 
+const getLocalDateString = (d: Date = new Date()) => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 export function CustomSingleDatePicker({
   value,
   onChange,
@@ -90,6 +97,9 @@ export function CustomSingleDatePicker({
     setYearPageStart(Math.floor(vYear / 16) * 16);
   }, [viewDate]);
 
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth();
   const year = viewDate.getFullYear();
   const month = viewDate.getMonth();
 
@@ -209,7 +219,11 @@ export function CustomSingleDatePicker({
                 <button
                   type="button"
                   onClick={handleNextMonth}
-                  disabled={viewMode === "months"}
+                  disabled={
+                    viewMode === "months" ||
+                    (viewMode === "years" && yearPageStart + 15 >= currentYear) ||
+                    (viewMode === "days" && (year > currentYear || (year === currentYear && month >= currentMonth)))
+                  }
                   className="p-1 rounded-lg hover:bg-white/[0.06] text-text-muted hover:text-text-primary transition-all disabled:opacity-30 disabled:pointer-events-none"
                 >
                   <ChevronRight size={14} />
@@ -229,15 +243,19 @@ export function CustomSingleDatePicker({
                     if (day === null) return <div key={`empty-${idx}`} className="h-7 w-7" />;
                     const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
                     const isSelected = value === dateStr;
-                    const isToday = dateStr === new Date().toISOString().split("T")[0];
+                    const todayStr = getLocalDateString();
+                    const isToday = dateStr === todayStr;
+                    const isFuture = dateStr > todayStr;
                     return (
                       <button
                         key={`day-${day}`}
                         type="button"
+                        disabled={isFuture}
                         onClick={(e) => handleDayClick(day, e)}
                         className={cn(
                           "h-8 w-8 text-xs rounded-lg flex items-center justify-center font-semibold transition-all cursor-pointer",
-                          isSelected ? "bg-accent text-white font-bold shadow-lg shadow-accent/30" : isToday ? "border border-accent/50 text-accent font-bold" : "text-text-primary hover:bg-white/[0.08] active:bg-white/[0.12]"
+                          isSelected ? "bg-accent text-white font-bold shadow-lg shadow-accent/30" : isToday ? "border border-accent/50 text-accent font-bold" : "text-text-primary hover:bg-white/[0.08] active:bg-white/[0.12]",
+                          isFuture && "opacity-30 pointer-events-none"
                         )}
                       >
                         {day}
@@ -250,39 +268,55 @@ export function CustomSingleDatePicker({
 
             {viewMode === "months" && (
               <div className="grid grid-cols-3 gap-2 py-1">
-                {["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"].map((m, mIdx) => (
-                  <button
-                    key={mIdx}
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setViewDate(new Date(year, mIdx, 1));
-                      setViewMode("days");
-                    }}
-                    className={cn("h-10 text-xs rounded-lg font-semibold transition-all cursor-pointer text-center", mIdx === month ? "bg-accent text-white font-bold shadow-lg shadow-accent/30" : "text-text-primary hover:bg-white/[0.08] active:bg-white/[0.12]")}
-                  >
-                    {m.substring(0, 3)}
-                  </button>
-                ))}
+                {["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"].map((m, mIdx) => {
+                  const isFutureMonth = year > currentYear || (year === currentYear && mIdx > currentMonth);
+                  return (
+                    <button
+                      key={mIdx}
+                      type="button"
+                      disabled={isFutureMonth}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setViewDate(new Date(year, mIdx, 1));
+                        setViewMode("days");
+                      }}
+                      className={cn(
+                        "h-10 text-xs rounded-lg font-semibold transition-all cursor-pointer text-center",
+                        mIdx === month ? "bg-accent text-white font-bold shadow-lg shadow-accent/30" : "text-text-primary hover:bg-white/[0.08] active:bg-white/[0.12]",
+                        isFutureMonth && "opacity-30 pointer-events-none"
+                      )}
+                    >
+                      {m.substring(0, 3)}
+                    </button>
+                  );
+                })}
               </div>
             )}
 
             {viewMode === "years" && (
               <div className="grid grid-cols-4 gap-2 py-1">
-                {Array.from({ length: 16 }, (_, i) => yearPageStart + i).map((y) => (
-                  <button
-                    key={y}
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setViewDate(new Date(y, month, 1));
-                      setViewMode("months");
-                    }}
-                    className={cn("h-10 text-xs rounded-lg font-semibold transition-all cursor-pointer text-center font-mono", y === year ? "bg-accent text-white font-bold shadow-lg shadow-accent/30" : "text-text-primary hover:bg-white/[0.08] active:bg-white/[0.12]")}
-                  >
-                    {y}
-                  </button>
-                ))}
+                {Array.from({ length: 16 }, (_, i) => yearPageStart + i).map((y) => {
+                  const isFutureYear = y > currentYear;
+                  return (
+                    <button
+                      key={y}
+                      type="button"
+                      disabled={isFutureYear}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setViewDate(new Date(y, month, 1));
+                        setViewMode("months");
+                      }}
+                      className={cn(
+                        "h-10 text-xs rounded-lg font-semibold transition-all cursor-pointer text-center font-mono",
+                        y === year ? "bg-accent text-white font-bold shadow-lg shadow-accent/30" : "text-text-primary hover:bg-white/[0.08] active:bg-white/[0.12]",
+                        isFutureYear && "opacity-30 pointer-events-none"
+                      )}
+                    >
+                      {y}
+                    </button>
+                  );
+                })}
               </div>
             )}
 
@@ -295,9 +329,15 @@ export function CustomSingleDatePicker({
                 value={value}
                 onChange={(e) => {
                   const val = e.target.value;
-                  onChange(val);
-                  const parseD = new Date(val);
-                  if (!isNaN(parseD.getTime())) setViewDate(parseD);
+                  const todayStr = getLocalDateString();
+                  if (val.length === 10 && val > todayStr) {
+                    onChange(todayStr);
+                    setViewDate(new Date());
+                  } else {
+                    onChange(val);
+                    const parseD = new Date(val);
+                    if (!isNaN(parseD.getTime())) setViewDate(parseD);
+                  }
                 }}
                 className="w-full bg-white/[0.02] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-accent/50 focus:border-accent transition-all font-mono"
               />
