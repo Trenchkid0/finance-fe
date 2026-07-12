@@ -18,6 +18,7 @@ import {
   Copy,
   SlidersHorizontal,
   ChevronDown,
+  Upload,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { formatIDR } from "@/lib/utils/formatters";
@@ -36,6 +37,7 @@ import { deleteAccount, toggleAccountActive } from "@/app/actions/accounts";
 import { TransactionForm } from "@/components/transactions/TransactionForm";
 import { ConfirmDelete as ConfirmDeleteTransaction } from "@/components/transactions/ConfirmDelete";
 import { CustomDateRangePicker } from "@/components/transactions/CustomDateRangePicker";
+import { ImportStatementModal } from "@/components/transactions/ImportStatementModal";
 
 import {
   Dialog,
@@ -307,6 +309,7 @@ export default function AccountDetail() {
   const [editingTransaction, setEditingTransaction] = useState<TransactionApiItem | null>(null);
   const [creatingTransaction, setCreatingTransaction] = useState<TransactionFormInitial | null>(null);
   const [deletingTransaction, setDeletingTransaction] = useState<TransactionApiItem | null>(null);
+  const [importStatementOpen, setImportStatementOpen] = useState(false);
 
   const accountTypeLabel: Record<string, string> = {
     bank: language === "id" ? "Bank" : "Bank",
@@ -580,6 +583,15 @@ export default function AccountDetail() {
           >
             <Plus size={14} strokeWidth={2.5} />
             {language === "id" ? "Tambah Transaksi" : "Add Transaction"}
+          </Button>
+
+          <Button
+            variant="secondary"
+            onClick={() => setImportStatementOpen(true)}
+            className="h-9 rounded-xl gap-1.5 text-xs font-semibold px-3.5 border-white/[0.06] hover:bg-white/[0.04] text-accent"
+          >
+            <Upload size={13} />
+            {language === "id" ? "Impor PDF / CSV" : "Import PDF / CSV"}
           </Button>
 
           <Button
@@ -1122,6 +1134,19 @@ export default function AccountDetail() {
           }}
         />
       )}
+
+      {/* Import PDF/CSV Statement Modal */}
+      <ImportStatementModal
+        open={importStatementOpen}
+        onClose={() => setImportStatementOpen(false)}
+        accountId={id || ""}
+        accounts={accounts.map(a => ({ id: a.id, name: a.name, balance: a.balance }))}
+        categories={categories.map(c => ({ id: c.id, name: c.name, type: c.type, icon: c.icon }))}
+        onSuccess={() => {
+          fetchData();
+          refreshGlobal();
+        }}
+      />
     </div>
   );
 }
