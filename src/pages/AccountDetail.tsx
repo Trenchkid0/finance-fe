@@ -19,6 +19,7 @@ import {
   SlidersHorizontal,
   ChevronDown,
   Upload,
+  Download,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { formatIDR } from "@/lib/utils/formatters";
@@ -38,6 +39,7 @@ import { TransactionForm } from "@/components/transactions/TransactionForm";
 import { ConfirmDelete as ConfirmDeleteTransaction } from "@/components/transactions/ConfirmDelete";
 import { CustomDateRangePicker } from "@/components/transactions/CustomDateRangePicker";
 import { ImportStatementModal } from "@/components/transactions/ImportStatementModal";
+import { exportToPDF } from "@/lib/utils/pdfExport";
 
 import {
   Dialog,
@@ -168,7 +170,7 @@ function CustomSelect({
         ref={triggerRef}
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex h-9 w-full items-center justify-between border border-white/[0.06] bg-[#1C2128] px-3.5 py-2 text-xs font-semibold text-foreground hover:border-white/[0.12] hover:bg-white/[0.05] focus:outline-none focus:ring-1 focus:ring-accent/30 focus:border-accent transition-all duration-200 text-left rounded-xl"
+        className="flex h-9 w-full items-center justify-between border border-white/[0.06] bg-white/[0.03] px-3.5 py-2 text-xs font-semibold text-foreground hover:border-white/[0.12] hover:bg-white/[0.05] focus:outline-none focus:ring-1 focus:ring-accent/30 focus:border-accent transition-all duration-200 text-left rounded-xl"
       >
         <span className="truncate">{selectedLabel}</span>
         <ChevronDown size={12} className="opacity-60 shrink-0 ml-2" />
@@ -447,6 +449,66 @@ export default function AccountDetail() {
     return groupByDate(filteredAndSortedTransactions, language);
   }, [filteredAndSortedTransactions, language]);
 
+  const handleExportCSV = async () => {
+    try {
+      const params = new URLSearchParams();
+      params.set("accountId", id || "");
+      if (startDate) params.set("startDate", startDate);
+      if (endDate) params.set("endDate", endDate);
+      const csvText = await api.get<string>(`/api/transactions/export?${params.toString()}`);
+      const blob = new Blob([csvText], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `account_${account?.name || "transactions"}_export_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success(
+        language === "id"
+          ? "Berhasil mengekspor CSV"
+          : "Successfully exported CSV"
+      );
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : (language === "id" ? "Gagal mengekspor CSV" : "Failed to export CSV");
+      toast.error(msg);
+    }
+  };
+
+  const handleExportPDF = () => {
+    try {
+      const dateRangeStr = (startDate || endDate)
+        ? `${startDate || "*"} ${language === "id" ? "s/d" : "to"} ${endDate || "*"}`
+        : (language === "id" ? "Semua Periode" : "All Time");
+
+      exportToPDF({
+        title: language === "id" ? "Laporan Rekening" : "Account Statement",
+        accountName: account?.name,
+        dateRange: dateRangeStr,
+        transactions: filteredAndSortedTransactions.map((t) => ({
+          date: t.date,
+          description: t.description,
+          categoryName: t.category?.name ?? null,
+          type: t.type,
+          amount: t.amount,
+          adminFee: t.adminFee,
+          note: t.note,
+          transferToName: t.transferTo?.name ?? null,
+        })),
+        summary: {
+          income: totalIncome,
+          expense: totalExpense,
+          total: totalCount,
+        },
+        language: language,
+      });
+      toast.success(language === "id" ? "Berhasil mengekspor PDF" : "Successfully exported PDF");
+    } catch (err) {
+      console.error(err);
+      toast.error(language === "id" ? "Gagal mengekspor PDF" : "Failed to export PDF");
+    }
+  };
+
   const toFormInitial = (row: TransactionApiItem): TransactionFormInitial => {
     return {
       id: String(row.id),
@@ -585,14 +647,30 @@ export default function AccountDetail() {
             {language === "id" ? "Tambah Transaksi" : "Add Transaction"}
           </Button>
 
-          <Button
-            variant="secondary"
-            onClick={() => setImportStatementOpen(true)}
-            className="h-9 rounded-xl gap-1.5 text-xs font-semibold px-3.5 border-white/[0.06] hover:bg-white/[0.04] text-accent"
-          >
-            <Upload size={13} />
-            {language === "id" ? "Impor PDF / CSV" : "Import PDF / CSV"}
-          </Button>
+          <DropdownMenu modal={false}>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="h-9 border border-border/50 bg-transparent text-foreground hover:bg-white/[0.04] hover:border-border transition-all flex items-center justify-center gap-2 text-xs font-semibold px-4"
+                style={{ borderRadius: 'var(--dropdown-radius, 12px)' }}
+              >
+                <Download size={14} />
+                {language === "id" ? "Ekspor/Impor" : "Export/Import"}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-surface border-border z-[99999]">
+              <DropdownMenuItem onClick={handleExportCSV} className="cursor-pointer flex items-center gap-2">
+                <span>CSV Format (Export)</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportPDF} className="cursor-pointer flex items-center gap-2">
+                <span>PDF Format (Export)</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator className="bg-border/40" />
+              <DropdownMenuItem onClick={() => setImportStatementOpen(true)} className="cursor-pointer flex items-center gap-2 text-accent focus:text-accent font-semibold">
+                <span>Import PDF / CSV (AI)</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <Button
             variant="secondary"
@@ -613,7 +691,7 @@ export default function AccountDetail() {
                 <MoreVertical size={14} />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="rounded-xl border-white/[0.08] bg-[#161B22] p-1 shadow-2xl">
+            <DropdownMenuContent align="end" className="rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl p-1 shadow-2xl">
               <DropdownMenuItem
                 onSelect={handleToggleActive}
                 disabled={togglingAccountPending}
@@ -645,76 +723,83 @@ export default function AccountDetail() {
       </header>
 
       {/* KPI Stats Grid */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {/* Card 1: Balance */}
-        <Card 
-          className="p-5 relative overflow-hidden bg-card border-border/80 gap-0"
-          style={{ borderLeft: `3px solid ${normalizeColor(account.color)}` }}
-        >
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-2">
+        <Card className="p-4 gap-0 relative overflow-hidden">
+          <div 
+            className="absolute top-3 right-3 size-8 rounded-lg flex items-center justify-center border"
+            style={{ 
+              backgroundColor: `color-mix(in srgb, ${normalizeColor(account.color)} 10%, transparent)`, 
+              color: normalizeColor(account.color),
+              borderColor: `color-mix(in srgb, ${normalizeColor(account.color)} 15%, transparent)`
+            }}
+          >
+            <span className="text-xs">{account.icon && account.icon !== "none" ? account.icon : "🏦"}</span>
+          </div>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-2">
             {language === "id" ? "Saldo Saat Ini" : "Current Balance"}
           </p>
-          <p className="text-2xl font-black font-mono tracking-tight text-foreground tabular-nums">
+          <p className="text-xl font-bold font-mono tabular-nums text-text-primary">
             {formatIDR(account.balance)}
           </p>
-          <span className="text-[10px] font-medium text-muted-foreground/45 mt-2.5 block">
+          <p className="text-[11px] text-text-muted mt-1">
             {language === "id" ? "Kategori Akun: " : "Account Type: "} {accountTypeLabel[account.type] ?? account.type}
-          </span>
+          </p>
         </Card>
 
         {/* Card 2: Income */}
-        <Card className="p-5 relative overflow-hidden bg-card border-border/80 gap-0">
-          <div className="absolute top-4 right-4 size-7 rounded-lg bg-income/10 flex items-center justify-center">
-            <TrendingUp size={14} className="text-income" />
+        <Card className="p-4 gap-0 relative overflow-hidden">
+          <div className="absolute top-3 right-3 size-8 rounded-lg bg-income/10 flex items-center justify-center">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" className="text-income"><path d="M7.5 12V3M7.5 3L4 6.5M7.5 3L11 6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-2">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-2">
             {language === "id" ? "Total Pemasukan" : "Total Inflow"}
           </p>
-          <p className="text-2xl font-black font-mono tracking-tight text-income tabular-nums">
+          <p className="text-xl font-bold font-mono tabular-nums text-income">
             {formatIDR(totalIncome)}
           </p>
-          <span className="text-[10px] font-medium text-muted-foreground/45 mt-2.5 block">
+          <p className="text-[11px] text-text-muted mt-1">
             {language === "id" ? "Semua pemasukan & transfer masuk" : "All income & inbound transfers"}
-          </span>
+          </p>
         </Card>
 
         {/* Card 3: Expenses */}
-        <Card className="p-5 relative overflow-hidden bg-card border-border/80 gap-0">
-          <div className="absolute top-4 right-4 size-7 rounded-lg bg-expense/10 flex items-center justify-center">
-            <TrendingDown size={14} className="text-expense" />
+        <Card className="p-4 gap-0 relative overflow-hidden">
+          <div className="absolute top-3 right-3 size-8 rounded-lg bg-expense/10 flex items-center justify-center">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" className="text-expense"><path d="M7.5 3V12M7.5 12L4 8.5M7.5 12L11 8.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-2">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-2">
             {language === "id" ? "Total Pengeluaran" : "Total Outflow"}
           </p>
-          <p className="text-2xl font-black font-mono tracking-tight text-expense tabular-nums">
+          <p className="text-xl font-bold font-mono tabular-nums text-expense">
             {formatIDR(totalExpense)}
           </p>
-          <span className="text-[10px] font-medium text-muted-foreground/45 mt-2.5 block">
+          <p className="text-[11px] text-text-muted mt-1">
             {language === "id" ? "Semua pengeluaran & transfer keluar" : "All expenses & outbound transfers"}
-          </span>
+          </p>
         </Card>
 
         {/* Card 4: Net Flow */}
-        <Card className="p-5 relative overflow-hidden bg-card border-border/80 gap-0">
-          <div className="absolute top-4 right-4 size-7 rounded-lg bg-white/[0.04] flex items-center justify-center border border-white/[0.08]">
-            <ArrowLeftRight size={13} className="text-muted-foreground/75" />
+        <Card className="p-4 gap-0 relative overflow-hidden">
+          <div className="absolute top-3 right-3 size-8 rounded-lg bg-white/[0.04] flex items-center justify-center border border-white/[0.08]">
+            <ArrowLeftRight size={15} className="text-text-muted/75" />
           </div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-2">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-2">
             {language === "id" ? "Aliran Bersih" : "Net Cashflow"}
           </p>
-          <p className={`text-2xl font-black font-mono tracking-tight tabular-nums ${netFlow >= 0 ? "text-income" : "text-expense"}`}>
+          <p className={`text-xl font-bold font-mono tabular-nums ${netFlow >= 0 ? "text-income" : "text-expense"}`}>
             {netFlow >= 0 ? "+" : ""}{formatIDR(netFlow)}
           </p>
-          <span className="text-[10px] font-medium text-muted-foreground/45 mt-2.5 block">
+          <p className="text-[11px] text-text-muted mt-1">
             {language === "id" ? "Selisih pemasukan vs pengeluaran" : "Difference between inflow & outflow"}
-          </span>
+          </p>
         </Card>
-      </section>
+      </div>
 
       {/* Transaction History Section */}
       <div className="space-y-4">
         {/* Section Header & Filters (no double cards to prevent borders overlapping) */}
-        <Card className="p-0 overflow-hidden bg-card border-border/80 gap-0">
+        <Card className="p-0 overflow-hidden gap-0">
           <div className="px-5 py-4 border-b border-white/[0.04] flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <h3 className="text-base font-bold text-foreground flex items-center gap-2">
@@ -741,12 +826,12 @@ export default function AccountDetail() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={language === "id" ? "Cari deskripsi, kategori, catatan..." : "Search description, category, note..."}
-                className="w-full bg-[#1C2128] border border-white/[0.06] rounded-xl pl-9 pr-4 py-2 text-xs text-foreground placeholder:text-muted-foreground/45 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-all"
+                className="w-full bg-white/[0.03] border border-white/[0.06] rounded-xl pl-9 pr-4 py-2 text-xs text-foreground placeholder:text-muted-foreground/45 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-all hover:bg-white/[0.05] hover:border-white/[0.12] focus:bg-white/[0.04]"
               />
             </div>
 
             {/* Type filter toggles */}
-            <div className="flex bg-[#161B22] border border-white/[0.06] rounded-xl p-0.5 gap-0.5 w-full md:w-auto overflow-x-auto shrink-0">
+            <div className="flex bg-white/[0.02] border border-white/[0.06] rounded-xl p-0.5 gap-0.5 w-full md:w-auto overflow-x-auto shrink-0">
               {(["all", "income", "expense", "transfer"] as const).map((type) => {
                 const labelMap: Record<string, string> = {
                   all: language === "id" ? "Semua" : "All",
@@ -823,7 +908,7 @@ export default function AccountDetail() {
 
         {/* Transactions list grouped by date (consistent with Transactions page table) */}
         {filteredAndSortedTransactions.length === 0 ? (
-          <Card className={cn("gap-0 border-border/80 transition-opacity duration-200", loading && "opacity-50 pointer-events-none")}>
+          <Card className={cn("gap-0 transition-opacity duration-200", loading && "opacity-50 pointer-events-none")}>
             <EmptyState
               icon={Inbox}
               title={language === "id" ? "Tidak ada transaksi" : "No transactions found"}
@@ -897,7 +982,7 @@ export default function AccountDetail() {
                   </header>
 
                   {/* Daily Rows Container */}
-                  <Card className="divide-y divide-white/[0.04] overflow-hidden gap-0 p-0 border-border/80">
+                  <Card className="divide-y divide-white/[0.04] overflow-hidden gap-0 p-0">
                     {group.items.map((tx) => {
                       const amount = Number(tx.amount);
                       const isIncoming =

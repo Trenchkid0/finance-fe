@@ -27,6 +27,8 @@ import {
   type TransactionFormInitial,
 } from "./TransactionForm";
 import { ImportCsvModal } from "./ImportCsvModal";
+import { ImportStatementModal } from "./ImportStatementModal";
+import { exportToPDF } from "@/lib/utils/pdfExport";
 import { TransactionFilters, isFilterActive } from "./TransactionFilters";
 import { TransactionsList } from "./TransactionTable";
 import { TransactionCalendar } from "./TransactionCalendar";
@@ -144,6 +146,7 @@ export function TransactionsClient({
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isExportCsvModalOpen, setIsExportCsvModalOpen] = useState(false);
+  const [importStatementOpen, setImportStatementOpen] = useState(false);
   const [pendingExport, startTransitionExport] = useTransition();
 
   useEffect(() => {
@@ -425,20 +428,37 @@ export function TransactionsClient({
     });
   };
 
-  function downloadJSON() {
+  const downloadPDF = () => {
     try {
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(transactions, null, 2));
-      const downloadAnchor = document.createElement("a");
-      downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", "transactions.json");
-      document.body.appendChild(downloadAnchor);
-      downloadAnchor.click();
-      downloadAnchor.remove();
-      toast.success(language === "id" ? "Berhasil mengekspor JSON" : "Successfully exported JSON");
-    } catch {
-      toast.error(language === "id" ? "Gagal mengekspor data" : "Failed to export data");
+      const dateRangeStr = (filters.startDate || filters.endDate)
+        ? `${filters.startDate || "*"} ${language === "id" ? "s/d" : "to"} ${filters.endDate || "*"}`
+        : (language === "id" ? "Semua Periode" : "All Time");
+
+      exportToPDF({
+        title: language === "id" ? "Laporan Transaksi" : "Transaction Report",
+        dateRange: dateRangeStr,
+        transactions: transactions.map((t) => ({
+          date: t.date,
+          description: t.description,
+          categoryName: t.categoryName,
+          type: t.type,
+          amount: t.amount,
+          adminFee: t.adminFee,
+          note: t.note,
+        })),
+        summary: {
+          income: summary.income,
+          expense: summary.expense,
+          total: summary.total,
+        },
+        language: language,
+      });
+      toast.success(language === "id" ? "Berhasil mengekspor PDF" : "Successfully exported PDF");
+    } catch (err) {
+      console.error(err);
+      toast.error(language === "id" ? "Gagal mengekspor PDF" : "Failed to export PDF");
     }
-  }
+  };
 
   // Filter out rows that are pending deletion (4s grace period)
   const visibleTransactions = transactions.filter((tx) => !pendingDeleteIds.has(tx.id));
@@ -497,12 +517,15 @@ export function TransactionsClient({
               <DropdownMenuItem onClick={() => setIsExportCsvModalOpen(true)} className="cursor-pointer flex items-center gap-2">
                 <span>CSV Format (Export)</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={downloadJSON} className="cursor-pointer flex items-center gap-2">
-                <span>JSON Format (Export)</span>
+              <DropdownMenuItem onClick={downloadPDF} className="cursor-pointer flex items-center gap-2">
+                <span>PDF Format (Export)</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator className="bg-border/40" />
               <DropdownMenuItem onClick={() => setIsImportModalOpen(true)} className="cursor-pointer flex items-center gap-2 text-accent focus:text-accent font-semibold">
                 <span>Import CSV</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setImportStatementOpen(true)} className="cursor-pointer flex items-center gap-2 text-accent focus:text-accent font-semibold">
+                <span>Import PDF / CSV (AI)</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -953,6 +976,21 @@ export function TransactionsClient({
             setTimeout(() => {
               window.location.reload();
             }, 300);
+          }}
+        />
+      )}
+
+      {/* Import PDF/CSV Statement Modal */}
+      {importStatementOpen && (
+        <ImportStatementModal
+          open={importStatementOpen}
+          onClose={() => setImportStatementOpen(false)}
+          accountId=""
+          accounts={accounts}
+          categories={categories}
+          onSuccess={() => {
+            setImportStatementOpen(false);
+            window.dispatchEvent(new CustomEvent("refresh-app-data"));
           }}
         />
       )}
