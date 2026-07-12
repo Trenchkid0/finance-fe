@@ -76,6 +76,8 @@ export function ImportStatementModal({
   // Parsed candidates ready for review
   const [candidates, setCandidates] = useState<FormCandidate[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [aiEnabled, setAiEnabled] = useState(true);
+  const [checkingAi, setCheckingAi] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -105,6 +107,25 @@ export function ImportStatementModal({
     setError(null);
     setCandidates([]);
     setIsSaving(false);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    
+    const checkAiStatus = async () => {
+      setCheckingAi(true);
+      try {
+        const res = await api.get<{ enabled: boolean }>("/api/ai/status");
+        setAiEnabled(!!res.enabled);
+      } catch (err) {
+        console.error("Failed to fetch AI status:", err);
+        setAiEnabled(false);
+      } finally {
+        setCheckingAi(false);
+      }
+    };
+
+    checkAiStatus();
   }, [open]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -541,6 +562,23 @@ export function ImportStatementModal({
           // UPLOAD / PASSWORD SCREEN
           <>
             <div className="flex-1 px-7 py-6 space-y-4">
+              {/* If AI is disabled/not configured, show proactive alert */}
+              {!aiEnabled && !checkingAi && (
+                <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl flex gap-3 text-xs text-amber-500">
+                  <AlertCircle size={16} className="shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-bold mb-0.5">
+                      {isId ? "Scan AI Belum Aktif" : "AI Scan Not Configured"}
+                    </p>
+                    <p className="leading-relaxed">
+                      {isId
+                        ? "Fitur pemindaian laporan ini membutuhkan kunci API DeepSeek. Harap tambahkan `DEEPSEEK_API_KEY` pada file `.env` di server Anda untuk mengaktifkan fitur ini."
+                        : "This statement scanning feature requires a DeepSeek API key. Please add `DEEPSEEK_API_KEY` to your server's `.env` file to enable it."}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {error && (
                 <div className="p-3.5 bg-expense/10 border border-expense/20 rounded-xl flex gap-2.5 text-xs text-expense">
                   <AlertCircle size={15} className="shrink-0 mt-0.5" />
@@ -611,10 +649,19 @@ export function ImportStatementModal({
                 // Drag & drop area
                 <div className="space-y-4">
                   <div
-                    onDragOver={handleDragOver}
-                    onDrop={handleDrop}
-                    onClick={() => fileInputRef.current?.click()}
-                    className="border-2 border-dashed border-border/70 hover:border-accent/50 rounded-2xl p-6 text-center cursor-pointer transition bg-white/[0.005] hover:bg-white/[0.01] flex flex-col items-center justify-center gap-2"
+                    onDragOver={!aiEnabled || checkingAi ? undefined : handleDragOver}
+                    onDrop={!aiEnabled || checkingAi ? undefined : handleDrop}
+                    onClick={() => {
+                      if (aiEnabled && !checkingAi) {
+                        fileInputRef.current?.click();
+                      }
+                    }}
+                    className={cn(
+                      "border-2 border-dashed rounded-2xl p-6 text-center transition flex flex-col items-center justify-center gap-2",
+                      (!aiEnabled || checkingAi)
+                        ? "border-border/40 bg-white/[0.002] cursor-not-allowed opacity-60"
+                        : "border-border/70 hover:border-accent/50 cursor-pointer bg-white/[0.005] hover:bg-white/[0.01]"
+                    )}
                   >
                     <input
                       type="file"
@@ -622,15 +669,22 @@ export function ImportStatementModal({
                       onChange={handleFileChange}
                       accept=".pdf,.csv,.txt"
                       className="hidden"
+                      disabled={!aiEnabled || checkingAi}
                     />
                     <div className="size-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
                       <Upload size={18} />
                     </div>
                     <div>
                       <p className="text-xs font-bold text-text-primary">
-                        {file ? file.name : (isId ? "Klik atau seret file PDF/CSV di sini" : "Click or drag PDF/CSV file here")}
+                        {checkingAi 
+                          ? (isId ? "Memeriksa status AI..." : "Checking AI status...") 
+                          : !aiEnabled 
+                            ? (isId ? "Pindai AI Tidak Tersedia" : "AI Scan Unavailable") 
+                            : file 
+                              ? file.name 
+                              : (isId ? "Klik atau seret file PDF/CSV di sini" : "Click or drag PDF/CSV file here")}
                       </p>
-                      {file ? (
+                      {file && aiEnabled && !checkingAi ? (
                         <p className="text-[10px] text-text-muted mt-1 font-mono">
                           {(file.size / 1024).toFixed(1)} KB
                         </p>
@@ -677,7 +731,7 @@ export function ImportStatementModal({
                 <Button
                   type="button"
                   onClick={() => parseFile("")}
-                  disabled={isParsing || !file}
+                  disabled={isParsing || !file || !aiEnabled || checkingAi}
                   className="h-10 px-5 rounded-xl text-xs font-semibold gap-1.5"
                 >
                   {isParsing ? (
