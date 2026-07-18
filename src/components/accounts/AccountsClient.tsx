@@ -90,12 +90,18 @@ export function AccountsClient({ accounts }: Props) {
       {activeAccounts.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <Card
-            className="p-4 gap-0"
+            className="relative overflow-hidden p-4 gap-0 border backdrop-blur-sm transition-all duration-300 hover:border-accent/30"
             style={{
               borderColor: "color-mix(in srgb, var(--accent) 25%, transparent)",
-              backgroundColor: "color-mix(in srgb, var(--accent) 5%, transparent)",
+              backgroundColor: "color-mix(in srgb, var(--accent) 4%, transparent)",
             }}
           >
+            {/* Sci-fi Corner Brackets */}
+            <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-accent/20 rounded-tl" />
+            <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-accent/20 rounded-tr" />
+            <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-accent/20 rounded-bl" />
+            <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-accent/20 rounded-br" />
+
             <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">
               {language === "id" ? "Total Saldo" : "Total Balance"}
             </p>
@@ -103,7 +109,13 @@ export function AccountsClient({ accounts }: Props) {
               {formatIDR(totalBalance)}
             </p>
           </Card>
-          <Card className="p-4 gap-0">
+          <Card className="relative overflow-hidden p-4 gap-0 border border-border/40 bg-elevated/5 backdrop-blur-sm transition-all duration-300 hover:border-accent/25">
+            {/* Sci-fi Corner Brackets */}
+            <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-accent/15 rounded-tl" />
+            <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-accent/15 rounded-tr" />
+            <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-accent/15 rounded-bl" />
+            <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-accent/15 rounded-br" />
+
             <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">
               {language === "id" ? "Akun Aktif" : "Active Accounts"}
             </p>
@@ -111,7 +123,13 @@ export function AccountsClient({ accounts }: Props) {
               {activeAccounts.length} <span className="text-xs text-muted-foreground/60 font-sans font-semibold ml-1">{language === "id" ? "akun" : "accounts"}</span>
             </p>
           </Card>
-          <Card className="p-4 gap-0">
+          <Card className="relative overflow-hidden p-4 gap-0 border border-border/40 bg-elevated/5 backdrop-blur-sm transition-all duration-300 hover:border-accent/25">
+            {/* Sci-fi Corner Brackets */}
+            <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-accent/15 rounded-tl" />
+            <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-accent/15 rounded-tr" />
+            <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-accent/15 rounded-bl" />
+            <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-accent/15 rounded-br" />
+
             <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">
               {language === "id" ? "Saldo Negatif" : "Negative Balance"}
             </p>
@@ -243,6 +261,7 @@ function AccountCard({
   const { language } = useLanguage();
   const { refresh } = useApp();
   const [pending, startTransition] = useTransition();
+  const [hovered, setHovered] = useState(false);
 
   function handleToggle() {
     startTransition(async () => {
@@ -253,7 +272,7 @@ function AccountCard({
 
   const swatch = normalizeColor(account.color);
   const isNegative = account.balance < 0;
-  const maskedNumber = `•••• •••• •••• ${account.id.slice(-4)}`;
+  const maskedNumber = `ACC-${account.id.slice(-4).toUpperCase()} // BLOCK-${account.id.slice(0, 4).toUpperCase()}`;
 
   const typeLabel: Record<AccountTypeInput, string> = {
     bank: language === "id" ? "Bank" : "Bank",
@@ -263,7 +282,11 @@ function AccountCard({
   };
 
   return (
-    <div className="relative group">
+    <div 
+      className="relative group"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       {/* Physical Card Container */}
       <Link
         to={`/accounts/${account.id}`}
@@ -273,18 +296,56 @@ function AccountCard({
         )}
       >
         <Card
-          className="p-4 pb-12 min-h-[160px] select-none cursor-pointer bg-gradient-to-br from-white/[0.03] via-white/[0.01] to-transparent hover:border-white/[0.15] hover:shadow-[0_6px_24px_rgba(0,0,0,0.3)] hover:-translate-y-1 transition-all duration-300 gap-0"
-          style={{ backgroundColor: "transparent" }}
+          className="p-5 pb-14 min-h-[175px] select-none cursor-pointer rounded-2xl border transition-all duration-500 gap-0 overflow-hidden bg-[#0D1117]/30 backdrop-blur-md"
+          style={{
+            backgroundColor: "transparent",
+            borderColor: hovered 
+              ? `color-mix(in srgb, ${swatch} 45%, transparent)` 
+              : `color-mix(in srgb, ${swatch} 15%, var(--border))`,
+            boxShadow: hovered 
+              ? `inset 0 1px 0 0 rgba(255, 255, 255, 0.1), 0 12px 30px -4px color-mix(in srgb, ${swatch} 10%, rgba(0,0,0,0.6))`
+              : `inset 0 1px 0 0 rgba(255, 255, 255, 0.03), 0 4px 12px -2px rgba(0, 0, 0, 0.3)`,
+            transform: hovered ? "translateY(-6px)" : "none"
+          }}
         >
+          {/* Sci-fi Corner Brackets */}
+          <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-accent/20 rounded-tl transition-all duration-300"
+            style={{ borderColor: hovered ? swatch : undefined }}
+          />
+          <div className="absolute top-0 right-0 w-3 h-3 border-t border-r border-accent/20 rounded-tr transition-all duration-300"
+            style={{ borderColor: hovered ? swatch : undefined }}
+          />
+          <div className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-accent/20 rounded-bl transition-all duration-300"
+            style={{ borderColor: hovered ? swatch : undefined }}
+          />
+          <div className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-accent/20 rounded-br transition-all duration-300"
+            style={{ borderColor: hovered ? swatch : undefined }}
+          />
+
+          {/* Tech Dotted Pattern */}
+          <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
+            style={{
+              backgroundImage: "radial-gradient(circle at 1px 1px, white 1px, transparent 0)",
+              backgroundSize: "10px 10px"
+            }}
+          />
+
+          {/* Neon Top Edge Glow */}
+          <div className="absolute top-0 left-6 right-6 h-[1.5px] opacity-35 transition-opacity duration-300 group-hover:opacity-100"
+            style={{
+              background: `linear-gradient(to right, transparent, ${swatch}, transparent)`
+            }}
+          />
+
           {/* Dynamic swatch glow - Enhanced */}
           <div
-            className="absolute -right-8 -top-8 w-24 h-24 rounded-full blur-3xl opacity-[0.15] pointer-events-none transition-all duration-500 group-hover:opacity-30 group-hover:scale-125"
+            className="absolute -right-8 -top-8 w-24 h-24 rounded-full blur-3xl opacity-[0.12] pointer-events-none transition-all duration-500 group-hover:opacity-30 group-hover:scale-125"
             style={{ backgroundColor: swatch }}
           />
           
           {/* Secondary glow for depth */}
           <div
-            className="absolute -left-8 -bottom-8 w-20 h-20 rounded-full blur-2xl opacity-[0.08] pointer-events-none transition-all duration-500 group-hover:opacity-20"
+            className="absolute -left-8 -bottom-8 w-20 h-20 rounded-full blur-2xl opacity-[0.06] pointer-events-none transition-all duration-500 group-hover:opacity-18"
             style={{ backgroundColor: swatch }}
           />
 
@@ -296,12 +357,24 @@ function AccountCard({
                 <span className="text-xl">{account.icon}</span>
               </div>
             ) : (
-              <div className="w-8 h-6 rounded bg-gradient-to-br from-amber-500/20 to-amber-600/30 border border-amber-500/30 relative overflow-hidden flex flex-wrap p-0.5 opacity-80 shadow-inner">
-                <div className="w-1/2 h-1/2 border-r border-b border-amber-500/30" />
-                <div className="w-1/2 h-1/2 border-b border-amber-500/30" />
-                <div className="w-1/2 h-1/2 border-r border-amber-500/30" />
-                <div className="w-1/2 h-1/2" />
-                <div className="absolute inset-1 border border-amber-500/10 pointer-events-none" />
+              <div className="w-9 h-7 rounded-md bg-gradient-to-br from-amber-400/20 via-yellow-500/5 to-amber-600/20 border border-amber-500/30 relative overflow-hidden flex flex-col p-1 shadow-[0_0_8px_rgba(245,158,11,0.1)] group-hover:shadow-[0_0_12px_rgba(245,158,11,0.25)] transition-all duration-300">
+                <div className="flex h-1/3 w-full justify-between">
+                  <div className="w-2.5 h-full border-r border-b border-amber-500/20" />
+                  <div className="w-2.5 h-full border-l border-b border-amber-500/20" />
+                </div>
+                <div className="flex h-1/3 w-full justify-between items-center px-1">
+                  <div className="w-1.5 h-1.5 rounded-full bg-amber-400/40" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-amber-400/40" />
+                </div>
+                <div className="flex h-1/3 w-full justify-between">
+                  <div className="w-2.5 h-full border-r border-t border-amber-500/20" />
+                  <div className="w-2.5 h-full border-l border-t border-amber-500/20" />
+                </div>
+                {/* Cyber active status point */}
+                <div className={cn(
+                  "absolute right-1 top-1 w-1.5 h-1.5 rounded-full animate-pulse",
+                  account.isActive ? "bg-income shadow-[0_0_4px_var(--income)]" : "bg-expense shadow-[0_0_4px_var(--expense)]"
+                )} />
               </div>
             )}
             
@@ -337,7 +410,7 @@ function AccountCard({
             )}>
               {formatIDR(account.balance)}
             </p>
-            <p className="text-[10px] font-mono text-muted-foreground/30 tracking-[0.2em] pt-0.5">
+            <p className="text-[9px] font-mono text-muted-foreground/30 tracking-[0.15em] pt-0.5 uppercase">
               {maskedNumber}
             </p>
           </div>
