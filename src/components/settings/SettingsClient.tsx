@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Key, Palette, Shapes, User, Database, Download, Upload, ShieldAlert, Loader2, LayoutGrid } from "lucide-react";
 import { ApiKeysCard } from "./ApiKeysCard";
 import { CategoriesSettings, type CategoryItem } from "./CategoriesSettings";
@@ -43,6 +43,26 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
   const [restoring, setRestoring] = useState(false);
   const [confirmRestore, setConfirmRestore] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [dbType, setDbType] = useState<string>("sqlite");
+
+  useEffect(() => {
+    const fetchDbType = async () => {
+      try {
+        const response = await fetch(`${getBaseUrl()}/api/system/db-type`, {
+          credentials: "include",
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.dbType) {
+            setDbType(data.dbType);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch database type:", err);
+      }
+    };
+    fetchDbType();
+  }, []);
 
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
     { id: "categories", label: language === "id" ? "Kategori" : "Categories", icon: <Shapes size={14} /> },
@@ -71,6 +91,50 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
       toast.success(language === "id" ? "Database berhasil diunduh" : "Database successfully downloaded");
     } catch (err: any) {
       toast.error(language === "id" ? "Gagal melakukan cadangan" : "Backup failed");
+    }
+  };
+
+  const handleBackupSQL = async () => {
+    try {
+      toast.info(language === "id" ? "Memulai pencadangan SQL..." : "Starting SQL backup...");
+      const response = await fetch(`${getBaseUrl()}/api/system/backup/sql`, {
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error("SQL Backup failed");
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `racks_finance_backup_${new Date().toISOString().slice(0, 10)}.sql`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success(language === "id" ? "Database SQL berhasil diunduh" : "SQL database successfully downloaded");
+    } catch (err: any) {
+      toast.error(language === "id" ? "Gagal melakukan cadangan SQL" : "SQL backup failed");
+    }
+  };
+
+  const handleBackupCSV = async () => {
+    try {
+      toast.info(language === "id" ? "Memulai pencadangan CSV..." : "Starting CSV backup...");
+      const response = await fetch(`${getBaseUrl()}/api/system/backup/csv`, {
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error("CSV Backup failed");
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `racks_finance_csv_backup_${new Date().toISOString().slice(0, 10)}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success(language === "id" ? "Database CSV berhasil diunduh" : "CSV database successfully downloaded");
+    } catch (err: any) {
+      toast.error(language === "id" ? "Gagal melakukan cadangan CSV" : "CSV backup failed");
     }
   };
 
@@ -218,18 +282,43 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
                   {language === "id" ? "Cadangkan Database" : "Backup Database"}
                 </h3>
                 <p className="text-xs text-text-muted max-w-xl">
-                  {language === "id"
-                    ? "Unduh salinan cadangan dari seluruh database SQLite Anda (.db) untuk disimpan secara aman."
-                    : "Download a full backup file of your SQLite database (.db) to store it securely."}
+                  {dbType === "mysql"
+                    ? (language === "id"
+                      ? "Ekspor salinan cadangan database MySQL Anda dalam format SQL dump atau file CSV (ZIP)."
+                      : "Export a backup copy of your MySQL database in SQL dump or CSV file (ZIP) format.")
+                    : (language === "id"
+                      ? "Unduh salinan cadangan dari seluruh database SQLite Anda (.db) untuk disimpan secara aman."
+                      : "Download a full backup file of your SQLite database (.db) to store it securely.")}
                 </p>
               </div>
-              <Button
-                variant="outline"
-                onClick={handleBackup}
-                className="border-border hover:bg-elevated text-xs font-semibold h-9 px-4 rounded-xl shrink-0"
-              >
-                {language === "id" ? "Unduh Database" : "Download Database"}
-              </Button>
+              {dbType === "mysql" ? (
+                <div className="flex flex-wrap gap-2 shrink-0">
+                  <Button
+                    variant="outline"
+                    onClick={handleBackupSQL}
+                    className="border-border hover:bg-elevated text-xs font-semibold h-9 px-4 rounded-xl gap-1.5"
+                  >
+                    <Download size={13} />
+                    {language === "id" ? "Ekspor SQL" : "Export SQL"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleBackupCSV}
+                    className="border-border hover:bg-elevated text-xs font-semibold h-9 px-4 rounded-xl gap-1.5"
+                  >
+                    <Download size={13} />
+                    {language === "id" ? "Ekspor CSV (ZIP)" : "Export CSV (ZIP)"}
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  onClick={handleBackup}
+                  className="border-border hover:bg-elevated text-xs font-semibold h-9 px-4 rounded-xl shrink-0"
+                >
+                  {language === "id" ? "Unduh Database" : "Download Database"}
+                </Button>
+              )}
             </Card>
 
             {/* Export Card */}
@@ -262,36 +351,42 @@ export function SettingsClient({ user, categories, apiKeys }: Props) {
                   {language === "id" ? "Pulihkan Database" : "Restore Database"}
                 </h3>
                 <p className="text-xs text-text-muted">
-                  {language === "id"
-                    ? "Unggah file database (.db) cadangan sebelumnya untuk memulihkan keadaan data. Seluruh data aktif akan ditimpa."
-                    : "Upload a previously backed-up database (.db) file to restore your state. All current active data will be overwritten."}
+                  {dbType === "mysql"
+                    ? (language === "id"
+                      ? "Fitur pemulihan database dari web panel hanya didukung untuk database SQLite. Untuk memulihkan database MySQL Anda, harap gunakan tool manajemen database standar (seperti phpMyAdmin, DBeaver, dll.)."
+                      : "Database restore from web panel is only supported for SQLite. To restore your MySQL database, please use standard database management tools (such as phpMyAdmin, DBeaver, etc.).")
+                    : (language === "id"
+                      ? "Unggah file database (.db) cadangan sebelumnya untuk memulihkan keadaan data. Seluruh data aktif akan ditimpa."
+                      : "Upload a previously backed-up database (.db) file to restore your state. All current active data will be overwritten.")}
                 </p>
               </div>
 
-              <div className="flex items-center gap-3">
-                <input
-                  type="file"
-                  accept=".db"
-                  id="db-restore-file"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      setSelectedFile(file);
-                      setConfirmRestore(true);
-                    }
-                  }}
-                />
-                <Button
-                  variant="destructive"
-                  onClick={() => document.getElementById("db-restore-file")?.click()}
-                  disabled={restoring}
-                  className="bg-expense/10 text-expense border border-expense/30 hover:bg-expense/20 text-xs font-semibold h-9 px-4 rounded-xl gap-1.5"
-                >
-                  <Upload size={13} />
-                  {language === "id" ? "Unggah & Pulihkan" : "Upload & Restore"}
-                </Button>
-              </div>
+              {dbType !== "mysql" && (
+                <div className="flex items-center gap-3">
+                  <input
+                    type="file"
+                    accept=".db"
+                    id="db-restore-file"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setSelectedFile(file);
+                        setConfirmRestore(true);
+                      }
+                    }}
+                  />
+                  <Button
+                    variant="destructive"
+                    onClick={() => document.getElementById("db-restore-file")?.click()}
+                    disabled={restoring}
+                    className="bg-expense/10 text-expense border border-expense/30 hover:bg-expense/20 text-xs font-semibold h-9 px-4 rounded-xl gap-1.5"
+                  >
+                    <Upload size={13} />
+                    {language === "id" ? "Unggah & Pulihkan" : "Upload & Restore"}
+                  </Button>
+                </div>
+              )}
             </Card>
 
             {/* Confirm Restore Dialog */}

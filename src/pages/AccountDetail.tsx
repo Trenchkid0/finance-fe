@@ -12,13 +12,10 @@ import {
   MoreVertical,
   MoreHorizontal,
   Search,
-  TrendingUp,
-  TrendingDown,
   Plus,
   Copy,
   SlidersHorizontal,
   ChevronDown,
-  Upload,
   Download,
 } from "lucide-react";
 import { api } from "@/lib/api";
