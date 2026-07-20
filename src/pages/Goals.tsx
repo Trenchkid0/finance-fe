@@ -4,7 +4,7 @@ import { useLanguage } from "@/lib/contexts/LanguageContext";
 import { api } from "@/lib/api";
 import { formatIDR, formatDate } from "@/lib/utils/formatters";
 import { toast } from "sonner";
-import { Plus, Target, Edit2, Trash2, Calendar, PiggyBank, TrendingUp, CheckCircle2, Clock } from "lucide-react";
+import { Plus, Target, Edit2, Trash2, PiggyBank, TrendingUp, CheckCircle2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils/cn";

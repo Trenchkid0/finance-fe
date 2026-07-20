@@ -241,3 +241,23 @@ html {
   --custom-dropdown-menu-radius: 0px !important;
 }
 
+/* Transaction Row Deletion Animations */
+@keyframes growProgressBar {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+@keyframes swipeScan {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-delete-progress {
+  animation-name: growProgressBar;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+.animate-swipe-scan {
+  animation: swipeScan 2000ms infinite linear;
+}
+

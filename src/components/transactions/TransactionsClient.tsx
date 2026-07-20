@@ -1,4 +1,4 @@
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useSearchParams } from "react-router-dom";
 import { ArrowLeftRight, Download, Loader2, Plus, Search, Trash2, Edit3, X, Pencil } from "lucide-react";
@@ -29,11 +29,14 @@ import {
 import { ImportCsvModal } from "./ImportCsvModal";
 import { ImportStatementModal } from "./ImportStatementModal";
 import { exportToPDF } from "@/lib/utils/pdfExport";
+import { deleteTransaction, restoreTransaction } from "@/app/actions/transactions";
 import { TransactionFilters, isFilterActive } from "./TransactionFilters";
 import { TransactionsList } from "./TransactionTable";
 import { TransactionCalendar } from "./TransactionCalendar";
 import { PaginationBar } from "./PaginationBar";
-import { ConfirmDelete } from "./ConfirmDelete";
+
+const DELETE_GRACE_PERIOD_MS = 3000; // configurable grace period in ms (e.g. 3000, 4000, 5000)
+
 
 export interface TransactionRowData {
   id: string;
@@ -136,7 +139,7 @@ export function TransactionsClient({
   const { t, language } = useLanguage();
   const [editing, setEditing] = useState<TransactionRowData | null>(null);
   const [creating, setCreating] = useState<TransactionFormInitial | null>(null);
-  const [confirmDelete, setConfirmDelete] = useState<TransactionRowData | null>(null);
+
   const [searchParams] = useSearchParams();
 
   const [viewMode, setViewMode] = useState<"table" | "calendar">("table");
@@ -226,6 +229,17 @@ export function TransactionsClient({
   const [bulkCategory, setBulkCategory] = useState("");
   const [pendingBulkEdit, setPendingBulkEdit] = useState(false);
   const [pendingDeleteIds, setPendingDeleteIds] = useState<Set<string>>(new Set());
+  const [pendingDeletes, setPendingDeletes] = useState<Record<string, TransactionRowData>>({});
+  const deleteTimeouts = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
+  useEffect(() => {
+    return () => {
+      // Clean up timeouts on unmount
+      Object.values(deleteTimeouts.current).forEach(clearTimeout);
+    };
+  }, []);
+
+
 
   // Esc key & body scroll lock for inline modals
   useEffect(() => {
@@ -310,16 +324,109 @@ export function TransactionsClient({
     }
   };
 
+  const handleDeleteClick = (row: TransactionRowData) => {
+    const id = row.id;
+
+    // Add to pending deletes immediately to trigger UI scanning state
+    setPendingDeletes((prev) => ({ ...prev, [id]: row }));
+    setPendingDeleteIds((prev) => new Set(prev).add(id));
+
+    // Fire the delete API call in the background immediately
+    deleteTransaction(id).then((result) => {
+      if (!result.ok) {
+        // If it failed, remove from pending so it's not lost
+        setPendingDeletes((prev) => {
+          const next = { ...prev };
+          delete next[id];
+          return next;
+        });
+        setPendingDeleteIds((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+        toast.error(result.error ?? (language === "id" ? "Gagal menghapus transaksi" : "Failed to delete transaction"));
+      }
+    });
+
+    // Set up the 4s timeout to finalize deletion in the UI list
+    if (deleteTimeouts.current[id]) {
+      clearTimeout(deleteTimeouts.current[id]);
+    }
+    deleteTimeouts.current[id] = setTimeout(() => {
+      setPendingDeleteIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+      setPendingDeletes((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+      delete deleteTimeouts.current[id];
+
+      // Invalidate cache and trigger refetch to update calculations
+      invalidateCache.afterTransactionChange();
+      window.dispatchEvent(new CustomEvent("refresh-app-data"));
+    }, DELETE_GRACE_PERIOD_MS);
+  };
+
+  const handleUndoSingleDelete = async (id: string) => {
+    if (deleteTimeouts.current[id]) {
+      clearTimeout(deleteTimeouts.current[id]);
+      delete deleteTimeouts.current[id];
+    }
+    setPendingDeleteIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+    try {
+      const restoreRes = await restoreTransaction(id);
+      if (restoreRes.ok) {
+        toast.success(language === "id" ? "Transaksi dikembalikan" : "Transaction restored");
+        window.dispatchEvent(new CustomEvent("refresh-app-data"));
+      } else {
+        setPendingDeletes((prev) => {
+          const next = { ...prev };
+          delete next[id];
+          return next;
+        });
+        toast.error(restoreRes.error || (language === "id" ? "Gagal mengembalikan transaksi" : "Failed to restore transaction"));
+      }
+    } catch (err: unknown) {
+      setPendingDeletes((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+      const msg = err instanceof Error ? err.message : (language === "id" ? "Gagal mengembalikan transaksi" : "Failed to restore transaction");
+      toast.error(msg);
+    }
+  };
+
   const handleBulkDelete = () => {
     startTransitionBulk(async () => {
       try {
         const ids = Array.from(selectedIds);
-        // Mark rows as pending delete (visible for 4s with undo option)
+        const deletedRows = transactions.filter((t) => selectedIds.has(t.id));
+
+        // Mark rows as pending delete
+        setPendingDeletes((prev) => {
+          const next = { ...prev };
+          deletedRows.forEach((row) => {
+            next[row.id] = row;
+          });
+          return next;
+        });
+
         setPendingDeleteIds((prev) => {
           const next = new Set(prev);
           ids.forEach((id) => next.add(id));
           return next;
         });
+
         await api.delete<unknown>("/api/transactions", { ids });
         toast.success(
           language === "id"
@@ -330,11 +437,24 @@ export function TransactionsClient({
               label: language === "id" ? "⟲ Urungkan" : "⟲ Undo",
               onClick: async () => {
                 try {
+                  ids.forEach((id) => {
+                    if (deleteTimeouts.current[id]) {
+                      clearTimeout(deleteTimeouts.current[id]);
+                      delete deleteTimeouts.current[id];
+                    }
+                  });
+
                   setPendingDeleteIds((prev) => {
                     const next = new Set(prev);
                     ids.forEach((id) => next.delete(id));
                     return next;
                   });
+                  setPendingDeletes((prev) => {
+                    const next = { ...prev };
+                    ids.forEach((id) => delete next[id]);
+                    return next;
+                  });
+
                   await api.post("/api/transactions/restore", { ids });
                   invalidateCache.afterTransactionChange();
                   toast.success(language === "id" ? "Transaksi dikembalikan" : "Transactions restored");
@@ -349,16 +469,32 @@ export function TransactionsClient({
         );
         setSelectedIds(new Set());
         setConfirmBulkDelete(false);
-        // Delay refresh so rows stay visible for ~4s before disappearing
-        setTimeout(() => {
-          setPendingDeleteIds((prev) => {
-            const next = new Set(prev);
-            ids.forEach((id) => next.delete(id));
-            return next;
-          });
-          invalidateCache.afterTransactionChange();
-          window.dispatchEvent(new CustomEvent("refresh-app-data"));
-        }, 4000);
+
+        // Setup individual timeouts
+        ids.forEach((id) => {
+          if (deleteTimeouts.current[id]) {
+            clearTimeout(deleteTimeouts.current[id]);
+          }
+          deleteTimeouts.current[id] = setTimeout(() => {
+            setPendingDeleteIds((prev) => {
+              const next = new Set(prev);
+              next.delete(id);
+              return next;
+            });
+            setPendingDeletes((prev) => {
+              const next = { ...prev };
+              delete next[id];
+              return next;
+            });
+            delete deleteTimeouts.current[id];
+
+            const hasActive = Object.keys(deleteTimeouts.current).length > 0;
+            if (!hasActive) {
+              invalidateCache.afterTransactionChange();
+              window.dispatchEvent(new CustomEvent("refresh-app-data"));
+            }
+          }, DELETE_GRACE_PERIOD_MS);
+        });
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : "Gagal menghapus transaksi.";
         toast.error(msg);
@@ -460,8 +596,20 @@ export function TransactionsClient({
     }
   };
 
-  // Filter out rows that are pending deletion (4s grace period)
-  const visibleTransactions = transactions.filter((tx) => !pendingDeleteIds.has(tx.id));
+  // Combine transactions from prop and the ones that are pending deletes
+  const combinedTransactions = [...transactions];
+  Object.keys(pendingDeletes).forEach((id) => {
+    if (!combinedTransactions.some((t) => t.id === id)) {
+      combinedTransactions.push(pendingDeletes[id]);
+    }
+  });
+
+  // Sort descending by date, then id as fallback
+  const visibleTransactions = combinedTransactions.sort((a, b) => {
+    const diff = new Date(b.date).getTime() - new Date(a.date).getTime();
+    if (diff !== 0) return diff;
+    return b.id.localeCompare(a.id);
+  });
 
   return (
     <div className="space-y-6 animate-fade-in-up overflow-visible">
@@ -632,13 +780,16 @@ export function TransactionsClient({
             transactions={visibleTransactions}
             categories={categories}
             onEdit={setEditing}
-            onDelete={setConfirmDelete}
+            onDelete={handleDeleteClick}
             onDuplicate={startDuplicate}
             selectedIds={selectedIds}
             toggleSelect={toggleSelect}
             isAllSelected={isAllSelected}
             toggleSelectAll={toggleSelectAll}
             filters={filters}
+            pendingDeleteIds={pendingDeleteIds}
+            onUndoDelete={handleUndoSingleDelete}
+            deleteGracePeriod={DELETE_GRACE_PERIOD_MS}
             emptyState={
               isFilterActive(filters) ? (
                 <EmptyState
@@ -713,22 +864,6 @@ export function TransactionsClient({
         />
       )}
 
-      {/* Single delete confirmation */}
-      <ConfirmDelete
-        target={confirmDelete}
-        onClose={() => setConfirmDelete(null)}
-        onDeleted={(id) => {
-          setPendingDeleteIds((prev) => new Set(prev).add(id));
-          setTimeout(() => {
-            setPendingDeleteIds((prev) => {
-              const next = new Set(prev);
-              next.delete(id);
-              return next;
-            });
-            window.dispatchEvent(new CustomEvent("refresh-app-data"));
-          }, 4000);
-        }}
-      />
 
       {/* Confirm Bulk Delete - Portal Modal */}
       {confirmBulkDelete && createPortal(

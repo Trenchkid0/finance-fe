@@ -29,6 +29,9 @@ interface TransactionsListProps {
   isAllSelected: boolean;
   toggleSelectAll: () => void;
   filters?: TransactionFiltersState;
+  pendingDeleteIds?: Set<string>;
+  onUndoDelete?: (id: string) => void;
+  deleteGracePeriod?: number;
 }
 
 export function TransactionsList({
@@ -43,6 +46,9 @@ export function TransactionsList({
   isAllSelected,
   toggleSelectAll,
   filters,
+  pendingDeleteIds,
+  onUndoDelete,
+  deleteGracePeriod = 4000,
 }: TransactionsListProps) {
   const { t, language } = useLanguage();
 
@@ -87,6 +93,9 @@ export function TransactionsList({
               selectedIds={selectedIds}
               toggleSelect={toggleSelect}
               filters={filters}
+              pendingDeleteIds={pendingDeleteIds}
+              onUndoDelete={onUndoDelete}
+              deleteGracePeriod={deleteGracePeriod}
             />
           </div>
         ))}
@@ -179,6 +188,9 @@ const DateGroup = memo(function DateGroup({
   selectedIds,
   toggleSelect,
   filters,
+  pendingDeleteIds,
+  onUndoDelete,
+  deleteGracePeriod,
 }: {
   group: TransactionGroup;
   categories: CategoryOption[];
@@ -188,6 +200,9 @@ const DateGroup = memo(function DateGroup({
   selectedIds: Set<string>;
   toggleSelect: (id: string) => void;
   filters?: TransactionFiltersState;
+  pendingDeleteIds?: Set<string>;
+  onUndoDelete?: (id: string) => void;
+  deleteGracePeriod?: number;
 }) {
   const { t, language } = useLanguage();
   const headerCheckboxRef = useRef<HTMLInputElement>(null);
@@ -312,6 +327,9 @@ const DateGroup = memo(function DateGroup({
             onDuplicate={onDuplicate}
             isSelected={selectedIds.has(tx.id)}
             onToggleSelect={() => toggleSelect(tx.id)}
+            isPendingDelete={pendingDeleteIds?.has(tx.id)}
+            onUndo={onUndoDelete}
+            deleteGracePeriod={deleteGracePeriod}
           />
         ))}
       </Card>
@@ -327,6 +345,9 @@ const TransactionRow = memo(function TransactionRow({
   onDuplicate,
   isSelected,
   onToggleSelect,
+  isPendingDelete,
+  onUndo,
+  deleteGracePeriod,
 }: {
   tx: TransactionRowData;
   categories: CategoryOption[];
@@ -335,9 +356,13 @@ const TransactionRow = memo(function TransactionRow({
   onDuplicate: (row: TransactionRowData) => void;
   isSelected: boolean;
   onToggleSelect: () => void;
+  isPendingDelete?: boolean;
+  onUndo?: (id: string) => void;
+  deleteGracePeriod?: number;
 }) {
   const { t, language } = useLanguage();
   const [showReceipt, setShowReceipt] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
   const initial =
     (tx.description ?? tx.categoryName ?? "T").trim().charAt(0).toUpperCase() || "T";
 
@@ -346,6 +371,82 @@ const TransactionRow = memo(function TransactionRow({
     expense: { bar: "bg-expense", chip: "bg-expense/10 border-expense/25 text-expense", amount: "text-expense" },
     transfer: { bar: "bg-accent", chip: "bg-accent/10 border-accent/25 text-accent", amount: "text-text-primary" },
   }[tx.type];
+
+  if (isPendingDelete) {
+    const handleUndoClick = async () => {
+      if (isRestoring) return;
+      setIsRestoring(true);
+      try {
+        if (onUndo) {
+          await onUndo(tx.id);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsRestoring(false);
+      }
+    };
+
+    return (
+      <div className="relative flex items-center justify-between pl-4 pr-3 py-2.5 bg-expense/[0.01] border-l-[3px] border-expense/60 overflow-hidden min-h-[58px] transition-all duration-300">
+        {/* Full-row scanning overlay filling from left to right with high-glow scan edge */}
+        <div 
+          className="absolute inset-y-0 left-0 bg-gradient-to-r from-expense/[0.01] via-expense/[0.03] to-expense/[0.06] border-r border-expense/30 pointer-events-none animate-delete-progress"
+          style={{
+            animationDuration: `${deleteGracePeriod || 4000}ms`,
+            transformOrigin: 'left',
+            boxShadow: 'inset -2px 0 8px rgba(239, 68, 68, 0.12)'
+          }}
+        />
+
+        {/* Subtle horizontal gradient swipe scan animation */}
+        <div 
+          className="absolute inset-0 bg-gradient-to-r from-transparent via-expense/[0.03] to-transparent pointer-events-none animate-swipe-scan"
+        />
+
+        <div className="relative z-10 flex items-center gap-3 min-w-0 flex-1">
+          <div className="size-9 rounded-xl border border-expense/20 bg-expense/10 text-expense flex items-center justify-center shrink-0">
+            {isRestoring ? (
+              <svg className="animate-spin h-4 w-4 text-expense" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+            ) : (
+              <Trash2 size={15} className="animate-pulse" />
+            )}
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <span className="text-[13px] font-medium text-text-muted line-through truncate">
+                {tx.description || (tx.type === "transfer" ? t("transferFund") : t("noDescription"))}
+              </span>
+              <span className="text-xs text-expense/80 font-mono line-through font-semibold shrink-0">
+                {amountPrefix(tx.type)}{formatIDR(tx.amount)}
+              </span>
+            </div>
+            <p className="text-[10px] text-text-muted/60 mt-0.5">
+              {isRestoring 
+                ? t("undoingLabel") 
+                : t("transactionDeleted")}
+            </p>
+          </div>
+        </div>
+
+        <div className="relative z-10 shrink-0 ml-4 flex items-center">
+          <button
+            type="button"
+            disabled={isRestoring}
+            onClick={handleUndoClick}
+            className="h-8 px-3 rounded-lg border border-accent/30 bg-accent/5 hover:bg-accent/15 text-accent text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-50"
+          >
+            <span className="text-xs">⟲</span>
+            {t("undoOption")}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

@@ -13,12 +13,14 @@ interface ConfirmDeleteProps {
   target: TransactionRowData | null;
   onClose: () => void;
   onDeleted?: (id: string) => void;
+  onUndo?: (id: string) => void;
 }
 
 export function ConfirmDelete({
   target,
   onClose,
   onDeleted,
+  onUndo,
 }: ConfirmDeleteProps) {
   const { t, language } = useLanguage();
   const [pending, startTransition] = useTransition();
@@ -35,11 +37,15 @@ export function ConfirmDelete({
             action: {
               label: language === "id" ? "⟲ Urungkan" : "⟲ Undo",
               onClick: async () => {
-                const restoreRes = await restoreTransaction(target.id);
-                if (restoreRes.ok) {
-                  toast.success(language === "id" ? "Transaksi dikembalikan" : "Transaction restored");
+                if (onUndo) {
+                  onUndo(target.id);
                 } else {
-                  toast.error(restoreRes.error || (language === "id" ? "Gagal mengembalikan transaksi" : "Failed to restore transaction"));
+                  const restoreRes = await restoreTransaction(target.id);
+                  if (restoreRes.ok) {
+                    toast.success(language === "id" ? "Transaksi dikembalikan" : "Transaction restored");
+                  } else {
+                    toast.error(restoreRes.error || (language === "id" ? "Gagal mengembalikan transaksi" : "Failed to restore transaction"));
+                  }
                 }
               }
             }
