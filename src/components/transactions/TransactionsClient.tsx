@@ -726,14 +726,14 @@ export function TransactionsClient({
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="h-9 border border-border/50 bg-transparent text-foreground hover:bg-white/[0.04] hover:border-border transition-all flex items-center justify-center gap-2 text-xs font-semibold px-4"
+                className="h-9 border border-border/50 bg-surface/30 text-foreground hover:bg-hover-elevated hover:border-border transition-colors flex items-center justify-center gap-2 text-xs font-semibold px-4"
                 style={{ borderRadius: 'var(--dropdown-radius, 12px)' }}
               >
                 <Download size={14} />
                 {t("exportImport")}
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-surface border-border z-[99999]">
+            <DropdownMenuContent align="end" className="bg-surface border-border z-50">
               <DropdownMenuItem onClick={() => setIsExportCsvModalOpen(true)} className="cursor-pointer flex items-center gap-2">
                 <span>CSV Format (Export)</span>
               </DropdownMenuItem>

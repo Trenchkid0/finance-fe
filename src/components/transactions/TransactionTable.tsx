@@ -60,30 +60,30 @@ export function TransactionsList({
   );
 
   if (transactions.length === 0) {
-    return <Card className="gap-0">{emptyState}</Card>;
+    return <Card className="gap-0 border-border/20 bg-surface/20 backdrop-blur-sm">{emptyState}</Card>;
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {/* Select-all bar */}
-      <div className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-surface/50 border border-border/50">
-        <label className="flex items-center gap-3 cursor-pointer select-none">
+      <div className="flex items-center justify-between px-5 py-3 rounded-2xl bg-surface/30 border border-border/20 backdrop-blur-md shadow-sm">
+        <label className="flex items-center gap-3.5 cursor-pointer select-none">
           <input
             type="checkbox"
             checked={isAllSelected}
             onChange={toggleSelectAll}
-            className="rounded border-white/20 bg-white/[0.04] text-accent focus:ring-accent/50 focus:ring-offset-canvas h-3.5 w-3.5 cursor-pointer"
+            className="rounded border-border/60 bg-canvas/30 text-accent focus:ring-accent/50 focus:ring-offset-canvas h-4 w-4 cursor-pointer transition-colors duration-150"
           />
-          <span className="text-[10px] uppercase font-semibold text-text-muted tracking-wider">
+          <span className="text-[10px] uppercase font-bold text-muted-foreground/80 tracking-wider">
             {language === "id" ? "Pilih semua di halaman ini" : "Select all on this page"}
           </span>
         </label>
-        <span className="text-[10px] font-semibold text-text-muted/50 tracking-wider tabular-nums bg-elevated/60 px-2.5 py-1 rounded-md border border-border/40">
+        <span className="text-[10px] font-bold text-muted-foreground/60 tracking-wider tabular-nums bg-elevated/40 px-3 py-1 rounded-lg border border-border/20 shadow-inner">
           {transactions.length} {t("transactionCount")}
         </span>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-6">
         {groups.map((group) => (
           <div
             key={group.date}
@@ -244,28 +244,28 @@ const DateGroup = memo(function DateGroup({
   })();
 
   const netColor =
-    group.net > 0 ? "text-income" : group.net < 0 ? "text-expense" : "text-text-primary";
+    group.net > 0 ? "text-income" : group.net < 0 ? "text-expense" : "text-foreground";
 
   return (
-    <section className="space-y-1.5">
+    <section className="space-y-2">
       <header
         className={cn(
-          "sticky top-0 z-20 flex items-center justify-between gap-3 px-3 py-2 rounded-xl border backdrop-blur-md transition-colors",
+          "sticky top-0 z-20 flex items-center justify-between gap-3 px-4 py-2.5 rounded-2xl border backdrop-blur-md transition-all duration-200",
           isInFilterRange
-            ? "bg-accent/[0.07] border-accent/25"
-            : "bg-surface/85 border-white/[0.05]",
+            ? "bg-accent/[0.08] border-accent/35 shadow-sm shadow-accent/5"
+            : "bg-surface/75 border-border/20 shadow-sm shadow-black/[0.03]",
         )}
       >
-        <div className="flex items-center gap-2.5 min-w-0">
+        <div className="flex items-center gap-3 min-w-0">
           <input
             ref={headerCheckboxRef}
             type="checkbox"
             checked={isGroupAllSelected}
             onChange={toggleGroupSelect}
-            className="rounded border-white/20 bg-white/[0.04] text-accent focus:ring-accent/50 focus:ring-offset-canvas h-3.5 w-3.5 cursor-pointer shrink-0"
+            className="rounded border-border/80 bg-canvas/30 text-accent focus:ring-accent/50 focus:ring-offset-canvas h-4 w-4 cursor-pointer shrink-0"
           />
           <div className="flex flex-col min-w-0">
-            <div className="flex items-center gap-2 min-w-0">
+            <div className="flex items-center gap-2.5 min-w-0">
               {group.relative && (
                 <span className="shrink-0 text-[9px] font-bold uppercase tracking-wide text-accent bg-accent/10 border border-accent/25 px-1.5 py-0.5 rounded">
                   {group.relative}
@@ -276,20 +276,20 @@ const DateGroup = memo(function DateGroup({
                   {language === "id" ? "Filter" : "Filtered"}
                 </span>
               )}
-              <span className="text-xs font-bold text-text-primary truncate">
+              <span className="text-xs font-bold text-foreground truncate">
                 {group.label}
               </span>
             </div>
-            <span className="text-[10px] text-text-muted/70 font-medium truncate">
+            <span className="text-[10px] text-muted-foreground/75 font-medium truncate">
               {group.weekday} · {group.items.length} {t("transactionCount")}
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-4 shrink-0">
           {group.income > 0 && (
             <div className="hidden sm:flex flex-col items-end leading-tight">
-              <span className="text-[8px] uppercase tracking-wider text-text-muted/50 font-bold">
+              <span className="text-[8px] uppercase tracking-wider text-muted-foreground/50 font-bold">
                 {language === "id" ? "Masuk" : "Income"}
               </span>
               <span className="text-[11px] font-mono font-bold text-income tabular-nums">
@@ -299,7 +299,7 @@ const DateGroup = memo(function DateGroup({
           )}
           {group.expense > 0 && (
             <div className="hidden sm:flex flex-col items-end leading-tight">
-              <span className="text-[8px] uppercase tracking-wider text-text-muted/50 font-bold">
+              <span className="text-[8px] uppercase tracking-wider text-muted-foreground/50 font-bold">
                 {language === "id" ? "Keluar" : "Expense"}
               </span>
               <span className="text-[11px] font-mono font-bold text-expense tabular-nums">
@@ -307,8 +307,8 @@ const DateGroup = memo(function DateGroup({
               </span>
             </div>
           )}
-          <div className="flex flex-col items-end leading-tight border-l border-white/[0.08] pl-3">
-            <span className="text-[8px] uppercase tracking-wider text-text-muted/50 font-bold">
+          <div className="flex flex-col items-end leading-tight border-l border-border/30 pl-4">
+            <span className="text-[8px] uppercase tracking-wider text-muted-foreground/50 font-bold">
               Net
             </span>
             <span className={cn("text-xs font-mono font-bold tabular-nums", netColor)}>
@@ -321,7 +321,7 @@ const DateGroup = memo(function DateGroup({
 
       <Card
         className={cn(
-          "divide-y divide-white/[0.04] overflow-hidden gap-0 p-0",
+          "divide-y divide-border/20 overflow-hidden gap-0 p-0 border-border/20 bg-surface/20 backdrop-blur-sm shadow-sm",
           isInFilterRange && "border-accent/20",
         )}
       >
@@ -379,7 +379,7 @@ const TransactionRow = memo(function TransactionRow({
   const style = {
     income: { bar: "bg-income", chip: "bg-income/10 border-income/25 text-income", amount: "text-income" },
     expense: { bar: "bg-expense", chip: "bg-expense/10 border-expense/25 text-expense", amount: "text-expense" },
-    transfer: { bar: "bg-accent", chip: "bg-accent/10 border-accent/25 text-accent", amount: "text-text-primary" },
+    transfer: { bar: "bg-accent", chip: "bg-accent/10 border-accent/25 text-accent", amount: "text-foreground" },
   }[tx.type];
 
   // ── Unified Deletion (Single & Bulk): elegant ghost fade-out ──
@@ -392,10 +392,10 @@ const TransactionRow = memo(function TransactionRow({
           <Trash2 size={14} className="text-expense/50" />
         </div>
         <div className="min-w-0 flex-1 opacity-40">
-          <span className="text-[13px] font-medium text-text-muted line-through truncate block">
+          <span className="text-[13px] font-medium text-muted-foreground line-through truncate block">
             {tx.description || (tx.type === "transfer" ? t("transferFund") : t("noDescription"))}
           </span>
-          <span className="text-[11px] font-mono text-text-muted/60 line-through">
+          <span className="text-[11px] font-mono text-muted-foreground/60 line-through">
             {amountPrefix(tx.type)}{formatIDR(tx.amount)}
           </span>
         </div>
@@ -406,32 +406,44 @@ const TransactionRow = memo(function TransactionRow({
   return (
     <div
       className={cn(
-        "relative flex items-center gap-3 pl-4 pr-3 py-2.5 transition-colors duration-150 group/row",
-        isSelected ? "bg-accent/[0.06]" : "hover:bg-elevated/40",
+        "relative grid grid-cols-[auto_auto_1fr_auto_auto] md:grid-cols-[auto_auto_2.5fr_1.2fr_1.5fr_1.2fr_auto] items-center gap-3 md:gap-4 pl-4 pr-3 py-3.5 transition-all duration-200 ease-out group/row border-l-2 border-transparent",
+        isSelected
+          ? "bg-accent/[0.05] border-l-accent"
+          : cn(
+              "hover:bg-hover-elevated/20",
+              tx.type === "income" && "hover:border-l-income/60",
+              tx.type === "expense" && "hover:border-l-expense/60",
+              tx.type === "transfer" && "hover:border-l-accent/60",
+            ),
       )}
     >
-      <input
-        type="checkbox"
-        checked={isSelected}
-        onChange={onToggleSelect}
-        className={cn(
-          "rounded border-white/20 bg-white/[0.04] text-accent focus:ring-accent/50 focus:ring-offset-canvas h-3.5 w-3.5 cursor-pointer shrink-0 transition-opacity",
-          isSelected ? "opacity-100" : "opacity-0 group-hover/row:opacity-100 focus-within:opacity-100",
-        )}
-      />
+      {/* 1. Checkbox Column */}
+      <div className="flex items-center justify-center">
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={onToggleSelect}
+          className={cn(
+            "rounded border-border/80 bg-canvas/30 text-accent focus:ring-accent/50 focus:ring-offset-canvas h-4 w-4 cursor-pointer shrink-0 transition-all duration-150",
+            isSelected ? "opacity-100" : "opacity-40 md:opacity-0 md:group-hover/row:opacity-100 md:focus-within:opacity-100",
+          )}
+        />
+      </div>
 
+      {/* 2. Type Icon Column */}
       <div
         className={cn(
-          "size-9 rounded-xl border flex items-center justify-center text-sm font-bold uppercase shrink-0 font-mono transition-transform duration-200 group-hover/row:scale-105",
+          "size-9 rounded-xl border flex items-center justify-center text-sm font-bold uppercase shrink-0 font-mono transition-colors duration-150 shadow-sm",
           style.chip,
         )}
       >
         {tx.type === "transfer" ? <ArrowLeftRight size={15} /> : tx.categoryIcon || initial}
       </div>
 
-      <div className="min-w-0 flex-1">
+      {/* 3. Description Column */}
+      <div className="min-w-0 flex flex-col justify-center">
         <div className="flex items-center gap-1.5 min-w-0">
-          <p className="text-[13px] font-semibold text-text-primary truncate leading-tight">
+          <p className="text-[13px] font-semibold text-foreground truncate leading-tight group-hover/row:text-accent transition-colors duration-150">
             {tx.description ||
               (tx.type === "transfer"
                 ? t("transferFund")
@@ -442,52 +454,52 @@ const TransactionRow = memo(function TransactionRow({
               type="button"
               onClick={() => setShowReceipt(true)}
               title={t("viewReceipt")}
-              className="shrink-0 text-text-muted/50 hover:text-accent transition-colors"
+              className="shrink-0 text-muted-foreground/50 hover:text-accent p-1.5 -m-1.5 rounded-md hover:bg-hover-elevated transition-colors duration-150 focus-visible:ring-1 focus-visible:ring-accent focus:outline-none"
             >
-              <Receipt size={12} />
+              <Receipt size={13} />
             </button>
           )}
         </div>
-        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mt-0.5 text-[11px] text-text-muted/80 min-w-0">
-          <span className="flex items-center gap-1">
-            <Wallet size={10} className="opacity-60 shrink-0" />
-            <span className="truncate max-w-[120px]">{tx.accountName}</span>
-          </span>
+        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mt-1 text-[11px] text-muted-foreground/80 min-w-0 md:hidden">
+          <span className="truncate max-w-[90px] font-medium">{tx.accountName}</span>
           {tx.type === "transfer" && tx.transferToName && (
             <>
               <ArrowLeftRight size={9} className="opacity-50 shrink-0" />
-              <span className="truncate max-w-[120px]">{tx.transferToName}</span>
+              <span className="truncate max-w-[90px] font-medium">{tx.transferToName}</span>
             </>
           )}
           {tx.type !== "transfer" && tx.categoryName && (
-            <span className="md:hidden flex items-center gap-1">
-              <span className="text-text-muted/30 shrink-0">·</span>
-              <span className="truncate max-w-[100px]">{tx.categoryName}</span>
-            </span>
-          )}
-          {tx.note && (
             <>
-              <span className="text-text-muted/30 shrink-0">·</span>
-              <span className="truncate italic max-w-[140px]" title={tx.note}>
-                {tx.note}
-              </span>
-            </>
-          )}
-          {tx.adminFee > 0 && (
-            <>
-              <span className="text-text-muted/30 shrink-0">·</span>
-              <span className="text-expense/90 font-semibold font-mono text-[9px] bg-expense/10 border border-expense/20 px-1 py-0.5 rounded flex items-center">
-                Fee: {formatIDR(tx.adminFee)}
-              </span>
+              <span className="text-muted-foreground/30 shrink-0">•</span>
+              <span className="truncate max-w-[90px]">{tx.categoryName}</span>
             </>
           )}
         </div>
+        {tx.note && (
+          <span className="truncate italic text-[11px] text-muted-foreground/60 mt-0.5 max-w-[200px] md:max-w-xs block" title={tx.note}>
+            {tx.note}
+          </span>
+        )}
       </div>
 
-      <div className="hidden md:flex items-center shrink-0 w-[150px] justify-end">
+      {/* 4. Account Column (Desktop Only) */}
+      <div className="hidden md:flex flex-col min-w-0">
+        <span className="text-[11px] font-semibold text-foreground/90 truncate flex items-center gap-1.5">
+          <Wallet size={11} className="text-muted-foreground/60 shrink-0" />
+          {tx.accountName}
+        </span>
+        {tx.type === "transfer" && tx.transferToName && (
+          <span className="text-[9px] text-accent font-medium truncate flex items-center gap-1 mt-0.5">
+            <ArrowLeftRight size={9} />
+            {tx.transferToName}
+          </span>
+        )}
+      </div>
+
+      {/* 5. Category Picker Column (Desktop Only) */}
+      <div className="hidden md:flex items-center min-w-0">
         {tx.type === "transfer" ? (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-accent/5 border border-accent/15 text-accent text-[11px] font-medium">
-            <ArrowLeftRight size={11} />
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-accent/10 border border-accent/15 text-accent text-[9px] font-bold uppercase tracking-wider">
             {t("transferLabel")}
           </span>
         ) : (
@@ -502,49 +514,60 @@ const TransactionRow = memo(function TransactionRow({
         )}
       </div>
 
-      <p
-        className={cn(
-          "font-mono tabular-nums text-xs sm:text-sm font-bold whitespace-nowrap text-right min-w-[70px] sm:min-w-[96px] shrink-0",
-          style.amount,
-        )}
-      >
-        {amountPrefix(tx.type)}
-        {formatIDR(tx.amount)}
-      </p>
-
-      <DropdownMenu modal={false}>
-        <DropdownMenuTrigger asChild>
-          <button
-            type="button"
-            aria-label={language === "id" ? "Opsi transaksi" : "Transaction options"}
-            className="h-8 w-8 shrink-0 text-text-muted hover:text-text-primary hover:bg-white/[0.12] transition-all duration-150 opacity-60 group-hover/row:opacity-100 flex items-center justify-center border border-transparent hover:border-white/[0.15]"
-            style={{ borderRadius: 'var(--dropdown-radius, 8px)' }}
-          >
-            <MoreHorizontal size={15} />
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48 bg-surface border-border shadow-xl z-[99999]">
-          <DropdownMenuItem onSelect={() => onEdit(tx)} className="gap-2">
-            <Pencil size={13} />
-            {t("editOption")}
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => onDuplicate(tx)} className="gap-2">
-            <Copy size={13} />
-            {t("duplicateOption")}
-          </DropdownMenuItem>
-          {tx.receiptImageUrl && (
-            <DropdownMenuItem onSelect={() => setShowReceipt(true)} className="gap-2">
-              <Receipt size={13} />
-              {t("viewReceipt")}
-            </DropdownMenuItem>
+      {/* 6. Amount Column */}
+      <div className="flex flex-col items-end justify-center text-right min-w-[70px] sm:min-w-[96px] shrink-0">
+        <p
+          className={cn(
+            "font-mono tabular-nums text-xs sm:text-sm font-bold whitespace-nowrap",
+            style.amount,
           )}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={() => onDelete(tx)} variant="destructive" className="gap-2">
-            <Trash2 size={13} />
-            {t("deleteOption")}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+        >
+          {amountPrefix(tx.type)}
+          {formatIDR(tx.amount)}
+        </p>
+        {tx.adminFee > 0 && (
+          <span className="text-expense/90 font-semibold font-mono text-[9px] bg-expense/10 border border-expense/20 px-1 py-0.2 rounded mt-0.5 flex items-center shrink-0">
+            Fee: {formatIDR(tx.adminFee)}
+          </span>
+        )}
+      </div>
+
+      {/* 7. Action Options Column */}
+      <div className="flex items-center justify-center shrink-0">
+        <DropdownMenu modal={false}>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              aria-label={language === "id" ? "Opsi transaksi" : "Transaction options"}
+              className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground hover:bg-hover-elevated transition-colors duration-150 opacity-60 group-hover/row:opacity-100 flex items-center justify-center border border-transparent hover:border-border/30 focus-visible:ring-1 focus-visible:ring-accent focus:outline-none"
+              style={{ borderRadius: 'var(--dropdown-radius, 8px)' }}
+            >
+              <MoreHorizontal size={15} />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48 bg-surface border-border shadow-xl z-50">
+            <DropdownMenuItem onSelect={() => onEdit(tx)} className="gap-2">
+              <Pencil size={13} />
+              {t("editOption")}
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => onDuplicate(tx)} className="gap-2">
+              <Copy size={13} />
+              {t("duplicateOption")}
+            </DropdownMenuItem>
+            {tx.receiptImageUrl && (
+              <DropdownMenuItem onSelect={() => setShowReceipt(true)} className="gap-2">
+                <Receipt size={13} />
+                {t("viewReceipt")}
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={() => onDelete(tx)} variant="destructive" className="gap-2">
+              <Trash2 size={13} />
+              {t("deleteOption")}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
       {/* Receipt Preview Modal */}
       {showReceipt && tx.receiptImageUrl && (

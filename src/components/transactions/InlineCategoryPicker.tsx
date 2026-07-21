@@ -5,6 +5,7 @@ import { ArrowLeftRight } from "lucide-react";
 import { updateTransactionCategory } from "@/app/actions/transactions-quick";
 import { cn } from "@/lib/utils/cn";
 import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/lib/contexts/LanguageContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,6 +48,7 @@ export function InlineCategoryPicker({
   categoryIcon,
   categories,
 }: Props) {
+  const { language } = useLanguage();
   const [pending, startTransition] = useTransition();
   // Optimistic state — langsung update tampilan saat klik supaya
   // tidak ada lag visual sambil tunggu server roundtrip.
@@ -91,33 +93,35 @@ export function InlineCategoryPicker({
       if (!result.ok) {
         // Revert + toast.
         setOptimistic(previous);
-        toast.error(result.error ?? "Gagal mengubah kategori.");
+        toast.error(result.error ?? (language === "id" ? "Gagal mengubah kategori." : "Failed to change category."));
       }
     });
   }
+
+  const noCategoryText = language === "id" ? "Tanpa kategori" : "No category";
 
   const trigger = optimistic.name ? (
     <Badge
       variant="secondary"
       className={cn(
-        "font-normal cursor-pointer hover:bg-elevated transition-colors",
+        "font-normal cursor-pointer hover:bg-hover-elevated transition-colors border border-border/30",
         pending && "opacity-60",
       )}
     >
-      {optimistic.icon ? <span aria-hidden>{optimistic.icon}</span> : null}
+      {optimistic.icon ? <span aria-hidden className="mr-1">{optimistic.icon}</span> : null}
       <span className="truncate">{optimistic.name}</span>
-      {pending ? <Loader2 size={10} className="animate-spin" /> : null}
+      {pending ? <Loader2 size={10} className="animate-spin ml-1.5" /> : null}
     </Badge>
   ) : (
     <Badge
       variant="outline"
       className={cn(
-        "font-normal cursor-pointer hover:bg-elevated transition-colors",
+        "font-normal cursor-pointer hover:bg-hover-elevated transition-colors border-dashed border-border/60 text-muted-foreground/80",
         pending && "opacity-60",
       )}
     >
-      Tanpa kategori
-      {pending ? <Loader2 size={10} className="animate-spin" /> : null}
+      {noCategoryText}
+      {pending ? <Loader2 size={10} className="animate-spin ml-1.5" /> : null}
     </Badge>
   );
 
@@ -126,13 +130,13 @@ export function InlineCategoryPicker({
       <DropdownMenuTrigger
         asChild
         disabled={pending}
-        aria-label={`Ubah kategori transaksi`}
+        aria-label={language === "id" ? `Ubah kategori transaksi` : `Change transaction category`}
       >
         {trigger}
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="start"
-        className="w-56 max-h-[320px] overflow-y-auto z-[99999]"
+        className="w-56 max-h-[320px] overflow-y-auto z-50 border border-border bg-surface"
       >
         {filtered.map((cat) => (
           <DropdownMenuItem
@@ -152,7 +156,7 @@ export function InlineCategoryPicker({
           onSelect={() => pickCategory(null)}
           className="text-muted-foreground"
         >
-          Tanpa kategori
+          {noCategoryText}
           {optimistic.id === null ? (
             <Check size={12} className="text-primary ml-auto" />
           ) : null}
