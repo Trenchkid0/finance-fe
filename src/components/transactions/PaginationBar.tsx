@@ -61,14 +61,14 @@ export function PaginationBar({
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="h-8 w-20 flex items-center justify-between px-2.5 text-xs font-semibold text-text-primary hover:bg-white/[0.04] bg-white/[0.03] border border-white/[0.08] transition-all"
+                className="h-8 w-20 flex items-center justify-between px-2.5 text-xs font-semibold text-foreground hover:bg-hover-elevated bg-surface/30 border border-border/50 transition-colors"
                 style={{ borderRadius: 'var(--dropdown-radius, 8px)' }}
               >
                 <span>{pageSize}</span>
                 <ChevronDown size={12} className="opacity-60 shrink-0 ml-1" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[80px] rounded-xl border-white/[0.08] bg-popover/95 backdrop-blur-xl z-[99999]">
+            <DropdownMenuContent align="end" className="min-w-[80px] rounded-xl border-border bg-popover/95 backdrop-blur-xl z-50">
               {pageSizeOptions.map((size) => (
                 <DropdownMenuItem
                   key={size}

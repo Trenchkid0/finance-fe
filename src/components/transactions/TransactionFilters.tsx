@@ -152,9 +152,9 @@ export function TransactionFilters({
         </div>
 
         {/* Date range + actions row */}
-        <div className="flex flex-col gap-3 pt-4 border-t border-white/[0.04] sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 pt-4 border-t border-border/30 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            <span className="text-xs font-semibold text-text-muted shrink-0">{t("dateRangeLabel")}</span>
+            <span className="text-xs font-semibold text-muted-foreground shrink-0">{t("dateRangeLabel")}</span>
             <input type="hidden" name="startDate" value={filters.startDate || ""} />
             <input type="hidden" name="endDate" value={filters.endDate || ""} />
             <CustomDateRangePicker
@@ -222,7 +222,7 @@ export function FilterStatusIndicator({ filters }: { filters: TransactionFilters
           <span className="text-xs font-semibold text-accent">
             {language === "id" ? "Filter Tanggal Aktif" : "Active Date Filter"}
           </span>
-          <div className="flex items-center gap-2 text-xs text-text-muted font-mono tabular-nums">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono tabular-nums">
             {filters.startDate && (
               <span className="bg-elevated/60 px-1.5 py-0.5 rounded border border-border/50">
                 {language === "id" ? "Mulai: " : "Start: "}{formatFriendlyDate(filters.startDate, language)}
@@ -243,7 +243,7 @@ export function FilterStatusIndicator({ filters }: { filters: TransactionFilters
         variant="ghost"
         size="sm"
         onClick={handleRemoveFilter}
-        className="text-xs text-text-muted hover:text-text-primary h-7 px-2.5"
+        className="text-xs text-muted-foreground hover:text-foreground h-7 px-2.5"
       >
         {language === "id" ? "Hapus Filter" : "Clear Filter"}
       </Button>

@@ -1,4 +1,4 @@
-import { useEffect, useState, useTransition, useRef, useMemo } from "react";
+import { useEffect, useState, useTransition, useRef, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useSearchParams } from "react-router-dom";
 import { ArrowLeftRight, Download, Loader2, Plus, Search, Trash2, Edit3, X, Pencil } from "lucide-react";
@@ -328,7 +328,7 @@ export function TransactionsClient({
 
   const canCreate = accounts.length > 0;
 
-  const toggleSelect = (id: string) => {
+  const toggleSelect = useCallback((id: string) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
@@ -338,13 +338,13 @@ export function TransactionsClient({
       }
       return next;
     });
-  };
+  }, []);
 
-  const allIdsOnPage = transactions.map((t) => t.id);
+  const allIdsOnPage = useMemo(() => transactions.map((t) => t.id), [transactions]);
   const isAllSelected =
     allIdsOnPage.length > 0 && allIdsOnPage.every((id) => selectedIds.has(id));
 
-  const toggleSelectAll = () => {
+  const toggleSelectAll = useCallback(() => {
     if (isAllSelected) {
       setSelectedIds((prev) => {
         const next = new Set(prev);
@@ -358,9 +358,48 @@ export function TransactionsClient({
         return next;
       });
     }
-  };
+  }, [isAllSelected, allIdsOnPage]);
 
-  const handleDeleteClick = (row: TransactionRowData) => {
+  const handleUndoSingleDelete = useCallback(async (id: string) => {
+    if (deleteTimeouts.current[id]) {
+      clearTimeout(deleteTimeouts.current[id]);
+      delete deleteTimeouts.current[id];
+    }
+    setPendingDeleteIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+    setConfirmedDeletedIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+    try {
+      const restoreRes = await restoreTransaction(id);
+      if (restoreRes.ok) {
+        toast.success(language === "id" ? "Transaksi dikembalikan" : "Transaction restored");
+        window.dispatchEvent(new CustomEvent("refresh-app-data"));
+      } else {
+        setPendingDeletes((prev) => {
+          const next = { ...prev };
+          delete next[id];
+          return next;
+        });
+        toast.error(restoreRes.error || (language === "id" ? "Gagal mengembalikan transaksi" : "Failed to restore transaction"));
+      }
+    } catch (err: unknown) {
+      setPendingDeletes((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+      const msg = err instanceof Error ? err.message : (language === "id" ? "Gagal mengembalikan transaksi" : "Failed to restore transaction");
+      toast.error(msg);
+    }
+  }, [language]);
+
+  const handleDeleteClick = useCallback((row: TransactionRowData) => {
     const id = row.id;
 
     // Add to pending deletes immediately to trigger UI fade-out
@@ -424,46 +463,7 @@ export function TransactionsClient({
       invalidateCache.afterTransactionChange();
       window.dispatchEvent(new CustomEvent("refresh-app-data"));
     }, DELETE_GRACE_PERIOD_MS);
-  };
-
-  const handleUndoSingleDelete = async (id: string) => {
-    if (deleteTimeouts.current[id]) {
-      clearTimeout(deleteTimeouts.current[id]);
-      delete deleteTimeouts.current[id];
-    }
-    setPendingDeleteIds((prev) => {
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
-    setConfirmedDeletedIds((prev) => {
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
-    try {
-      const restoreRes = await restoreTransaction(id);
-      if (restoreRes.ok) {
-        toast.success(language === "id" ? "Transaksi dikembalikan" : "Transaction restored");
-        window.dispatchEvent(new CustomEvent("refresh-app-data"));
-      } else {
-        setPendingDeletes((prev) => {
-          const next = { ...prev };
-          delete next[id];
-          return next;
-        });
-        toast.error(restoreRes.error || (language === "id" ? "Gagal mengembalikan transaksi" : "Failed to restore transaction"));
-      }
-    } catch (err: unknown) {
-      setPendingDeletes((prev) => {
-        const next = { ...prev };
-        delete next[id];
-        return next;
-      });
-      const msg = err instanceof Error ? err.message : (language === "id" ? "Gagal mengembalikan transaksi" : "Failed to restore transaction");
-      toast.error(msg);
-    }
-  };
+  }, [language, handleUndoSingleDelete]);
 
   const handleBulkDelete = () => {
     startTransitionBulk(async () => {
@@ -696,15 +696,15 @@ export function TransactionsClient({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {/* View Mode Toggle */}
-          <div className="flex bg-white/[0.02] border border-white/[0.06] rounded-xl p-0.5 gap-0.5 mr-2">
+          <div className="flex bg-surface/30 border border-border/50 rounded-xl p-0.5 gap-0.5 mr-2">
             <button
               type="button"
               onClick={() => setViewMode("table")}
               className={cn(
-                "px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 flex items-center gap-1.5",
+                "px-3 py-1.5 rounded-lg text-xs font-bold transition-colors duration-150 flex items-center gap-1.5",
                 viewMode === "table"
                   ? "bg-accent/10 text-accent font-extrabold border border-accent/20"
-                  : "text-text-muted hover:text-text-primary border border-transparent"
+                  : "text-muted-foreground hover:text-foreground border border-transparent"
               )}
             >
               <span>{language === "id" ? "Tabel" : "Table"}</span>
@@ -713,10 +713,10 @@ export function TransactionsClient({
               type="button"
               onClick={() => setViewMode("calendar")}
               className={cn(
-                "px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 flex items-center gap-1.5",
+                "px-3 py-1.5 rounded-lg text-xs font-bold transition-colors duration-150 flex items-center gap-1.5",
                 viewMode === "calendar"
                   ? "bg-accent/10 text-accent font-extrabold border border-accent/20"
-                  : "text-text-muted hover:text-text-primary border border-transparent"
+                  : "text-muted-foreground hover:text-foreground border border-transparent"
               )}
             >
               <span>{language === "id" ? "Kalender" : "Calendar"}</span>
@@ -767,17 +767,17 @@ export function TransactionsClient({
           <div className="absolute top-3 right-3 size-8 rounded-lg bg-accent/10 flex items-center justify-center">
             <ArrowLeftRight size={15} className="text-accent" />
           </div>
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-2">{t("totalTransactions")}</p>
-          <p className="text-xl font-bold font-mono tabular-nums text-text-primary">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">{t("totalTransactions")}</p>
+          <p className="text-xl font-bold font-mono tabular-nums text-foreground">
             {summary.total.toLocaleString()}
           </p>
-          <p className="text-[11px] text-text-muted mt-1">{t("transactionCount")}</p>
+          <p className="text-[11px] text-muted-foreground mt-1">{t("transactionCount")}</p>
         </Card>
         <Card className="p-4 gap-0 relative overflow-hidden">
           <div className="absolute top-3 right-3 size-8 rounded-lg bg-income/10 flex items-center justify-center">
             <svg width="15" height="15" viewBox="0 0 15 15" fill="none" className="text-income"><path d="M7.5 12V3M7.5 3L4 6.5M7.5 3L11 6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-2">{t("incomeLabel")}</p>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">{t("incomeLabel")}</p>
           <p className="text-xl font-bold font-mono tabular-nums text-income">
             {formatIDR(summary.income, { compact: true })}
           </p>
@@ -791,7 +791,7 @@ export function TransactionsClient({
           <div className="absolute top-3 right-3 size-8 rounded-lg bg-expense/10 flex items-center justify-center">
             <svg width="15" height="15" viewBox="0 0 15 15" fill="none" className="text-expense"><path d="M7.5 3V12M7.5 12L4 8.5M7.5 12L11 8.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-2">{t("expenseLabel")}</p>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">{t("expenseLabel")}</p>
           <p className="text-xl font-bold font-mono tabular-nums text-expense">
             {formatIDR(summary.expense, { compact: true })}
           </p>
@@ -821,7 +821,7 @@ export function TransactionsClient({
               variant="ghost"
               size="sm"
               onClick={() => setSelectedIds(new Set())}
-              className="text-xs text-text-muted hover:text-text-primary flex-1 sm:flex-initial"
+              className="text-xs text-muted-foreground hover:text-foreground flex-1 sm:flex-initial"
             >
               {t("cancelButton")}
             </Button>
