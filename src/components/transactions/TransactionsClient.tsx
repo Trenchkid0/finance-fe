@@ -1,4 +1,4 @@
-import { useEffect, useState, useTransition, useRef } from "react";
+import { useEffect, useState, useTransition, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useSearchParams } from "react-router-dom";
 import { ArrowLeftRight, Download, Loader2, Plus, Search, Trash2, Edit3, X, Pencil } from "lucide-react";
@@ -229,6 +229,8 @@ export function TransactionsClient({
   const [bulkCategory, setBulkCategory] = useState("");
   const [pendingBulkEdit, setPendingBulkEdit] = useState(false);
   const [pendingDeleteIds, setPendingDeleteIds] = useState<Set<string>>(new Set());
+  const [bulkPendingDeleteIds, setBulkPendingDeleteIds] = useState<Set<string>>(new Set());
+  const [confirmedDeletedIds, setConfirmedDeletedIds] = useState<Set<string>>(new Set());
   const [pendingDeletes, setPendingDeletes] = useState<Record<string, TransactionRowData>>({});
   const deleteTimeouts = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
@@ -238,6 +240,17 @@ export function TransactionsClient({
       Object.values(deleteTimeouts.current).forEach(clearTimeout);
     };
   }, []);
+
+  // Clean up confirmedDeletedIds when they are no longer present in transactions prop
+  useEffect(() => {
+    if (confirmedDeletedIds.size === 0) return;
+    const stillPresent = Array.from(confirmedDeletedIds).filter((id) =>
+      transactions.some((t) => t.id === id)
+    );
+    if (stillPresent.length !== confirmedDeletedIds.size) {
+      setConfirmedDeletedIds(new Set(stillPresent));
+    }
+  }, [transactions, confirmedDeletedIds]);
 
 
 
@@ -261,6 +274,29 @@ export function TransactionsClient({
       document.body.style.overflow = prev;
     };
   }, [confirmBulkDelete, openBulkEdit, isExportCsvModalOpen]);
+
+  // Keyboard shortcuts: N = new transaction, F = focus search filter
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      // Skip if user is typing in an input/textarea/select or any modal is open
+      const tag = (e.target as HTMLElement).tagName;
+      const isTyping = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || (e.target as HTMLElement).isContentEditable;
+      const anyModalOpen = creating !== null || editing !== null || confirmBulkDelete || openBulkEdit || isImportModalOpen || importStatementOpen;
+      if (isTyping || anyModalOpen || e.metaKey || e.ctrlKey || e.altKey) return;
+
+      if (e.key === "n" || e.key === "N") {
+        e.preventDefault();
+        startCreate();
+      }
+      if (e.key === "f" || e.key === "F") {
+        e.preventDefault();
+        const searchInput = document.querySelector<HTMLInputElement>('input[name="q"], input[placeholder*="Cari"], input[placeholder*="Search"]');
+        searchInput?.focus();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [creating, editing, confirmBulkDelete, openBulkEdit, isImportModalOpen, importStatementOpen]);
 
   const handleBulkEdit = async () => {
     try {
@@ -327,9 +363,22 @@ export function TransactionsClient({
   const handleDeleteClick = (row: TransactionRowData) => {
     const id = row.id;
 
-    // Add to pending deletes immediately to trigger UI scanning state
+    // Add to pending deletes immediately to trigger UI fade-out
     setPendingDeletes((prev) => ({ ...prev, [id]: row }));
     setPendingDeleteIds((prev) => new Set(prev).add(id));
+
+    // Show toast with Undo option
+    toast.success(
+      language === "id"
+        ? "Transaksi berhasil dihapus"
+        : "Transaction deleted successfully",
+      {
+        action: {
+          label: language === "id" ? "⟲ Urungkan" : "⟲ Undo",
+          onClick: () => handleUndoSingleDelete(id),
+        },
+      }
+    );
 
     // Fire the delete API call in the background immediately
     deleteTransaction(id).then((result) => {
@@ -349,7 +398,7 @@ export function TransactionsClient({
       }
     });
 
-    // Set up the 4s timeout to finalize deletion in the UI list
+    // Set up the 3s timeout to finalize deletion in the UI list
     if (deleteTimeouts.current[id]) {
       clearTimeout(deleteTimeouts.current[id]);
     }
@@ -362,6 +411,11 @@ export function TransactionsClient({
       setPendingDeletes((prev) => {
         const next = { ...prev };
         delete next[id];
+        return next;
+      });
+      setConfirmedDeletedIds((prev) => {
+        const next = new Set(prev);
+        next.add(id);
         return next;
       });
       delete deleteTimeouts.current[id];
@@ -378,6 +432,11 @@ export function TransactionsClient({
       delete deleteTimeouts.current[id];
     }
     setPendingDeleteIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+    setConfirmedDeletedIds((prev) => {
       const next = new Set(prev);
       next.delete(id);
       return next;
@@ -412,18 +471,19 @@ export function TransactionsClient({
         const ids = Array.from(selectedIds);
         const deletedRows = transactions.filter((t) => selectedIds.has(t.id));
 
-        // Mark rows as pending delete
+        // Mark rows as bulk-pending (fade-out, no undo per-row)
+        setBulkPendingDeleteIds((prev) => {
+          const next = new Set(prev);
+          ids.forEach((id) => next.add(id));
+          return next;
+        });
+
+        // Keep pendingDeletes so rows remain visible until grace period ends
         setPendingDeletes((prev) => {
           const next = { ...prev };
           deletedRows.forEach((row) => {
             next[row.id] = row;
           });
-          return next;
-        });
-
-        setPendingDeleteIds((prev) => {
-          const next = new Set(prev);
-          ids.forEach((id) => next.add(id));
           return next;
         });
 
@@ -444,7 +504,12 @@ export function TransactionsClient({
                     }
                   });
 
-                  setPendingDeleteIds((prev) => {
+                  setBulkPendingDeleteIds((prev) => {
+                    const next = new Set(prev);
+                    ids.forEach((id) => next.delete(id));
+                    return next;
+                  });
+                  setConfirmedDeletedIds((prev) => {
                     const next = new Set(prev);
                     ids.forEach((id) => next.delete(id));
                     return next;
@@ -470,13 +535,13 @@ export function TransactionsClient({
         setSelectedIds(new Set());
         setConfirmBulkDelete(false);
 
-        // Setup individual timeouts
+        // Grace period: rows stay visible (faded) then disappear
         ids.forEach((id) => {
           if (deleteTimeouts.current[id]) {
             clearTimeout(deleteTimeouts.current[id]);
           }
           deleteTimeouts.current[id] = setTimeout(() => {
-            setPendingDeleteIds((prev) => {
+            setBulkPendingDeleteIds((prev) => {
               const next = new Set(prev);
               next.delete(id);
               return next;
@@ -484,6 +549,11 @@ export function TransactionsClient({
             setPendingDeletes((prev) => {
               const next = { ...prev };
               delete next[id];
+              return next;
+            });
+            setConfirmedDeletedIds((prev) => {
+              const next = new Set(prev);
+              next.add(id);
               return next;
             });
             delete deleteTimeouts.current[id];
@@ -596,20 +666,22 @@ export function TransactionsClient({
     }
   };
 
-  // Combine transactions from prop and the ones that are pending deletes
-  const combinedTransactions = [...transactions];
-  Object.keys(pendingDeletes).forEach((id) => {
-    if (!combinedTransactions.some((t) => t.id === id)) {
-      combinedTransactions.push(pendingDeletes[id]);
-    }
-  });
-
-  // Sort descending by date, then id as fallback
-  const visibleTransactions = combinedTransactions.sort((a, b) => {
-    const diff = new Date(b.date).getTime() - new Date(a.date).getTime();
-    if (diff !== 0) return diff;
-    return b.id.localeCompare(a.id);
-  });
+  // Combine transactions from prop and the ones that are pending deletes, memoised
+  const visibleTransactions = useMemo(() => {
+    // Filter out transactions that are already confirmed deleted in UI
+    const filteredProps = transactions.filter((t) => !confirmedDeletedIds.has(t.id));
+    const combined = [...filteredProps];
+    Object.keys(pendingDeletes).forEach((id) => {
+      if (!confirmedDeletedIds.has(id) && !combined.some((t) => t.id === id)) {
+        combined.push(pendingDeletes[id]);
+      }
+    });
+    return combined.sort((a, b) => {
+      const diff = new Date(b.date).getTime() - new Date(a.date).getTime();
+      if (diff !== 0) return diff;
+      return b.id.localeCompare(a.id);
+    });
+  }, [transactions, pendingDeletes, confirmedDeletedIds]);
 
   return (
     <div className="space-y-6 animate-fade-in-up overflow-visible">
@@ -685,6 +757,7 @@ export function TransactionsClient({
           >
             <Plus size={14} strokeWidth={2.5} />
             {t("addTransaction")}
+            {canCreate && <span className="kbd ml-0.5 hidden sm:inline-flex opacity-60">N</span>}
           </Button>
         </div>
       </div>
@@ -788,6 +861,7 @@ export function TransactionsClient({
             toggleSelectAll={toggleSelectAll}
             filters={filters}
             pendingDeleteIds={pendingDeleteIds}
+            bulkPendingDeleteIds={bulkPendingDeleteIds}
             onUndoDelete={handleUndoSingleDelete}
             deleteGracePeriod={DELETE_GRACE_PERIOD_MS}
             emptyState={

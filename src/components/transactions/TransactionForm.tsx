@@ -185,9 +185,48 @@ export function TransactionForm({
     FormData
   >(boundAction, undefined);
 
+  const hasShownRestoreToastRef = useRef(false);
+
   // Reset modal state when open changes
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      hasShownRestoreToastRef.current = false;
+      return;
+    }
+
+    // For create mode: try to restore a saved draft
+    if (mode === "create") {
+      try {
+        const saved = localStorage.getItem("tx-form-draft");
+        if (saved) {
+          const parsed = JSON.parse(saved) as FormTransaction[];
+          setItems(parsed);
+          setActiveIndex(0);
+          if (!hasShownRestoreToastRef.current) {
+            hasShownRestoreToastRef.current = true;
+            toast.info(isId ? "Draft sebelumnya dipulihkan" : "Previous draft restored", {
+              action: {
+                label: isId ? "Buang draft" : "Discard",
+                onClick: () => {
+                  localStorage.removeItem("tx-form-draft");
+                  setItems([createEmptyTransaction(stableInitial)]);
+                },
+              },
+              duration: 6000,
+            });
+          }
+          setTab("manual");
+          setScanning(false);
+          setUploading(false);
+          setSubmitting(false);
+          setCustomError(null);
+          return;
+        }
+      } catch {
+        localStorage.removeItem("tx-form-draft");
+      }
+    }
+
     setItems([createEmptyTransaction(stableInitial)]);
     setActiveIndex(0);
     setTab("manual");
@@ -197,11 +236,26 @@ export function TransactionForm({
     setCustomError(null);
   }, [open, stableInitial]);
 
+  // Auto-save draft for create mode whenever items change
+  useEffect(() => {
+    if (!open || mode !== "create") return;
+    const hasContent = items.some(
+      (item) => item.amount || item.description || item.note,
+    );
+    if (hasContent) {
+      try {
+        localStorage.setItem("tx-form-draft", JSON.stringify(items));
+      } catch {
+        // ignore storage errors
+      }
+    }
+  }, [items, open, mode]);
+
   // Handle success callback
   useEffect(() => {
     if (state?.ok) {
       invalidateCache.afterTransactionChange();
-
+      localStorage.removeItem("tx-form-draft");
       toast.success(
         mode === "create"
           ? isId
@@ -378,6 +432,8 @@ export function TransactionForm({
 
         const res = await createBulkTransactions(payloads);
         if (res.ok) {
+          invalidateCache.afterTransactionChange();
+          localStorage.removeItem("tx-form-draft");
           toast.success(isId ? `${items.length} transaksi berhasil ditambahkan` : `${items.length} transactions added successfully`);
           onSuccess?.();
           onClose();

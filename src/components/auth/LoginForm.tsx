@@ -1,4 +1,4 @@
-import { useActionState, useState, useEffect, useRef } from "react";
+import { useActionState, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { AlertCircle, Eye, EyeOff, Info, Loader2, Mail, Lock, ArrowRight } from "lucide-react";
 import { login } from "@/app/actions/auth";
@@ -19,17 +19,18 @@ export function LoginForm() {
   const demoPassword = isDev ? "password123" : "";
   const [email, setEmail] = useState(demoEmail);
   const [shaking, setShaking] = useState(false);
-  const prevErrorRef = useRef<string | undefined>(undefined);
 
-  // Trigger shake + toast when a new global error appears
+  // Trigger shake + toast when a failed action state is returned
   useEffect(() => {
-    const currentError = state?.error && !state.fieldErrors ? state.error : undefined;
-    if (currentError && currentError !== prevErrorRef.current) {
+    if (state && !state.ok) {
       setShaking(true);
-      toast.error(currentError);
-      setTimeout(() => setShaking(false), 500);
+      const currentError = state.error && !state.fieldErrors ? state.error : undefined;
+      if (currentError) {
+        toast.error(currentError);
+      }
+      const timer = setTimeout(() => setShaking(false), 500);
+      return () => clearTimeout(timer);
     }
-    prevErrorRef.current = currentError;
   }, [state]);
 
   return (

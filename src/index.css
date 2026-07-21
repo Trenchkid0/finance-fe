@@ -81,6 +81,31 @@ html[data-radix-scroll-locked] {
   animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 
+/* Consistent focus ring for keyboard navigation — meets WCAG 2.4.7 */
+:focus-visible {
+  outline: 2px solid rgba(56, 139, 253, 0.7);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Keyboard shortcut badge — used for tooltip hints */
+.kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 18px;
+  min-width: 18px;
+  padding: 0 4px;
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  letter-spacing: 0;
+}
+
 /* Page fade-in-up animation with high-end spring/easing curve */
 @keyframes fadeInUp {
   from {
@@ -259,5 +284,16 @@ html {
 
 .animate-swipe-scan {
   animation: swipeScan 2000ms infinite linear;
+}
+
+/* Bulk delete: ghost fade — rows become translucent immediately, no scanning bar */
+@keyframes bulkDeleteFade {
+  0%   { opacity: 1;    transform: scale(1); }
+  15%  { opacity: 0.55; transform: scale(0.995); }
+  100% { opacity: 0.25; transform: scale(0.992); }
+}
+
+.animate-bulk-delete {
+  animation: bulkDeleteFade 400ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
