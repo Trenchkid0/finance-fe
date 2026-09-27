@@ -13,6 +13,7 @@ import { CardTypeProvider } from "@/components/ui/card";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 import { loadPreferences } from "@/lib/preferences";
+import { OnboardingCurrencyModal } from "@/components/onboarding/OnboardingCurrencyModal";
 import type { User, Account, Category } from "@/types";
 
 interface AppContextType {
@@ -26,6 +27,7 @@ interface AppContextType {
   setCounts: React.Dispatch<React.SetStateAction<{ accounts: number; transactions: number }>>;
   refresh: () => Promise<void>;
   loading: boolean;
+  openOnboarding: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -43,6 +45,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [counts, setCounts] = useState({ accounts: 0, transactions: 0 });
   const [loading, setLoading] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const navigate = useNavigate();
 
   const refresh = useCallback(async () => {
@@ -52,13 +55,18 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       setUser(me);
 
       // 2. Fetch preferences from backend (applies theme/language)
-      await loadPreferences();
+      const prefs = await loadPreferences();
 
       // 3. Fetch layout data (with cache for accounts/categories)
       let accList = cache.get<Account[]>(CacheKeys.accounts());
       if (!accList) {
         accList = await api.get<Account[]>("/api/accounts?status=all");
         cache.set(CacheKeys.accounts(), accList, CacheTTL.LONG);
+      }
+
+      // Show onboarding modal ONLY if user has NOT completed onboarding AND has 0 accounts
+      if (prefs && prefs.onboardingCompleted === false && accList.length === 0) {
+        setShowOnboarding(true);
       }
 
       let catList = cache.get<Category[]>(CacheKeys.categories());
@@ -107,7 +115,18 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const canCreate = accounts.length > 0;
 
   return (
-    <AppContext.Provider value={{ user, accounts, categories, counts, setCounts, refresh, loading }}>
+    <AppContext.Provider
+      value={{
+        user,
+        accounts,
+        categories,
+        counts,
+        setCounts,
+        refresh,
+        loading,
+        openOnboarding: () => setShowOnboarding(true),
+      }}
+    >
       <CardTypeProvider>
       <SidebarProvider
         style={
@@ -152,6 +171,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           />
           <QuickAddFab />
           <MobileBottomNav />
+          <OnboardingCurrencyModal
+            open={showOnboarding}
+            onComplete={() => setShowOnboarding(false)}
+          />
         </QuickAddProvider>
       </SidebarProvider>
       </CardTypeProvider>

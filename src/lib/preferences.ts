@@ -42,6 +42,8 @@ export interface UserPreferences {
   notificationSettings: NotificationSettings;
   language: string;
   dashboardLayout: DashboardLayout;
+  baseCurrency?: string;
+  onboardingCompleted?: boolean;
 }
 
 // ─── Defaults ─────────────────────────────────────────────────────────────────
@@ -77,6 +79,8 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   },
   language: "id",
   dashboardLayout: "default",
+  baseCurrency: "IDR",
+  onboardingCompleted: false,
 };
 
 // ─── Local Storage Keys (match existing keys used by theme.ts / LanguageContext)
@@ -91,6 +95,8 @@ const LS_KEYS = {
   notificationSettings: "racks-notification-settings",
   language: "app-language",
   dashboardLayout: "racks-dashboard-layout",
+  baseCurrency: "racks-base-currency",
+  onboardingCompleted: "racks-onboarding-completed",
 } as const;
 
 // ─── Local Storage Helpers ────────────────────────────────────────────────────
@@ -131,6 +137,8 @@ function readFromLocalStorage(): UserPreferences {
     ),
     language: localStorage.getItem(LS_KEYS.language) || DEFAULT_PREFERENCES.language,
     dashboardLayout: (localStorage.getItem(LS_KEYS.dashboardLayout) || DEFAULT_PREFERENCES.dashboardLayout) as DashboardLayout,
+    baseCurrency: localStorage.getItem(LS_KEYS.baseCurrency) || DEFAULT_PREFERENCES.baseCurrency,
+    onboardingCompleted: localStorage.getItem(LS_KEYS.onboardingCompleted) === "true",
   };
 }
 
@@ -149,6 +157,12 @@ function writeToLocalStorage(prefs: UserPreferences): void {
   localStorage.setItem(LS_KEYS.notificationSettings, JSON.stringify(prefs.notificationSettings));
   localStorage.setItem(LS_KEYS.language, prefs.language);
   localStorage.setItem(LS_KEYS.dashboardLayout, prefs.dashboardLayout);
+  if (prefs.baseCurrency) {
+    localStorage.setItem(LS_KEYS.baseCurrency, prefs.baseCurrency);
+  }
+  if (prefs.onboardingCompleted != null) {
+    localStorage.setItem(LS_KEYS.onboardingCompleted, String(prefs.onboardingCompleted));
+  }
 }
 
 // ─── Apply to UI ──────────────────────────────────────────────────────────────

@@ -1,5 +1,5 @@
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
-import { useTransition, useRef } from "react";
+import { useTransition, useRef, useState, useEffect } from "react";
 import { Search, Calendar } from "lucide-react";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
@@ -61,9 +61,29 @@ export function TransactionFilters({
   const { t } = useLanguage();
   const formRef = useRef<HTMLFormElement>(null);
 
+  const [searchValue, setSearchValue] = useState(filters.q || "");
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setSearchValue(filters.q || "");
+  }, [filters.q]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setSearchValue(val);
+
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      pushFilter({ q: val || null });
+    }, 300);
+  };
+
   function pushFilter(patch: Record<string, string | null | undefined>) {
     const fd = formRef.current ? new FormData(formRef.current) : null;
-    const currentQ = fd ? (fd.get("q") as string) : filters.q;
+    const currentQ = fd ? (fd.get("q") as string) : searchValue;
     const currentStart = fd ? (fd.get("startDate") as string) : filters.startDate;
     const currentEnd = fd ? (fd.get("endDate") as string) : filters.endDate;
 
@@ -106,7 +126,8 @@ export function TransactionFilters({
             />
             <Input
               name="q"
-              defaultValue={filters.q}
+              value={searchValue}
+              onChange={handleSearchChange}
               placeholder={t("searchPlaceholder")}
               className="pl-9"
               aria-label={t("searchPlaceholder")}

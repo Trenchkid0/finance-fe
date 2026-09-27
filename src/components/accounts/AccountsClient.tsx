@@ -296,16 +296,15 @@ function AccountCard({
         )}
       >
         <Card
-          className="p-5 pb-14 min-h-[175px] select-none cursor-pointer rounded-2xl border transition-all duration-500 gap-0 overflow-hidden bg-[#0D1117]/30 backdrop-blur-md"
+          className="p-5 pb-14 min-h-[175px] select-none cursor-pointer rounded-2xl border transition-all duration-300 gap-0 overflow-hidden bg-[#0D1117]/60 backdrop-blur-md"
           style={{
-            backgroundColor: "transparent",
             borderColor: hovered 
               ? `color-mix(in srgb, ${swatch} 45%, transparent)` 
               : `color-mix(in srgb, ${swatch} 15%, var(--border))`,
             boxShadow: hovered 
-              ? `inset 0 1px 0 0 rgba(255, 255, 255, 0.1), 0 12px 30px -4px color-mix(in srgb, ${swatch} 10%, rgba(0,0,0,0.6))`
-              : `inset 0 1px 0 0 rgba(255, 255, 255, 0.03), 0 4px 12px -2px rgba(0, 0, 0, 0.3)`,
-            transform: hovered ? "translateY(-6px)" : "none"
+              ? `inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 0 10px 24px -4px rgba(0, 0, 0, 0.4)`
+              : `inset 0 1px 0 0 rgba(255, 255, 255, 0.02), 0 4px 12px -2px rgba(0, 0, 0, 0.25)`,
+            transform: hovered ? "translateY(-4px)" : "none"
           }}
         >
           {/* Sci-fi Corner Brackets */}
@@ -322,33 +321,6 @@ function AccountCard({
             style={{ borderColor: hovered ? swatch : undefined }}
           />
 
-          {/* Tech Dotted Pattern */}
-          <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
-            style={{
-              backgroundImage: "radial-gradient(circle at 1px 1px, white 1px, transparent 0)",
-              backgroundSize: "10px 10px"
-            }}
-          />
-
-          {/* Neon Top Edge Glow */}
-          <div className="absolute top-0 left-6 right-6 h-[1.5px] opacity-35 transition-opacity duration-300 group-hover:opacity-100"
-            style={{
-              background: `linear-gradient(to right, transparent, ${swatch}, transparent)`
-            }}
-          />
-
-          {/* Dynamic swatch glow - Enhanced */}
-          <div
-            className="absolute -right-8 -top-8 w-24 h-24 rounded-full blur-3xl opacity-[0.12] pointer-events-none transition-all duration-500 group-hover:opacity-30 group-hover:scale-125"
-            style={{ backgroundColor: swatch }}
-          />
-          
-          {/* Secondary glow for depth */}
-          <div
-            className="absolute -left-8 -bottom-8 w-20 h-20 rounded-full blur-2xl opacity-[0.06] pointer-events-none transition-all duration-500 group-hover:opacity-18"
-            style={{ backgroundColor: swatch }}
-          />
-
           {/* Card Header: Icon/Chip & Status */}
           <div className="flex items-start justify-between mb-4 relative z-10">
             {/* Institution Icon or EMV Chip */}
@@ -357,7 +329,7 @@ function AccountCard({
                 <span className="text-xl">{account.icon}</span>
               </div>
             ) : (
-              <div className="w-9 h-7 rounded-md bg-gradient-to-br from-amber-400/20 via-yellow-500/5 to-amber-600/20 border border-amber-500/30 relative overflow-hidden flex flex-col p-1 shadow-[0_0_8px_rgba(245,158,11,0.1)] group-hover:shadow-[0_0_12px_rgba(245,158,11,0.25)] transition-all duration-300">
+              <div className="w-9 h-7 rounded-md bg-amber-500/10 border border-amber-500/30 relative overflow-hidden flex flex-col p-1 shadow-[0_0_8px_rgba(245,158,11,0.1)] group-hover:shadow-[0_0_12px_rgba(245,158,11,0.25)] transition-all duration-300">
                 <div className="flex h-1/3 w-full justify-between">
                   <div className="w-2.5 h-full border-r border-b border-amber-500/20" />
                   <div className="w-2.5 h-full border-l border-b border-amber-500/20" />
@@ -434,11 +406,6 @@ function AccountCard({
                 {account.transactionCount ?? 0}
               </span>
             </div>
-          </div>
-          
-          {/* Hover shine effect */}
-          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
-            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.02] to-transparent" />
           </div>
         </Card>
       </Link>

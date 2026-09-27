@@ -1,7 +1,7 @@
 import { useEffect, useState, useTransition } from "react";
 import {
   TrendingUp, TrendingDown, Wallet, Download,
-  Layers, Inbox, Loader2, FileSpreadsheet, PiggyBank,
+  Layers, Inbox, Loader2, FileSpreadsheet, PiggyBank, Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
@@ -13,6 +13,7 @@ import { FormSelect } from "@/components/ui/FormSelect";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 import { CustomSingleDatePicker } from "@/components/ui/CustomSingleDatePicker";
+import { MonthlyWrappedModal } from "@/components/reports/MonthlyWrappedModal";
 import {
   ResponsiveContainer, PieChart, Pie, Cell,
   Tooltip as ChartTooltip, XAxis, YAxis, CartesianGrid,
@@ -132,6 +133,7 @@ export default function Reports() {
   const { language } = useLanguage();
   const isId = language === "id";
 
+  const [isWrappedOpen, setIsWrappedOpen] = useState(false);
   const [datePreset, setDatePreset] = useState("30d");
   const [startDate, setStartDate] = useState(() => {
     const d = new Date(); d.setDate(d.getDate() - 30); return d.toISOString().split("T")[0];
@@ -215,14 +217,30 @@ export default function Reports() {
             {isId ? "Analisis keuangan mendalam dan ekspor siap SPT pajak." : "In-depth financial intelligence and tax-ready exports."}
           </p>
         </div>
-        {data && data.summary.totalTaxDeductible > 0 && (
-          <Button asChild size="sm" className="h-9 gap-2 font-semibold">
-            <a href={taxExportHref()} download>
-              <Download size={14} /> {isId ? "Ekspor CSV Pajak" : "Export Tax CSV"}
-            </a>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            onClick={() => setIsWrappedOpen(true)}
+            className="h-9 gap-2 font-bold bg-accent text-black hover:bg-accent/90 shadow-md shadow-accent/20"
+          >
+            <Sparkles size={14} />
+            <span>{isId ? "Rekap Bulanan (Wrapped)" : "Monthly Wrapped"}</span>
           </Button>
-        )}
+
+          {data && data.summary.totalTaxDeductible > 0 && (
+            <Button asChild size="sm" variant="outline" className="h-9 gap-2 font-semibold">
+              <a href={taxExportHref()} download>
+                <Download size={14} /> {isId ? "Ekspor CSV Pajak" : "Export Tax CSV"}
+              </a>
+            </Button>
+          )}
+        </div>
       </div>
+
+      <MonthlyWrappedModal
+        open={isWrappedOpen}
+        onClose={() => setIsWrappedOpen(false)}
+      />
 
       {/* ── Filter Bar ── */}
       <Card className="p-5 border border-border/60 bg-card/60">

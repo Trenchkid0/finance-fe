@@ -1,7 +1,7 @@
 import { useEffect, useState, useTransition, useRef, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useSearchParams } from "react-router-dom";
-import { ArrowLeftRight, Download, Loader2, Plus, Search, Trash2, Edit3, X, Pencil } from "lucide-react";
+import { ArrowLeftRight, Download, Loader2, Plus, Search, Trash2, Edit3, X, Pencil, Calculator } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils/cn";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
@@ -28,6 +28,7 @@ import {
 } from "./TransactionForm";
 import { ImportCsvModal } from "./ImportCsvModal";
 import { ImportStatementModal } from "./ImportStatementModal";
+import { SplitBillModal } from "./SplitBillModal";
 import { exportToPDF } from "@/lib/utils/pdfExport";
 import { deleteTransaction, restoreTransaction } from "@/app/actions/transactions";
 import { TransactionFilters, isFilterActive } from "./TransactionFilters";
@@ -221,6 +222,7 @@ export function TransactionsClient({
   }, [viewMode]);
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isSplitBillOpen, setIsSplitBillOpen] = useState(false);
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
   const [pendingBulk, startTransitionBulk] = useTransition();
 
@@ -750,6 +752,15 @@ export function TransactionsClient({
             </DropdownMenuContent>
           </DropdownMenu>
           <Button
+            variant="outline"
+            onClick={() => setIsSplitBillOpen(true)}
+            className="h-9 rounded-xl gap-2 text-xs font-semibold px-3 border-border/50 bg-surface/30 text-foreground hover:bg-hover-elevated"
+          >
+            <Calculator size={14} className="text-accent" />
+            <span>{language === "id" ? "Split Bill" : "Split Bill"}</span>
+          </Button>
+
+          <Button
             onClick={startCreate}
             disabled={!canCreate}
             className="h-9 rounded-xl gap-2 text-xs font-semibold px-4"
@@ -937,6 +948,12 @@ export function TransactionsClient({
           onSuccess={() => setEditing(null)}
         />
       )}
+
+      {/* Split Bill modal */}
+      <SplitBillModal
+        open={isSplitBillOpen}
+        onClose={() => setIsSplitBillOpen(false)}
+      />
 
 
       {/* Confirm Bulk Delete - Portal Modal */}
