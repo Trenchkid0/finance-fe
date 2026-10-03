@@ -30,7 +30,7 @@ export default function Profile() {
 	if (!user) {
 		return (
 			<div className="flex h-[50vh] items-center justify-center">
-				<Card className="relative max-w-md p-8 text-center border border-border bg-card rounded-xl">
+				<Card className="relative max-w-md p-8 text-center">
 					<User size={48} className="mx-auto mb-4 text-muted-foreground" />
 					<p className="mb-2 text-base font-bold text-foreground">
 						{language === "id" ? "Profil tidak ditemukan" : "Profile not found"}
@@ -88,7 +88,7 @@ export default function Profile() {
 				</div>
 				<Button
 					onClick={() => setIsEditModalOpen(true)}
-					className="h-9 rounded-xl gap-2 text-xs font-semibold px-4 shrink-0"
+					className="h-9 gap-2 text-xs font-semibold px-4 shrink-0"
 				>
 					{language === "id" ? "Edit Profil" : "Edit Profile"}
 				</Button>
@@ -97,7 +97,7 @@ export default function Profile() {
 			<div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
 				{/* Left profile rail */}
 				<aside className="space-y-6">
-					<Card className="p-6 space-y-6 rounded-xl border border-border bg-card">
+					<Card className="p-6 space-y-6">
 						<div className="flex flex-col items-center text-center space-y-4">
 							{/* Avatar */}
 							<div className="relative flex aspect-square w-24 h-24 items-center justify-center overflow-hidden rounded-full border-2 border-border bg-muted">
@@ -155,7 +155,7 @@ export default function Profile() {
 					</Card>
 
 					{/* Active portfolio mini widget */}
-					<Card className="p-5 space-y-4 rounded-xl border border-border bg-card">
+					<Card className="p-5 space-y-4">
 						<div className="flex items-center justify-between">
 							<span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
 								{language === "id" ? "Portofolio Aktif" : "Active Portfolio"}
@@ -236,7 +236,10 @@ export default function Profile() {
 						</div>
 
 						{inactiveAccountsCount > 0 && (
-							<div className="mt-4 flex items-center justify-between border border-warning/20 bg-warning/5 p-4 text-sm rounded-xl">
+							<div
+								className="mt-4 flex items-center justify-between border border-warning/20 bg-warning/5 p-4 text-sm"
+								style={{ borderRadius: "var(--card-radius, 12px)" }}
+							>
 								<span className="flex items-center gap-2 font-medium text-warning text-xs">
 									<span className="h-2 w-2 rounded-full bg-warning animate-pulse" />
 									{language === "id"
@@ -256,7 +259,7 @@ export default function Profile() {
 					</section>
 
 					{/* Metrics Card */}
-					<Card className="rounded-xl border border-border bg-card">
+					<Card className="overflow-hidden">
 						<div className="flex items-center justify-between border-b border-border/30 p-4">
 							<span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
 								Metrics
@@ -294,7 +297,7 @@ export default function Profile() {
 					</Card>
 
 					{/* Security Card */}
-					<Card className="rounded-xl border border-border bg-card">
+					<Card className="overflow-hidden">
 						<div className="flex items-center justify-between border-b border-border/30 p-4">
 							<span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
 								Security
@@ -329,7 +332,7 @@ export default function Profile() {
 					</Card>
 
 					{/* Recent Activity Card */}
-					<Card className="rounded-xl border border-border bg-card">
+					<Card className="overflow-hidden">
 						<div className="flex items-center justify-between border-b border-border/30 p-4">
 							<span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
 								Audit
@@ -400,7 +403,7 @@ function PortfolioSegmentCard({
 }) {
 	const { language } = useLanguage();
 	return (
-		<Card className="p-5 rounded-xl border border-border bg-card">
+		<Card className="p-5">
 			<div className="mb-4 flex items-center justify-between">
 				<span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
 					{label}
@@ -434,7 +437,7 @@ function MetricCard({
 	const toneClass = tone === "income" ? "text-income bg-income/10 border-income/20" : "text-accent bg-accent/10 border-accent/20";
 
 	return (
-		<Card className="p-5 rounded-xl border border-border bg-surface flex flex-col justify-between">
+		<Card className="p-5 flex flex-col justify-between">
 			<div className="flex items-center gap-2 mb-4">
 				<div className={`p-1.5 rounded-lg border ${toneClass}`}>
 					{icon}

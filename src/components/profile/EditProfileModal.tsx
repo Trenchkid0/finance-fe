@@ -153,7 +153,8 @@ export function EditProfileModal({ open, onClose, user, onSuccess }: EditProfile
 			}}
 		>
 			<div
-				className="flex max-h-[calc(100dvh-48px)] w-full max-w-[480px] flex-col overflow-hidden rounded-[22px] border border-border bg-surface shadow-2xl"
+				className="flex max-h-[calc(100dvh-48px)] w-full max-w-[480px] flex-col overflow-hidden border border-border bg-background shadow-2xl"
+				style={{ borderRadius: "var(--card-radius, 16px)" }}
 				role="dialog"
 				aria-modal="true"
 			>

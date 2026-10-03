@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   LayoutGrid,
   BarChart3,
@@ -718,6 +719,21 @@ export function DashboardGridSettings() {
   const [hovered, setHovered] = useState<DashboardLayout | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Close modal on Escape key and prevent background scroll while modal is open
+  useEffect(() => {
+    if (!isModalOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsModalOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [isModalOpen]);
+
   // When hovering, preview follows hovered; otherwise falls back to selected
   const activeLayout = hovered || selected;
   const activeLayoutConfig =
@@ -931,56 +947,72 @@ export function DashboardGridSettings() {
         </div>
       </div>
 
-      {/* ── Fullscreen Preview Modal ── */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-5xl max-h-[92vh] flex flex-col rounded-2xl border border-border bg-background shadow-2xl overflow-hidden animate-scale-up">
-            <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-elevated/40">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-accent/15 text-accent">
-                  {activeLayoutConfig.icon}
+      {/* ── Fullscreen Preview Modal (Portaled to document.body to prevent clipping by parent scroll/headers) ── */}
+      {isModalOpen &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 md:p-6 bg-black/80 backdrop-blur-md overflow-y-auto animate-fade-in"
+            onClick={() => setIsModalOpen(false)}
+          >
+            <div
+              className="relative w-full max-w-5xl max-h-[90vh] my-auto flex flex-col rounded-2xl border border-border bg-background shadow-2xl overflow-hidden animate-scale-up"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header — shrink-0 and sticky top-0 ensures it is NEVER compressed, clipped, or squashed */}
+              <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-border flex items-center justify-between bg-elevated/80 backdrop-blur-sm shrink-0 sticky top-0 z-20">
+                <div className="flex items-center gap-3 min-w-0 pr-2">
+                  <div className="p-2 rounded-lg bg-accent/15 text-accent shrink-0">
+                    {activeLayoutConfig.icon}
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="text-sm sm:text-base font-bold text-foreground truncate">
+                      {isId
+                        ? `Pratinjau Layar Penuh: Layout ${activeLayoutConfig.label.id}`
+                        : `Full Screen Preview: ${activeLayoutConfig.label.en} Layout`}
+                    </h3>
+                    <p className="text-xs text-muted-foreground truncate hidden xs:block">
+                      {isId ? activeLayoutConfig.desc.id : activeLayoutConfig.desc.en}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-sm font-bold text-foreground">
-                    {isId
-                      ? `Pratinjau Layar Penuh: Layout ${activeLayoutConfig.label.id}`
-                      : `Full Screen Preview: ${activeLayoutConfig.label.en} Layout`}
-                  </h3>
-                  <p className="text-xs text-muted-foreground">
-                    {isId ? activeLayoutConfig.desc.id : activeLayoutConfig.desc.en}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {activeLayout !== selected && (
+
+                <div className="flex items-center gap-2 shrink-0">
+                  {activeLayout !== selected && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleSelect(activeLayout);
+                        setIsModalOpen(false);
+                      }}
+                      className="px-3 sm:px-3.5 py-1.5 rounded-lg bg-accent text-white text-xs font-semibold hover:bg-accent/90 flex items-center gap-1.5 cursor-pointer shadow-sm transition-all"
+                    >
+                      <Check size={13} strokeWidth={3} />
+                      <span className="hidden sm:inline">
+                        {isId ? "Terapkan Layout Ini" : "Apply This Layout"}
+                      </span>
+                      <span className="sm:hidden">{isId ? "Terapkan" : "Apply"}</span>
+                    </button>
+                  )}
                   <button
                     type="button"
-                    onClick={() => {
-                      handleSelect(activeLayout);
-                      setIsModalOpen(false);
-                    }}
-                    className="px-3.5 py-1.5 rounded-lg bg-accent text-white text-xs font-semibold hover:bg-accent/90 flex items-center gap-1.5 cursor-pointer shadow-sm"
+                    onClick={() => setIsModalOpen(false)}
+                    className="p-1.5 rounded-lg hover:bg-elevated text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+                    title={isId ? "Tutup (Esc)" : "Close (Esc)"}
                   >
-                    <Check size={13} strokeWidth={3} />
-                    {isId ? "Terapkan Layout Ini" : "Apply This Layout"}
+                    <X size={18} />
                   </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="p-1.5 rounded-lg hover:bg-elevated text-muted-foreground hover:text-foreground cursor-pointer"
-                >
-                  <X size={16} />
-                </button>
+                </div>
+              </div>
+
+              {/* Scrollable Body — flex-1 min-h-0 guarantees clean internal scrolling without cutting off header */}
+              <div className="p-4 sm:p-6 overflow-y-auto flex-1 min-h-0 space-y-4 bg-background">
+                <LiveDashboardHomeMockup layoutId={activeLayout} isId={isId} />
               </div>
             </div>
-
-            <div className="p-6 overflow-y-auto max-h-[calc(92vh-80px)] space-y-4 bg-background">
-              <LiveDashboardHomeMockup layoutId={activeLayout} isId={isId} />
-            </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "@/lib/utils/cn";
+import { BlueprintCorners } from "@/components/ui/card";
 
 /**
  * Profile-style card primitives — "Blueprint / Terminal" design language.
@@ -14,24 +15,8 @@ import { cn } from "@/lib/utils/cn";
 /* ─── Corner Marks ─────────────────────────────────────────── */
 
 export function CornerMarks({ size = "sm" }: { size?: "sm" | "lg" }) {
-  const cornerSize = size === "lg" ? "h-3 w-3" : "h-2 w-2";
-
-  return (
-    <>
-      <div
-        className={`absolute -left-px -top-px z-10 border-l-2 border-t-2 border-text-muted/20 ${cornerSize}`}
-      />
-      <div
-        className={`absolute -right-px -top-px z-10 border-r-2 border-t-2 border-text-muted/20 ${cornerSize}`}
-      />
-      <div
-        className={`absolute -bottom-px -left-px z-10 border-b-2 border-l-2 border-text-muted/20 ${cornerSize}`}
-      />
-      <div
-        className={`absolute -bottom-px -right-px z-10 border-b-2 border-r-2 border-text-muted/20 ${cornerSize}`}
-      />
-    </>
-  );
+  const pixelSize = size === "lg" ? 14 : 10;
+  return <BlueprintCorners size={pixelSize} />;
 }
 
 /* ─── Profile Card ─────────────────────────────────────────── */

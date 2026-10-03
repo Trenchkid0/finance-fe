@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils/cn";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 import { savePreferences, getCurrentPreferences, type NotificationSettings } from "@/lib/preferences";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, BlueprintCorners } from "@/components/ui/card";
 
 function SettingsSelect<T extends string | number | boolean>({
   value,
@@ -1398,10 +1398,7 @@ export function ThemeSettings() {
                     {/* Mini preview — blueprint style */}
                     <div className="relative mb-3 h-20 w-full border border-border bg-background p-3 flex flex-col justify-between overflow-hidden">
                       {/* Corner marks */}
-                      <div className="absolute -left-px -top-px h-2 w-2 border-l-2 border-t-2 border-text-muted/20" />
-                      <div className="absolute -right-px -top-px h-2 w-2 border-r-2 border-t-2 border-text-muted/20" />
-                      <div className="absolute -bottom-px -left-px h-2 w-2 border-b-2 border-l-2 border-text-muted/20" />
-                      <div className="absolute -bottom-px -right-px h-2 w-2 border-b-2 border-r-2 border-text-muted/20" />
+                      <BlueprintCorners size={8} />
                       {/* Left accent bar */}
                       <div className="absolute left-0 top-0 h-full w-0.5 bg-accent/40" />
                       <div className="flex justify-between items-start relative z-10">
@@ -1619,12 +1616,7 @@ export function ThemeSettings() {
             } : undefined}
           >
             {cardStyles.cardType === "blueprint" && (
-              <>
-                <div className="absolute -left-px -top-px h-3 w-3 border-l-2 border-t-2 border-text-muted/20" />
-                <div className="absolute -right-px -top-px h-3 w-3 border-r-2 border-t-2 border-text-muted/20" />
-                <div className="absolute -bottom-px -left-px h-3 w-3 border-b-2 border-l-2 border-text-muted/20" />
-                <div className="absolute -bottom-px -right-px h-3 w-3 border-b-2 border-r-2 border-text-muted/20" />
-              </>
+              <BlueprintCorners size={14} />
             )}
             {cardStyles.cardType === "manly" && (
               <>
@@ -1681,10 +1673,7 @@ export function ThemeSettings() {
               >
                 {cardStyles.cardType === "blueprint" && (
                   <>
-                    <div className="absolute -left-px -top-px h-2 w-2 border-l-2 border-t-2 border-text-muted/20" />
-                    <div className="absolute -right-px -top-px h-2 w-2 border-r-2 border-t-2 border-text-muted/20" />
-                    <div className="absolute -bottom-px -left-px h-2 w-2 border-b-2 border-l-2 border-text-muted/20" />
-                    <div className="absolute -bottom-px -right-px h-2 w-2 border-b-2 border-r-2 border-text-muted/20" />
+                    <BlueprintCorners size={10} />
                     <div className="absolute left-0 top-0 h-full w-0.5 bg-accent/40" />
                   </>
                 )}
@@ -1827,12 +1816,7 @@ export function ThemeSettings() {
                 }
               >
                 {cardStyles.cardType === "blueprint" && (
-                  <>
-                    <div className="absolute -left-px -top-px h-2 w-2 border-l-2 border-t-2 border-text-muted/20" />
-                    <div className="absolute -right-px -top-px h-2 w-2 border-r-2 border-t-2 border-text-muted/20" />
-                    <div className="absolute -bottom-px -left-px h-2 w-2 border-b-2 border-l-2 border-text-muted/20" />
-                    <div className="absolute -bottom-px -right-px h-2 w-2 border-b-2 border-r-2 border-text-muted/20" />
-                  </>
+                  <BlueprintCorners size={10} />
                 )}
                 <p className="font-semibold text-foreground text-sm relative z-10">
                   {language === "id" ? "Detail Penerapan Gaya Kartu:" : "Card Styling Properties Applied:"}
