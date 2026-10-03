@@ -95,19 +95,19 @@ export function NetWorthHero({ current, previous, period, series }: Props) {
 
   return (
     <Card className="group relative overflow-hidden p-0 gap-0 border border-border/50 bg-card/60 dark:bg-elevated/10 backdrop-blur-sm transition-all duration-300 hover:border-accent/30 hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-accent/[0.01]" aria-label={isId ? "Grafik Total Kekayaan" : "Net Worth Chart"} role="region">
-      {/* Sci-fi Corner Brackets */}
-      <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-accent/20 rounded-tl transition-all duration-300 group-hover:border-accent/50 group-hover:w-4 group-hover:h-4" />
-      <div className="absolute top-0 right-0 w-3 h-3 border-t border-r border-accent/20 rounded-tr transition-all duration-300 group-hover:border-accent/50 group-hover:w-4 group-hover:h-4" />
-      <div className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-accent/20 rounded-bl transition-all duration-300 group-hover:border-accent/50 group-hover:w-4 group-hover:h-4" />
-      <div className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-accent/20 rounded-br transition-all duration-300 group-hover:border-accent/50 group-hover:w-4 group-hover:h-4" />
+      {/* Precision corner marks */}
+      <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-border/40 rounded-tl pointer-events-none" />
+      <div className="absolute top-0 right-0 w-3 h-3 border-t border-r border-border/40 rounded-tr pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-border/40 rounded-bl pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-border/40 rounded-br pointer-events-none" />
 
       {/* Header controls: Net Worth Info + Tab Switch (Original sizes, theme-adaptive colors) */}
       <div className="flex items-start justify-between gap-4 px-5 pt-5 pb-3 relative z-10">
         <div className="space-y-2">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60 transition-colors duration-300 group-hover:text-muted-foreground/80">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">
             {isId ? "Total Kekayaan" : "Net Worth"}
           </p>
-          <p className="text-3xl font-black font-mono tabular-nums text-foreground transition-all duration-300 group-hover:scale-105 group-hover:text-accent">
+          <p className="text-3xl font-black font-mono tabular-nums text-foreground tracking-tight">
             {formatIDR(display.value)}
           </p>
           <DeltaLine dir={dir} delta={delta} ratio={ratio} hoveredLabel={display.label} periodLabel={periodLabel} isId={isId} />

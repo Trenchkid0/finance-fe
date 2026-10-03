@@ -38,20 +38,17 @@ export default function Login() {
           </DropdownMenu>
         </div>
 
-        {/* Ambient glow */}
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-          <div className="absolute -top-32 -left-32 w-[400px] h-[400px] bg-accent/[0.04] rounded-full blur-[100px]" />
-          <div className="absolute bottom-0 right-0 w-[300px] h-[300px] bg-indigo-500/[0.03] rounded-full blur-[80px]" />
-        </div>
+        {/* Ambient background grid texture */}
+        <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, var(--foreground) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
 
         <div className="relative mx-auto w-full max-w-[360px] space-y-10 animate-fade-in-up">
           {/* Brand */}
           <div className="flex items-center gap-3">
             <div className="relative">
-              <span className="flex size-10 items-center justify-center rounded-2xl bg-gradient-to-br from-accent via-blue-500 to-indigo-600 text-white font-black text-lg shadow-[0_4px_20px_rgba(56,139,253,0.4)]" aria-hidden>
+              <span className="flex size-10 items-center justify-center rounded-xl bg-accent text-white font-mono font-bold text-base shadow-sm ring-1 ring-white/15" aria-hidden>
                 R
               </span>
-              <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full bg-income border-2 border-canvas" />
+              <span className="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full bg-income ring-2 ring-canvas" />
             </div>
             <span className="text-lg font-bold tracking-tight text-foreground">Racks Finance</span>
           </div>
@@ -60,9 +57,9 @@ export default function Login() {
           <div className="space-y-3">
             <h1 className="text-[2rem] leading-[1.15] font-extrabold tracking-tight text-foreground">
               {language === "id" ? (
-                <>Selamat datang<br /><span className="bg-gradient-to-r from-accent to-indigo-400 bg-clip-text text-transparent">kembali.</span></>
+                <>Selamat datang<br />kembali.</>
               ) : (
-                <>Welcome<br /><span className="bg-gradient-to-r from-accent to-indigo-400 bg-clip-text text-transparent">back.</span></>
+                <>Welcome<br />back.</>
               )}
             </h1>
             <p className="text-[13px] text-muted-foreground leading-relaxed max-w-[300px]">
@@ -75,21 +72,21 @@ export default function Login() {
           <LoginForm />
 
           {/* Trust badges */}
-          <div className="flex items-center gap-5 pt-2">
-            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/60">
-              <Shield size={12} className="text-income/60" />
-              <span>{language === "id" ? "Terenkripsi" : "Encrypted"}</span>
+          <div className="flex flex-wrap items-center gap-4 pt-2">
+            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/75">
+              <Shield size={12} className="text-income" />
+              <span>{language === "id" ? "Self-hosted & terenkripsi" : "Self-hosted & encrypted"}</span>
             </div>
-            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/60">
-              <Zap size={12} className="text-warning/60" />
-              <span>{language === "id" ? "Sinkronisasi real-time" : "Real-time sync"}</span>
+            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/75">
+              <Zap size={12} className="text-accent" />
+              <span>{language === "id" ? "Zero-latency SQLite engine" : "Zero-latency SQLite engine"}</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="hidden lg:flex relative flex-col items-center justify-center overflow-hidden bg-[#07090e] border-l border-border/40 font-sans p-10 xl:p-16">
-        {/* 1. Subtle horizontal and vertical grid lines */}
+      <div className="hidden lg:flex relative flex-col items-center justify-center overflow-hidden bg-canvas border-l border-border/40 font-sans p-10 xl:p-16">
+        {/* Subtle grid texture */}
         <div
           className="absolute inset-0 opacity-[0.03] pointer-events-none"
           style={{
@@ -97,48 +94,25 @@ export default function Login() {
             backgroundSize: '48px 48px',
           }}
         />
-        
-        {/* 2. Overlaid dot-grid pattern for texture */}
-        <div
-          className="absolute inset-0 opacity-[0.05] pointer-events-none"
-          style={{
-            backgroundImage: 'radial-gradient(circle, var(--text-muted) 1px, transparent 1px)',
-            backgroundSize: '16px 16px',
-          }}
-        />
 
-        {/* 3. Deep colorful ambient aura glows */}
-        <div className="absolute top-12 left-12 w-[350px] h-[350px] bg-income/[0.04] rounded-full blur-[100px] pointer-events-none" />
-        <div className="absolute bottom-12 right-12 w-[400px] h-[400px] bg-indigo-500/[0.04] rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[580px] h-[580px] bg-accent/[0.07] rounded-full blur-[140px] pointer-events-none" />
-
-        {/* 4. Tech decorative corner crosshairs */}
-        <div className="absolute top-8 left-8 size-4 border-t border-l border-border/20 pointer-events-none" />
-        <div className="absolute top-8 right-8 size-4 border-t border-r border-border/20 pointer-events-none" />
-        <div className="absolute bottom-8 left-8 size-4 border-b border-l border-border/20 pointer-events-none" />
-        <div className="absolute bottom-8 right-8 size-4 border-b border-r border-border/20 pointer-events-none" />
-
-        {/* Floating SaaS Window Mockup */}
-        <div className="relative z-10 w-full max-w-[620px] bg-elevated/45 backdrop-blur-lg border border-border/80 rounded-2xl shadow-[0_35px_70px_rgba(0,0,0,0.35)] overflow-hidden flex flex-col">
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3.5 bg-surface/40 border-b border-border/40">
-            <div className="flex gap-2 items-center">
-              <span className="size-2.5 rounded-full bg-red-500/40" />
-              <span className="size-2.5 rounded-full bg-yellow-500/40" />
-              <span className="size-2.5 rounded-full bg-green-500/40" />
-            </div>
-            
-            <div className="flex items-center gap-2 px-4 py-1 rounded-md bg-surface/60 border border-border/30 text-[10px] text-text-muted/65 font-mono w-[240px] justify-center select-none">
-              <span className="size-1.5 rounded-full bg-income/80 mr-1 animate-pulse" />
-              racks.finance/dashboard
+        {/* Authentic Double-Bezel Financial Terminal & Live Ledger Card */}
+        <div className="relative z-10 w-full max-w-[620px] rounded-2xl bg-surface/30 p-1.5 ring-1 ring-border/60 shadow-2xl backdrop-blur-md flex flex-col">
+          <div className="rounded-[14px] bg-card-bg/95 border border-border/50 overflow-hidden flex flex-col">
+            {/* Terminal Header Bar */}
+            <div className="flex items-center justify-between px-5 py-3 bg-surface/60 border-b border-border/40">
+              <div className="flex items-center gap-2">
+                <span className="size-2 rounded-full bg-income" />
+                <span className="text-[10px] font-mono font-semibold uppercase tracking-wider text-muted-foreground">
+                  LEDGER // LOCAL ENGINE ONLINE
+                </span>
+              </div>
+              
+              <div className="text-[10px] font-mono text-muted-foreground/60">
+                SQLITE v3.45 • 0.4ms
+              </div>
             </div>
 
-            <div className="size-6 rounded-full bg-border/40 flex items-center justify-center text-[10px] font-bold text-text-muted">
-              U
-            </div>
-          </div>
-
-          <div className="flex flex-row h-[420px] bg-canvas/20">
+            <div className="flex flex-row h-[420px] bg-canvas/30">
             {/* Sidebar Mockup (More filled with 6 items) */}
             <div className="w-[56px] border-r border-border/30 bg-surface/10 py-5 flex flex-col items-center gap-5">
               <div className="size-8 rounded-xl bg-accent flex items-center justify-center text-white text-[11px] font-black shadow-[0_2px_10px_rgba(56,139,253,0.3)]">
@@ -283,6 +257,7 @@ export default function Login() {
             </div>
           </div>
         </div>
+      </div>
 
         {/* Feature subtitle */}
         <div className="relative z-10 mt-8 text-center max-w-[380px] space-y-2">

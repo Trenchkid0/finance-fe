@@ -896,7 +896,7 @@ export function applyTheme(themeId: string, customVars?: Partial<ThemeVariables>
   }
 }
 
-export type CardType = "default" | "blueprint";
+export type CardType = "default" | "blueprint" | "manly" | "girly";
 
 export interface CardStyles {
   radius: string;      // "0px" | "8px" | "16px" | "24px"
@@ -904,7 +904,7 @@ export interface CardStyles {
   blur: string;        // "0px" | "12px" | "24px"
   opacity: string;     // "1" | "0.75" | "0.5"
   dropdownRadius: string; // "0px" | "8px" | "12px" | "16px" | "24px" | "9999px"
-  cardType: CardType;  // "default" | "blueprint"
+  cardType: CardType;  // "default" | "blueprint" | "manly" | "girly"
 }
 
 export interface ButtonStyles {

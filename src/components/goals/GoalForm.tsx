@@ -133,9 +133,9 @@ export function GoalForm({ open, onClose, goal, accounts, onSubmit }: GoalModalP
     >
       <div className="flex max-h-[calc(100dvh-48px)] w-full max-w-[520px] flex-col overflow-hidden rounded-[22px] border border-border bg-surface shadow-2xl">
         {/* ---- Header ---- */}
-        <div className="flex flex-none items-start gap-3.5 border-b border-border bg-gradient-to-b from-white/[0.03] to-transparent px-7 py-5">
-          <div className="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-gradient-to-br from-accent to-accent/70 shadow-lg shadow-accent/30">
-            <Target className="h-[22px] w-[22px] text-white" />
+        <div className="flex flex-none items-start gap-3.5 border-b border-border px-7 py-5">
+          <div className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-accent/10 border border-accent/25 text-accent shadow-xs">
+            <Target className="h-5 w-5" />
           </div>
           <div className="min-w-0 flex-1">
             <h2 className="text-lg font-bold leading-tight tracking-tight">

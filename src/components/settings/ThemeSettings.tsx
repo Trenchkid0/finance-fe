@@ -1,6 +1,6 @@
 import { useState, useLayoutEffect, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { ChevronDown, Palette, Plus, Settings, Type, CreditCard, Square, Bell, Check, LayoutGrid, CornerDownRight } from "lucide-react";
+import { ChevronDown, Palette, Plus, Settings, Type, CreditCard, Square, Bell, Check, LayoutGrid, CornerDownRight, Shield, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import {
   applyTheme,
@@ -1329,7 +1329,7 @@ export function ThemeSettings() {
                 <label className="text-xs font-semibold text-foreground">
                   {language === "id" ? "Jenis Kartu" : "Card Type"}
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                   {/* Default */}
                   <button
                     type="button"
@@ -1348,12 +1348,11 @@ export function ThemeSettings() {
                     )}
                     {/* Mini preview */}
                     <div
-                      className="mb-3 h-20 w-full border border-border/50 p-3 flex flex-col justify-between"
+                      className="mb-3 h-20 w-full border border-border bg-background p-3 flex flex-col justify-between"
                       style={{
                         borderRadius: cardStyles.radius || "16px",
                         borderWidth: cardStyles.borderWidth || "1px",
-                        backdropFilter: `blur(${cardStyles.blur || "12px"})`,
-                        backgroundColor: `color-mix(in srgb, var(--card-bg) calc(${cardStyles.opacity || "0.75"} * 100%), transparent)`,
+                        backgroundColor: "var(--background)",
                       }}
                     >
                       <div className="flex justify-between items-start">
@@ -1430,6 +1429,108 @@ export function ThemeSettings() {
                         : "Sharp corners, decorative corner marks, and accent hover glow. Technical & precise feel."}
                     </p>
                   </button>
+
+                  {/* Manly */}
+                  <button
+                    type="button"
+                    onClick={() => handleCardStyleChange("cardType", "manly")}
+                    className={cn(
+                      "relative text-left p-4 rounded-xl border transition-all duration-200",
+                      cardStyles.cardType === "manly"
+                        ? "border-amber-500/80 ring-1 ring-amber-500/30 bg-amber-500/5"
+                        : "border-border bg-elevated/30 hover:border-hover-border hover:bg-elevated/50",
+                    )}
+                  >
+                    {cardStyles.cardType === "manly" && (
+                      <span className="absolute top-3 right-3 z-20 flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-black shadow-sm font-bold">
+                        <Check size={12} />
+                      </span>
+                    )}
+                    {/* Mini preview — manly style */}
+                    <div className="relative mb-3 h-20 w-full rounded-md border border-zinc-700/80 bg-background p-3 flex flex-col justify-between overflow-hidden shadow-inner">
+                      {/* Corner micro-rivets */}
+                      <div className="absolute left-1 top-1 h-1 w-1 rounded-full bg-zinc-400/60 ring-1 ring-zinc-700" />
+                      <div className="absolute right-1 top-1 h-1 w-1 rounded-full bg-zinc-400/60 ring-1 ring-zinc-700" />
+                      <div className="absolute bottom-1 left-1 h-1 w-1 rounded-full bg-zinc-400/60 ring-1 ring-zinc-700" />
+                      <div className="absolute bottom-1 right-1 h-1 w-1 rounded-full bg-zinc-400/60 ring-1 ring-zinc-700" />
+                      {/* Top titanium/amber stripe */}
+                      <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-zinc-600/50 via-amber-500/70 to-zinc-600/50" />
+                      <div className="flex justify-between items-start relative z-10">
+                        <div>
+                          <div className="h-1.5 w-12 rounded bg-zinc-500/40" />
+                          <div className="mt-1.5 h-3 w-20 rounded bg-zinc-200/50" />
+                        </div>
+                        <div className="h-4 px-1.5 rounded-sm border border-zinc-700 bg-elevated/80 flex items-center justify-center">
+                          <span className="text-[7px] font-mono font-bold tracking-wider text-amber-400">TACTICAL</span>
+                        </div>
+                      </div>
+                      <div className="h-1.5 w-3/4 rounded-sm bg-border/40 relative z-10 overflow-hidden">
+                        <div className="h-full w-2/3 bg-gradient-to-r from-amber-600 to-amber-400 rounded-sm" />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <Shield size={14} className="text-amber-500" />
+                      <span className="text-sm font-semibold text-foreground">
+                        {language === "id" ? "Manly" : "Manly"}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      {language === "id"
+                        ? "Sudut kokoh 6px, baut taktis sudut, dan strip titanium. Nuansa maskulin & tangguh."
+                        : "Solid 6px corners, corner tactical rivets, and titanium stripe. Rugged & masculine feel."}
+                    </p>
+                  </button>
+
+                  {/* Girly */}
+                  <button
+                    type="button"
+                    onClick={() => handleCardStyleChange("cardType", "girly")}
+                    className={cn(
+                      "relative text-left p-4 rounded-xl border transition-all duration-200",
+                      cardStyles.cardType === "girly"
+                        ? "border-pink-400 ring-1 ring-pink-400/30 bg-pink-500/5"
+                        : "border-border bg-elevated/30 hover:border-hover-border hover:bg-elevated/50",
+                    )}
+                  >
+                    {cardStyles.cardType === "girly" && (
+                      <span className="absolute top-3 right-3 z-20 flex h-5 w-5 items-center justify-center rounded-full bg-pink-500 text-white shadow-sm">
+                        <Check size={12} />
+                      </span>
+                    )}
+                    {/* Mini preview — girly style */}
+                    <div className="relative mb-3 h-20 w-full rounded-[18px] border border-pink-300/50 bg-background p-3 flex flex-col justify-between overflow-hidden">
+                      {/* Pastel blurs */}
+                      <div className="pointer-events-none absolute -right-3 -top-3 h-14 w-14 rounded-full bg-pink-400/20 blur-md" />
+                      <div className="pointer-events-none absolute -left-3 -bottom-3 h-14 w-14 rounded-full bg-purple-400/15 blur-md" />
+                      {/* Sparkle star */}
+                      <div className="pointer-events-none absolute right-2.5 top-2 z-10 text-pink-400">
+                        <Sparkles size={11} />
+                      </div>
+                      <div className="flex justify-between items-start relative z-10">
+                        <div>
+                          <div className="h-1.5 w-12 rounded-full bg-pink-300/40" />
+                          <div className="mt-1.5 h-3 w-20 rounded-full bg-pink-200/50 dark:bg-pink-100/40" />
+                        </div>
+                        <div className="h-4 px-2 rounded-full border border-pink-400/30 bg-pink-500/10 flex items-center justify-center">
+                          <span className="text-[7px] font-bold tracking-wider text-pink-400">LOVELY</span>
+                        </div>
+                      </div>
+                      <div className="h-1.5 w-3/4 rounded-full bg-pink-200/20 relative z-10 overflow-hidden">
+                        <div className="h-full w-2/3 rounded-full bg-gradient-to-r from-pink-400 to-rose-400" />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <Sparkles size={14} className="text-pink-400" />
+                      <span className="text-sm font-semibold text-foreground">
+                        {language === "id" ? "Girly" : "Girly"}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      {language === "id"
+                        ? "Sudut melengkung halus 22px, pendar pastel dreamy, dan kilau bintang. Manis & estetik."
+                        : "Soft 22px curves, dreamy pastel glow, and delicate star sparkles. Sweet & aesthetic."}
+                    </p>
+                  </button>
                 </div>
               </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
@@ -1502,15 +1603,19 @@ export function ThemeSettings() {
           {/* Real-time Preview */}
           <div
             className={cn(
-              "mt-6 p-5 border transition-all duration-300",
+              "mt-6 p-5 border transition-all duration-300 bg-background",
               cardStyles.cardType === "blueprint"
-                ? "border-border bg-background overflow-hidden relative"
-                : "rounded-2xl border-border/30 bg-white/[0.01]",
+                ? "border-border overflow-hidden relative"
+                : cardStyles.cardType === "manly"
+                ? "border-zinc-700/60 overflow-hidden relative rounded-lg"
+                : cardStyles.cardType === "girly"
+                ? "border-pink-300/40 overflow-hidden relative rounded-[24px]"
+                : "rounded-2xl border-border/30",
             )}
-            style={cardStyles.cardType !== "blueprint" ? {
+            style={cardStyles.cardType === "default" ? {
               borderRadius: 'var(--card-radius)',
               borderWidth: 'var(--card-border-width)',
-              backgroundColor: 'color-mix(in srgb, var(--card-bg) calc(var(--card-opacity) * 100%), transparent)',
+              backgroundColor: 'var(--background)',
             } : undefined}
           >
             {cardStyles.cardType === "blueprint" && (
@@ -1519,6 +1624,21 @@ export function ThemeSettings() {
                 <div className="absolute -right-px -top-px h-3 w-3 border-r-2 border-t-2 border-text-muted/20" />
                 <div className="absolute -bottom-px -left-px h-3 w-3 border-b-2 border-l-2 border-text-muted/20" />
                 <div className="absolute -bottom-px -right-px h-3 w-3 border-b-2 border-r-2 border-text-muted/20" />
+              </>
+            )}
+            {cardStyles.cardType === "manly" && (
+              <>
+                <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-zinc-600/40 via-amber-500/50 to-zinc-600/40" />
+                <div className="absolute left-2 top-2 h-1.5 w-1.5 rounded-full bg-zinc-500/40 ring-1 ring-zinc-700/50" />
+                <div className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-zinc-500/40 ring-1 ring-zinc-700/50" />
+                <div className="absolute bottom-2 left-2 h-1.5 w-1.5 rounded-full bg-zinc-500/40 ring-1 ring-zinc-700/50" />
+                <div className="absolute bottom-2 right-2 h-1.5 w-1.5 rounded-full bg-zinc-500/40 ring-1 ring-zinc-700/50" />
+              </>
+            )}
+            {cardStyles.cardType === "girly" && (
+              <>
+                <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-pink-400/15 blur-xl" />
+                <div className="pointer-events-none absolute -left-8 -bottom-8 h-32 w-32 rounded-full bg-purple-400/10 blur-xl" />
               </>
             )}
             <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">
@@ -1530,19 +1650,34 @@ export function ThemeSettings() {
               <div
                 className={cn(
                   "w-full lg:w-[360px] p-6 border text-card-foreground flex flex-col justify-between gap-4 transition-all duration-300 relative overflow-hidden",
-                  cardStyles.cardType === "blueprint" && "group hover:border-accent/40",
+                  cardStyles.cardType === "blueprint" && "group hover:border-accent/40 rounded-none",
+                  cardStyles.cardType === "manly" && "group hover:border-zinc-500 hover:shadow-lg hover:shadow-black/25 rounded-md",
+                  cardStyles.cardType === "girly" && "group hover:border-pink-400/70 hover:shadow-[0_8px_30px_rgba(244,114,182,0.18)] rounded-[22px]",
                 )}
-                style={cardStyles.cardType !== "blueprint" ? {
-                  borderRadius: cardStyles.radius,
-                  borderWidth: cardStyles.borderWidth,
-                  borderColor: "color-mix(in srgb, var(--border) 50%, transparent)",
-                  backdropFilter: `blur(${cardStyles.blur})`,
-                  WebkitBackdropFilter: `blur(${cardStyles.blur})`,
-                  backgroundColor: `color-mix(in srgb, var(--card-bg) calc(${cardStyles.opacity} * 100%), transparent)`,
-                } : {
-                  borderColor: "var(--border)",
-                  backgroundColor: "var(--background)",
-                }}
+                style={
+                  cardStyles.cardType === "blueprint"
+                    ? { borderColor: "var(--border)", backgroundColor: "var(--background)" }
+                    : cardStyles.cardType === "manly"
+                    ? {
+                        borderRadius: "6px",
+                        borderWidth: "1px",
+                        borderColor: "rgba(113, 113, 122, 0.6)",
+                        backgroundColor: "var(--background)",
+                      }
+                    : cardStyles.cardType === "girly"
+                    ? {
+                        borderRadius: "22px",
+                        borderWidth: "1.5px",
+                        borderColor: "rgba(244, 114, 182, 0.4)",
+                        backgroundColor: "var(--background)",
+                      }
+                    : {
+                        borderRadius: cardStyles.radius,
+                        borderWidth: cardStyles.borderWidth,
+                        borderColor: "var(--border)",
+                        backgroundColor: "var(--background)",
+                      }
+                }
               >
                 {cardStyles.cardType === "blueprint" && (
                   <>
@@ -1551,6 +1686,25 @@ export function ThemeSettings() {
                     <div className="absolute -bottom-px -left-px h-2 w-2 border-b-2 border-l-2 border-text-muted/20" />
                     <div className="absolute -bottom-px -right-px h-2 w-2 border-b-2 border-r-2 border-text-muted/20" />
                     <div className="absolute left-0 top-0 h-full w-0.5 bg-accent/40" />
+                  </>
+                )}
+                {cardStyles.cardType === "manly" && (
+                  <>
+                    <div className="pointer-events-none absolute left-1.5 top-1.5 z-10 h-1.5 w-1.5 rounded-full bg-zinc-500/40 ring-1 ring-zinc-700/50" />
+                    <div className="pointer-events-none absolute right-1.5 top-1.5 z-10 h-1.5 w-1.5 rounded-full bg-zinc-500/40 ring-1 ring-zinc-700/50" />
+                    <div className="pointer-events-none absolute bottom-1.5 left-1.5 z-10 h-1.5 w-1.5 rounded-full bg-zinc-500/40 ring-1 ring-zinc-700/50" />
+                    <div className="pointer-events-none absolute bottom-1.5 right-1.5 z-10 h-1.5 w-1.5 rounded-full bg-zinc-500/40 ring-1 ring-zinc-700/50" />
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-zinc-600/40 via-amber-500/50 to-zinc-600/40 opacity-70 group-hover:opacity-100 transition-opacity" />
+                    <div className="pointer-events-none absolute right-0 top-0 h-8 w-8 bg-gradient-to-bl from-zinc-600/10 to-transparent" />
+                  </>
+                )}
+                {cardStyles.cardType === "girly" && (
+                  <>
+                    <div className="pointer-events-none absolute -right-6 -top-6 h-28 w-28 rounded-full bg-gradient-to-br from-pink-400/15 via-rose-300/10 to-transparent blur-xl" />
+                    <div className="pointer-events-none absolute -left-6 -bottom-6 h-28 w-28 rounded-full bg-gradient-to-tr from-purple-400/10 via-pink-300/10 to-transparent blur-xl" />
+                    <div className="pointer-events-none absolute right-3.5 top-3 z-10 text-pink-400/70 group-hover:scale-110 group-hover:text-pink-400 transition-all duration-300">
+                      <Sparkles size={13} />
+                    </div>
                   </>
                 )}
                 <div className="space-y-4 relative z-10">
@@ -1568,6 +1722,14 @@ export function ThemeSettings() {
                       <span className="text-[10px] font-bold font-mono px-1.5 py-0.5 border border-border text-muted-foreground">
                         LIVE
                       </span>
+                    ) : cardStyles.cardType === "manly" ? (
+                      <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-sm border border-zinc-600/70 bg-zinc-800/80 text-amber-400 tracking-wider">
+                        TACTICAL
+                      </span>
+                    ) : cardStyles.cardType === "girly" ? (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-pink-500/15 text-pink-400 border border-pink-400/30 flex items-center gap-1">
+                        ✨ LOVELY
+                      </span>
                     ) : (
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-income/10 text-income border border-income/20">
                         +12.4%
@@ -1583,11 +1745,23 @@ export function ThemeSettings() {
                     </div>
                     <div className={cn(
                       "h-1.5 w-full overflow-hidden",
-                      cardStyles.cardType === "blueprint" ? "bg-muted-foreground/10" : "bg-border/20 rounded-full",
+                      cardStyles.cardType === "blueprint"
+                        ? "bg-muted-foreground/10"
+                        : cardStyles.cardType === "manly"
+                        ? "bg-zinc-800 rounded-sm"
+                        : cardStyles.cardType === "girly"
+                        ? "bg-pink-100/20 dark:bg-pink-900/20 rounded-full"
+                        : "bg-border/20 rounded-full",
                     )}>
                       <div className={cn(
-                        "h-full bg-accent transition-all duration-500",
-                        cardStyles.cardType !== "blueprint" && "rounded-full",
+                        "h-full transition-all duration-500",
+                        cardStyles.cardType === "blueprint"
+                          ? "bg-accent"
+                          : cardStyles.cardType === "manly"
+                          ? "bg-gradient-to-r from-amber-600 to-amber-400 rounded-sm"
+                          : cardStyles.cardType === "girly"
+                          ? "bg-gradient-to-r from-pink-400 to-rose-400 rounded-full"
+                          : "bg-accent rounded-full",
                       )} style={{ width: "75%" }} />
                     </div>
                   </div>
@@ -1596,19 +1770,36 @@ export function ThemeSettings() {
                 {/* Card Footer Action */}
                 <div className={cn(
                   "flex justify-end gap-2 pt-3 border-t relative z-10",
-                  cardStyles.cardType === "blueprint" ? "border-border/30" : "border-border/20",
+                  cardStyles.cardType === "blueprint"
+                    ? "border-border/30"
+                    : cardStyles.cardType === "manly"
+                    ? "border-zinc-700/40"
+                    : cardStyles.cardType === "girly"
+                    ? "border-pink-300/20"
+                    : "border-border/20",
                 )}>
                   <button type="button" className={cn(
-                    "px-2.5 py-1.5 border text-[10px] font-semibold text-muted-foreground hover:text-foreground transition-all",
+                    "px-2.5 py-1.5 border text-[10px] font-semibold transition-all",
                     cardStyles.cardType === "blueprint"
-                      ? "border-border hover:bg-muted/30"
-                      : "border-border hover:bg-white/[0.03]",
-                  )} style={cardStyles.cardType !== "blueprint" ? { borderRadius: 'var(--button-radius)' } : undefined}>
+                      ? "border-border text-muted-foreground hover:bg-muted/30"
+                      : cardStyles.cardType === "manly"
+                      ? "rounded-sm border-zinc-600 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
+                      : cardStyles.cardType === "girly"
+                      ? "rounded-full border-pink-300/40 text-pink-400 hover:bg-pink-500/10"
+                      : "border-border text-muted-foreground hover:text-foreground hover:bg-white/[0.03]",
+                  )} style={cardStyles.cardType === "default" ? { borderRadius: 'var(--button-radius)' } : undefined}>
                     {language === "id" ? "Batal" : "Cancel"}
                   </button>
                   <button type="button" className={cn(
-                    "px-2.5 py-1.5 bg-accent text-white text-[10px] font-semibold hover:bg-accent/80 transition-all",
-                  )} style={cardStyles.cardType !== "blueprint" ? { borderRadius: 'var(--button-radius)' } : undefined}>
+                    "px-2.5 py-1.5 text-[10px] font-semibold transition-all",
+                    cardStyles.cardType === "blueprint"
+                      ? "bg-accent text-white hover:bg-accent/80"
+                      : cardStyles.cardType === "manly"
+                      ? "rounded-sm bg-gradient-to-r from-zinc-700 to-zinc-800 hover:from-zinc-600 hover:to-zinc-700 text-amber-300 border border-zinc-600"
+                      : cardStyles.cardType === "girly"
+                      ? "rounded-full bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-sm shadow-pink-500/30 hover:brightness-105"
+                      : "bg-accent text-white hover:bg-accent/80",
+                  )} style={cardStyles.cardType === "default" ? { borderRadius: 'var(--button-radius)' } : undefined}>
                     {language === "id" ? "Terapkan" : "Apply"}
                   </button>
                 </div>
@@ -1619,16 +1810,21 @@ export function ThemeSettings() {
                 className={cn(
                   "flex-1 p-5 border flex flex-col justify-center text-left text-xs text-muted-foreground space-y-2.5 relative overflow-hidden",
                   cardStyles.cardType === "blueprint" && "group",
+                  cardStyles.cardType === "manly" && "group rounded-md border-zinc-700/60 bg-zinc-900/40",
+                  cardStyles.cardType === "girly" && "group rounded-[20px] border-pink-300/30 bg-pink-500/[0.02]",
                 )}
-                style={cardStyles.cardType !== "blueprint" ? {
-                  borderRadius: 'var(--card-radius)',
-                  borderWidth: 'var(--card-border-width)',
-                  borderColor: 'var(--border)',
-                  backgroundColor: 'color-mix(in srgb, var(--card-bg) calc(var(--card-opacity) * 100%), transparent)',
-                } : {
-                  borderColor: 'var(--border)',
-                  backgroundColor: 'var(--background)',
-                }}
+                style={
+                  cardStyles.cardType === "blueprint"
+                    ? { borderColor: 'var(--border)', backgroundColor: 'var(--background)' }
+                    : cardStyles.cardType === "manly" || cardStyles.cardType === "girly"
+                    ? undefined
+                    : {
+                        borderRadius: 'var(--card-radius)',
+                        borderWidth: 'var(--card-border-width)',
+                        borderColor: 'var(--border)',
+                        backgroundColor: 'color-mix(in srgb, var(--card-bg) calc(var(--card-opacity) * 100%), transparent)',
+                      }
+                }
               >
                 {cardStyles.cardType === "blueprint" && (
                   <>
@@ -1643,12 +1839,17 @@ export function ThemeSettings() {
                 </p>
                 <ul className="list-disc pl-4 space-y-1.5 relative z-10">
                   <li>
-                    <strong>{language === "id" ? "Jenis Kartu" : "Card Type"}:</strong> {cardStyles.cardType === "blueprint"
-                      ? (language === "id" ? "Blueprint — sudut tajam, tanda dekoratif, efek cahaya aksen" : "Blueprint — sharp corners, decorative marks, accent hover glow")
-                      : (language === "id" ? "Default — sudut melengkung, efek kaca buram" : "Default — rounded corners, glassmorphism")
+                    <strong>{language === "id" ? "Jenis Kartu" : "Card Type"}:</strong> {
+                      cardStyles.cardType === "blueprint"
+                        ? (language === "id" ? "Blueprint — sudut tajam, tanda dekoratif, efek cahaya aksen" : "Blueprint — sharp corners, decorative marks, accent hover glow")
+                        : cardStyles.cardType === "manly"
+                        ? (language === "id" ? "Manly — sudut kokoh 6px, baut sudut taktis, strip titanium maskulin" : "Manly — 6px solid corners, tactical corner rivets, titanium accent stripe")
+                        : cardStyles.cardType === "girly"
+                        ? (language === "id" ? "Girly — sudut lembut 22px, pendar pastel dreamy, kilauan bintang manis" : "Girly — soft 22px pillowy curves, dreamy pastel glow, star sparkles")
+                        : (language === "id" ? "Default — sudut melengkung, efek kaca buram" : "Default — rounded corners, glassmorphism")
                     }.
                   </li>
-                  {cardStyles.cardType !== "blueprint" && (
+                  {cardStyles.cardType === "default" && (
                     <>
                       <li>
                         <strong>{language === "id" ? "Sudut Kelengkungan" : "Corner Radius"}:</strong> {language === "id" ? `Tepi luar kotak kartu melengkung sebesar ${cardStyles.radius}` : `Card corner radius set to ${cardStyles.radius}`}.
@@ -1661,11 +1862,47 @@ export function ThemeSettings() {
                       </li>
                     </>
                   )}
+                  {cardStyles.cardType === "manly" && (
+                    <>
+                      <li>
+                        <strong>{language === "id" ? "Geometri & Tepi" : "Geometry & Edge"}:</strong> {language === "id" ? "Presisi sudut 6px dengan baut pengunci taktis di setiap sudut" : "6px precision corners with tactical locking rivets at each corner"}.
+                      </li>
+                      <li>
+                        <strong>{language === "id" ? "Aksen Material" : "Material Accent"}:</strong> {language === "id" ? "Garis strip titanium/amber di tepi atas kartu dengan latar gunmetal pekat" : "Titanium/amber accent stripe at the top edge with solid gunmetal depth"}.
+                      </li>
+                    </>
+                  )}
+                  {cardStyles.cardType === "girly" && (
+                    <>
+                      <li>
+                        <strong>{language === "id" ? "Geometri & Tepi" : "Geometry & Edge"}:</strong> {language === "id" ? "Sudut ultra-lembut 22px dengan garis tepi bernuansa rose gold halus" : "Ultra-soft 22px curves with delicate rose gold outline"}.
+                      </li>
+                      <li>
+                        <strong>{language === "id" ? "Efek Suasana" : "Atmospheric Glow"}:</strong> {language === "id" ? "Pendaran warna pastel lembut di sudut dan ikon kilau bintang (sparkle) interaktif" : "Soft pastel aura in the corners and interactive starlet sparkles"}.
+                      </li>
+                    </>
+                  )}
                   <li>
-                    <strong>{language === "id" ? "Ketebalan Garis" : "Border Thickness"}:</strong> {language === "id" ? `Garis pembatas luar berukuran ${cardStyles.borderWidth}` : `Outer outlines stroke is ${cardStyles.borderWidth}`}.
+                    <strong>{language === "id" ? "Ketebalan Garis" : "Border Thickness"}:</strong> {
+                      cardStyles.cardType === "manly"
+                        ? "1px"
+                        : cardStyles.cardType === "girly"
+                        ? "1.5px"
+                        : cardStyles.cardType === "blueprint"
+                        ? "1px"
+                        : cardStyles.borderWidth
+                    }.
                   </li>
                   <li>
-                    <strong>{language === "id" ? "Kelengkungan Dropdown" : "Dropdown Roundedness"}:</strong> {language === "id" ? `Sudut kelengkungan tombol pilihan (dropdown) diatur ke ${cardStyles.dropdownRadius || "9999px"}` : `Dropdown triggers corner radius set to ${cardStyles.dropdownRadius || "9999px"}`}.
+                    <strong>{language === "id" ? "Kelengkungan Dropdown" : "Dropdown Roundedness"}:</strong> {
+                      cardStyles.cardType === "manly"
+                        ? "6px"
+                        : cardStyles.cardType === "girly"
+                        ? "22px"
+                        : cardStyles.cardType === "blueprint"
+                        ? "0px"
+                        : (language === "id" ? `Sudut kelengkungan tombol pilihan (dropdown) diatur ke ${cardStyles.dropdownRadius || "9999px"}` : `Dropdown triggers corner radius set to ${cardStyles.dropdownRadius || "9999px"}`)
+                    }.
                   </li>
                 </ul>
               </div>

@@ -44,6 +44,7 @@ export interface UserPreferences {
   dashboardLayout: DashboardLayout;
   baseCurrency?: string;
   onboardingCompleted?: boolean;
+  accountOrder?: string[];
 }
 
 // ─── Defaults ─────────────────────────────────────────────────────────────────
@@ -97,6 +98,7 @@ const LS_KEYS = {
   dashboardLayout: "racks-dashboard-layout",
   baseCurrency: "racks-base-currency",
   onboardingCompleted: "racks-onboarding-completed",
+  accountOrder: "racks-accounts-order-ids",
 } as const;
 
 // ─── Local Storage Helpers ────────────────────────────────────────────────────
@@ -139,6 +141,10 @@ function readFromLocalStorage(): UserPreferences {
     dashboardLayout: (localStorage.getItem(LS_KEYS.dashboardLayout) || DEFAULT_PREFERENCES.dashboardLayout) as DashboardLayout,
     baseCurrency: localStorage.getItem(LS_KEYS.baseCurrency) || DEFAULT_PREFERENCES.baseCurrency,
     onboardingCompleted: localStorage.getItem(LS_KEYS.onboardingCompleted) === "true",
+    accountOrder: safeParseJSON<string[]>(
+      localStorage.getItem(LS_KEYS.accountOrder),
+      []
+    ),
   };
 }
 
@@ -162,6 +168,11 @@ function writeToLocalStorage(prefs: UserPreferences): void {
   }
   if (prefs.onboardingCompleted != null) {
     localStorage.setItem(LS_KEYS.onboardingCompleted, String(prefs.onboardingCompleted));
+  }
+  if (prefs.accountOrder && prefs.accountOrder.length > 0) {
+    localStorage.setItem(LS_KEYS.accountOrder, JSON.stringify(prefs.accountOrder));
+  } else if (prefs.accountOrder && prefs.accountOrder.length === 0) {
+    localStorage.removeItem(LS_KEYS.accountOrder);
   }
 }
 

@@ -127,7 +127,7 @@ export function RecurringForm({ open, onClose, recurring, categories, accounts, 
       >
         {/* ===== STICKY HEADER ===== */}
         <div className="flex items-start gap-4 border-b border-border px-7 py-5">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-accent to-accent/60 text-white shadow-lg animate-pulse-subtle">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent/10 border border-accent/25 text-accent shadow-xs">
             <Calendar className="h-5 w-5" />
           </div>
           <div className="min-w-0 flex-1">

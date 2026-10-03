@@ -118,12 +118,12 @@ export default function ResetPassword() {
           <div className="flex items-center gap-3">
             <div className="relative">
               <span
-                className="flex size-10 items-center justify-center rounded-2xl bg-gradient-to-br from-accent via-blue-500 to-indigo-600 text-white font-black text-lg shadow-[0_4px_20px_rgba(56,139,253,0.4)]"
+                className="flex size-10 items-center justify-center rounded-xl bg-accent text-white font-mono font-bold text-base shadow-sm ring-1 ring-white/15"
                 aria-hidden
               >
                 R
               </span>
-              <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full bg-income border-2 border-canvas" />
+              <span className="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full bg-income ring-2 ring-canvas" />
             </div>
             <span className="text-lg font-bold tracking-tight text-foreground">
               Racks Finance
@@ -314,11 +314,15 @@ export default function ResetPassword() {
         </div>
       </div>
 
-      {/* RIGHT COLUMN — Visual Showcase (same as Login page for theme consistency) */}
-      <div className="hidden lg:flex relative flex-col overflow-hidden bg-gradient-to-br from-sidebar via-canvas to-elevated border-l border-border/40">
-        <div className="absolute top-[10%] right-[10%] w-[500px] h-[500px] bg-accent/[0.08] rounded-full blur-[120px] animate-pulse" style={{ animationDuration: '7s' }} />
-        <div className="absolute bottom-[5%] left-[15%] w-[450px] h-[450px] bg-progress/[0.06] rounded-full blur-[130px] animate-pulse" style={{ animationDuration: '11s' }} />
-        <div className="absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-warning/[0.04] rounded-full blur-[100px]" />
+      {/* RIGHT COLUMN — Visual Showcase */}
+      <div className="hidden lg:flex relative flex-col overflow-hidden bg-canvas border-l border-border/40">
+        <div
+          className="absolute inset-0 opacity-[0.03] pointer-events-none"
+          style={{
+            backgroundImage: 'linear-gradient(to right, var(--text-muted) 1px, transparent 1px), linear-gradient(to bottom, var(--text-muted) 1px, transparent 1px)',
+            backgroundSize: '48px 48px',
+          }}
+        />
 
         <div
           className="absolute inset-0 opacity-[0.3]"
@@ -381,12 +385,8 @@ export default function ResetPassword() {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     />
-                    {/* Glowing endpoint */}
-                    <circle cx="200" cy="2" r="4" fill="var(--accent)" opacity="0.3">
-                      <animate attributeName="r" values="4;8;4" dur="2s" repeatCount="indefinite" />
-                      <animate attributeName="opacity" values="0.3;0.1;0.3" dur="2s" repeatCount="indefinite" />
-                    </circle>
-                    <circle cx="200" cy="2" r="3" fill="var(--accent)" />
+                    {/* Chart endpoint marker */}
+                    <circle cx="200" cy="2" r="3.5" fill="var(--accent)" stroke="var(--canvas)" strokeWidth="1.5" />
                   </svg>
                 </div>
 

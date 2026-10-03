@@ -266,6 +266,34 @@ html {
   --custom-dropdown-menu-radius: 0px !important;
 }
 
+/* ── Manly Mode: Global CSS Overrides ──────────────────────────
+   Tactical, solid 6px corners, dense backdrop
+────────────────────────────────────────────────────────────── */
+[data-card-type="manly"] {
+  --card-radius: 6px !important;
+  --card-backdrop-blur: 16px !important;
+  --card-opacity: 0.95 !important;
+  --card-border-width: 1px !important;
+  --dropdown-radius: 6px !important;
+  --dropdown-menu-radius: 6px !important;
+  --custom-dropdown-radius: 6px !important;
+  --custom-dropdown-menu-radius: 6px !important;
+}
+
+/* ── Girly Mode: Global CSS Overrides ──────────────────────────
+   Soft 22px pillowy curves, dreamy blur, rose/pastel aesthetic
+────────────────────────────────────────────────────────────── */
+[data-card-type="girly"] {
+  --card-radius: 22px !important;
+  --card-backdrop-blur: 20px !important;
+  --card-opacity: 0.85 !important;
+  --card-border-width: 1.5px !important;
+  --dropdown-radius: 22px !important;
+  --dropdown-menu-radius: 16px !important;
+  --custom-dropdown-radius: 22px !important;
+  --custom-dropdown-menu-radius: 16px !important;
+}
+
 /* Transaction Row Deletion Animations */
 @keyframes growProgressBar {
   from { width: 0%; }

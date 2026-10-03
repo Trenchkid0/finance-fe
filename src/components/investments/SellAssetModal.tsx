@@ -68,7 +68,7 @@ export function SellAssetModal({
       <div className="flex max-h-[calc(100dvh-48px)] w-full max-w-[500px] flex-col overflow-hidden rounded-[22px] border border-border bg-surface shadow-2xl">
         {/* STICKY HEADER */}
         <div className="flex items-start gap-4 border-b border-border px-7 py-5">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-expense to-expense/60 text-white shadow-lg">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-expense/10 border border-expense/25 text-expense shadow-xs">
             <MinusCircle className="h-5 w-5" />
           </div>
           <div className="min-w-0 flex-1">
