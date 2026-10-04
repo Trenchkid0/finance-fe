@@ -23,7 +23,7 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from "@/components/ui/command";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { createPortal } from "react-dom";
 import { useQuickAdd } from "@/components/transactions/QuickAddProvider";
 
 interface AccountQuickEntry {
@@ -92,6 +92,21 @@ export function CommandPalette({ accounts }: Props) {
     return () => window.removeEventListener("command-palette:open", onOpen);
   }, []);
 
+  // Esc + lock scroll exactly like TransactionForm (create transaction)
+  React.useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
   function go(path: string) {
     setOpen(false);
     navigate(path);
@@ -100,22 +115,28 @@ export function CommandPalette({ accounts }: Props) {
   function triggerQuickAdd() {
     setOpen(false);
     // Beri waktu dialog command tertutup dulu sebelum buka dialog quick-add
-    // — Radix Dialog tidak suka dua dialog terbuka sekaligus dalam render
-    // yang sama (focus trap bertabrakan).
     setTimeout(() => openQuickAdd(), 50);
   }
 
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent
-        showCloseButton={false}
-        className="overflow-hidden p-0 sm:max-w-lg"
+  if (!open || typeof document === "undefined") return null;
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center bg-black/70 p-4 pt-[12vh] sm:pt-[15vh] backdrop-blur-sm animate-in fade-in-0 duration-150"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) setOpen(false);
+      }}
+    >
+      <div
+        className="flex max-h-[calc(100dvh-48px)] w-full max-w-xl flex-col overflow-hidden rounded-[22px] border border-white/[0.12] dark:border-white/[0.08] bg-popover/98 shadow-2xl backdrop-blur-2xl animate-in zoom-in-95 duration-150"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Pencarian Cepat"
       >
-        <DialogTitle className="sr-only">Cari perintah</DialogTitle>
         <Command className="[&_[cmdk-group-heading]]:px-3">
           <CommandInput placeholder="Cari halaman, akun, atau aksi…" />
-          <CommandList>
-            <CommandEmpty>Tidak ada hasil.</CommandEmpty>
+          <CommandList className="max-h-[min(52vh,380px)] overflow-y-auto px-1 py-1.5">
+            <CommandEmpty>Tidak ada hasil ditemukan.</CommandEmpty>
 
             <CommandGroup heading="Aksi">
               <CommandItem
@@ -165,9 +186,29 @@ export function CommandPalette({ accounts }: Props) {
               </>
             ) : null}
           </CommandList>
+
+          {/* Footer Shortcuts */}
+          <div className="flex items-center justify-between border-t border-border/60 px-4 py-2.5 bg-muted/20 text-[11px] text-muted-foreground/80 select-none">
+            <div className="flex items-center gap-3">
+              <span className="flex items-center gap-1">
+                <kbd className="rounded bg-muted/60 px-1.5 py-0.5 font-mono text-[10px] border border-border/40 text-foreground/80">↑</kbd>
+                <kbd className="rounded bg-muted/60 px-1.5 py-0.5 font-mono text-[10px] border border-border/40 text-foreground/80">↓</kbd>
+                <span className="text-muted-foreground/70">Navigasi</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <kbd className="rounded bg-muted/60 px-1.5 py-0.5 font-mono text-[10px] border border-border/40 text-foreground/80">↵</kbd>
+                <span className="text-muted-foreground/70">Pilih</span>
+              </span>
+            </div>
+            <div className="flex items-center gap-1">
+              <kbd className="rounded bg-muted/60 px-1.5 py-0.5 font-mono text-[10px] border border-border/40 text-foreground/80">ESC</kbd>
+              <span className="text-muted-foreground/70">Tutup</span>
+            </div>
+          </div>
         </Command>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>,
+    document.body
   );
 }
 

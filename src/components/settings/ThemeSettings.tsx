@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils/cn";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 import {
   savePreferences,
+  savePreferencesNow,
   getCurrentPreferences,
   type NotificationSettings,
   type CursorSettings,
@@ -202,6 +203,7 @@ export function ThemeSettings() {
       buttonStyles,
       typographyStyles,
       notificationSettings,
+      cursorSettings,
     });
   };
 
@@ -219,6 +221,7 @@ export function ThemeSettings() {
       buttonStyles: updated,
       typographyStyles,
       notificationSettings,
+      cursorSettings,
     });
   };
 
@@ -263,8 +266,11 @@ export function ThemeSettings() {
   const handleCursorChange = <K extends keyof CursorSettings>(key: K, value: CursorSettings[K]) => {
     const updated: CursorSettings = { ...cursorSettings, [key]: value };
     setCursorSettings(updated);
+    try {
+      localStorage.setItem("racks-cursor-settings", JSON.stringify(updated));
+    } catch { /* ignore */ }
     const current = getCurrentPreferences();
-    savePreferences({ ...current, cursorSettings: updated });
+    savePreferencesNow({ ...current, cursorSettings: updated });
     window.dispatchEvent(new Event("cursor-settings-changed"));
     toast.success(
       language === "id" ? "Pengaturan kursor berhasil diperbarui!" : "Cursor settings updated successfully!"

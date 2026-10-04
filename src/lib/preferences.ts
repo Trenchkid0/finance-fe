@@ -225,7 +225,14 @@ let _isAuthenticated = false;
 
 /** Returns the current in-memory preferences (or defaults if not loaded yet). */
 export function getCurrentPreferences(): UserPreferences {
-  return _currentPrefs ?? { ...DEFAULT_PREFERENCES };
+  if (!_currentPrefs) {
+    if (typeof window !== "undefined") {
+      _currentPrefs = readFromLocalStorage();
+    } else {
+      _currentPrefs = { ...DEFAULT_PREFERENCES };
+    }
+  }
+  return _currentPrefs;
 }
 
 // ─── Public API ───────────────────────────────────────────────────────────────
@@ -236,11 +243,19 @@ export function getCurrentPreferences(): UserPreferences {
  * Falls back to localStorage if the API call fails.
  */
 export async function loadPreferences(skipCache: boolean = false): Promise<UserPreferences> {
+  const local = typeof window !== "undefined" ? readFromLocalStorage() : { ...DEFAULT_PREFERENCES };
   try {
     if (!skipCache) {
       const cachedRaw = cache.get<UserPreferences>(CacheKeys.preferences());
       if (cachedRaw) {
-        const cached = { ...DEFAULT_PREFERENCES, ...cachedRaw };
+        const cached: UserPreferences = {
+          ...DEFAULT_PREFERENCES,
+          ...local,
+          ...cachedRaw,
+          cursorSettings: cachedRaw.cursorSettings && cachedRaw.cursorSettings.type
+            ? cachedRaw.cursorSettings
+            : local.cursorSettings || DEFAULT_PREFERENCES.cursorSettings,
+        };
         _currentPrefs = cached;
         applyPreferences(cached);
         writeToLocalStorage(cached);
@@ -248,7 +263,15 @@ export async function loadPreferences(skipCache: boolean = false): Promise<UserP
       }
     }
 
-    const prefs = { ...DEFAULT_PREFERENCES, ...(await api.get<UserPreferences>("/api/preferences")) };
+    const remote = await api.get<UserPreferences>("/api/preferences");
+    const prefs: UserPreferences = {
+      ...DEFAULT_PREFERENCES,
+      ...local,
+      ...remote,
+      cursorSettings: remote?.cursorSettings && remote.cursorSettings.type
+        ? remote.cursorSettings
+        : (local.cursorSettings || DEFAULT_PREFERENCES.cursorSettings),
+    };
     _currentPrefs = prefs;
     _isAuthenticated = true;
 
@@ -262,7 +285,7 @@ export async function loadPreferences(skipCache: boolean = false): Promise<UserP
     return prefs;
   } catch {
     // API failed (offline, not logged in, etc.) — fall back to localStorage
-    const fallback = readFromLocalStorage();
+    const fallback = local;
     _currentPrefs = fallback;
     applyPreferences(fallback);
     return fallback;

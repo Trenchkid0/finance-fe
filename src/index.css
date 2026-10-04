@@ -49,6 +49,10 @@ form,
   --dropdown-menu-radius: 12px !important;
 }
 
+html {
+  scrollbar-gutter: stable;
+}
+
 html,
 body,
 #root {
@@ -399,13 +403,6 @@ html {
 body.custom-cursor-active,
 body.custom-cursor-active * {
   cursor: none !important;
-}
-
-body.custom-cursor-active input,
-body.custom-cursor-active textarea,
-body.custom-cursor-active select,
-body.custom-cursor-active [contenteditable="true"] {
-  cursor: text !important;
 }
 
 @keyframes spinSlow {

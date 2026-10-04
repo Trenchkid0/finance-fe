@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Command as CommandPrimitive } from "cmdk";
+import { Search } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
 /**
@@ -17,7 +18,7 @@ const Command = React.forwardRef<
   <CommandPrimitive
     ref={ref}
     className={cn(
-      "flex h-full w-full flex-col overflow-hidden rounded-md bg-popover text-popover-foreground",
+      "flex h-full w-full flex-col overflow-hidden rounded-2xl bg-popover text-popover-foreground",
       className,
     )}
     {...props}
@@ -29,17 +30,21 @@ const CommandInput = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Input>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
 >(({ className, ...props }, ref) => (
-  <div className="flex items-center border-b border-border px-3" cmdk-input-wrapper="">
+  <div className="flex items-center gap-3.5 border-b border-border/60 px-4 h-[52px] shrink-0" cmdk-input-wrapper="">
+    <Search size={16} className="shrink-0 text-muted-foreground/60" />
     <CommandPrimitive.Input
       ref={ref}
       className={cn(
-        "flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none",
-        "placeholder:text-muted-foreground",
+        "flex h-10 w-full min-w-0 rounded-md bg-transparent text-sm leading-normal outline-none pr-3",
+        "placeholder:text-muted-foreground/60",
         "disabled:cursor-not-allowed disabled:opacity-50",
         className,
       )}
       {...props}
     />
+    <kbd className="hidden sm:inline-flex items-center gap-1 shrink-0 ml-3 rounded-md bg-muted/70 px-2 py-0.5 text-[10px] font-mono font-medium text-muted-foreground/80 border border-border/60 shadow-xs select-none">
+      ESC
+    </kbd>
   </div>
 ));
 CommandInput.displayName = "CommandInput";
