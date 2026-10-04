@@ -47,6 +47,10 @@ export function CustomCursor() {
   const cursorRef = useRef<HTMLDivElement | null>(null);
   const spotlightRef = useRef<HTMLDivElement | null>(null);
   const mousePos = useRef({ x: -100, y: -100 });
+  const isVisibleRef = useRef(false);
+  const lastTargetRef = useRef<EventTarget | null>(null);
+  const isHoveredRef = useRef(false);
+  const isDraggingRef = useRef(false);
 
   // Sync settings when updated via preferences or theme changes
   useEffect(() => {
@@ -82,7 +86,7 @@ export function CustomCursor() {
     };
   }, [isActive]);
 
-  // Main cursor event loop with zero-latency hardware sync
+  // Main cursor event loop with zero-latency hardware sync & optimized target caching
   useEffect(() => {
     if (!isActive) return;
     if (typeof window === "undefined") return;
@@ -93,28 +97,39 @@ export function CustomCursor() {
       const y = e.clientY;
       mousePos.current = { x, y };
 
-      if (!isVisible) setIsVisible(true);
+      if (!isVisibleRef.current) {
+        isVisibleRef.current = true;
+        setIsVisible(true);
+      }
 
-      // Instant direct hardware positioning — Zero float, Zero lag
+      // Instant direct hardware positioning via GPU compositor thread
       if (cursorRef.current) {
         cursorRef.current.style.transform = `translate3d(${x}px, ${y}px, 0)`;
       }
 
-      // Spotlight tracking
       if (spotlightRef.current) {
         spotlightRef.current.style.transform = `translate3d(${x}px, ${y}px, 0)`;
       }
 
-      // Detect interactive target hover
-      const target = e.target as HTMLElement | null;
-      if (target) {
-        const isInteractive = Boolean(
-          target.closest("button, a, [role='button'], select, [data-account-id], .cursor-pointer, [data-cursor='interactive'], [data-cursor='grab']")
-        );
-        setIsHovered(isInteractive);
+      // High-performance target caching: only inspect DOM tree when crossing element boundary
+      const target = e.target;
+      if (target && target !== lastTargetRef.current) {
+        lastTargetRef.current = target;
+        const el = target as HTMLElement;
 
-        const isGrabbing = Boolean(target.closest("[data-dragging='true'], .cursor-grabbing"));
-        setIsDragging(isGrabbing);
+        const isInteractive = Boolean(
+          el.closest?.("button, a, [role='button'], select, [data-account-id], .cursor-pointer, [data-cursor='interactive'], [data-cursor='grab']")
+        );
+        if (isInteractive !== isHoveredRef.current) {
+          isHoveredRef.current = isInteractive;
+          setIsHovered(isInteractive);
+        }
+
+        const isGrabbing = Boolean(el.closest?.("[data-dragging='true'], .cursor-grabbing"));
+        if (isGrabbing !== isDraggingRef.current) {
+          isDraggingRef.current = isGrabbing;
+          setIsDragging(isGrabbing);
+        }
       }
     };
 
@@ -122,19 +137,34 @@ export function CustomCursor() {
     const onMouseUp = () => setIsMouseDown(false);
 
     const onMouseLeave = () => {
+      isVisibleRef.current = false;
       setIsVisible(false);
       setIsMouseDown(false);
       setIsHovered(false);
       setIsDragging(false);
+      isHoveredRef.current = false;
+      isDraggingRef.current = false;
+      lastTargetRef.current = null;
     };
 
-    const onMouseEnter = () => setIsVisible(true);
-    const onDragStart = () => setIsDragging(true);
-    const onDragEnd = () => setIsDragging(false);
+    const onMouseEnter = () => {
+      isVisibleRef.current = true;
+      setIsVisible(true);
+    };
+
+    const onDragStart = () => {
+      isDraggingRef.current = true;
+      setIsDragging(true);
+    };
+
+    const onDragEnd = () => {
+      isDraggingRef.current = false;
+      setIsDragging(false);
+    };
 
     window.addEventListener("mousemove", onMouseMove, { passive: true });
-    window.addEventListener("mousedown", onMouseDown);
-    window.addEventListener("mouseup", onMouseUp);
+    window.addEventListener("mousedown", onMouseDown, { passive: true });
+    window.addEventListener("mouseup", onMouseUp, { passive: true });
     document.addEventListener("mouseleave", onMouseLeave);
     document.addEventListener("mouseenter", onMouseEnter);
     window.addEventListener("dragstart", onDragStart);
@@ -148,8 +178,9 @@ export function CustomCursor() {
       document.removeEventListener("mouseenter", onMouseEnter);
       window.removeEventListener("dragstart", onDragStart);
       window.removeEventListener("dragend", onDragEnd);
+      lastTargetRef.current = null;
     };
-  }, [isActive, isVisible]);
+  }, [isActive]);
 
   if (!isActive) return null;
 
@@ -158,8 +189,11 @@ export function CustomCursor() {
 
   return (
     <div
-      className="pointer-events-none fixed inset-0 z-[999999] overflow-hidden transition-opacity duration-150"
-      style={{ opacity: isVisible ? 1 : 0 }}
+      className="pointer-events-none fixed inset-0 z-[999999] overflow-hidden transition-opacity duration-150 transform-gpu"
+      style={{
+        opacity: isVisible ? 1 : 0,
+        contain: "layout style paint",
+      }}
       aria-hidden="true"
     >
       {/* ── Ambient Spotlight Layer (Clean Luxury Flashlight, No Fuzzy Blobs) ── */}
