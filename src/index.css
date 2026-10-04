@@ -40,7 +40,11 @@
 }
 
 /* Force standard dropdown radius values inside form flows, dialog boxes, and inputs */
-form, .form-container, [role="dialog"], [role="alertdialog"], .form-dropdown-override {
+form,
+.form-container,
+[role="dialog"],
+[role="alertdialog"],
+.form-dropdown-override {
   --dropdown-radius: 8px !important;
   --dropdown-menu-radius: 12px !important;
 }
@@ -49,7 +53,7 @@ html,
 body,
 #root {
   background-color: var(--background);
-  background-image: 
+  background-image:
     radial-gradient(at 0% 0%, rgba(56, 139, 253, 0.04) 0px, transparent 50%),
     radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.03) 0px, transparent 50%),
     radial-gradient(at 50% 100%, rgba(56, 139, 253, 0.02) 0px, transparent 50%);
@@ -72,9 +76,26 @@ html[data-radix-scroll-locked] {
 
 /* Form shake animation for validation errors */
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
-  20%, 40%, 60%, 80% { transform: translateX(4px); }
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-4px);
+  }
+
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(4px);
+  }
 }
 
 .animate-shake {
@@ -112,6 +133,7 @@ html[data-radix-scroll-locked] {
     opacity: 0;
     transform: translateY(16px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -123,11 +145,25 @@ html[data-radix-scroll-locked] {
 }
 
 /* Staggered animation delays for dashboard entry */
-.delay-100 { animation-delay: 100ms; }
-.delay-200 { animation-delay: 200ms; }
-.delay-300 { animation-delay: 300ms; }
-.delay-400 { animation-delay: 400ms; }
-.delay-500 { animation-delay: 500ms; }
+.delay-100 {
+  animation-delay: 100ms;
+}
+
+.delay-200 {
+  animation-delay: 200ms;
+}
+
+.delay-300 {
+  animation-delay: 300ms;
+}
+
+.delay-400 {
+  animation-delay: 400ms;
+}
+
+.delay-500 {
+  animation-delay: 500ms;
+}
 
 /* Custom premium card backdrop-filter */
 .glass-panel {
@@ -155,11 +191,12 @@ html[data-radix-scroll-locked] {
 }
 
 @layer utilities {
+
   /* --- Standard Text (Teks Biasa) --- */
   .text-regular-primary {
     @apply font-sans text-foreground;
   }
-  
+
   .text-regular-secondary {
     @apply font-sans text-muted-foreground;
   }
@@ -191,13 +228,16 @@ html[data-radix-scroll-locked] {
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 9999px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
 }
@@ -211,12 +251,15 @@ html {
 .font-normal {
   font-weight: var(--font-weight-normal, 400) !important;
 }
+
 .font-medium {
   font-weight: var(--font-weight-medium, 500) !important;
 }
+
 .font-semibold {
   font-weight: var(--font-weight-semibold, 600) !important;
 }
+
 .font-bold,
 .font-extrabold,
 .font-black {
@@ -231,18 +274,23 @@ html {
   border-radius: var(--card-radius) !important;
   font-family: var(--font-family, sans-serif) !important;
 }
+
 .custom-toaster [data-sonner-toast] [data-title] {
   color: var(--foreground) !important;
 }
+
 .custom-toaster [data-sonner-toast] [data-description] {
   color: var(--muted-foreground) !important;
 }
+
 .custom-toaster [data-sonner-toast][data-type="success"] [data-icon] {
   color: var(--income) !important;
 }
+
 .custom-toaster [data-sonner-toast][data-type="error"] [data-icon] {
   color: var(--expense) !important;
 }
+
 .custom-toaster [data-sonner-toast][data-type="warning"] [data-icon] {
   color: var(--warning) !important;
 }
@@ -296,12 +344,23 @@ html {
 
 /* Transaction Row Deletion Animations */
 @keyframes growProgressBar {
-  from { width: 0%; }
-  to { width: 100%; }
+  from {
+    width: 0%;
+  }
+
+  to {
+    width: 100%;
+  }
 }
+
 @keyframes swipeScan {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 .animate-delete-progress {
@@ -316,12 +375,42 @@ html {
 
 /* Bulk delete: ghost fade — rows become translucent immediately, no scanning bar */
 @keyframes bulkDeleteFade {
-  0%   { opacity: 1;    transform: scale(1); }
-  15%  { opacity: 0.55; transform: scale(0.995); }
-  100% { opacity: 0.25; transform: scale(0.992); }
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  15% {
+    opacity: 0.55;
+    transform: scale(0.995);
+  }
+
+  100% {
+    opacity: 0.25;
+    transform: scale(0.992);
+  }
 }
 
 .animate-bulk-delete {
   animation: bulkDeleteFade 400ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+/* Custom Cursor styles */
+body.custom-cursor-active,
+body.custom-cursor-active * {
+  cursor: none !important;
+}
+
+body.custom-cursor-active input,
+body.custom-cursor-active textarea {
+  cursor: text !important;
+}
+
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+  animation: spinSlow 8s linear infinite;
+}

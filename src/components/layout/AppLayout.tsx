@@ -12,7 +12,7 @@ import { QuickAddProvider } from "@/components/transactions/QuickAddProvider";
 import { CardTypeProvider } from "@/components/ui/card";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
-import { loadPreferences } from "@/lib/preferences";
+import { loadPreferences, setPreferencesAuthenticated } from "@/lib/preferences";
 import { OnboardingCurrencyModal } from "@/components/onboarding/OnboardingCurrencyModal";
 import type { User, Account, Category } from "@/types";
 
@@ -53,9 +53,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       // 1. Fetch user info
       const me = await api.get<User>("/api/auth/me");
       setUser(me);
+      setPreferencesAuthenticated(true);
 
-      // 2. Fetch preferences from backend (applies theme/language)
-      const prefs = await loadPreferences();
+      // 2. Fetch preferences from backend (applies theme/language and syncs account order)
+      const prefs = await loadPreferences(true);
 
       // 3. Fetch layout data (with cache for accounts/categories)
       let accList = cache.get<Account[]>(CacheKeys.accounts());

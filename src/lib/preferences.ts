@@ -32,6 +32,16 @@ export interface NotificationSettings {
 
 export type DashboardLayout = "default" | "analytics" | "compact" | "hero";
 
+export type CursorType = "default" | "macos-pointer" | "vision-glass" | "raycast-tech" | "ambient-spotlight";
+export type CursorColor = "accent" | "white" | "cyan" | "purple" | "amber" | "progress" | "income";
+export type CursorSize = "small" | "default" | "large";
+
+export interface CursorSettings {
+  type: CursorType;
+  color: CursorColor;
+  size: CursorSize;
+}
+
 export interface UserPreferences {
   themeId: string;
   customThemeVars: Record<string, string>;
@@ -45,6 +55,7 @@ export interface UserPreferences {
   baseCurrency?: string;
   onboardingCompleted?: boolean;
   accountOrder?: string[];
+  cursorSettings?: CursorSettings;
 }
 
 // ─── Defaults ─────────────────────────────────────────────────────────────────
@@ -82,6 +93,11 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   dashboardLayout: "default",
   baseCurrency: "IDR",
   onboardingCompleted: false,
+  cursorSettings: {
+    type: "macos-pointer",
+    color: "accent",
+    size: "default",
+  },
 };
 
 // ─── Local Storage Keys (match existing keys used by theme.ts / LanguageContext)
@@ -99,6 +115,7 @@ const LS_KEYS = {
   baseCurrency: "racks-base-currency",
   onboardingCompleted: "racks-onboarding-completed",
   accountOrder: "racks-accounts-order-ids",
+  cursorSettings: "racks-cursor-settings",
 } as const;
 
 // ─── Local Storage Helpers ────────────────────────────────────────────────────
@@ -145,6 +162,10 @@ function readFromLocalStorage(): UserPreferences {
       localStorage.getItem(LS_KEYS.accountOrder),
       []
     ),
+    cursorSettings: safeParseJSON<CursorSettings>(
+      localStorage.getItem(LS_KEYS.cursorSettings),
+      DEFAULT_PREFERENCES.cursorSettings!
+    ),
   };
 }
 
@@ -174,6 +195,9 @@ function writeToLocalStorage(prefs: UserPreferences): void {
   } else if (prefs.accountOrder && prefs.accountOrder.length === 0) {
     localStorage.removeItem(LS_KEYS.accountOrder);
   }
+  if (prefs.cursorSettings) {
+    localStorage.setItem(LS_KEYS.cursorSettings, JSON.stringify(prefs.cursorSettings));
+  }
 }
 
 // ─── Apply to UI ──────────────────────────────────────────────────────────────
@@ -187,6 +211,8 @@ export function applyPreferences(prefs: UserPreferences): void {
   applyTypographyStyles(prefs.typographyStyles);
   // Notify about notification settings change (for Toaster in App.tsx)
   window.dispatchEvent(new Event("notification-settings-changed"));
+  // Notify about cursor settings change
+  window.dispatchEvent(new Event("cursor-settings-changed"));
   // Notify components that depend on preferences (e.g. Dashboard layout)
   window.dispatchEvent(new Event("preferences-changed"));
 }
@@ -209,15 +235,17 @@ export function getCurrentPreferences(): UserPreferences {
  * Called once after login / on app init.
  * Falls back to localStorage if the API call fails.
  */
-export async function loadPreferences(): Promise<UserPreferences> {
+export async function loadPreferences(skipCache: boolean = false): Promise<UserPreferences> {
   try {
-    const cachedRaw = cache.get<UserPreferences>(CacheKeys.preferences());
-    if (cachedRaw) {
-      const cached = { ...DEFAULT_PREFERENCES, ...cachedRaw };
-      _currentPrefs = cached;
-      applyPreferences(cached);
-      writeToLocalStorage(cached);
-      return cached;
+    if (!skipCache) {
+      const cachedRaw = cache.get<UserPreferences>(CacheKeys.preferences());
+      if (cachedRaw) {
+        const cached = { ...DEFAULT_PREFERENCES, ...cachedRaw };
+        _currentPrefs = cached;
+        applyPreferences(cached);
+        writeToLocalStorage(cached);
+        return cached;
+      }
     }
 
     const prefs = { ...DEFAULT_PREFERENCES, ...(await api.get<UserPreferences>("/api/preferences")) };
@@ -291,6 +319,26 @@ export function updatePreference<K extends keyof UserPreferences>(
 ): void {
   const current = getCurrentPreferences();
   savePreferences({ ...current, [key]: value });
+}
+
+/**
+ * Parses account order list safely from array or JSON string.
+ */
+export function parseAccountOrder(raw: unknown): string[] {
+  if (Array.isArray(raw)) {
+    return raw.filter((item): item is string => typeof item === "string");
+  }
+  if (typeof raw === "string") {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed.filter((item): item is string => typeof item === "string");
+      }
+    } catch {
+      return raw.split(",").map((s) => s.trim()).filter(Boolean);
+    }
+  }
+  return [];
 }
 
 // ─── Internal ─────────────────────────────────────────────────────────────────

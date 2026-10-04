@@ -43,7 +43,7 @@ import {
   type AccountFormInitial,
 } from "./AccountForm";
 import type { AccountTypeInput } from "@/lib/utils/validators";
-import { getCurrentPreferences, savePreferences } from "@/lib/preferences";
+import { getCurrentPreferences, savePreferencesNow, parseAccountOrder } from "@/lib/preferences";
 
 export interface AccountRowData {
   id: string;
@@ -60,20 +60,22 @@ interface Props {
   accounts: AccountRowData[];
 }
 
-const STORAGE_KEY = "racks_accounts_order_ids";
+const STORAGE_KEYS = ["racks-accounts-order-ids", "racks_accounts_order_ids"];
 
 function getSavedOrder(): string[] {
   // First check in-memory / backend synced preferences
-  const prefOrder = getCurrentPreferences().accountOrder;
-  if (prefOrder && prefOrder.length > 0) return prefOrder;
+  const prefOrder = parseAccountOrder(getCurrentPreferences().accountOrder);
+  if (prefOrder.length > 0) return prefOrder;
 
-  // Fallback to localStorage
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
+  // Fallback to localStorage across supported keys
+  for (const key of STORAGE_KEYS) {
+    try {
+      const raw = localStorage.getItem(key);
+      const parsed = parseAccountOrder(raw);
+      if (parsed.length > 0) return parsed;
+    } catch { /* ignore */ }
   }
+  return [];
 }
 
 function applySavedOrder(list: AccountRowData[]): AccountRowData[] {
@@ -84,7 +86,8 @@ function applySavedOrder(list: AccountRowData[]): AccountRowData[] {
   return [...list].sort((a, b) => {
     const idxA = idMap.has(a.id) ? idMap.get(a.id)! : 9999;
     const idxB = idMap.has(b.id) ? idMap.get(b.id)! : 9999;
-    return idxA - idxB;
+    if (idxA !== idxB) return idxA - idxB;
+    return a.name.localeCompare(b.name);
   });
 }
 
@@ -110,34 +113,43 @@ export function AccountsClient({ accounts }: Props) {
   const isDraggingRef = useRef(false);
   const touchDraggedIdRef = useRef<string | null>(null);
 
-  // Sync with prop changes while preserving order
+  // Sync with prop changes and cross-device/server preferences updates
   useEffect(() => {
-    setOrderedAccounts(applySavedOrder(accounts));
-    setHasCustomOrder(getSavedOrder().length > 0);
+    const syncOrder = () => {
+      setOrderedAccounts(applySavedOrder(accounts));
+      setHasCustomOrder(getSavedOrder().length > 0);
+    };
+
+    syncOrder();
+
+    window.addEventListener("preferences-changed", syncOrder);
+    return () => window.removeEventListener("preferences-changed", syncOrder);
   }, [accounts]);
 
   const activeAccounts = orderedAccounts.filter((a) => a.isActive);
   const inactiveAccounts = orderedAccounts.filter((a) => !a.isActive);
   const totalBalance = activeAccounts.reduce((sum, a) => sum + a.balance, 0);
 
-  // Commit order to both localStorage AND backend database for cross-device sync
-  const commitNewOrder = (newList: AccountRowData[]) => {
+  // Commit order to both localStorage AND backend database for instant & cross-device sync
+  const commitNewOrder = async (newList: AccountRowData[]) => {
     const orderIds = newList.map((a) => a.id);
     
-    // 1. Save to local storage for instant local response
+    // 1. Instantly update UI
+    setOrderedAccounts(newList);
+    setHasCustomOrder(true);
+
+    // 2. Save to local storage for instant local response across both keys
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(orderIds));
+      const jsonStr = JSON.stringify(orderIds);
+      STORAGE_KEYS.forEach((k) => localStorage.setItem(k, jsonStr));
     } catch { /* ignore */ }
 
-    // 2. Sync to backend database via UserPreferences
+    // 3. Immediately sync to backend database via UserPreferences
     const curPrefs = getCurrentPreferences();
-    savePreferences({
+    await savePreferencesNow({
       ...curPrefs,
       accountOrder: orderIds,
     });
-
-    setOrderedAccounts(newList);
-    setHasCustomOrder(true);
   };
 
   // Handle Desktop Drag Start
@@ -286,14 +298,14 @@ export function AccountsClient({ accounts }: Props) {
   };
 
   // Reset custom order to original default
-  const handleResetOrder = () => {
+  const handleResetOrder = async () => {
     try {
-      localStorage.removeItem(STORAGE_KEY);
+      STORAGE_KEYS.forEach((k) => localStorage.removeItem(k));
     } catch { /* ignore */ }
 
-    // Clear backend preference
+    // Clear backend preference immediately
     const curPrefs = getCurrentPreferences();
-    savePreferences({
+    await savePreferencesNow({
       ...curPrefs,
       accountOrder: [],
     });

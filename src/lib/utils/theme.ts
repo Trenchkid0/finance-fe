@@ -894,6 +894,9 @@ export function applyTheme(themeId: string, customVars?: Partial<ThemeVariables>
   } else {
     localStorage.removeItem("racks-custom-theme-vars");
   }
+
+  // Notify listeners that theme has updated
+  window.dispatchEvent(new Event("theme-changed"));
 }
 
 export type CardType = "default" | "blueprint" | "manly" | "girly";

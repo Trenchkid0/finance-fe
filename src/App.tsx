@@ -29,6 +29,7 @@ const Reports = lazy(() => import("@/pages/Reports"));
 import { LanguageProvider } from "@/lib/contexts/LanguageContext";
 import { loadSavedTheme } from "@/lib/utils/theme";
 import { loadPreferences, getCurrentPreferences } from "@/lib/preferences";
+import { CustomCursor } from "@/components/ui/CustomCursor";
 
 /** Layout wrapper - renders AppLayout + child routes via <Outlet /> */
 function DashboardLayout() {
@@ -76,7 +77,7 @@ export default function App() {
           expand: parsed.expand != null ? parsed.expand : false,
         };
       }
-    } catch (e) {}
+    } catch (e) { }
     return {
       position: "top-right" as const,
       theme: "dark" as const,
@@ -101,7 +102,7 @@ export default function App() {
           duration: ns.duration || 4000,
           expand: ns.expand ?? false,
         });
-      } catch (e) {}
+      } catch (e) { }
     };
 
     window.addEventListener("notification-settings-changed", handleUpdate);
@@ -145,6 +146,7 @@ export default function App() {
           {/* Catch-all fallback redirect */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        <CustomCursor />
         <Toaster
           theme={toastSettings.theme === "custom" ? undefined : (toastSettings.theme as any)}
           position={toastSettings.position as any}
