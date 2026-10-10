@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <rect width="48" height="48" rx="10" fill="#003566"/>
+  <path d="M24 12L34 28H14L24 12Z" fill="#00A8E8"/>
+  <path d="M20 28L24 36L28 28H20Z" fill="#F77F00"/>
+  <text x="24" y="27" fill="#FFFFFF" font-size="6" font-weight="900" font-family="Arial, sans-serif" text-anchor="middle">BPAM</text>
+</svg>

@@ -165,3 +165,42 @@ export function parseLocalizedFloat(val: string): number {
   return parseFloat(clean) || 0;
 }
 
+/**
+ * Konversi angka nominal uang Rupiah ke ejaan kata (terbilang).
+ * Mencegah kebingungan pengguna dalam membaca nominal puluhan/ratusan juta.
+ */
+export function terbilangRupiah(amount: number, isId: boolean = true): string {
+  const n = Math.floor(Math.abs(amount || 0));
+  if (n === 0) return isId ? "Nol Rupiah" : "Zero Rupiah";
+
+  if (isId) {
+    const satuan = ["", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"];
+    const convert = (x: number): string => {
+      if (x < 12) return satuan[x];
+      if (x < 20) return convert(x - 10) + " Belas";
+      if (x < 100) return convert(Math.floor(x / 10)) + " Puluh" + (x % 10 !== 0 ? " " + convert(x % 10) : "");
+      if (x < 200) return "Seratus" + (x % 100 !== 0 ? " " + convert(x % 100) : "");
+      if (x < 1000) return convert(Math.floor(x / 100)) + " Ratus" + (x % 100 !== 0 ? " " + convert(x % 100) : "");
+      if (x < 2000) return "Seribu" + (x % 1000 !== 0 ? " " + convert(x % 1000) : "");
+      if (x < 1_000_000) return convert(Math.floor(x / 1000)) + " Ribu" + (x % 1000 !== 0 ? " " + convert(x % 1000) : "");
+      if (x < 1_000_000_000) return convert(Math.floor(x / 1_000_000)) + " Juta" + (x % 1_000_000 !== 0 ? " " + convert(x % 1_000_000) : "");
+      if (x < 1_000_000_000_000) return convert(Math.floor(x / 1_000_000_000)) + " Miliar" + (x % 1_000_000_000 !== 0 ? " " + convert(x % 1_000_000_000) : "");
+      return convert(Math.floor(x / 1_000_000_000_000)) + " Triliun" + (x % 1_000_000_000_000 !== 0 ? " " + convert(x % 1_000_000_000_000) : "");
+    };
+    return convert(n).trim() + " Rupiah";
+  }
+
+  // English fallback
+  const ones = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
+  const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+  const convertEn = (x: number): string => {
+    if (x < 20) return ones[x];
+    if (x < 100) return tens[Math.floor(x / 10)] + (x % 10 !== 0 ? " " + ones[x % 10] : "");
+    if (x < 1000) return ones[Math.floor(x / 100)] + " Hundred" + (x % 100 !== 0 ? " " + convertEn(x % 100) : "");
+    if (x < 1_000_000) return convertEn(Math.floor(x / 1000)) + " Thousand" + (x % 1000 !== 0 ? " " + convertEn(x % 1000) : "");
+    if (x < 1_000_000_000) return convertEn(Math.floor(x / 1_000_000)) + " Million" + (x % 1_000_000 !== 0 ? " " + convertEn(x % 1_000_000) : "");
+    return convertEn(Math.floor(x / 1_000_000_000)) + " Billion" + (x % 1_000_000_000 !== 0 ? " " + convertEn(x % 1_000_000_000) : "");
+  };
+  return convertEn(n).trim() + " Rupiah";
+}
+

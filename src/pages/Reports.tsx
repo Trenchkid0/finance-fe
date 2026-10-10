@@ -1,7 +1,8 @@
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition, useMemo } from "react";
 import {
   TrendingUp, TrendingDown, Wallet, Download,
   Layers, Inbox, Loader2, FileSpreadsheet, PiggyBank, Sparkles,
+  Building2, BarChart3,
 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
@@ -14,6 +15,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 import { CustomSingleDatePicker } from "@/components/ui/CustomSingleDatePicker";
 import { MonthlyWrappedModal } from "@/components/reports/MonthlyWrappedModal";
+import { CoretaxTaxAssistant, type SalaryCategoryData } from "@/components/reports/CoretaxTaxAssistant";
 import {
   ResponsiveContainer, PieChart, Pie, Cell,
   Tooltip as ChartTooltip, XAxis, YAxis, CartesianGrid,
@@ -89,12 +91,13 @@ function DonutChart({ data, isId }: { data: ReportBreakdownItem[]; isId: boolean
   );
 }
 
-// KPI card with optional mini progress bar and glow border
+// KPI card with optional mini progress bar, click handler, and glow border
 function KpiCard({
-  label, value, icon: Icon, color, sub, progress,
+  label, value, icon: Icon, color, sub, progress, onClick,
 }: {
   label: string; value: string; icon: React.ElementType;
   color: "income" | "expense" | "accent" | "warning"; sub?: string; progress?: number;
+  onClick?: () => void;
 }) {
   const colorMap = {
     income: { bg: "bg-income/10", text: "text-income", border: "border-income/20" },
@@ -105,7 +108,14 @@ function KpiCard({
   const c = colorMap[color];
 
   return (
-    <Card className={cn("p-4 gap-0 relative overflow-hidden group transition-all duration-300 hover:shadow-lg", `hover:${c.border}`)}>
+    <Card
+      onClick={onClick}
+      className={cn(
+        "p-4 gap-0 relative overflow-hidden group transition-all duration-300 hover:shadow-lg",
+        `hover:${c.border}`,
+        onClick && "cursor-pointer"
+      )}
+    >
       {/* Top-right icon badge */}
       <div className={cn("absolute top-3 right-3 size-8 rounded-lg flex items-center justify-center transition-all duration-300 group-hover:scale-110", c.bg)}>
         <Icon size={15} className={c.text} />
@@ -133,6 +143,9 @@ export default function Reports() {
   const { language } = useLanguage();
   const isId = language === "id";
 
+  // Top-level page view tab: Analytics vs Coretax Tax Assistant
+  const [pageTab, setPageTab] = useState<"analytics" | "tax-coretax">("analytics");
+
   const [isWrappedOpen, setIsWrappedOpen] = useState(false);
   const [datePreset, setDatePreset] = useState("30d");
   const [startDate, setStartDate] = useState(() => {
@@ -145,6 +158,8 @@ export default function Reports() {
   const [categoryId, setCategoryId] = useState("all");
   const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [accounts, setAccounts] = useState<AccountOption[]>([]);
+  const [rawAccounts, setRawAccounts] = useState<any[]>([]);
+  const [salaryCategoryData, setSalaryCategoryData] = useState<SalaryCategoryData | null>(null);
   const [data, setData] = useState<ReportsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [, startTransition] = useTransition();
@@ -152,9 +167,10 @@ export default function Reports() {
   useEffect(() => {
     const load = async () => {
       try {
-        const [catsRes, accsRes] = await Promise.all([
+        const [catsRes, accsRes, txRes] = await Promise.all([
           api.get<Array<{ id: string; name: string; icon: string }>>("/api/categories"),
-          api.get<Array<{ id: string; name: string }>>("/api/accounts"),
+          api.get<Array<{ id: string; name: string; type: string; balance: number; currency: string; icon?: string; color?: string }>>("/api/accounts"),
+          api.get<{ transactions: Array<{ amount: number; date: string; category?: { id: string; name: string } | null; description?: string | null; note?: string | null }> }>("/api/transactions?type=income&limit=500"),
         ]);
         setCategories([
           { value: "all", label: isId ? "Semua Kategori" : "All Categories" },
@@ -164,6 +180,42 @@ export default function Reports() {
           { value: "all", label: isId ? "Semua Akun" : "All Accounts" },
           ...(accsRes || []).map((a) => ({ value: a.id, label: a.name })),
         ]);
+        setRawAccounts(accsRes || []);
+
+        // Detect salary transactions from income transactions with category Gaji / Salary
+        if (txRes && Array.isArray(txRes.transactions)) {
+          const salaryTxs = txRes.transactions.filter((tx) => {
+            const catName = (tx.category?.name || "").toLowerCase();
+            const desc = (tx.description || "").toLowerCase();
+            const note = (tx.note || "").toLowerCase();
+            return (
+              catName.includes("gaji") ||
+              catName.includes("salary") ||
+              catName.includes("upah") ||
+              catName.includes("payroll") ||
+              desc.includes("gaji") ||
+              desc.includes("salary") ||
+              note.includes("gaji") ||
+              note.includes("salary")
+            );
+          });
+
+          if (salaryTxs.length > 0) {
+            salaryTxs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            const latest = salaryTxs[0].amount;
+            const avg = Math.round(
+              salaryTxs.reduce((sum, t) => sum + t.amount, 0) / salaryTxs.length
+            );
+            setSalaryCategoryData({
+              detectedSalary: latest > 0 ? latest : avg,
+              latestSalary: latest,
+              averageSalary: avg,
+              count: salaryTxs.length,
+              lastDate: salaryTxs[0].date,
+              categoryName: salaryTxs[0].category?.name || (isId ? "Gaji" : "Salary"),
+            });
+          }
+        }
       } catch { /* silent */ }
     };
     load();
@@ -195,6 +247,15 @@ export default function Reports() {
 
   useEffect(() => { startTransition(() => { fetchReport(); }); }, [startDate, endDate, reportType, groupBy, accountId, categoryId]);
 
+  // Compute average monthly income from historical reports series
+  const averageMonthlyIncome = useMemo(() => {
+    if (!data?.series || data.series.length === 0) return 0;
+    const incomeMonths = data.series.filter((s) => s.income > 0);
+    if (incomeMonths.length === 0) return 0;
+    const total = incomeMonths.reduce((sum, s) => sum + s.income, 0);
+    return Math.round(total / incomeMonths.length);
+  }, [data?.series]);
+
   const taxExportHref = () => {
     const p = new URLSearchParams({ startDate, endDate, accountId, categoryId });
     return `/api/transactions/export/tax?${p}`;
@@ -214,7 +275,9 @@ export default function Reports() {
             📊 {isId ? "Laporan & Pajak" : "Reports & Tax"}
           </h1>
           <p className="text-sm text-muted-foreground/70 mt-1.5">
-            {isId ? "Analisis keuangan mendalam dan ekspor siap SPT pajak." : "In-depth financial intelligence and tax-ready exports."}
+            {isId
+              ? "Analisis keuangan mendalam, kalkulator PPh 21 TER, dan asistensi siap SPT Coretax DJP."
+              : "In-depth financial intelligence, PPh 21 TER calculator, and Coretax DJP tax filing assistant."}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -237,16 +300,58 @@ export default function Reports() {
         </div>
       </div>
 
+      {/* ── Top-Level Page Segment Switcher ── */}
+      <div className="flex items-center gap-1.5 p-1 bg-muted/40 border border-border/60 rounded-xl w-fit shadow-xs">
+        <button
+          onClick={() => setPageTab("analytics")}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all duration-200",
+            pageTab === "analytics"
+              ? "bg-background text-foreground shadow-sm border border-border/60"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+          )}
+        >
+          <BarChart3 size={14} />
+          <span>{isId ? "Ringkasan & Tren Keuangan" : "Financial Analytics"}</span>
+        </button>
+
+        <button
+          onClick={() => setPageTab("tax-coretax")}
+          className={cn(
+            "flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 relative",
+            pageTab === "tax-coretax"
+              ? "bg-background text-foreground shadow-sm border border-border/60"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+          )}
+        >
+          <Building2 size={14} className="text-accent" />
+          <span>{isId ? "Pajak Gaji & Coretax DJP" : "Salary Tax & Coretax"}</span>
+          <span className="px-2 py-0.5 text-xs font-semibold uppercase tracking-wider rounded-md bg-accent text-black shadow-xs">
+            PPh 21 TER
+          </span>
+        </button>
+      </div>
+
       <MonthlyWrappedModal
         open={isWrappedOpen}
         onClose={() => setIsWrappedOpen(false)}
       />
 
-      {/* ── Filter Bar ── */}
-      <Card className="p-5 border border-border/60 bg-card/60">
-        <p className="text-[10px] uppercase tracking-widest text-muted-foreground/50 font-bold mb-4 font-sans">
-          {isId ? "Filter Laporan" : "Report Filters"}
-        </p>
+      {/* ── CONDITIONAL VIEW: CORETAX ASSISTANT ── */}
+      {pageTab === "tax-coretax" ? (
+        <CoretaxTaxAssistant
+          accounts={rawAccounts}
+          averageMonthlyIncome={averageMonthlyIncome}
+          salaryCategoryData={salaryCategoryData}
+          isId={isId}
+        />
+      ) : (
+        <>
+          {/* ── Filter Bar ── */}
+          <Card className="p-5 border border-border/60 bg-card/60">
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground/50 font-bold mb-4 font-sans">
+              {isId ? "Filter Laporan" : "Report Filters"}
+            </p>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
           <div className="space-y-1.5 col-span-2 md:col-span-1">
             <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider">{isId ? "Periode" : "Period"}</label>
@@ -338,7 +443,8 @@ export default function Reports() {
               label={isId ? "Deduktibel Pajak" : "Tax Deductible"}
               value={formatIDR(data!.summary.totalTaxDeductible)}
               icon={FileSpreadsheet} color="warning"
-              sub={isId ? "Siap ekspor SPT" : "Ready for tax SPT"}
+              sub={isId ? "Buka Asisten Coretax →" : "Open Coretax Helper →"}
+              onClick={() => setPageTab("tax-coretax")}
             />
           </div>
 
@@ -493,6 +599,8 @@ export default function Reports() {
           </Card>
 
         </div>
+      )}
+        </>
       )}
     </div>
   );

@@ -10,6 +10,7 @@ import { MiniStatWidget } from "@/components/dashboard/MiniStatWidget";
 import { InsightWidget } from "@/components/dashboard/InsightWidget";
 import { CashflowSankey } from "@/components/charts/CashflowSankey";
 import { RecentTransactions } from "@/components/dashboard/RecentTransactions";
+import { MarketTickerWidget } from "@/components/dashboard/MarketTickerWidget";
 import { SkeletonDashboard } from "@/components/ui/skeleton-loader";
 import { InlineErrorBoundary } from "@/components/ui/error-boundary";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -414,6 +415,7 @@ export default function Dashboard() {
                 <div className="lg:col-span-1"><AssetSummaryWidget total={netWorthCurrent} deltaRatio={deltaRatio} groups={assetGroups} isId={isId} /></div>
               </section>
               {statsRow}
+              <MarketTickerWidget isId={isId} />
               <div className="space-y-4">
                 {tabbedCharts}
                 {recentTxSection}

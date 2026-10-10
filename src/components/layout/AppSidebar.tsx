@@ -79,7 +79,7 @@ export function AppSidebar({ user, counts, ...props }: AppSidebarProps) {
     },
     {
       href: "/investments",
-      label: language === "id" ? "Investasi & Aset" : "Investments",
+      label: language === "id" ? "Investasi & Pasar" : "Investments & Market",
       icon: Briefcase,
     },
     {

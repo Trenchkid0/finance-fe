@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <rect width="48" height="48" rx="10" fill="#004D25"/>
+  <circle cx="24" cy="24" r="13" fill="#00824B"/>
+  <text x="24" y="29" fill="#FFFFFF" font-size="10" font-weight="900" font-family="Arial, sans-serif" text-anchor="middle">ADRO</text>
+</svg>

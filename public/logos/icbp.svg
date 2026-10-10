@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <rect width="48" height="48" rx="10" fill="#0A3B8B"/>
+  <path d="M12 16H36V22C36 29 24 34 24 34C24 34 12 29 12 22V16Z" fill="#FCD34D"/>
+  <text x="24" y="26" fill="#0A3B8B" font-size="9" font-weight="900" font-family="Arial, sans-serif" text-anchor="middle">ICBP</text>
+</svg>
