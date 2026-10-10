@@ -14,6 +14,7 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 import { loadPreferences, setPreferencesAuthenticated } from "@/lib/preferences";
 import { OnboardingCurrencyModal } from "@/components/onboarding/OnboardingCurrencyModal";
+import { GhostChatModal } from "@/components/chat/GhostChatModal";
 import type { User, Account, Category } from "@/types";
 
 interface AppContextType {
@@ -176,6 +177,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             open={showOnboarding}
             onComplete={() => setShowOnboarding(false)}
           />
+          <GhostChatModal />
         </QuickAddProvider>
       </SidebarProvider>
       </CardTypeProvider>

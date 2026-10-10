@@ -413,3 +413,17 @@ body.custom-cursor-active * {
 .animate-spin-slow {
   animation: spinSlow 8s linear infinite;
 }
+
+/* Kiro Ghost Floating Animation */
+@keyframes ghostFloat {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-7px) rotate(1.5deg);
+  }
+}
+
+.animate-ghost-float {
+  animation: ghostFloat 3.2s ease-in-out infinite;
+}
