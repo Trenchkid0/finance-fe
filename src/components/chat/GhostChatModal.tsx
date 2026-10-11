@@ -90,8 +90,16 @@ export const GhostChatModal: React.FC = () => {
   const scrollLeftChipsRef = useRef(0);
   const hasMovedChipsRef = useRef(false);
 
+  // In-memory session caches to avoid redundant API network requests during rapid questions (2-min TTL)
+  const cachedTxRef = useRef<{ data: any[]; timestamp: number } | null>(null);
+  const cachedBudgetsRef = useRef<{ data: any[]; timestamp: number } | null>(null);
+  const cachedInvestmentsRef = useRef<{ data: any[]; timestamp: number } | null>(null);
+
   // Switch chat history when logged-in user changes (User A -> User B)
   useEffect(() => {
+    cachedTxRef.current = null;
+    cachedBudgetsRef.current = null;
+    cachedInvestmentsRef.current = null;
     try {
       const saved = localStorage.getItem(storageKey);
       if (saved) {
@@ -129,11 +137,12 @@ export const GhostChatModal: React.FC = () => {
     };
   }, [userId]);
 
-  // Save chat to user-specific localStorage key
+  // Save chat to user-specific localStorage key (capped at last 50 messages to preserve memory & storage)
   useEffect(() => {
     if (!messages || messages.length === 0) return;
     try {
-      localStorage.setItem(storageKey, JSON.stringify(messages));
+      const trimmed = messages.slice(-50);
+      localStorage.setItem(storageKey, JSON.stringify(trimmed));
     } catch {
       // ignore
     }
@@ -261,30 +270,44 @@ export const GhostChatModal: React.FC = () => {
         qLower.includes("kemarin") ||
         transactionsList.length <= 5;
 
+      const now = Date.now();
+
       if (needsTx) {
-        try {
-          const res = await api.get<{ transactions: any[] }>(
-            "/api/transactions?type=expense&limit=500"
-          );
-          if (res && res.transactions) {
-            transactionsList = res.transactions;
+        if (cachedTxRef.current && now - cachedTxRef.current.timestamp < 120_000) {
+          transactionsList = cachedTxRef.current.data;
+        } else {
+          try {
+            const res = await api.get<{ transactions: any[] }>(
+              "/api/transactions?type=expense&limit=500"
+            );
+            if (res && res.transactions) {
+              transactionsList = res.transactions;
+              cachedTxRef.current = { data: res.transactions, timestamp: now };
+            }
+          } catch {
+            // fallback to summaryData.recent
           }
-        } catch {
-          // fallback to summaryData.recent
         }
       }
 
-      // Fetch budgets if queried
+      // Fetch budgets if queried (cached for 2 minutes)
       let budgetsList = undefined;
       if (qLower.includes("budget") || qLower.includes("anggaran")) {
-        try {
-          budgetsList = await api.get<any[]>("/api/budgets");
-        } catch {
-          // ignore
+        if (cachedBudgetsRef.current && now - cachedBudgetsRef.current.timestamp < 120_000) {
+          budgetsList = cachedBudgetsRef.current.data;
+        } else {
+          try {
+            budgetsList = await api.get<any[]>("/api/budgets");
+            if (budgetsList) {
+              cachedBudgetsRef.current = { data: budgetsList, timestamp: now };
+            }
+          } catch {
+            // ignore
+          }
         }
       }
 
-      // Fetch investments if queried
+      // Fetch investments if queried (cached for 2 minutes)
       let investmentsList = undefined;
       if (
         qLower.includes("investasi") ||
@@ -294,15 +317,22 @@ export const GhostChatModal: React.FC = () => {
         qLower.includes("sehat") ||
         qLower.includes("skor")
       ) {
-        try {
-          investmentsList = await api.get<any[]>("/api/investments");
-        } catch {
-          // ignore
+        if (cachedInvestmentsRef.current && now - cachedInvestmentsRef.current.timestamp < 120_000) {
+          investmentsList = cachedInvestmentsRef.current.data;
+        } else {
+          try {
+            investmentsList = await api.get<any[]>("/api/investments");
+            if (investmentsList) {
+              cachedInvestmentsRef.current = { data: investmentsList, timestamp: now };
+            }
+          } catch {
+            // ignore
+          }
         }
       }
 
-      // Small natural delay so user sees Kiro Ghost thinking
-      await new Promise((r) => setTimeout(r, 380));
+      // Small natural delay so user sees Racks thinking
+      await new Promise((r) => setTimeout(r, 260));
 
       const ctx: FinancialContext = {
         summary: summaryData,
@@ -332,6 +362,9 @@ export const GhostChatModal: React.FC = () => {
   };
 
   const handleClearChat = () => {
+    cachedTxRef.current = null;
+    cachedBudgetsRef.current = null;
+    cachedInvestmentsRef.current = null;
     setMessages(getInitialMessages(userName, userId));
     localStorage.removeItem(storageKey);
   };
