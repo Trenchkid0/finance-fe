@@ -14,6 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { GhostAvatar } from "@/components/chat/GhostAvatar";
 
 /**
  * Sticky top bar — sidebar trigger + global actions.
@@ -262,6 +263,17 @@ export function SiteHeader() {
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {/* Racks AI Assistant Header Button */}
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent("toggle-ghost-chat"))}
+            title={language === "id" ? "Buka Asisten Finansial Racks" : "Open Racks Financial Assistant"}
+            className="h-8 px-2 rounded-lg flex items-center gap-1.5 text-xs font-semibold text-purple-300 hover:text-purple-200 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/25 transition-all ml-0.5 cursor-pointer"
+          >
+            <GhostAvatar mood="happy" size="xs" withAura={false} />
+            <span className="hidden sm:inline font-bold text-[11px]">Racks AI</span>
+          </button>
 
           {/* Language selector */}
           <DropdownMenu modal={false}>

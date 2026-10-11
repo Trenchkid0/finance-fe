@@ -25,7 +25,13 @@ export type GhostDataCardType =
   | "top_expense"
   | "comparison"
   | "budget"
-  | "investment";
+  | "investment"
+  | "health_score"
+  | "latte_factor"
+  | "goal_simulation"
+  | "rule_50_30_20"
+  | "anomaly"
+  | "yesterday_expense";
 
 export interface GhostDataCardItem {
   label: string;
@@ -80,6 +86,7 @@ function parseTimeRange(q: string) {
   let isMonth = true;
   let isLastMonth = false;
   let isToday = false;
+  let isYesterday = false;
   let isAllTime = false;
 
   if (q.includes("bulan lalu") || q.includes("last month") || q.includes("kemarin bulan")) {
@@ -88,6 +95,10 @@ function parseTimeRange(q: string) {
     const targetMonth = currentMonth === 0 ? 11 : currentMonth - 1;
     const targetYear = currentMonth === 0 ? currentYear - 1 : currentYear;
     rangeLabel = `Bulan Lalu (${MONTH_NAMES_ID[targetMonth]} ${targetYear})`;
+  } else if (q.includes("kemarin") || q.includes("yesterday")) {
+    isYesterday = true;
+    isMonth = false;
+    rangeLabel = "Kemarin";
   } else if (q.includes("hari ini") || q.includes("today")) {
     isToday = true;
     isMonth = false;
@@ -113,6 +124,15 @@ function parseTimeRange(q: string) {
       const targetYear = currentMonth === 0 ? currentYear - 1 : currentYear;
       return d.getFullYear() === targetYear && d.getMonth() === targetMonth;
     }
+    if (isYesterday) {
+      const yDate = new Date(now);
+      yDate.setDate(now.getDate() - 1);
+      return (
+        d.getFullYear() === yDate.getFullYear() &&
+        d.getMonth() === yDate.getMonth() &&
+        d.getDate() === yDate.getDate()
+      );
+    }
     if (isToday) {
       return (
         d.getFullYear() === currentYear &&
@@ -128,6 +148,7 @@ function parseTimeRange(q: string) {
     isMonth,
     isLastMonth,
     isToday,
+    isYesterday,
     isAllTime,
     matchesDate,
     currentMonthName: MONTH_NAMES_ID[currentMonth],
@@ -149,7 +170,7 @@ function formatShortDate(dateStr?: string | null): string {
 }
 
 /**
- * Core engine answering 15 financial cases with Kiro Ghost persona.
+ * Core engine answering 21 financial cases with Racks persona.
  */
 export function processGhostQuery(
   rawQuery: string,
@@ -173,6 +194,7 @@ export function processGhostQuery(
     .reduce((sum, a) => sum + Number(a.balance || 0), 0);
 
   const timeFilter = parseTimeRange(q);
+  const allExpenses = allTx.filter((t) => t.type === "expense");
 
   // =========================================================================
   // PILAR 1: GAYA HIDUP & HARIAN (DAILY LIFESTYLE)
@@ -1179,6 +1201,505 @@ export function processGhostQuery(
     };
   }
 
+  // CASE 16: SKOR KESEHATAN FINANSIAL & CHECKUP DOMPET (FINANCIAL HEALTH SCORE)
+  if (
+    q.includes("sehat") ||
+    q.includes("kesehatan") ||
+    q.includes("skor") ||
+    q.includes("nilai dompet") ||
+    q.includes("checkup") ||
+    q.includes("financial health") ||
+    q.includes("kondisi keuangan")
+  ) {
+    const savingRate = totalInflow > 0 ? Math.round(((totalInflow - totalOutflow) / totalInflow) * 100) : 0;
+    const expenseRatio = totalInflow > 0 ? Math.round((totalOutflow / totalInflow) * 100) : 100;
+    const netCashflow = totalInflow - totalOutflow;
+    const holdings = ctx.investments || [];
+    const accounts = ctx.accounts || [];
+
+    // Hitung Skor (0 - 100)
+    let score = 50;
+    if (savingRate >= 25) score += 25;
+    else if (savingRate >= 15) score += 18;
+    else if (savingRate >= 5) score += 10;
+    else if (savingRate < 0) score -= 20;
+
+    if (netCashflow > 0) score += 10;
+    if (holdings.length > 0) score += 10;
+    if (accounts.length >= 2) score += 5;
+    score = Math.max(15, Math.min(score, 98));
+
+    let grade = "B (Sehat & Stabil)";
+    let badgeLabel = "Kondisi Sehat ✅";
+    let isPositive = true;
+    let mood: GhostMood = "happy";
+
+    if (score >= 85) {
+      grade = "A+ (Sangat Sehat 🌟)";
+      badgeLabel = "Finansial Prima 🌟";
+    } else if (score >= 70) {
+      grade = "A- (Bagus & Kuat 💪)";
+      badgeLabel = "Stabil & Kuat 💪";
+    } else if (score >= 50) {
+      grade = "B- (Cukup Waspada ⚠️)";
+      badgeLabel = "Perlu Pengendalian ⚠️";
+      isPositive = false;
+      mood = "thinking";
+    } else {
+      grade = "C (Kritis / Defisit 🚨)";
+      badgeLabel = "Peringatan Defisit 🚨";
+      isPositive = false;
+      mood = "spooky";
+    }
+
+    const items: GhostDataCardItem[] = [
+      {
+        label: "Skor Kesehatan",
+        value: `${score} / 100 (${grade})`,
+        formattedValue: `${score}/100`,
+        percent: score,
+        color: score >= 70 ? "#10b981" : score >= 50 ? "#f59e0b" : "#ef4444",
+      },
+      {
+        label: "Saving Rate (Rasio Tabungan)",
+        value: `${savingRate}% dari pemasukan`,
+        formattedValue: `${savingRate}%`,
+        percent: Math.max(0, Math.min(savingRate, 100)),
+        color: "#3b82f6",
+      },
+      {
+        label: "Rasio Pengeluaran",
+        value: `${expenseRatio}% dari pemasukan`,
+        formattedValue: `${expenseRatio}%`,
+        percent: Math.min(expenseRatio, 100),
+        color: expenseRatio > 90 ? "#ef4444" : "#a855f7",
+      },
+      {
+        label: "Arus Kas Bersih Bulanan",
+        value: formatIDR(netCashflow),
+        formattedValue: formatIDR(netCashflow),
+        color: netCashflow >= 0 ? "#10b981" : "#ef4444",
+      },
+      {
+        label: "Aset Investasi Aktif",
+        value: `${holdings.length} instrumen`,
+        formattedValue: `${holdings.length} aset`,
+        color: "#06b6d4",
+      },
+    ];
+
+    let tip =
+      score >= 80
+        ? "Luar biasa! Rasio tabunganmu sehat. Pertahankan disiplin dan tingkatkan alokasi ke instrumen investasi!"
+        : score >= 50
+        ? "Keuanganmu cukup stabil, namun tekan pos jajan dan keinginan agar saving rate bisa menembus di atas 20%."
+        : "Alarm merah! Pengeluaranmu melampaui pemasukan. Stop belanja sekunder dan prioritaskan kebutuhan esensial!";
+
+    return {
+      text: `Boo! 🩺👻 Hasil checkup mata gaibku: Skor kesehatan dompetmu adalah **${score}/100** dengan predikat **${grade}**! ${
+        netCashflow >= 0
+          ? `Bulan ini kamu berhasil menyisihkan **${savingRate}%** pemasukan sebagai surplus.`
+          : `Bulan ini kamu mengalami defisit kas sebesar **${formatIDR(Math.abs(netCashflow))}**!`
+      }`,
+      mood,
+      dataCard: {
+        type: "health_score",
+        title: "🩺 Medical Checkup Finansial",
+        subtitle: `Audit kesehatan dompet ${userName}`,
+        totalAmount: score,
+        formattedTotal: `${score}/100`,
+        items,
+        statusBadge: {
+          label: badgeLabel,
+          isPositive,
+        },
+        tip,
+      },
+      suggestedPrompts: [
+        "Pengeluaran receh apa yang numpuk?",
+        "Apakah pembagian gajiku 50/30/20 ideal?",
+        "Kategori apa yang paling boros?",
+      ],
+    };
+  }
+
+  // CASE 17: LATTE FACTOR & DETEKSI BOCOR HALUS (Micro-expenses <= Rp 50.000)
+  if (
+    q.includes("latte factor") ||
+    q.includes("bocor halus") ||
+    q.includes("kebocoran") ||
+    q.includes("receh") ||
+    q.includes("transaksi kecil") ||
+    q.includes("pengeluaran kecil")
+  ) {
+    const smallExpenses = allExpenses.filter(
+      (t) => Math.abs(t.amount) <= 50000 && timeFilter.matchesDate(t.date)
+    );
+    const totalSmall = smallExpenses.reduce((sum, t) => sum + Math.abs(t.amount), 0);
+    const countSmall = smallExpenses.length;
+    const projectedAnnual = totalSmall * 12;
+    const pctOfTotal = totalOutflow > 0 ? Math.round((totalSmall / totalOutflow) * 100) : 0;
+
+    const items: GhostDataCardItem[] = smallExpenses.slice(0, 5).map((t) => ({
+      label: `${t.description || "Transaksi kecil"} (${formatShortDate(t.date)})`,
+      value: Math.abs(t.amount),
+      formattedValue: formatIDR(Math.abs(t.amount)),
+      color: "#f59e0b",
+    }));
+
+    return {
+      text:
+        countSmall > 0
+          ? `Mata gaibku mencium bocor halus! ☕🔍 Ditemukan **${countSmall} transaksi receh** (≤ Rp 50.000) dengan total **${formatIDR(
+              totalSmall
+            )}** pada periode ini (${pctOfTotal}% dari total pengeluaran). Jika dibiarkan, setahun bisa tembus **${formatIDR(
+              projectedAnnual
+            )}**!`
+          : `Boo! 👻 Bersih! Tidak ditemukan transaksi receh yang menumpuk pada periode ini. Pengeluaranmu terfokus pada transaksi terencana.`,
+      mood: countSmall > 8 ? "spooky" : "thinking",
+      dataCard: {
+        type: "latte_factor",
+        title: "☕ Deteksi Latte Factor (Bocor Halus)",
+        subtitle: `${countSmall} transaksi receh di bawah Rp 50.000`,
+        totalAmount: totalSmall,
+        formattedTotal: formatIDR(totalSmall),
+        items: [
+          {
+            label: "Estimasi Bocor per Tahun",
+            value: projectedAnnual,
+            formattedValue: formatIDR(projectedAnnual),
+            color: "#ef4444",
+          },
+          ...items,
+        ],
+        statusBadge: {
+          label: countSmall > 8 ? "Bocor Halus Terdeteksi ⚠️" : "Terkendali ✅",
+          isPositive: countSmall <= 8,
+        },
+        tip: "Transaksi kecil seperti kopi sachet, parkir, jajan mini, dan biaya admin bank sering tidak disadari. Alihkan Rp 20.000/hari ke reksa dana bisa menjadi jutaan rupiah!",
+      },
+      suggestedPrompts: [
+        "Kondisi keuanganku sehat gak?",
+        "Berapa pengeluaran kopi saya bulan ini?",
+        "Berapa pengeluaran makan di luar?",
+      ],
+    };
+  }
+
+  // CASE 18: SIMULASI TARGET & GOALS IMPIAN
+  if (
+    q.includes("target") ||
+    q.includes("goals") ||
+    q.includes("impian") ||
+    q.includes("kapan bisa beli") ||
+    q.includes("nabung berapa") ||
+    q.includes("simulasi tabungan") ||
+    q.includes("beli iphone") ||
+    q.includes("beli motor") ||
+    q.includes("beli mobil") ||
+    q.includes("beli laptop")
+  ) {
+    const monthlySurplus = Math.max(0, totalInflow - totalOutflow);
+    let targetAmount = 20000000;
+    const matchJuta = q.match(/(\d+)\s*(juta|jt)/i);
+    const matchNumber = q.match(/(\d{6,12})/);
+    if (matchJuta && matchJuta[1]) {
+      targetAmount = parseInt(matchJuta[1], 10) * 1000000;
+    } else if (matchNumber && matchNumber[1]) {
+      targetAmount = parseInt(matchNumber[1], 10);
+    }
+
+    const monthsNeeded = monthlySurplus > 0 ? Math.ceil(targetAmount / monthlySurplus) : 0;
+
+    const items: GhostDataCardItem[] = [
+      {
+        label: "Target Nominal",
+        value: targetAmount,
+        formattedValue: formatIDR(targetAmount),
+        color: "#a855f7",
+      },
+      {
+        label: "Surplus Kas Bulananmu",
+        value: monthlySurplus,
+        formattedValue: formatIDR(monthlySurplus),
+        color: monthlySurplus > 0 ? "#10b981" : "#ef4444",
+      },
+      {
+        label: "Estimasi Waktu Tercapai",
+        value: monthlySurplus > 0 ? `${monthsNeeded} Bulan (${(monthsNeeded / 12).toFixed(1)} Tahun)` : "Belum ada surplus",
+        formattedValue: monthlySurplus > 0 ? `${monthsNeeded} Bulan` : "Defisit",
+        color: "#38bdf8",
+      },
+      {
+        label: "Jika Tabungan Dinaikkan +20%",
+        value: monthlySurplus > 0 ? `${Math.ceil(targetAmount / (monthlySurplus * 1.2))} Bulan` : "-",
+        formattedValue: monthlySurplus > 0 ? `${Math.ceil(targetAmount / (monthlySurplus * 1.2))} Bulan` : "-",
+        color: "#f59e0b",
+      },
+    ];
+
+    return {
+      text:
+        monthlySurplus > 0
+          ? `Mata gaibku memproyeksikan impianmu! 🎯👻 Dengan surplus kas saat ini **${formatIDR(
+              monthlySurplus
+            )}/bulan**, kamu membutuhkan sekitar **${monthsNeeded} bulan** untuk mengumpulkan target **${formatIDR(
+              targetAmount
+            )}**.`
+          : `Boo! 🎯👻 Saat ini arus kasku belum memiliki surplus (pemasukan habis terpakai). Kamu perlu memotong pos jajan atau menambah pemasukan agar simulasi tabungan target impian bisa berjalan!`,
+      mood: monthlySurplus > 0 ? "happy" : "thinking",
+      dataCard: {
+        type: "goal_simulation",
+        title: "🎯 Simulasi Tabungan & Target Impian",
+        subtitle: `Proyeksi target ${formatIDR(targetAmount)}`,
+        totalAmount: targetAmount,
+        formattedTotal: formatIDR(targetAmount),
+        items,
+        statusBadge: {
+          label: monthlySurplus > 0 ? `Target Realistis (~${monthsNeeded} Bln) 🚀` : "Perlu Surplus Kas ⚠️",
+          isPositive: monthlySurplus > 0,
+        },
+        tip: "Ingin target tercapai lebih cepat? Simpan dana tabungan di awal gajian (Pay Yourself First) sebelum mulai belanja kebutuhan!",
+      },
+      suggestedPrompts: [
+        "Kondisi keuanganku sehat gak?",
+        "Apakah pembagian gajiku 50/30/20 ideal?",
+        "Bagaimana arus kasku (cash flow)?",
+      ],
+    };
+  }
+
+  // CASE 19: EVALUASI ATURAN BUDGET 50/30/20 (NEEDS / WANTS / SAVINGS)
+  if (
+    q.includes("50/30/20") ||
+    q.includes("50 30 20") ||
+    q.includes("aturan 50") ||
+    q.includes("alokasi gaji") ||
+    q.includes("pembagian gaji") ||
+    q.includes("rasio ideal") ||
+    q.includes("kebutuhan keinginan")
+  ) {
+    const monthlyIncome = totalInflow > 0 ? totalInflow : totalOutflow;
+    let needsTotal = 0;
+    let wantsTotal = 0;
+
+    for (const t of allExpenses) {
+      if (!timeFilter.matchesDate(t.date)) continue;
+      const amt = Math.abs(t.amount);
+      const text = `${t.description || ""} ${t.category?.name || ""}`.toLowerCase();
+      if (
+        text.includes("listrik") || text.includes("pln") || text.includes("air") ||
+        text.includes("wifi") || text.includes("bensin") || text.includes("sewa") ||
+        text.includes("transport") || text.includes("beras") || text.includes("pasar") ||
+        text.includes("bpjs") || text.includes("asuransi") || text.includes("cicilan")
+      ) {
+        needsTotal += amt;
+      } else {
+        wantsTotal += amt;
+      }
+    }
+
+    const savingsTotal = Math.max(0, totalInflow - totalOutflow);
+    const needsPct = monthlyIncome > 0 ? Math.round((needsTotal / monthlyIncome) * 100) : 0;
+    const wantsPct = monthlyIncome > 0 ? Math.round((wantsTotal / monthlyIncome) * 100) : 0;
+    const savingsPct = monthlyIncome > 0 ? Math.round((savingsTotal / monthlyIncome) * 100) : 0;
+
+    const items: GhostDataCardItem[] = [
+      {
+        label: "Kebutuhan Pokok (Target: 50%)",
+        value: `${formatIDR(needsTotal)} (${needsPct}%)`,
+        formattedValue: `${needsPct}% (Ideal: ≤50%)`,
+        percent: Math.min(needsPct, 100),
+        color: needsPct <= 55 ? "#10b981" : "#ef4444",
+      },
+      {
+        label: "Keinginan & Lifestyle (Target: 30%)",
+        value: `${formatIDR(wantsTotal)} (${wantsPct}%)`,
+        formattedValue: `${wantsPct}% (Ideal: ≤30%)`,
+        percent: Math.min(wantsPct, 100),
+        color: wantsPct <= 35 ? "#3b82f6" : "#f59e0b",
+      },
+      {
+        label: "Tabungan & Investasi (Target: 20%)",
+        value: `${formatIDR(savingsTotal)} (${savingsPct}%)`,
+        formattedValue: `${savingsPct}% (Ideal: ≥20%)`,
+        percent: Math.min(savingsPct, 100),
+        color: savingsPct >= 20 ? "#10b981" : "#ef4444",
+      },
+    ];
+
+    const isHealthy = needsPct <= 60 && wantsPct <= 40 && savingsPct >= 15;
+
+    return {
+      text: `Boo! ⚖️👻 Menurut pedoman piramida 50/30/20: Alokasi uangmu adalah **${needsPct}% Kebutuhan**, **${wantsPct}% Keinginan**, dan **${savingsPct}% Tabungan**. ${
+        isHealthy
+          ? "Komposisimu sangat rapi dan mendekati rasio emas finansial!"
+          : "Ada pos yang melebihi standar ideal. Cek bagian keinginan atau tingkatkan porsi tabunganmu!"
+      }`,
+      mood: isHealthy ? "happy" : "thinking",
+      dataCard: {
+        type: "rule_50_30_20",
+        title: "⚖️ Evaluasi Rasio Gaji 50/30/20",
+        subtitle: `Komposisi alokasi keuangan ${timeFilter.rangeLabel}`,
+        totalAmount: monthlyIncome,
+        formattedTotal: formatIDR(monthlyIncome),
+        items,
+        statusBadge: {
+          label: isHealthy ? "Rasio Ideal Tercapai ✅" : "Perlu Kalibrasi Ulang ⚠️",
+          isPositive: isHealthy,
+        },
+        tip: "Rumus 50/30/20: 50% untuk kebutuhan dasar hidup, 30% untuk rekreasi & gaya hidup, dan 20% wajib diamankan untuk dana darurat / investasi.",
+      },
+      suggestedPrompts: [
+        "Kondisi keuanganku sehat gak?",
+        "Pengeluaran receh apa yang numpuk?",
+        "Kategori apa yang paling boros?",
+      ],
+    };
+  }
+
+  // CASE 20: DETEKSI TRANSAKSI DUPLIKAT & ANOMALI
+  if (
+    q.includes("mencurigakan") ||
+    q.includes("duplikat") ||
+    q.includes("ganda") ||
+    q.includes("anomali") ||
+    q.includes("aneh") ||
+    q.includes("double") ||
+    q.includes("transaksi kembar") ||
+    q.includes("cek transaksi")
+  ) {
+    const duplicatePairs: TransactionApiItem[] = [];
+    const seen = new Map<string, TransactionApiItem>();
+
+    for (const t of allExpenses) {
+      if (!timeFilter.matchesDate(t.date)) continue;
+      const key = `${Math.abs(t.amount)}_${t.date ? t.date.slice(0, 10) : ""}`;
+      if (seen.has(key)) {
+        duplicatePairs.push(seen.get(key)!);
+        duplicatePairs.push(t);
+      } else {
+        seen.set(key, t);
+      }
+    }
+
+    const avgExpense = allExpenses.length > 0 ? totalOutflow / allExpenses.length : 0;
+    const outliers = allExpenses.filter(
+      (t) => timeFilter.matchesDate(t.date) && Math.abs(t.amount) > avgExpense * 3 && Math.abs(t.amount) > 500000
+    );
+
+    const hasIssue = duplicatePairs.length > 0 || outliers.length > 0;
+
+    const items: GhostDataCardItem[] = [];
+    if (duplicatePairs.length > 0) {
+      items.push({
+        label: "Potensi Transaksi Kembar / Ganda",
+        value: `${duplicatePairs.length / 2} pasangan terdeteksi`,
+        formattedValue: `${duplicatePairs.length} transaksi`,
+        color: "#ef4444",
+      });
+      duplicatePairs.slice(0, 4).forEach((d) => {
+        items.push({
+          label: `${d.description || "Transaksi"} (${formatShortDate(d.date)})`,
+          value: Math.abs(d.amount),
+          formattedValue: formatIDR(Math.abs(d.amount)),
+          color: "#f59e0b",
+        });
+      });
+    }
+
+    if (outliers.length > 0) {
+      items.push({
+        label: "Lonjakan Ekstrem (>3x Rata-rata)",
+        value: `${outliers.length} transaksi`,
+        formattedValue: `${outliers.length} lonjakan`,
+        color: "#e11d48",
+      });
+      outliers.slice(0, 2).forEach((o) => {
+        items.push({
+          label: `${o.description || "Lonjakan"} (${formatShortDate(o.date)})`,
+          value: Math.abs(o.amount),
+          formattedValue: formatIDR(Math.abs(o.amount)),
+          color: "#ec4899",
+        });
+      });
+    }
+
+    return {
+      text: hasIssue
+        ? `Mata gaibku menangkap anomali! 🕵️👻 Terdeteksi **${
+            duplicatePairs.length > 0 ? `${duplicatePairs.length / 2} transaksi kembar/ganda` : ""
+          }${duplicatePairs.length > 0 && outliers.length > 0 ? " dan " : ""}${
+            outliers.length > 0 ? `${outliers.length} lonjakan transaksi tidak wajar` : ""
+          }. Pastikan tidak ada pembayaran terpotong dua kali!`
+        : `Boo! 🛡️👻 Semua aman terkendali! Tidak terdeteksi transaksi kembar, tagihan duplikat, atau anomali mencurigakan pada catatan ${timeFilter.rangeLabel}.`,
+      mood: hasIssue ? "spooky" : "happy",
+      dataCard: {
+        type: "anomaly",
+        title: "🕵️ Sensor Anomali & Transaksi Duplikat",
+        subtitle: hasIssue ? "Ditemukan transaksi yang perlu dicek ulang" : "Catatan transaksi normal & aman",
+        totalAmount: duplicatePairs.length + outliers.length,
+        formattedTotal: hasIssue ? `${duplicatePairs.length / 2} Kembar / ${outliers.length} Anomali` : "Aman 100%",
+        items: items.length > 0 ? items : [
+          { label: "Transaksi Ganda", value: "0", formattedValue: "Nihil ✅", color: "#10b981" },
+          { label: "Lonjakan Ekstrem", value: "0", formattedValue: "Nihil ✅", color: "#10b981" },
+          { label: "Status Rekonsiliasi", value: "Aman", formattedValue: "Sinkron", color: "#38bdf8" },
+        ],
+        statusBadge: {
+          label: hasIssue ? "Perlu Verifikasi ⚠️" : "Bebas Anomali ✅",
+          isPositive: !hasIssue,
+        },
+        tip: "Periksa bukti mutasi rekening bank atau struk jika ada merchant yang menarik saldo dua kali untuk belanjaan yang sama.",
+      },
+      suggestedPrompts: [
+        "Kategori apa yang paling boros?",
+        "Transaksi terbesar bulan ini apa?",
+        "Kondisi keuanganku sehat gak?",
+      ],
+    };
+  }
+
+  // CASE 21: PENGELUARAN KEMARIN (YESTERDAY EXPENSE)
+  if (q.includes("kemarin") || q.includes("yesterday")) {
+    const yesterdayExpenses = allExpenses.filter((t) => timeFilter.matchesDate(t.date));
+    const totalYesterday = yesterdayExpenses.reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+    const items: GhostDataCardItem[] = yesterdayExpenses.slice(0, 5).map((t) => ({
+      label: t.description || t.category?.name || "Pengeluaran",
+      value: Math.abs(t.amount),
+      formattedValue: formatIDR(Math.abs(t.amount)),
+      color: "#ec4899",
+    }));
+
+    return {
+      text:
+        totalYesterday > 0
+          ? `Boo! 📅👻 Pengeluaranmu **kemarin** tercatat sebesar **${formatIDR(
+              totalYesterday
+            )}** dari **${yesterdayExpenses.length} transaksi**.`
+          : `Boo! 📅👻 Kemarin kamu tidak mencatat pengeluaran sama sekali (Rp 0). Hari yang sangat hemat!`,
+      mood: totalYesterday > 0 ? "thinking" : "happy",
+      dataCard: {
+        type: "yesterday_expense",
+        title: "📅 Pengeluaran Kemarin",
+        subtitle: `${yesterdayExpenses.length} transaksi tercatat kemarin`,
+        totalAmount: totalYesterday,
+        formattedTotal: formatIDR(totalYesterday),
+        items,
+        statusBadge: {
+          label: totalYesterday > 0 ? "Catatan Kemarin 📅" : "Hari Tanpa Pengeluaran 🌟",
+          isPositive: totalYesterday === 0,
+        },
+        tip: "Mencatat pengeluaran harian secara disiplin membantu mengontrol ritme cashflow sebelum akhir bulan!",
+      },
+      suggestedPrompts: [
+        "Berapa total pengeluaranku?",
+        "Berapa pengeluaran kopi saya bulan ini?",
+        "Kondisi keuanganku sehat gak?",
+      ],
+    };
+  }
+
   // =========================================================================
   // PILAR UMUM: PENGELUARAN UMUM & CAPABILITIES
   // =========================================================================
@@ -1251,36 +1772,39 @@ export function processGhostQuery(
     q.includes("fitur") ||
     q.includes("bantuan") ||
     q.includes("help") ||
+    q.includes("racks") ||
     q.includes("kiro") ||
     q.includes("kamu siapa") ||
     q.includes("fungsimu")
   ) {
     return {
-      text: `Boo! 👻 Aku adalah **Kiro Ghost**, roh asisten finansial pribadimu! Aku bisa melacak berbagai pos pengeluaran spesifik dan mengaudit kesehatan dompetmu:`,
+      text: `Boo! 👻 Aku adalah **Racks**, roh asisten finansial pribadimu! Aku bisa melacak berbagai pos pengeluaran spesifik dan mengaudit kesehatan dompetmu:`,
       mood: "happy",
       dataCard: {
         type: "capabilities",
-        title: "🔮 Mantra & Kemampuan Kiro Ghost (15 Kasus)",
+        title: "🔮 Mantra & Kemampuan Racks (21 Kasus)",
         subtitle: "Tanyakan hal-hal berikut kapan saja kepadaku:",
         items: [
-          { label: "1. Jajan Kopi & Kafe", value: "Berapa pengeluaran kopi bulan ini?", formattedValue: "Audit kafein", color: "#f59e0b" },
-          { label: "2. Kuliner & Pesan Antar", value: "Berapa pengeluaran makan di luar?", formattedValue: "GoFood / resto", color: "#f97316" },
-          { label: "3. Belanja Online", value: "Berapa belanja Shopee / Tokped?", formattedValue: "Keranjang belanja", color: "#ec4899" },
-          { label: "4. Transportasi & BBM", value: "Berapa ongkos bensin dan transport?", formattedValue: "BBM / ojol / tol", color: "#6366f1" },
-          { label: "5. Tagihan Rutin", value: "Berapa tagihan listrik & wifi?", formattedValue: "PLN / PDAM / wifi", color: "#06b6d4" },
-          { label: "6. Langganan Digital", value: "Berapa biaya langganan Netflix/Spotify?", formattedValue: "Langganan aktif", color: "#a855f7" },
-          { label: "7. Cicilan & Paylater", value: "Berapa cicilan atau paylater saya?", formattedValue: "Kewajiban utang", color: "#ef4444" },
-          { label: "8. Pos Paling Boros", value: "Kategori apa yang paling boros?", formattedValue: "Audit penguras saldo", color: "#e11d48" },
-          { label: "9. Transaksi Terbesar", value: "Transaksi terbesar bulan ini apa?", formattedValue: "Pengeluaran puncak", color: "#fb7185" },
-          { label: "10. Arus Kas & Saldo", value: "Arus kasku surplus atau defisit?", formattedValue: "Cek saldo rekening", color: "#38bdf8" },
+          { label: "1. Skor Kesehatan Finansial", value: "Kondisi keuanganku sehat gak?", formattedValue: "Checkup dompet", color: "#10b981" },
+          { label: "2. Bocor Halus (Latte Factor)", value: "Pengeluaran receh apa yang numpuk?", formattedValue: "Audit belanja kecil", color: "#f59e0b" },
+          { label: "3. Rasio Budget 50/30/20", value: "Apakah pembagian gajiku 50/30/20 ideal?", formattedValue: "Evaluasi piramida", color: "#3b82f6" },
+          { label: "4. Simulasi Target & Impian", value: "Kapan saya bisa beli motor / laptop?", formattedValue: "Target nabung", color: "#a855f7" },
+          { label: "5. Deteksi Transaksi Duplikat", value: "Ada transaksi mencurigakan / ganda?", formattedValue: "Sensor anomali", color: "#ef4444" },
+          { label: "6. Pengeluaran Kemarin", value: "Kemarin saya habis berapa?", formattedValue: "Audit harian", color: "#ec4899" },
+          { label: "7. Jajan Kopi & Kafe", value: "Berapa pengeluaran kopi bulan ini?", formattedValue: "Audit kafein", color: "#f59e0b" },
+          { label: "8. Kuliner & Pesan Antar", value: "Berapa pengeluaran makan di luar?", formattedValue: "GoFood / resto", color: "#f97316" },
+          { label: "9. Belanja Online", value: "Berapa belanja Shopee / Tokped?", formattedValue: "Keranjang belanja", color: "#ec4899" },
+          { label: "10. Transportasi & BBM", value: "Berapa ongkos bensin dan transport?", formattedValue: "BBM / ojol / tol", color: "#6366f1" },
+          { label: "11. Tagihan Rutin", value: "Berapa tagihan listrik & wifi?", formattedValue: "PLN / PDAM / wifi", color: "#06b6d4" },
+          { label: "12. Pos Paling Boros", value: "Kategori apa yang paling boros?", formattedValue: "Audit penguras saldo", color: "#e11d48" },
         ],
         tip: "Ketik pertanyaanmu langsung atau klik salah satu tombol prompt di bawah!",
       },
       suggestedPrompts: [
-        "Berapa pengeluaran kopi saya bulan ini?",
-        "Berapa pengeluaran makan di luar?",
-        "Kategori apa yang paling boros?",
-        "Arus kasku surplus atau defisit?",
+        "Kondisi keuanganku sehat gak?",
+        "Pengeluaran receh apa yang numpuk?",
+        "Apakah pembagian gajiku 50/30/20 ideal?",
+        "Ada transaksi mencurigakan gak?",
       ],
     };
   }

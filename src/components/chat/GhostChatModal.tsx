@@ -35,7 +35,7 @@ const getInitialMessages = (name?: string, uId?: string): ChatMessage[] => [
   {
     id: `welcome-${uId || "guest"}`,
     sender: "ghost",
-    text: `Boo! 👻 Halo **${name || "Sobat"}**! Aku **Kiro Ghost**, roh asisten finansial pribadimu! Aku melayang di sini untuk mengawasi pengeluaran, pemasukan, dan kesehatan dompetmu. Mau cek kondisi keuanganmu hari ini?`,
+    text: `Boo! 👻 Halo **${name || "Sobat"}**! Aku **Racks**, roh asisten finansial pribadimu! Aku melayang di sini untuk mengawasi pengeluaran, pemasukan, dan kesehatan dompetmu. Mau cek kondisi keuanganmu hari ini?`,
     timestamp: new Date(),
     mood: "happy",
     suggestedPrompts: [
@@ -51,7 +51,7 @@ const getInitialMessages = (name?: string, uId?: string): ChatMessage[] => [
 export const GhostChatModal: React.FC = () => {
   const { user, accounts } = useApp();
   const [isOpen, setIsOpen] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // Unique key per user (isolated storage for User A, User B, etc.)
   const userId = user?.id || user?.email || "anonymous";
@@ -59,7 +59,7 @@ export const GhostChatModal: React.FC = () => {
     user?.name?.trim().split(" ")[0] ||
     user?.email?.split("@")?.[0] ||
     "Sobat";
-  const storageKey = `kiro_ghost_chat_history_${userId}`;
+  const storageKey = `racks_ghost_chat_history_${userId}`;
 
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     try {
@@ -82,7 +82,6 @@ export const GhostChatModal: React.FC = () => {
   const [inputQuery, setInputQuery] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [summaryData, setSummaryData] = useState<SummaryApiResponse | null>(null);
-  const [showTooltip, setShowTooltip] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const chipsRef = useRef<HTMLDivElement>(null);
@@ -140,30 +139,47 @@ export const GhostChatModal: React.FC = () => {
     }
   }, [messages, storageKey]);
 
+  // Handle ESC key to close right sidebar
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen) {
+        setIsOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
+
+  // Global custom event listeners to toggle/open ghost chat from Header or anywhere
+  useEffect(() => {
+    const handleOpen = () => setIsOpen(true);
+    const handleToggle = () => setIsOpen((prev) => !prev);
+    window.addEventListener("open-ghost-chat", handleOpen);
+    window.addEventListener("toggle-ghost-chat", handleToggle);
+    return () => {
+      window.removeEventListener("open-ghost-chat", handleOpen);
+      window.removeEventListener("toggle-ghost-chat", handleToggle);
+    };
+  }, []);
+
   // Scroll to bottom on new message
   useEffect(() => {
-    if (isOpen && !isMinimized) {
+    if (isOpen) {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages, isOpen, isMinimized, isTyping]);
+  }, [messages, isOpen, isTyping]);
 
   // Auto-focus input when opened
   useEffect(() => {
-    if (isOpen && !isMinimized) {
+    if (isOpen) {
       setTimeout(() => inputRef.current?.focus(), 150);
     }
-  }, [isOpen, isMinimized]);
-
-  // Hide initial floating tooltip after 8s
-  useEffect(() => {
-    const timer = setTimeout(() => setShowTooltip(false), 8000);
-    return () => clearTimeout(timer);
-  }, []);
+  }, [isOpen]);
 
   // Convert mouse wheel vertical scroll into horizontal scroll for chips
   useEffect(() => {
     const el = chipsRef.current;
-    if (!el || !isOpen || isMinimized) return;
+    if (!el || !isOpen) return;
 
     const onWheel = (e: WheelEvent) => {
       if (e.deltaY !== 0) {
@@ -176,7 +192,7 @@ export const GhostChatModal: React.FC = () => {
     return () => {
       el.removeEventListener("wheel", onWheel);
     };
-  }, [isOpen, isMinimized]);
+  }, [isOpen]);
 
   // Mouse drag-to-scroll for desktop mouse users
   const handleChipsMouseDown = (e: React.MouseEvent) => {
@@ -238,6 +254,11 @@ export const GhostChatModal: React.FC = () => {
         qLower.includes("listrik") || qLower.includes("tagihan") || qLower.includes("wifi") ||
         qLower.includes("langganan") || qLower.includes("netflix") || qLower.includes("spotify") ||
         qLower.includes("cicilan") || qLower.includes("paylater") || qLower.includes("terbesar") ||
+        qLower.includes("sehat") || qLower.includes("skor") || qLower.includes("checkup") ||
+        qLower.includes("latte") || qLower.includes("bocor") || qLower.includes("receh") ||
+        qLower.includes("target") || qLower.includes("goal") || qLower.includes("50/30/20") ||
+        qLower.includes("50 30 20") || qLower.includes("duplikat") || qLower.includes("mencurigakan") ||
+        qLower.includes("kemarin") ||
         transactionsList.length <= 5;
 
       if (needsTx) {
@@ -269,7 +290,9 @@ export const GhostChatModal: React.FC = () => {
         qLower.includes("investasi") ||
         qLower.includes("portofolio") ||
         qLower.includes("saham") ||
-        qLower.includes("reksa")
+        qLower.includes("reksa") ||
+        qLower.includes("sehat") ||
+        qLower.includes("skor")
       ) {
         try {
           investmentsList = await api.get<any[]>("/api/investments");
@@ -322,138 +345,127 @@ export const GhostChatModal: React.FC = () => {
   return (
     <>
       {/* ========================================================
-          1. FLOATING GHOST LAUNCHER (Kiro Floating Widget)
+          1. RIGHT-EDGE FLOATING DOCK (Tab samping di kanan tengah)
           ======================================================== */}
-      <div className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-50 flex items-center gap-2.5">
-        {/* Floating Speech Bubble Teaser (when closed) */}
-        {!isOpen && showTooltip && (
-          <div
-            onClick={() => {
-              setIsOpen(true);
-              setShowTooltip(false);
-            }}
-            className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-card/95 border border-purple-500/30 text-xs text-foreground shadow-xl shadow-purple-950/30 backdrop-blur-md cursor-pointer hover:border-purple-500/60 transition-all duration-200 animate-in fade-in slide-in-from-right-4 whitespace-nowrap select-none"
-          >
-            <span className="text-purple-400 font-extrabold shrink-0">Boo!</span>
-            <span className="font-semibold text-foreground shrink-0">
-              Tanya pengeluaranmu yuk 👻
-            </span>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowTooltip(false);
-              }}
-              className="text-muted-foreground hover:text-foreground ml-1 p-0.5 rounded-full hover:bg-muted/50 transition-colors shrink-0 flex items-center justify-center"
-              aria-label="Tutup balon teks"
-            >
-              <X size={12} />
-            </button>
-          </div>
+      <div
+        className={cn(
+          "fixed right-0 top-1/2 -translate-y-1/2 z-40 flex items-center transition-all duration-300",
+          isOpen ? "opacity-0 pointer-events-none translate-x-12" : "opacity-100 translate-x-0"
         )}
-
-        {/* Floating Mascot Button */}
+      >
         <button
           type="button"
-          onClick={() => {
-            setIsOpen((prev) => !prev);
-            setIsMinimized(false);
-            setShowTooltip(false);
-          }}
-          aria-label="Kiro Ghost Chatbot"
+          onClick={() => setIsOpen(true)}
+          aria-label="Buka Racks Asisten Finansial"
           className={cn(
-            "group relative p-2.5 rounded-2xl flex items-center justify-center transition-all duration-300",
-            "bg-gradient-to-br from-slate-950 via-purple-950/80 to-slate-900 border border-purple-500/40",
-            "shadow-[0_4px_24px_rgba(168,85,247,0.35),0_0_12px_rgba(56,189,248,0.2)]",
-            "hover:border-purple-400 hover:shadow-[0_4px_32px_rgba(168,85,247,0.55),0_0_20px_rgba(56,189,248,0.35)]",
-            "active:scale-95 cursor-pointer"
+            "group relative pl-2.5 pr-1.5 py-3 rounded-l-2xl flex flex-col items-center justify-center gap-1.5 transition-all duration-300",
+            "bg-gradient-to-b from-slate-950 via-purple-950/90 to-slate-900 border-l border-t border-b border-purple-500/40",
+            "shadow-[-4px_4px_20px_rgba(168,85,247,0.35),0_0_12px_rgba(56,189,248,0.15)]",
+            "hover:pl-3 hover:border-purple-400 hover:shadow-[-6px_6px_28px_rgba(168,85,247,0.55)]",
+            "active:scale-95 cursor-pointer select-none"
           )}
         >
           {/* Inner spectral aura pulsing */}
-          <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-500/10 via-cyan-500/15 to-purple-500/10 opacity-75 group-hover:opacity-100 transition-opacity pointer-events-none" />
+          <div className="absolute inset-0 rounded-l-2xl bg-gradient-to-b from-purple-500/15 via-cyan-500/20 to-purple-500/15 opacity-75 group-hover:opacity-100 transition-opacity pointer-events-none" />
 
-          {/* Kiro Ghost Mascot */}
-          <GhostAvatar mood={currentMood} size="sm" isFloating={true} />
+          {/* Racks Ghost Mascot */}
+          <GhostAvatar mood={currentMood} size="xs" isFloating={true} />
+
+          {/* Vertical Label */}
+          <span className="text-[9px] font-black tracking-widest text-purple-300 uppercase [writing-mode:vertical-rl] rotate-180 opacity-90 group-hover:opacity-100">
+            RACKS
+          </span>
 
           {/* Glowing spiritual online dot */}
-          <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-500 ring-2 ring-slate-950" />
+          <span className="flex h-1.5 w-1.5">
+            <span className="animate-ping absolute inline-flex h-1.5 w-1.5 rounded-full bg-cyan-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-cyan-500 ring-2 ring-slate-950" />
           </span>
         </button>
       </div>
 
       {/* ========================================================
-          2. CHAT MODAL / DOCKED WINDOW
+          2. MOBILE BACKDROP OVERLAY
           ======================================================== */}
       {isOpen && (
         <div
-          className={cn(
-            "fixed z-50 flex flex-col transition-all duration-200 overflow-hidden",
-            "bg-card/95 backdrop-blur-2xl border border-purple-500/30 rounded-2xl",
-            "shadow-[0_20px_60px_rgba(0,0,0,0.65),0_0_35px_rgba(168,85,247,0.22)]",
-            // Responsive positioning & size
-            isMinimized
-              ? "bottom-20 right-4 md:bottom-20 md:right-6 w-72 h-14"
-              : "bottom-4 right-4 md:bottom-20 md:right-6 w-[94vw] sm:w-[420px] h-[580px] max-h-[86vh]"
-          )}
-        >
-          {/* Top Ghostly Ambient Bar */}
-          <div className="h-1 w-full bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 opacity-80" />
+          onClick={() => setIsOpen(false)}
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs md:hidden animate-in fade-in duration-200"
+          aria-hidden="true"
+        />
+      )}
 
-          {/* Header Bar */}
-          <div className="p-3.5 bg-elevated/70 border-b border-purple-500/20 flex items-center justify-between shrink-0">
-            <div className="flex items-center gap-2.5">
-              <GhostAvatar mood={currentMood} size="xs" withAura={false} />
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-black tracking-tight text-foreground">
-                    Kiro Ghost
-                  </span>
-                  <span className="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-purple-500/20 text-purple-400 border border-purple-500/30">
-                    AI SPIRIT
-                  </span>
-                </div>
-                <div className="text-[10px] text-muted-foreground flex items-center gap-1">
-                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>Siap audit keuangan</span>
-                </div>
+      {/* ========================================================
+          3. RIGHT SIDEBAR PANEL
+          ======================================================== */}
+      <aside
+        aria-label="Racks Sidebar"
+        className={cn(
+          "fixed top-0 right-0 bottom-0 z-50 flex flex-col h-screen",
+          "bg-card/98 backdrop-blur-2xl border-l border-purple-500/30",
+          "shadow-[-16px_0_50px_rgba(0,0,0,0.65),0_0_35px_rgba(168,85,247,0.18)]",
+          "transition-all duration-300 ease-in-out",
+          isExpanded
+            ? "w-full sm:w-[540px] md:w-[600px]"
+            : "w-full sm:w-[420px] md:w-[460px]",
+          isOpen ? "translate-x-0" : "translate-x-full pointer-events-none"
+        )}
+      >
+        {/* Top Ghostly Ambient Bar */}
+        <div className="h-1 w-full bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 opacity-80 shrink-0" />
+
+        {/* Header Bar */}
+        <div className="px-4 py-3 bg-elevated/70 border-b border-purple-500/20 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-2.5">
+            <GhostAvatar mood={currentMood} size="xs" withAura={false} />
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-black tracking-tight text-foreground">
+                  Racks
+                </span>
+                <span className="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-purple-500/20 text-purple-400 border border-purple-500/30">
+                  AI ASSISTANT
+                </span>
               </div>
-            </div>
-
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={handleClearChat}
-                title="Hapus riwayat obrolan"
-                className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-lg transition-colors"
-              >
-                <Trash2 size={13} />
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsMinimized((prev) => !prev)}
-                title={isMinimized ? "Perbesar" : "Perkecil"}
-                className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-lg transition-colors"
-              >
-                {isMinimized ? <Maximize2 size={13} /> : <Minimize2 size={13} />}
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsOpen(false)}
-                title="Tutup asisten"
-                className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-lg transition-colors"
-              >
-                <X size={14} />
-              </button>
+              <div className="text-[10px] text-muted-foreground flex items-center gap-1">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span>Asisten Finansial</span>
+              </div>
             </div>
           </div>
 
-          {/* Main Body (Only when not minimized) */}
-          {!isMinimized && (
-            <>
-              {/* Scrollable Messages Area */}
-              <div className="flex-1 overflow-y-auto overflow-x-hidden p-3.5 space-y-3.5 text-xs">
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={handleClearChat}
+              title="Hapus riwayat obrolan"
+              className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-lg transition-colors"
+            >
+              <Trash2 size={13} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsExpanded((prev) => !prev)}
+              title={isExpanded ? "Perkecil sidebar" : "Perlebar sidebar"}
+              className="hidden sm:inline-flex p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-lg transition-colors"
+            >
+              {isExpanded ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              title="Tutup sidebar (Esc)"
+              className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-lg transition-colors flex items-center gap-0.5"
+            >
+              <X size={15} />
+            </button>
+          </div>
+        </div>
+
+        {/* Main Body */}
+        <>
+          {/* Scrollable Messages Area */}
+          <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-3.5 text-xs">
                 {messages.map((msg) => (
                   <div
                     key={msg.id}
@@ -599,7 +611,7 @@ export const GhostChatModal: React.FC = () => {
                   <div className="flex items-center gap-2 text-muted-foreground text-[11px] pl-1">
                     <GhostAvatar mood="thinking" size="xs" withAura={false} />
                     <span className="italic flex items-center gap-1">
-                      Kiro Ghost sedang memindai catatan...
+                      Racks sedang memindai catatan...
                       <span className="inline-flex gap-0.5">
                         <span className="w-1 h-1 bg-purple-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
                         <span className="w-1 h-1 bg-purple-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
@@ -640,6 +652,48 @@ export const GhostChatModal: React.FC = () => {
                     className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-elevated hover:bg-muted text-muted-foreground hover:text-foreground border border-border/50 shrink-0 transition-colors"
                   >
                     💸 Pengeluaran
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => !hasMovedChipsRef.current && handleSendMessage("Kondisi keuanganku sehat gak?")}
+                    className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 hover:text-emerald-200 border border-emerald-500/30 shrink-0 transition-colors"
+                  >
+                    🩺 Skor Dompet
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => !hasMovedChipsRef.current && handleSendMessage("Pengeluaran receh apa yang numpuk?")}
+                    className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 hover:text-amber-200 border border-amber-500/30 shrink-0 transition-colors"
+                  >
+                    ☕ Bocor Halus
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => !hasMovedChipsRef.current && handleSendMessage("Apakah pembagian gajiku 50/30/20 ideal?")}
+                    className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 hover:text-blue-200 border border-blue-500/30 shrink-0 transition-colors"
+                  >
+                    ⚖️ Rasio 50/30/20
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => !hasMovedChipsRef.current && handleSendMessage("Kapan saya bisa beli motor 20 juta?")}
+                    className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 hover:text-purple-200 border border-purple-500/30 shrink-0 transition-colors"
+                  >
+                    🎯 Target Impian
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => !hasMovedChipsRef.current && handleSendMessage("Ada transaksi mencurigakan atau duplikat gak?")}
+                    className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 hover:text-rose-200 border border-rose-500/30 shrink-0 transition-colors"
+                  >
+                    🕵️ Cek Duplikat
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => !hasMovedChipsRef.current && handleSendMessage("Kemarin saya habis berapa?")}
+                    className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-fuchsia-500/10 hover:bg-fuchsia-500/20 text-fuchsia-300 hover:text-fuchsia-200 border border-fuchsia-500/30 shrink-0 transition-colors"
+                  >
+                    📅 Kemarin
                   </button>
                   <button
                     type="button"
@@ -746,9 +800,7 @@ export const GhostChatModal: React.FC = () => {
                 </form>
               </div>
             </>
-          )}
-        </div>
-      )}
+          </aside>
     </>
   );
 };

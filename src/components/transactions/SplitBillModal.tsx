@@ -42,8 +42,6 @@ export function SplitBillModal({ open, onClose }: SplitBillModalProps) {
   const [servicePercent, setServicePercent] = useState<number>(5);
   const [copied, setCopied] = useState<boolean>(false);
 
-  if (!open) return null;
-
   const addMember = () => {
     if (!newMemberName.trim()) return;
     setMembers((prev) => [...prev, { id: `m-${Date.now()}`, name: newMemberName.trim() }]);
@@ -161,6 +159,8 @@ export function SplitBillModal({ open, onClose }: SplitBillModalProps) {
       setTimeout(() => setCopied(false), 2000);
     });
   };
+
+  if (!open || typeof document === "undefined") return null;
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm animate-fade-in">

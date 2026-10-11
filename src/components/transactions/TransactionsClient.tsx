@@ -950,10 +950,12 @@ export function TransactionsClient({
       )}
 
       {/* Split Bill modal */}
-      <SplitBillModal
-        open={isSplitBillOpen}
-        onClose={() => setIsSplitBillOpen(false)}
-      />
+      {isSplitBillOpen && (
+        <SplitBillModal
+          open={isSplitBillOpen}
+          onClose={() => setIsSplitBillOpen(false)}
+        />
+      )}
 
 
       {/* Confirm Bulk Delete - Portal Modal */}
