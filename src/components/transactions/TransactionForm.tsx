@@ -186,6 +186,38 @@ export function TransactionForm({
   >(boundAction, undefined);
 
   const hasShownRestoreToastRef = useRef(false);
+  const saveAndAddAnotherRef = useRef(false);
+
+  // Keyboard shortcuts: 1 = expense, 2 = income, 3 = transfer (when not typing in an input)
+  useEffect(() => {
+    if (!open) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+
+      if (e.key === "1") {
+        e.preventDefault();
+        updateField(activeIndex, "type", "expense");
+      } else if (e.key === "2") {
+        e.preventDefault();
+        updateField(activeIndex, "type", "income");
+      } else if (e.key === "3") {
+        e.preventDefault();
+        updateField(activeIndex, "type", "transfer");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, activeIndex]);
 
   // Reset modal state when open changes
   useEffect(() => {
@@ -436,8 +468,15 @@ export function TransactionForm({
           localStorage.removeItem("tx-form-draft");
           toast.success(isId ? `${items.length} transaksi berhasil ditambahkan` : `${items.length} transactions added successfully`);
           onSuccess?.();
-          onClose();
+          if (saveAndAddAnotherRef.current) {
+            saveAndAddAnotherRef.current = false;
+            setItems([createEmptyTransaction(stableInitial)]);
+            setActiveIndex(0);
+          } else {
+            onClose();
+          }
         } else {
+          saveAndAddAnotherRef.current = false;
           setCustomError(res.error || (isId ? "Gagal menyimpan transaksi" : "Failed to save transactions"));
         }
       }
@@ -551,6 +590,7 @@ export function TransactionForm({
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-muted-foreground/70">Rp</span>
               <Input
                 inputMode="numeric"
+                autoFocus={open && idx === 0}
                 value={item.amount}
                 onChange={(e) => updateField(idx, "amount", formatInputRupiah(e.target.value))}
                 placeholder="0"
@@ -728,7 +768,7 @@ export function TransactionForm({
       }}
     >
       <div
-        className="flex max-h-[calc(100dvh-48px)] w-full max-w-[520px] flex-col overflow-hidden rounded-[22px] border border-border bg-surface shadow-2xl"
+        className="flex max-h-[calc(100dvh-48px)] w-full max-w-[540px] sm:max-w-[600px] flex-col overflow-hidden rounded-[22px] border border-border bg-surface shadow-2xl"
         role="dialog"
         aria-modal="true"
       >
@@ -886,50 +926,84 @@ export function TransactionForm({
         </div>
 
         {/* ===== STICKY FOOTER ===== */}
-        <div className="flex items-center justify-between border-t border-border px-7 py-5">
-          <div className="flex items-center gap-2">
-            {mode === "create" && (
+        <div className="border-t border-border bg-surface px-6 py-4">
+          <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              {mode === "create" && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-9 gap-1.5 text-xs font-semibold border-accent/30 text-accent hover:bg-accent/10 hover:text-accent transition-colors"
+                  onClick={handleAddItem}
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  {isId ? "Tambah Form" : "Add Form"}
+                  {items.length > 1 && (
+                    <span className="ml-0.5 rounded-full bg-accent/20 px-1.5 py-0.2 text-[10px] font-mono font-bold text-accent">
+                      {items.length}
+                    </span>
+                  )}
+                </Button>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 shrink-0">
               <Button
                 type="button"
-                variant="outline"
-                className="h-10 gap-1.5 text-[13px] border-accent/20 text-accent hover:bg-accent/5 hover:text-accent font-bold"
-                onClick={handleAddItem}
+                variant="ghost"
+                size="sm"
+                onClick={onClose}
+                className="h-9 px-3 text-xs text-muted-foreground hover:text-foreground"
+                disabled={pending || submitting}
               >
-                <Plus className="h-4 w-4" />
-                {isId ? "Tambah Form" : "Add Form"}
+                {isId ? "Batal" : "Cancel"}
               </Button>
-            )}
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={onClose}
-              className="h-10 text-[13px]"
-              disabled={pending || submitting}
-            >
-              {isId ? "Batal" : "Cancel"}
-            </Button>
-             <Button
-              type="submit"
-              form={FORM_ID}
-              className="h-10 gap-1.5 text-[13px]"
-              disabled={pending || scanning || uploading || hasInsufficient || submitting}
-            >
-              {pending || uploading || submitting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Check className="h-4 w-4" />
+              {mode === "create" && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => {
+                    saveAndAddAnotherRef.current = true;
+                    const form = document.getElementById(FORM_ID) as HTMLFormElement | null;
+                    if (form) {
+                      form.requestSubmit();
+                    } else {
+                      handleSubmit(e);
+                    }
+                  }}
+                  className="h-9 px-3.5 text-xs font-medium border-border/80 hover:bg-elevated text-foreground hidden sm:inline-flex"
+                  disabled={pending || scanning || uploading || hasInsufficient || submitting}
+                >
+                  {isId ? "Simpan & Buat Lagi" : "Save & Add Another"}
+                </Button>
               )}
-              {mode === "create"
-                ? isId
-                  ? "Simpan Semua"
-                  : "Save All"
-                : isId
-                  ? "Perbarui"
-                  : "Update"}
-            </Button>
+              <Button
+                type="submit"
+                form={FORM_ID}
+                size="sm"
+                className="h-9 px-4 gap-1.5 text-xs font-bold shrink-0 shadow-sm"
+                disabled={pending || scanning || uploading || hasInsufficient || submitting}
+              >
+                {pending || uploading || submitting ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Check className="h-3.5 w-3.5" />
+                )}
+                {mode === "create"
+                  ? items.length > 1
+                    ? isId
+                      ? `Simpan Semua (${items.length})`
+                      : `Save All (${items.length})`
+                    : isId
+                      ? "Simpan"
+                      : "Save"
+                  : isId
+                    ? "Perbarui"
+                    : "Update"}
+              </Button>
+            </div>
           </div>
         </div>
       </div>

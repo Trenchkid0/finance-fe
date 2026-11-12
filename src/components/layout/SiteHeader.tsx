@@ -14,7 +14,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { GhostAvatar } from "@/components/chat/GhostAvatar";
 
 /**
  * Sticky top bar — sidebar trigger + global actions.
@@ -136,12 +135,14 @@ export function SiteHeader() {
         <button
           type="button"
           onClick={openCommandPalette}
-          className="hidden md:flex items-center gap-2.5 h-9 px-3.5 rounded-xl border border-white/[0.06] bg-white/[0.02] text-xs text-muted-foreground/50 hover:text-foreground/80 hover:border-white/[0.12] hover:bg-white/[0.04] transition-all duration-300 w-64 lg:w-80 group"
-          aria-label="Buka pencarian cepat"
+          className="hidden md:flex items-center gap-2.5 h-9 px-3.5 rounded-xl border border-white/[0.06] bg-white/[0.02] text-xs text-muted-foreground/60 hover:text-foreground/90 hover:border-white/[0.12] hover:bg-white/[0.04] transition-all duration-300 w-64 lg:w-80 group"
+          aria-label={language === "id" ? "Buka pencarian cepat" : "Open quick search"}
         >
-          <Search size={14} className="shrink-0 text-muted-foreground/40 group-hover:text-accent/60 transition-colors" />
-          <span className="flex-1 text-left text-[12px]">Cari halaman, akun, transaksi…</span>
-          <kbd className="ml-auto text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.08] text-muted-foreground/40 tracking-wide">
+          <Search size={14} className="shrink-0 text-muted-foreground/50 group-hover:text-accent/80 transition-colors" />
+          <span className="flex-1 text-left text-[12px] text-muted-foreground/80 group-hover:text-foreground/90">
+            {language === "id" ? "Cari halaman, akun, transaksi…" : "Search pages, accounts, transactions…"}
+          </span>
+          <kbd className="ml-auto text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.08] text-muted-foreground/60 tracking-wide">
             ⌘K
           </kbd>
         </button>
@@ -152,8 +153,8 @@ export function SiteHeader() {
           <Button
             variant="ghost"
             size="icon"
-            aria-label="Cari"
-            className="h-9 w-9 md:hidden rounded-xl text-muted-foreground/50 hover:text-foreground"
+            aria-label={language === "id" ? "Cari" : "Search"}
+            className="h-9 w-9 md:hidden rounded-xl text-muted-foreground/60 hover:text-foreground"
             onClick={openCommandPalette}
           >
             <Search size={16} />
@@ -165,8 +166,8 @@ export function SiteHeader() {
               <Button
                 variant="ghost"
                 size="icon"
-                aria-label="Notifikasi"
-                className="h-9 w-9 rounded-xl text-muted-foreground/50 hover:text-foreground relative"
+                aria-label={language === "id" ? "Notifikasi" : "Notifications"}
+                className="h-9 w-9 rounded-xl text-muted-foreground/60 hover:text-foreground relative"
               >
                 <Bell size={16} />
                 {unreadCount > 0 && (
@@ -264,17 +265,6 @@ export function SiteHeader() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Racks AI Assistant Header Button */}
-          <button
-            type="button"
-            onClick={() => window.dispatchEvent(new CustomEvent("toggle-ghost-chat"))}
-            title={language === "id" ? "Buka Asisten Finansial Racks" : "Open Racks Financial Assistant"}
-            className="h-8 px-2 rounded-lg flex items-center gap-1.5 text-xs font-semibold text-purple-300 hover:text-purple-200 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/25 transition-all ml-0.5 cursor-pointer"
-          >
-            <GhostAvatar mood="happy" size="xs" withAura={false} />
-            <span className="hidden sm:inline font-bold text-[11px]">Racks AI</span>
-          </button>
-
           {/* Language selector */}
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
@@ -315,13 +305,19 @@ export function SiteHeader() {
             disabled={!canCreate}
             title={
               canCreate
-                ? "Tambah transaksi (N)"
-                : "Tambahkan akun terlebih dahulu"
+                ? language === "id"
+                  ? "Tambah transaksi (N)"
+                  : "Add transaction (N)"
+                : language === "id"
+                ? "Tambahkan akun terlebih dahulu"
+                : "Add an account first"
             }
-            className="h-9 gap-2 rounded-xl text-[12px] px-4"
+            className="h-9 gap-2 rounded-xl text-[12px] px-4 font-semibold"
           >
             <Plus size={14} strokeWidth={2.5} />
-            <span className="hidden sm:inline">Tambah</span>
+            <span className="hidden sm:inline">
+              {language === "id" ? "Tambah" : "Add"}
+            </span>
           </Button>
         </div>
       </div>

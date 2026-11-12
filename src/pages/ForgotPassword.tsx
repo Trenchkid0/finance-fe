@@ -1,6 +1,6 @@
 import { useActionState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { AlertCircle, ArrowLeft, Mail, Loader2, ArrowRight, TrendingUp, Wallet, PiggyBank, BarChart3 } from "lucide-react";
+import { AlertCircle, ArrowLeft, Mail, Loader2, ArrowRight, KeyRound, Lock, RefreshCw } from "lucide-react";
 import { forgotPassword } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ import {
 
 export default function ForgotPassword() {
   const { t, language, setLanguage } = useLanguage();
+  const isId = language === "id";
   const navigate = useNavigate();
   const [state, formAction, pending] = useActionState(forgotPassword, undefined);
 
@@ -25,9 +26,9 @@ export default function ForgotPassword() {
   }, [state, navigate]);
 
   return (
-    <div className="grid min-h-screen w-full lg:grid-cols-[2fr_3fr] overflow-hidden bg-canvas font-sans">
-      {/* LEFT COLUMN — Form */}
-      <div className="relative flex flex-col justify-center px-6 py-10 sm:px-10 lg:px-14 xl:px-20 z-10">
+    <div className="grid min-h-screen w-full lg:grid-cols-[5fr_7fr] overflow-hidden bg-canvas font-sans selection:bg-accent/20">
+      {/* LEFT COLUMN — Form Area */}
+      <div className="relative flex flex-col justify-center px-6 py-10 sm:px-10 lg:px-14 xl:px-18 z-10">
         {/* Language selector */}
         <div className="absolute top-5 right-5 z-20">
           <DropdownMenu modal={false}>
@@ -153,182 +154,169 @@ export default function ForgotPassword() {
         </div>
       </div>
 
-      {/* RIGHT COLUMN — Visual Showcase */}
-      <div className="hidden lg:flex relative flex-col overflow-hidden bg-canvas border-l border-border/40">
+      {/* RIGHT COLUMN — Hallmark Crafted Editorial Showcase: Cryptographic Continuity & Access Recovery */}
+      {/* Hallmark · pre-emit critique: P5 H5 E5 S5 R5 V5 */}
+      <div className="hidden lg:flex relative flex-col justify-between overflow-hidden bg-[#0A0D14] border-l border-white/[0.08] p-12 xl:p-16 select-none">
+        {/* Subtle geometric grid background */}
         <div
-          className="absolute inset-0 opacity-[0.03] pointer-events-none"
+          className="absolute inset-0 opacity-[0.035] pointer-events-none"
           style={{
-            backgroundImage: 'linear-gradient(to right, var(--text-muted) 1px, transparent 1px), linear-gradient(to bottom, var(--text-muted) 1px, transparent 1px)',
-            backgroundSize: '48px 48px',
+            backgroundImage: 'linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px)',
+            backgroundSize: '40px 40px',
           }}
         />
 
-        <div
-          className="absolute inset-0 opacity-[0.3]"
-          style={{
-            backgroundImage: 'radial-gradient(circle, var(--border) 1px, transparent 1px)',
-            backgroundSize: '24px 24px',
-          }}
-        />
+        {/* Ambient lighting accent */}
+        <div className="absolute -top-32 -right-32 w-96 h-96 bg-income/[0.06] rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-accent/[0.06] rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col justify-between h-full p-10 xl:p-14">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <span className="relative flex size-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-income opacity-75" />
-                <span className="relative inline-flex size-2 rounded-full bg-income" />
-              </span>
-              <span className="text-[11px] font-semibold tracking-wider text-text-muted uppercase">Sistem aktif</span>
-            </div>
-            <div className="text-[11px] text-text-muted/40 font-mono">v2.4.0</div>
+        {/* Header Metadata Strip */}
+        <div className="relative z-10 flex items-center justify-between border-b border-white/[0.08] pb-5">
+          <div className="flex items-center gap-2.5">
+            <span className="font-mono text-[10px] font-bold tracking-widest text-income uppercase px-2 py-0.5 rounded bg-income/10 border border-income/20">
+              03 / RECOVERY
+            </span>
+            <span className="font-mono text-[11px] text-muted-foreground/80 tracking-wide uppercase">
+              {isId ? "Protokol Pemulihan Akses" : "Access Recovery Protocol"}
+            </span>
           </div>
 
-          <div className="flex-1 flex items-center justify-center py-10">
-            <div className="w-full max-w-lg space-y-5" style={{ perspective: '1200px' }}>
-              {/* Hero net worth card */}
-              <div
-                className="rounded-2xl border border-border bg-surface/30 backdrop-blur-xl p-7 shadow-2xl shadow-black/10"
-                style={{ transform: 'rotateY(-2deg) rotateX(1deg)' }}
-              >
-                <div className="flex justify-between items-start mb-6">
-                  <div className="space-y-1">
-                    <p className="text-[11px] font-semibold uppercase tracking-widest text-text-muted">Total Kekayaan Bersih</p>
-                    <div className="text-4xl font-black font-mono tracking-tight text-text-primary">
-                      Rp 1.482<span className="text-text-primary/45">.950.000</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-income bg-income/10 px-3 py-1.5 rounded-full border border-income/20">
-                    <TrendingUp size={13} />
-                    +12.4%
-                  </div>
-                </div>
+          <div className="flex items-center gap-2">
+            <span className="size-2 rounded-full bg-income shadow-[0_0_8px_var(--income)]" />
+            <span className="font-mono text-[11px] text-muted-foreground font-medium tracking-tight">
+              ZERO-KNOWLEDGE AUTH
+            </span>
+          </div>
+        </div>
 
-                {/* Chart area */}
-                <div className="h-28 w-full">
-                  <svg viewBox="0 0 200 60" className="w-full h-full overflow-visible" preserveAspectRatio="none">
-                    <defs>
-                      <linearGradient id="loginChartFill" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.15" />
-                        <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
-                      </linearGradient>
-                    </defs>
-                    <path
-                      d="M0,50 C20,45 35,30 50,35 S70,15 90,20 S120,5 140,10 S170,3 200,2 L200,60 L0,60 Z"
-                      fill="url(#loginChartFill)"
-                    />
-                    <path
-                      d="M0,50 C20,45 35,30 50,35 S70,15 90,20 S120,5 140,10 S170,3 200,2"
-                      fill="none"
-                      stroke="var(--accent)"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    {/* Chart endpoint marker */}
-                    <circle cx="200" cy="2" r="3.5" fill="var(--accent)" stroke="var(--canvas)" strokeWidth="1.5" />
-                  </svg>
-                </div>
+        {/* Center Content: Security Hierarchy */}
+        <div className="relative z-10 my-auto py-8 space-y-8 max-w-[580px]">
+          {/* Main Statement */}
+          <div className="space-y-3">
+            <h2 className="text-3xl xl:text-4xl font-extrabold tracking-tight text-white leading-[1.2]">
+              {isId ? (
+                <>Kunci akses selalu berada di <span className="text-income">tangan Anda sendiri.</span></>
+              ) : (
+                <>You hold the master keys. <span className="text-income">We provide the vault.</span></>
+              )}
+            </h2>
+            <p className="text-sm text-muted-foreground/90 leading-relaxed font-normal">
+              {isId
+                ? "Racks Finance menerapkan standar keamanan mandiri yang ketat. Permintaan pemulihan menghasilkan tiket kriptografi satu kali pakai yang dikirim langsung ke email terverifikasi tanpa perantara pihak ketiga."
+                : "Racks Finance operates on strict zero-trust self-custody principles. Recovery requests issue a single-use signed cryptographic ticket directly to your verified inbox without passing through external aggregators."}
+            </p>
+          </div>
 
-                {/* Time range pills */}
-                <div className="flex gap-1.5 mt-4">
-                  {["1H", "1M", "3B", "1T", "YTD", "ALL"].map((label, i) => (
-                    <span
-                      key={label}
-                      className={`text-[10px] font-semibold px-2.5 py-1 rounded-full transition-all ${
-                        i === 3
-                          ? "bg-accent/15 text-accent border border-accent/30"
-                          : "text-text-muted hover:text-text-primary hover:bg-hover-surface"
-                      }`}
-                    >
-                      {label}
+          {/* Security Verification Pillars */}
+          <div className="grid grid-cols-1 gap-3.5 pt-2">
+            {/* Pillar 1 */}
+            <div className="p-4 rounded-xl border border-white/[0.07] bg-white/[0.02] backdrop-blur-sm transition-all duration-200 hover:border-white/[0.14] hover:bg-white/[0.03]">
+              <div className="flex items-start gap-3.5">
+                <div className="size-9 rounded-lg bg-income/10 border border-income/20 text-income flex items-center justify-center shrink-0 mt-0.5">
+                  <KeyRound size={17} />
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-white tracking-wide">
+                      {isId ? "Tiket Verifikasi Berumur Singkat" : "Ephemeral Cryptographic Ticket"}
                     </span>
-                  ))}
+                    <span className="font-mono text-[9.5px] text-income/80 bg-income/10 px-1.5 py-0.2 rounded font-semibold">
+                      15 Min Expiry
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground/80 leading-normal">
+                    {isId
+                      ? "Tautan pemulihan memiliki masa berlaku terbatas dan otomatis hangus seketika setelah digunakan satu kali."
+                      : "The reset URL carries an expiry signature and is permanently invalidated the moment it is consumed."}
+                  </p>
                 </div>
               </div>
+            </div>
 
-              {/* Stats row */}
-              <div className="grid grid-cols-3 gap-3">
-                <div
-                  className="rounded-xl border border-border bg-surface/30 backdrop-blur-md p-4"
-                  style={{ transform: 'rotateY(-2deg)' }}
-                >
-                  <div className="flex items-center gap-2 mb-2.5">
-                    <div className="flex size-7 items-center justify-center rounded-lg bg-income/10 text-income">
-                      <Wallet size={14} />
-                    </div>
-                    <span className="text-[10px] font-semibold text-text-muted uppercase tracking-wide">Pemasukan</span>
-                  </div>
-                  <p className="text-lg font-black font-mono text-income">+12.5<span className="text-sm text-income/60">jt</span></p>
+            {/* Pillar 2 */}
+            <div className="p-4 rounded-xl border border-white/[0.07] bg-white/[0.02] backdrop-blur-sm transition-all duration-200 hover:border-white/[0.14] hover:bg-white/[0.03]">
+              <div className="flex items-start gap-3.5">
+                <div className="size-9 rounded-lg bg-accent/10 border border-accent/20 text-accent flex items-center justify-center shrink-0 mt-0.5">
+                  <RefreshCw size={17} />
                 </div>
-
-                <div
-                  className="rounded-xl border border-border bg-surface/30 backdrop-blur-md p-4"
-                  style={{ transform: 'rotateY(-2deg)' }}
-                >
-                  <div className="flex items-center gap-2 mb-2.5">
-                    <div className="flex size-7 items-center justify-center rounded-lg bg-accent/10 text-accent">
-                      <PiggyBank size={14} />
-                    </div>
-                    <span className="text-[10px] font-semibold text-text-muted uppercase tracking-wide">Tabungan</span>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-white tracking-wide">
+                      {isId ? "Terminasi Sesi Multi-Perangkat" : "Instant Session Revocation"}
+                    </span>
+                    <span className="font-mono text-[9.5px] text-accent/80 bg-accent/10 px-1.5 py-0.2 rounded font-semibold">
+                      Full Invalidation
+                    </span>
                   </div>
-                  <p className="text-lg font-black font-mono text-text-primary">480<span className="text-sm text-text-primary/45">jt</span></p>
-                </div>
-
-                <div
-                  className="rounded-xl border border-border bg-surface/30 backdrop-blur-md p-4"
-                  style={{ transform: 'rotateY(-2deg)' }}
-                >
-                  <div className="flex items-center gap-2 mb-2.5">
-                    <div className="flex size-7 items-center justify-center rounded-lg bg-indigo-500/10" style={{ color: 'var(--progress)' }}>
-                      <BarChart3 size={14} />
-                    </div>
-                    <span className="text-[10px] font-semibold text-text-muted uppercase tracking-wide">Investasi</span>
-                  </div>
-                  <p className="text-lg font-black font-mono text-text-primary">534<span className="text-sm text-text-primary/45">jt</span></p>
+                  <p className="text-xs text-muted-foreground/80 leading-normal">
+                    {isId
+                      ? "Begitu kata sandi diperbarui, seluruh sesi login dan token cookie di perangkat lain langsung dinonaktifkan."
+                      : "Upon password rotation, all existing active JWT tokens and browser sessions across other devices are immediately revoked."}
+                  </p>
                 </div>
               </div>
+            </div>
 
-              {/* Portfolio bar */}
-              <div
-                className="rounded-xl border border-border bg-surface/30 backdrop-blur-md p-5"
-                style={{ transform: 'rotateY(-2deg)' }}
-              >
-                <div className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-3">Alokasi Portofolio</div>
-                <div className="flex h-2.5 rounded-full overflow-hidden gap-0.5">
-                  <div className="rounded-l-full" style={{ width: '54%', backgroundColor: 'var(--accent)' }} />
-                  <div style={{ width: '36%', backgroundColor: 'var(--progress)' }} />
-                  <div className="rounded-r-full" style={{ width: '10%', backgroundColor: 'var(--income)' }} />
+            {/* Pillar 3 */}
+            <div className="p-4 rounded-xl border border-white/[0.07] bg-white/[0.02] backdrop-blur-sm transition-all duration-200 hover:border-white/[0.14] hover:bg-white/[0.03]">
+              <div className="flex items-start gap-3.5">
+                <div className="size-9 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center shrink-0 mt-0.5">
+                  <Lock size={17} />
                 </div>
-                <div className="flex justify-between mt-3 text-[11px]">
-                  <div className="flex items-center gap-1.5">
-                    <span className="size-1.5 rounded-full" style={{ backgroundColor: 'var(--accent)' }} />
-                    <span className="text-text-muted">Bank <span className="text-text-primary font-semibold ml-0.5">54%</span></span>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-white tracking-wide">
+                      {isId ? "Data Finansial Tetap Terisolasi" : "Untouched Encrypted Records"}
+                    </span>
+                    <span className="font-mono text-[9.5px] text-purple-400/80 bg-purple-500/10 px-1.5 py-0.2 rounded font-semibold">
+                      Zero Exposure
+                    </span>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="size-1.5 rounded-full" style={{ backgroundColor: 'var(--progress)' }} />
-                    <span className="text-text-muted">Saham <span className="text-text-primary font-semibold ml-0.5">36%</span></span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="size-1.5 rounded-full" style={{ backgroundColor: 'var(--income)' }} />
-                    <span className="text-text-muted">Tunai <span className="text-text-primary font-semibold ml-0.5">10%</span></span>
-                  </div>
+                  <p className="text-xs text-muted-foreground/80 leading-normal">
+                    {isId
+                      ? "Buku besar, saldo transaksi, dan catatan rekening Anda tersimpan di database lokal yang tidak terpengaruh oleh pergantian kredensial."
+                      : "Your underlying transaction ledger, balances, and receipts stay strictly sealed within your personal local database."}
+                  </p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="space-y-2 max-w-md border-t border-border/40 pt-6 mt-6">
-            <p className="text-base font-bold text-text-primary leading-snug">
-              {language === "id"
-                ? "Satu dasbor terpadu untuk seluruh aset finansial Anda."
-                : "One unified dashboard for all your financial assets."}
-            </p>
-            <p className="text-xs text-text-muted leading-relaxed">
-              {language === "id"
-                ? "Rekening bank, dompet digital, portofolio saham, properti — pantau semuanya secara real-time dalam satu tempat yang aman."
-                : "Bank accounts, digital wallets, stock portfolios, real estate — track it all in real-time in one secure place."}
-            </p>
+          {/* Cryptographic Assurance Specs */}
+          <div className="grid grid-cols-3 gap-2.5 pt-1 border-t border-white/[0.08]">
+            <div className="p-2.5 rounded-lg border border-white/[0.06] bg-white/[0.02]">
+              <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground block">
+                HASHING
+              </span>
+              <span className="font-mono text-xs font-bold text-white block mt-0.5">
+                Bcrypt 12-Rounds
+              </span>
+            </div>
+
+            <div className="p-2.5 rounded-lg border border-white/[0.06] bg-white/[0.02]">
+              <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground block">
+                COOKIES
+              </span>
+              <span className="font-mono text-xs font-bold text-white block mt-0.5">
+                httpOnly SameSite
+              </span>
+            </div>
+
+            <div className="p-2.5 rounded-lg border border-white/[0.06] bg-white/[0.02]">
+              <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground block">
+                TELEMETRY
+              </span>
+              <span className="font-mono text-xs font-bold text-white block mt-0.5">
+                0% Remote Logs
+              </span>
+            </div>
           </div>
+        </div>
+
+        {/* Footer Colophon */}
+        <div className="relative z-10 flex items-center justify-between border-t border-white/[0.08] pt-5 font-mono text-[10.5px] text-muted-foreground/60">
+          <span>RACKS FINANCE · RECOVERY ARCHITECTURE</span>
+          <span className="tracking-widest uppercase">CRYPTOGRAPHIC ASSURANCE</span>
         </div>
       </div>
     </div>

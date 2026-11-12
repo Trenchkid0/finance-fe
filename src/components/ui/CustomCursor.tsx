@@ -142,7 +142,7 @@ function getInitialCursorSettings(): CursorSettings {
       }
     } catch { /* ignore */ }
   }
-  return getCurrentPreferences().cursorSettings || { type: "macos-pointer", color: "accent", size: "default" };
+  return getCurrentPreferences().cursorSettings || { type: "default", color: "accent", size: "default" };
 }
 
 export function CustomCursor() {
@@ -175,7 +175,7 @@ export function CustomCursor() {
           }
         } catch { /* ignore */ }
       }
-      setSettings(next || { type: "macos-pointer", color: "accent", size: "default" });
+      setSettings(next || { type: "default", color: "accent", size: "default" });
       setTick((t) => t + 1);
     };
 

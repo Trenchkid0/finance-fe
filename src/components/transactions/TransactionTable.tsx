@@ -267,12 +267,12 @@ const DateGroup = memo(function DateGroup({
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-2.5 min-w-0">
               {group.relative && (
-                <span className="shrink-0 text-[9px] font-bold uppercase tracking-wide text-accent bg-accent/10 border border-accent/25 px-1.5 py-0.5 rounded">
+                <span className="shrink-0 text-[10px] font-bold uppercase tracking-wide text-accent bg-accent/10 border border-accent/25 px-1.5 py-0.5 rounded">
                   {group.relative}
                 </span>
               )}
               {isInFilterRange && (
-                <span className="shrink-0 text-[9px] font-bold uppercase tracking-wide text-accent bg-accent/15 border border-accent/25 px-1.5 py-0.5 rounded">
+                <span className="shrink-0 text-[10px] font-bold uppercase tracking-wide text-accent bg-accent/15 border border-accent/25 px-1.5 py-0.5 rounded">
                   {language === "id" ? "Filter" : "Filtered"}
                 </span>
               )}
@@ -280,7 +280,7 @@ const DateGroup = memo(function DateGroup({
                 {group.label}
               </span>
             </div>
-            <span className="text-[10px] text-muted-foreground/75 font-medium truncate">
+            <span className="text-[11px] text-muted-foreground font-medium truncate">
               {group.weekday} · {group.items.length} {t("transactionCount")}
             </span>
           </div>
@@ -289,26 +289,26 @@ const DateGroup = memo(function DateGroup({
         <div className="flex items-center gap-4 shrink-0">
           {group.income > 0 && (
             <div className="hidden sm:flex flex-col items-end leading-tight">
-              <span className="text-[8px] uppercase tracking-wider text-muted-foreground/50 font-bold">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
                 {language === "id" ? "Masuk" : "Income"}
               </span>
-              <span className="text-[11px] font-mono font-bold text-income tabular-nums">
+              <span className="text-xs font-mono font-bold text-income tabular-nums">
                 +{formatIDR(group.income)}
               </span>
             </div>
           )}
           {group.expense > 0 && (
             <div className="hidden sm:flex flex-col items-end leading-tight">
-              <span className="text-[8px] uppercase tracking-wider text-muted-foreground/50 font-bold">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
                 {language === "id" ? "Keluar" : "Expense"}
               </span>
-              <span className="text-[11px] font-mono font-bold text-expense tabular-nums">
+              <span className="text-xs font-mono font-bold text-expense tabular-nums">
                 -{formatIDR(group.expense)}
               </span>
             </div>
           )}
           <div className="flex flex-col items-end leading-tight border-l border-border/30 pl-4">
-            <span className="text-[8px] uppercase tracking-wider text-muted-foreground/50 font-bold">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
               Net
             </span>
             <span className={cn("text-xs font-mono font-bold tabular-nums", netColor)}>
@@ -489,8 +489,8 @@ const TransactionRow = memo(function TransactionRow({
           {tx.accountName}
         </span>
         {tx.type === "transfer" && tx.transferToName && (
-          <span className="text-[9px] text-accent font-medium truncate flex items-center gap-1 mt-0.5">
-            <ArrowLeftRight size={9} />
+          <span className="text-[10px] text-accent font-medium truncate flex items-center gap-1 mt-0.5">
+            <ArrowLeftRight size={10} />
             {tx.transferToName}
           </span>
         )}
@@ -499,7 +499,7 @@ const TransactionRow = memo(function TransactionRow({
       {/* 5. Category Picker Column (Desktop Only) */}
       <div className="hidden md:flex items-center min-w-0">
         {tx.type === "transfer" ? (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-accent/10 border border-accent/15 text-accent text-[9px] font-bold uppercase tracking-wider">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-[10px] font-bold uppercase tracking-wider">
             {t("transferLabel")}
           </span>
         ) : (
@@ -526,7 +526,7 @@ const TransactionRow = memo(function TransactionRow({
           {formatIDR(tx.amount)}
         </p>
         {tx.adminFee > 0 && (
-          <span className="text-expense/90 font-semibold font-mono text-[9px] bg-expense/10 border border-expense/20 px-1 py-0.2 rounded mt-0.5 flex items-center shrink-0">
+          <span className="text-expense/90 font-semibold font-mono text-[10px] bg-expense/10 border border-expense/20 px-1.5 py-0.5 rounded mt-0.5 flex items-center shrink-0">
             Fee: {formatIDR(tx.adminFee)}
           </span>
         )}

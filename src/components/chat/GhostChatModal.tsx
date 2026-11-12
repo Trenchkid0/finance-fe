@@ -13,6 +13,7 @@ import { GhostAvatar, type GhostMood } from "./GhostAvatar";
 import {
   processGhostQuery,
   type GhostDataCard,
+  type GhostDataCardAction,
   type FinancialContext,
 } from "@/lib/chat/ghostFinancialEngine";
 import { useApp } from "@/components/layout/AppLayout";
@@ -20,6 +21,9 @@ import { api } from "@/lib/api";
 import type { SummaryApiResponse } from "@/types";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { invalidateCache } from "@/lib/cache";
+import { formatIDR } from "@/lib/utils/formatters";
 
 interface ChatMessage {
   id: string;
@@ -35,14 +39,15 @@ const getInitialMessages = (name?: string, uId?: string): ChatMessage[] => [
   {
     id: `welcome-${uId || "guest"}`,
     sender: "ghost",
-    text: `Boo! 👻 Halo **${name || "Sobat"}**! Aku **Racks**, roh asisten finansial pribadimu! Aku melayang di sini untuk mengawasi pengeluaran, pemasukan, dan kesehatan dompetmu. Mau cek kondisi keuanganmu hari ini?`,
+    text: `Boo! 👻 Halo **${name || "Sobat"}**! Aku **Racks**, asisten finansial pribadimu! Aku mengawasi seluruh pengeluaran, pemasukan, dan kesehatan dompetmu. Kamu bisa langsung menyuruhku mencatat transaksi, cari riwayat belanja, atau cek saldo akun!`,
     timestamp: new Date(),
     mood: "happy",
     suggestedPrompts: [
-      "Berapa total pengeluaranku?",
-      "Berapa pengeluaran kopi saya bulan ini?",
-      "Berapa pemasukanku bulan ini?",
-      "Bagaimana arus kasku (cash flow)?",
+      "Catat makan siang 35rb dari BCA",
+      "Cari transaksi Indomaret",
+      "Saldo BCA berapa?",
+      "Boleh beli laptop 10jt gak?",
+      "Cek transaksi pajak Coretax",
       "Apa yang bisa kamu lakukan?",
     ],
   },
@@ -254,21 +259,11 @@ export const GhostChatModal: React.FC = () => {
       let transactionsList = summaryData?.recent || [];
       const qLower = query.toLowerCase();
 
-      // Fetch live transactions if needed for category queries
-      const needsTx =
-        qLower.includes("kopi") || qLower.includes("coffee") || qLower.includes("ngopi") ||
-        qLower.includes("makan") || qLower.includes("food") || qLower.includes("kuliner") ||
-        qLower.includes("shopee") || qLower.includes("tokopedia") || qLower.includes("belanja") ||
-        qLower.includes("bensin") || qLower.includes("transport") || qLower.includes("gojek") ||
-        qLower.includes("listrik") || qLower.includes("tagihan") || qLower.includes("wifi") ||
-        qLower.includes("langganan") || qLower.includes("netflix") || qLower.includes("spotify") ||
-        qLower.includes("cicilan") || qLower.includes("paylater") || qLower.includes("terbesar") ||
-        qLower.includes("sehat") || qLower.includes("skor") || qLower.includes("checkup") ||
-        qLower.includes("latte") || qLower.includes("bocor") || qLower.includes("receh") ||
-        qLower.includes("target") || qLower.includes("goal") || qLower.includes("50/30/20") ||
-        qLower.includes("50 30 20") || qLower.includes("duplikat") || qLower.includes("mencurigakan") ||
-        qLower.includes("kemarin") ||
-        transactionsList.length <= 5;
+      // Fetch live transactions for all financial queries (cached in memory for 120s)
+      const isPureGreeting =
+        (qLower === "halo" || qLower === "hai" || qLower === "hey" || qLower === "tes" || qLower === "test" || qLower === "makasih") &&
+        qLower.length < 10;
+      const needsTx = !isPureGreeting || transactionsList.length <= 5;
 
       const now = Date.now();
 
@@ -369,6 +364,52 @@ export const GhostChatModal: React.FC = () => {
     localStorage.removeItem(storageKey);
   };
 
+  const handleDataCardAction = async (action: GhostDataCardAction) => {
+    if (action.type === "quick_create_tx" && action.payload) {
+      try {
+        setIsTyping(true);
+        await api.post("/api/transactions", action.payload);
+        invalidateCache.afterTransactionChange();
+        window.dispatchEvent(new CustomEvent("refresh-app-data"));
+        toast.success("Transaksi berhasil dicatat!");
+
+        cachedTxRef.current = null;
+        cachedBudgetsRef.current = null;
+        cachedInvestmentsRef.current = null;
+
+        const replyMsg: ChatMessage = {
+          id: `action-success-${Date.now()}`,
+          sender: "ghost",
+          text: `Boo! 👻 Transaksi **${action.payload.description || "Transaksi"}** sebesar **${formatIDR(
+            action.payload.amount
+          )}** sukses dibukukan! Saldo akunmu otomatis diperbarui.`,
+          timestamp: new Date(),
+          mood: "happy",
+          suggestedPrompts: [
+            "Hari ini habis berapa?",
+            "Berapa total pengeluaranku?",
+            "Bagaimana arus kasku (cash flow)?",
+          ],
+        };
+
+        setMessages((prev) => {
+          const next = [...prev, replyMsg];
+          try {
+            localStorage.setItem(storageKey, JSON.stringify(next));
+          } catch {
+            // ignore
+          }
+          return next;
+        });
+      } catch (err) {
+        console.error("Gagal mencatat transaksi via chat:", err);
+        toast.error("Gagal mencatat transaksi otomatis");
+      } finally {
+        setIsTyping(false);
+      }
+    }
+  };
+
   // Get current active mood of ghost based on last ghost message
   const lastGhostMessage = [...messages].reverse().find((m) => m.sender === "ghost");
   const currentMood: GhostMood = isTyping
@@ -391,29 +432,22 @@ export const GhostChatModal: React.FC = () => {
           onClick={() => setIsOpen(true)}
           aria-label="Buka Racks Asisten Finansial"
           className={cn(
-            "group relative pl-2.5 pr-1.5 py-3 rounded-l-2xl flex flex-col items-center justify-center gap-1.5 transition-all duration-300",
-            "bg-gradient-to-b from-slate-950 via-purple-950/90 to-slate-900 border-l border-t border-b border-purple-500/40",
-            "shadow-[-4px_4px_20px_rgba(168,85,247,0.35),0_0_12px_rgba(56,189,248,0.15)]",
-            "hover:pl-3 hover:border-purple-400 hover:shadow-[-6px_6px_28px_rgba(168,85,247,0.55)]",
+            "group relative pl-2.5 pr-2 py-3.5 rounded-l-xl flex flex-col items-center justify-center gap-1.5 transition-all duration-200",
+            "bg-card hover:bg-elevated text-foreground border-l border-t border-b border-border",
+            "shadow-md hover:shadow-lg",
             "active:scale-95 cursor-pointer select-none"
           )}
         >
-          {/* Inner spectral aura pulsing */}
-          <div className="absolute inset-0 rounded-l-2xl bg-gradient-to-b from-purple-500/15 via-cyan-500/20 to-purple-500/15 opacity-75 group-hover:opacity-100 transition-opacity pointer-events-none" />
-
-          {/* Racks Ghost Mascot */}
-          <GhostAvatar mood={currentMood} size="xs" isFloating={true} />
+          {/* Racks Mascot (Clean, no floating, no aura) */}
+          <GhostAvatar mood={currentMood} size="xs" isFloating={false} withAura={false} />
 
           {/* Vertical Label */}
-          <span className="text-[9px] font-black tracking-widest text-purple-300 uppercase [writing-mode:vertical-rl] rotate-180 opacity-90 group-hover:opacity-100">
-            RACKS
+          <span className="text-[10px] font-bold tracking-wider text-muted-foreground group-hover:text-foreground uppercase [writing-mode:vertical-rl] rotate-180 transition-colors">
+            AI CHAT
           </span>
 
-          {/* Glowing spiritual online dot */}
-          <span className="flex h-1.5 w-1.5">
-            <span className="animate-ping absolute inline-flex h-1.5 w-1.5 rounded-full bg-cyan-400 opacity-75" />
-            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-cyan-500 ring-2 ring-slate-950" />
-          </span>
+          {/* Solid status dot without glow/ping */}
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 ring-2 ring-card" />
         </button>
       </div>
 
@@ -435,8 +469,8 @@ export const GhostChatModal: React.FC = () => {
         aria-label="Racks Sidebar"
         className={cn(
           "fixed top-0 right-0 bottom-0 z-50 flex flex-col h-screen",
-          "bg-card/98 backdrop-blur-2xl border-l border-purple-500/30",
-          "shadow-[-16px_0_50px_rgba(0,0,0,0.65),0_0_35px_rgba(168,85,247,0.18)]",
+          "bg-card backdrop-blur-2xl border-l border-border",
+          "shadow-2xl",
           "transition-all duration-300 ease-in-out",
           isExpanded
             ? "w-full sm:w-[540px] md:w-[600px]"
@@ -444,11 +478,8 @@ export const GhostChatModal: React.FC = () => {
           isOpen ? "translate-x-0" : "translate-x-full pointer-events-none"
         )}
       >
-        {/* Top Ghostly Ambient Bar */}
-        <div className="h-1 w-full bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 opacity-80 shrink-0" />
-
         {/* Header Bar */}
-        <div className="px-4 py-3 bg-elevated/70 border-b border-purple-500/20 flex items-center justify-between shrink-0">
+        <div className="px-4 py-3 bg-elevated/50 border-b border-border flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">
             <GhostAvatar mood={currentMood} size="xs" withAura={false} />
             <div>
@@ -456,12 +487,12 @@ export const GhostChatModal: React.FC = () => {
                 <span className="text-xs font-black tracking-tight text-foreground">
                   Racks
                 </span>
-                <span className="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-purple-500/20 text-purple-400 border border-purple-500/30">
+                <span className="px-1.5 py-0.5 rounded-md text-[9px] font-semibold bg-muted text-muted-foreground border border-border">
                   AI ASSISTANT
                 </span>
               </div>
               <div className="text-[10px] text-muted-foreground flex items-center gap-1">
-                <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
                 <span>Asisten Finansial</span>
               </div>
             </div>
@@ -616,6 +647,21 @@ export const GhostChatModal: React.FC = () => {
                                 <span>{msg.dataCard.tip}</span>
                               </div>
                             )}
+
+                            {/* Action Button (e.g. 1-click Quick Add Transaction) */}
+                            {msg.dataCard.action && (
+                              <div className="pt-1">
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  onClick={() => handleDataCardAction(msg.dataCard!.action!)}
+                                  className="w-full text-xs font-semibold h-8 bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center gap-1.5 shadow-sm active:scale-95 cursor-pointer"
+                                >
+                                  <Sparkles size={13} />
+                                  {msg.dataCard.action.label}
+                                </Button>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -679,6 +725,146 @@ export const GhostChatModal: React.FC = () => {
                   onMouseLeave={handleChipsMouseUp}
                   className="px-6 py-1.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar cursor-grab active:cursor-grabbing"
                 >
+                  <button
+                    type="button"
+                    onClick={() => !hasMovedChipsRef.current && handleSendMessage("Catat makan siang 35rb dari BCA")}
+                    className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 hover:text-emerald-200 border border-emerald-500/30 shrink-0 transition-colors"
+                  >
+                    ⚡ Catat 35rb
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => !hasMovedChipsRef.current && handleSendMessage("Cari transaksi Indomaret")}
+                    className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 hover:text-blue-200 border border-blue-500/30 shrink-0 transition-colors"
+                  >
+                    🔍 Cari Indomaret
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => !hasMovedChipsRef.current && handleSendMessage("Saldo BCA berapa?")}
+                    className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 hover:text-cyan-200 border border-cyan-500/30 shrink-0 transition-colors"
+                  >
+                    💳 Saldo BCA
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => !hasMovedChipsRef.current && handleSendMessage("Boleh beli laptop 10jt gak?")}
+                    className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 hover:text-amber-200 border border-amber-500/30 shrink-0 transition-colors"
+                  >
+                    🛍️ Boleh Beli Laptop?
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => !hasMovedChipsRef.current && handleSendMessage("Cek transaksi pajak Coretax")}
+                    className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 hover:text-purple-200 border border-purple-500/30 shrink-0 transition-colors"
+                  >
+                    🏛️ Audit Pajak
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => !hasMovedChipsRef.current && handleSendMessage("Aku lebih boros pas weekend atau weekday?")}
+                    className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-pink-500/10 hover:bg-pink-500/20 text-pink-300 hover:text-pink-200 border border-pink-500/30 shrink-0 transition-colors"
+                  >
+                    ⚖️ Weekend vs Weekday
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => !hasMovedChipsRef.current && handleSendMessage("Berapa rasio tabunganku?")}
+                    className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 hover:text-emerald-200 border border-emerald-500/30 shrink-0 transition-colors"
+                  >
+                    📊 Saving Rate
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => !hasMovedChipsRef.current && handleSendMessage("Kapan saya bisa pensiun?")}
+                    className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 hover:text-indigo-200 border border-indigo-500/30 shrink-0 transition-colors"
+                  >
+                    🏖️ FIRE Pensiun
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => !hasMovedChipsRef.current && handleSendMessage("Cek langganan zombie yang jarang kepake")}
+                    className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 hover:text-violet-200 border border-violet-500/30 shrink-0 transition-colors"
+                  >
+                    📺 Langganan Zombie
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => !hasMovedChipsRef.current && handleSendMessage("Berapa habis buat ongkir & GoFood?")}
+                    className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-orange-500/10 hover:bg-orange-500/20 text-orange-300 hover:text-orange-200 border border-orange-500/30 shrink-0 transition-colors"
+                  >
+                    🛵 Ongkir & GoFood
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => !hasMovedChipsRef.current && handleSendMessage("Transaksi termahal bulan ini apa?")}
+                    className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 hover:text-rose-200 border border-rose-500/30 shrink-0 transition-colors"
+                  >
+                    💎 Belanja Termahal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => !hasMovedChipsRef.current && handleSendMessage("Dapat THR 10jt enaknya diapain?")}
+                    className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 hover:text-cyan-200 border border-cyan-500/30 shrink-0 transition-colors"
+                  >
+                    🎁 Alokasi THR
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => !hasMovedChipsRef.current && handleSendMessage("Kalau hemat 500rb sebulan jadi berapa?")}
+                    className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 hover:text-emerald-200 border border-emerald-500/30 shrink-0 transition-colors"
+                  >
+                    🪄 Simulasi Compound
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => !hasMovedChipsRef.current && handleSendMessage("Strategi lunasi utang cepat")}
+                    className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-red-500/10 hover:bg-red-500/20 text-red-300 hover:text-red-200 border border-red-500/30 shrink-0 transition-colors"
+                  >
+                    🛡️ Lunasi Utang
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => !hasMovedChipsRef.current && handleSendMessage("Apakah gaya hidupku naik dibanding bulan lalu?")}
+                    className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-pink-500/10 hover:bg-pink-500/20 text-pink-300 hover:text-pink-200 border border-pink-500/30 shrink-0 transition-colors"
+                  >
+                    📈 Lifestyle Creep
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => !hasMovedChipsRef.current && handleSendMessage("Apakah uang kasku aman?")}
+                    className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-teal-500/10 hover:bg-teal-500/20 text-teal-300 hover:text-teal-200 border border-teal-500/30 shrink-0 transition-colors"
+                  >
+                    🏦 Bantalan Kas
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => !hasMovedChipsRef.current && handleSendMessage("Hari ini habis berapa?")}
+                    className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 hover:text-emerald-200 border border-emerald-500/30 shrink-0 transition-colors"
+                  >
+                    ☀️ Hari Ini
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => !hasMovedChipsRef.current && handleSendMessage("Berapa bulan dana daruratku bisa bertahan?")}
+                    className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 hover:text-cyan-200 border border-cyan-500/30 shrink-0 transition-colors"
+                  >
+                    🛡️ Dana Darurat
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => !hasMovedChipsRef.current && handleSendMessage("Berapa proyeksi pengeluaranku akhir bulan?")}
+                    className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 hover:text-purple-200 border border-purple-500/30 shrink-0 transition-colors"
+                  >
+                    🔮 Proyeksi
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => !hasMovedChipsRef.current && handleSendMessage("Berapa rata-rata pengeluaranku sehari?")}
+                    className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 hover:text-amber-200 border border-amber-500/30 shrink-0 transition-colors"
+                  >
+                    ⚡ Burn Rate
+                  </button>
                   <button
                     type="button"
                     onClick={() => !hasMovedChipsRef.current && handleSendMessage("Berapa total pengeluaranku?")}

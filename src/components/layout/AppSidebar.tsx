@@ -68,30 +68,18 @@ export function AppSidebar({ user, counts, ...props }: AppSidebarProps) {
   const navMain: NavItem[] = [
     { href: "/", label: t("dashboard"), icon: LayoutDashboard },
     {
-      href: "/accounts",
-      label: language === "id" ? "Rekening" : t("accounts"),
-      icon: Wallet,
-    },
-    {
       href: "/transactions",
       label: t("transactions"),
       icon: ArrowLeftRight,
     },
     {
-      href: "/investments",
-      label: language === "id" ? "Investasi & Pasar" : "Investments & Market",
-      icon: Briefcase,
-    },
-    {
-      href: "/goals",
-      label: language === "id" ? "Target Tabungan" : "Savings Goals",
-      icon: Target,
+      href: "/accounts",
+      label: language === "id" ? "Rekening" : t("accounts"),
+      icon: Wallet,
     },
   ];
 
-  const navAnalytics: NavItem[] = [
-    { href: "/income", label: t("income"), icon: TrendingUp },
-    { href: "/expenses", label: t("expenses"), icon: TrendingDown },
+  const navPlanning: NavItem[] = [
     { href: "/budget", label: t("budget"), icon: PiggyBank },
     {
       href: "/recurring",
@@ -99,10 +87,25 @@ export function AppSidebar({ user, counts, ...props }: AppSidebarProps) {
       icon: CalendarRange,
     },
     {
+      href: "/goals",
+      label: language === "id" ? "Target Tabungan" : "Savings Goals",
+      icon: Target,
+    },
+    {
+      href: "/investments",
+      label: language === "id" ? "Investasi & Pasar" : "Investments & Market",
+      icon: Briefcase,
+    },
+  ];
+
+  const navAnalytics: NavItem[] = [
+    {
       href: "/reports",
       label: language === "id" ? "Laporan & Pajak" : "Reports & Tax",
       icon: BarChart,
     },
+    { href: "/income", label: t("income"), icon: TrendingUp },
+    { href: "/expenses", label: t("expenses"), icon: TrendingDown },
   ];
 
   const navPrefs: NavItem[] = [
@@ -152,12 +155,15 @@ export function AppSidebar({ user, counts, ...props }: AppSidebarProps) {
       <SidebarContent>
         <NavGroup label={language === "id" ? "Menu Utama" : "Main Menu"} items={navMain} pathname={pathname} />
         <NavGroup
-          label={language === "id" ? "Analisis & Anggaran" : "Analytics & Budget"}
+          label={language === "id" ? "Perencanaan" : "Planning"}
+          items={navPlanning}
+          pathname={pathname}
+        />
+        <NavGroup
+          label={language === "id" ? "Analisis" : "Analytics"}
           items={navAnalytics}
           pathname={pathname}
         />
-
-
 
         <NavGroup
           label={language === "id" ? "Preferensi" : "Preferences"}

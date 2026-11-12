@@ -362,52 +362,28 @@ export function AccountsClient({ accounts }: Props) {
       {/* Summary cards strip */}
       {activeAccounts.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <Card
-            className="relative overflow-hidden p-4 gap-0 border backdrop-blur-sm transition-all duration-300 hover:border-accent/30"
-            style={{
-              borderColor: "color-mix(in srgb, var(--accent) 25%, transparent)",
-              backgroundColor: "color-mix(in srgb, var(--accent) 4%, transparent)",
-            }}
-          >
-            {/* Sci-fi Corner Brackets */}
-            <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-accent/20 rounded-tl" />
-            <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-accent/20 rounded-tr" />
-            <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-accent/20 rounded-bl" />
-            <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-accent/20 rounded-br" />
-
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">
+          <Card className="relative overflow-hidden p-4 gap-0 border border-accent/25 bg-accent/[0.04] backdrop-blur-sm transition-all duration-300 hover:border-accent/40 shadow-sm">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
               {language === "id" ? "Total Saldo" : "Total Balance"}
             </p>
-            <p className={cn("text-lg font-black font-mono tabular-nums", totalBalance >= 0 ? "text-income" : "text-expense")}>
+            <p className={cn("text-xl font-bold font-mono tabular-nums", totalBalance >= 0 ? "text-income" : "text-expense")}>
               {formatIDR(totalBalance)}
             </p>
           </Card>
-          <Card className="relative overflow-hidden p-4 gap-0 border border-border/40 bg-elevated/5 backdrop-blur-sm transition-all duration-300 hover:border-accent/25">
-            {/* Sci-fi Corner Brackets */}
-            <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-accent/15 rounded-tl" />
-            <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-accent/15 rounded-tr" />
-            <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-accent/15 rounded-bl" />
-            <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-accent/15 rounded-br" />
-
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">
+          <Card className="relative overflow-hidden p-4 gap-0 border border-border/50 bg-elevated/20 backdrop-blur-sm transition-all duration-300 hover:border-border/80 shadow-sm">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
               {language === "id" ? "Akun Aktif" : "Active Accounts"}
             </p>
-            <p className="text-lg font-black font-mono tabular-nums text-foreground">
-              {activeAccounts.length} <span className="text-xs text-muted-foreground/60 font-sans font-semibold ml-1">{language === "id" ? "akun" : "accounts"}</span>
+            <p className="text-xl font-bold font-mono tabular-nums text-foreground">
+              {activeAccounts.length} <span className="text-xs text-muted-foreground font-sans font-medium ml-1">{language === "id" ? "akun" : "accounts"}</span>
             </p>
           </Card>
-          <Card className="relative overflow-hidden p-4 gap-0 border border-border/40 bg-elevated/5 backdrop-blur-sm transition-all duration-300 hover:border-accent/25">
-            {/* Sci-fi Corner Brackets */}
-            <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-accent/15 rounded-tl" />
-            <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-accent/15 rounded-tr" />
-            <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-accent/15 rounded-bl" />
-            <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-accent/15 rounded-br" />
-
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">
+          <Card className="relative overflow-hidden p-4 gap-0 border border-border/50 bg-elevated/20 backdrop-blur-sm transition-all duration-300 hover:border-border/80 shadow-sm">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
               {language === "id" ? "Saldo Negatif" : "Negative Balance"}
             </p>
-            <p className="text-lg font-black font-mono tabular-nums text-foreground">
-              {accounts.filter((a) => a.isActive && a.balance < 0).length} <span className="text-xs text-muted-foreground/60 font-sans font-semibold ml-1">{language === "id" ? "akun" : "accounts"}</span>
+            <p className="text-xl font-bold font-mono tabular-nums text-foreground">
+              {accounts.filter((a) => a.isActive && a.balance < 0).length} <span className="text-xs text-muted-foreground font-sans font-medium ml-1">{language === "id" ? "akun" : "accounts"}</span>
             </p>
           </Card>
         </div>
@@ -690,51 +666,24 @@ function AccountCard({
             transform: hovered && !isDragging && !isDragOver ? "translateY(-4px)" : "none",
           }}
         >
-          {/* Sci-fi Corner Brackets */}
-          <div
-            className="absolute top-0 left-0 w-3 h-3 border-t border-l border-accent/20 rounded-tl transition-all duration-300"
-            style={{ borderColor: hovered || isDragOver ? swatch : undefined }}
-          />
-          <div
-            className="absolute top-0 right-0 w-3 h-3 border-t border-r border-accent/20 rounded-tr transition-all duration-300"
-            style={{ borderColor: hovered || isDragOver ? swatch : undefined }}
-          />
-          <div
-            className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-accent/20 rounded-bl transition-all duration-300"
-            style={{ borderColor: hovered || isDragOver ? swatch : undefined }}
-          />
-          <div
-            className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-accent/20 rounded-br transition-all duration-300"
-            style={{ borderColor: hovered || isDragOver ? swatch : undefined }}
-          />
-
-          {/* Card Header: Icon/Chip, Drag Handle & Status */}
+          {/* Card Header: Institution Icon, Drag Handle & Status */}
           <div className="flex items-start justify-between mb-4 relative z-10">
-            <div className="flex items-center gap-2">
-              {/* Institution Icon or EMV Chip */}
+            <div className="flex items-center gap-2.5">
+              {/* Institution Icon or Clean Wallet Badge */}
               {account.icon && account.icon !== "none" ? (
-                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-white/[0.04] border border-white/[0.08] backdrop-blur-sm transition-all duration-300 group-hover:bg-white/[0.08] group-hover:border-white/[0.12] group-hover:scale-105">
+                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/[0.04] border border-white/[0.08] backdrop-blur-sm transition-all duration-300 group-hover:bg-white/[0.08] group-hover:border-white/[0.12] group-hover:scale-105">
                   <span className="text-xl">{account.icon}</span>
                 </div>
               ) : (
-                <div className="w-9 h-7 rounded-md bg-amber-500/10 border border-amber-500/30 relative overflow-hidden flex flex-col p-1 shadow-[0_0_8px_rgba(245,158,11,0.1)] group-hover:shadow-[0_0_12px_rgba(245,158,11,0.25)] transition-all duration-300">
-                  <div className="flex h-1/3 w-full justify-between">
-                    <div className="w-2.5 h-full border-r border-b border-amber-500/20" />
-                    <div className="w-2.5 h-full border-l border-b border-amber-500/20" />
-                  </div>
-                  <div className="flex h-1/3 w-full justify-between items-center px-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-amber-400/40" />
-                    <div className="w-1.5 h-1.5 rounded-full bg-amber-400/40" />
-                  </div>
-                  <div className="flex h-1/3 w-full justify-between">
-                    <div className="w-2.5 h-full border-r border-t border-amber-500/20" />
-                    <div className="w-2.5 h-full border-l border-t border-amber-500/20" />
-                  </div>
-                  {/* Cyber active status point */}
-                  <div className={cn(
-                    "absolute right-1 top-1 w-1.5 h-1.5 rounded-full animate-pulse",
-                    account.isActive ? "bg-income shadow-[0_0_4px_var(--income)]" : "bg-expense shadow-[0_0_4px_var(--expense)]"
-                  )} />
+                <div
+                  className="w-10 h-10 rounded-xl border flex items-center justify-center transition-all duration-300 shadow-sm"
+                  style={{
+                    backgroundColor: `color-mix(in srgb, ${swatch} 12%, transparent)`,
+                    borderColor: `color-mix(in srgb, ${swatch} 28%, transparent)`,
+                    color: swatch,
+                  }}
+                >
+                  <Wallet size={18} />
                 </div>
               )}
 
@@ -762,21 +711,26 @@ function AccountCard({
               </div>
             </div>
             
-            {/* Account Type Badge */}
-            <div className="flex flex-col items-end gap-1">
+            {/* Account Type Badge & Status */}
+            <div className="flex flex-col items-end gap-1.5">
               <span
-                className="inline-flex items-center px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider border backdrop-blur-sm transition-all duration-300 group-hover:scale-105"
+                className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide border backdrop-blur-sm transition-all duration-300"
                 style={{
-                  backgroundColor: `color-mix(in srgb, ${swatch} 15%, transparent)`,
+                  backgroundColor: `color-mix(in srgb, ${swatch} 12%, transparent)`,
                   color: swatch,
-                  borderColor: `color-mix(in srgb, ${swatch} 30%, transparent)`
+                  borderColor: `color-mix(in srgb, ${swatch} 28%, transparent)`
                 }}
               >
+                <span
+                  className={cn(
+                    "size-1.5 rounded-full",
+                    account.isActive ? "bg-income shadow-[0_0_4px_var(--income)]" : "bg-muted-foreground/50"
+                  )}
+                />
                 {typeLabel[account.type]}
               </span>
               {!account.isActive && (
-                <span className="text-[8px] font-semibold uppercase tracking-wider text-muted-foreground/40 flex items-center gap-1">
-                  <span className="w-1 h-1 rounded-full bg-muted-foreground/40" />
+                <span className="text-[9.5px] font-medium tracking-wide text-muted-foreground/60 flex items-center gap-1">
                   {language === "id" ? "Nonaktif" : "Inactive"}
                 </span>
               )}
@@ -785,16 +739,16 @@ function AccountCard({
 
           {/* Card Body: Balance & Card Number */}
           <div className="space-y-1 relative z-10 mb-4">
-            <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground/50">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               {language === "id" ? "Saldo Tersedia" : "Available Balance"}
             </p>
             <p className={cn(
-              "text-2xl font-black font-mono tracking-tight tabular-nums transition-colors duration-300",
+              "text-2xl font-bold font-mono tracking-tight tabular-nums transition-colors duration-300",
               isNegative ? "text-expense" : "text-income"
             )}>
               {formatIDR(account.balance)}
             </p>
-            <p className="text-[9px] font-mono text-muted-foreground/30 tracking-[0.15em] pt-0.5 uppercase">
+            <p className="text-[10px] font-mono text-muted-foreground/60 tracking-wider pt-0.5 uppercase">
               {maskedNumber}
             </p>
           </div>
@@ -802,7 +756,7 @@ function AccountCard({
           {/* Card Footer: Holder Name & Transaction Count */}
           <div className="flex items-end justify-between border-t border-border/40 pt-3 relative z-10">
             <div className="min-w-0 flex-1 pr-3">
-              <p className="text-[8px] uppercase tracking-wider text-muted-foreground/50 font-bold mb-0.5">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-0.5">
                 {language === "id" ? "Nama Akun" : "Account Name"}
               </p>
               <p className="text-xs font-bold text-foreground truncate tracking-wide transition-colors duration-300">
@@ -810,11 +764,11 @@ function AccountCard({
               </p>
             </div>
             
-            <div className="flex items-center gap-1 shrink-0 px-2 py-0.5 rounded bg-white/[0.02] border border-border/40">
-              <svg className="w-2.5 h-2.5 text-muted-foreground/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+            <div className="flex items-center gap-1 shrink-0 px-2 py-0.5 rounded-md bg-white/[0.03] border border-border/50">
+              <svg className="w-2.5 h-2.5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              <span className="text-[9px] font-mono text-muted-foreground/60 font-bold tabular-nums">
+              <span className="text-[10px] font-mono text-muted-foreground font-semibold tabular-nums">
                 {account.transactionCount ?? 0}
               </span>
             </div>

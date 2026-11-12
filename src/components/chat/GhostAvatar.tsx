@@ -53,12 +53,15 @@ export const GhostAvatar: React.FC<GhostAvatarProps> = ({
         />
       )}
 
-      {/* SVG Ghost Vector Character (Kiro Editor inspired) */}
+      {/* SVG Ghost Vector Character */}
       <svg
         viewBox="0 0 100 110"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="w-full h-full drop-shadow-[0_4px_12px_rgba(168,85,247,0.35)] relative z-10 transition-transform duration-300"
+        className={cn(
+          "w-full h-full relative z-10 transition-transform duration-300",
+          withAura ? "drop-shadow-[0_4px_12px_rgba(168,85,247,0.35)]" : "drop-shadow-xs"
+        )}
       >
         <defs>
           {/* Body linear gradient: Spectral Pearl to Cosmic Purple */}

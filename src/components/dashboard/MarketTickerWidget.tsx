@@ -58,7 +58,7 @@ export function MarketTickerWidget({ isId }: { isId: boolean }) {
           {/* Emas Antam */}
           <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-secondary/50 border border-border/40 shrink-0">
             <AssetLogo
-              logoUrl="/logos/antam.svg"
+              logoUrl="/logos/antam.png"
               name="Antam"
               symbol="ANTAM"
               category="gold"
@@ -95,7 +95,7 @@ export function MarketTickerWidget({ isId }: { isId: boolean }) {
           {bbca && (
             <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-secondary/50 border border-border/40 shrink-0">
               <AssetLogo
-                logoUrl="/logos/bbca.svg"
+                logoUrl="/logos/bbca.png"
                 name="BBCA"
                 symbol="BBCA.JK"
                 category="indo_stock"
@@ -124,7 +124,7 @@ export function MarketTickerWidget({ isId }: { isId: boolean }) {
           {aapl && (
             <div className="hidden md:flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-secondary/50 border border-border/40 shrink-0">
               <AssetLogo
-                logoUrl="/logos/aapl.svg"
+                logoUrl="/logos/aapl.png"
                 name="AAPL"
                 symbol="AAPL"
                 category="world_stock"

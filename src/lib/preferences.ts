@@ -94,7 +94,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   baseCurrency: "IDR",
   onboardingCompleted: false,
   cursorSettings: {
-    type: "macos-pointer",
+    type: "default",
     color: "accent",
     size: "default",
   },

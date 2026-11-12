@@ -148,14 +148,14 @@ export function MarketOverviewView({
               category: "gold",
               currentPrice: gold?.antamPrice1g || 2722000,
               currency: "IDR",
-              logoUrl: "/logos/antam.svg",
+              logoUrl: "/logos/antam.png",
             })
           }
           className="p-3.5 rounded-xl border border-amber-500/25 bg-amber-500/5 flex items-center justify-between cursor-pointer hover:border-amber-500/50 transition-all hover:shadow-sm"
         >
           <div className="flex items-center gap-2.5">
             <AssetLogo
-              logoUrl="/logos/antam.svg"
+              logoUrl="/logos/antam.png"
               name="Antam Gold"
               symbol="ANTAM"
               category="gold"
@@ -208,7 +208,7 @@ export function MarketOverviewView({
         >
           <div className="flex items-center gap-2.5">
             <AssetLogo
-              logoUrl="/logos/sucor.svg"
+              logoUrl="/logos/sucor.png"
               name="Sucor MMF"
               symbol="SUCOR"
               category="mutual_fund"
@@ -281,7 +281,7 @@ export function MarketOverviewView({
         >
           <div className="flex items-center gap-2.5">
             <AssetLogo
-              logoUrl="/logos/bbca.svg"
+              logoUrl="/logos/bbca.png"
               name="Bank Central Asia"
               symbol="BBCA.JK"
               category="indo_stock"
@@ -442,7 +442,7 @@ export function MarketOverviewView({
                   category: "gold",
                   currentPrice: gold?.antamPrice1g || 2722000,
                   currency: "IDR",
-                  logoUrl: "/logos/antam.svg",
+                  logoUrl: "/logos/antam.png",
                 })
               }
               className="p-5 border-amber-500/25 bg-gradient-to-br from-card via-card to-amber-500/5 space-y-4 cursor-pointer hover:border-amber-500/50 transition-all hover:shadow-md"
@@ -450,7 +450,7 @@ export function MarketOverviewView({
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <AssetLogo
-                    logoUrl="/logos/antam.svg"
+                    logoUrl="/logos/antam.png"
                     name="PT Aneka Tambang Tbk"
                     symbol="ANTAM"
                     category="gold"
@@ -556,7 +556,7 @@ export function MarketOverviewView({
                   category: "gold",
                   currentPrice: gold?.pegadaianPrice1g || 2532000,
                   currency: "IDR",
-                  logoUrl: "/logos/pegadaian.svg",
+                  logoUrl: "/logos/pegadaian.png",
                 })
               }
               className="p-5 border-emerald-500/25 bg-gradient-to-br from-card via-card to-emerald-500/5 space-y-4 cursor-pointer hover:border-emerald-500/50 transition-all hover:shadow-md"
@@ -564,7 +564,7 @@ export function MarketOverviewView({
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <AssetLogo
-                    logoUrl="/logos/pegadaian.svg"
+                    logoUrl="/logos/pegadaian.png"
                     name="PT Pegadaian (Persero)"
                     symbol="PEGADAIAN"
                     category="gold"
