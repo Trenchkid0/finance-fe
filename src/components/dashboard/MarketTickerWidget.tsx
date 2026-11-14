@@ -45,7 +45,7 @@ export function MarketTickerWidget({ isId }: { isId: boolean }) {
               <span className="text-xs font-bold text-foreground">
                 {isId ? "Pantauan Pasar & Kurs Hari Ini" : "Market & FX Overview"}
               </span>
-              <span className="flex size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="flex size-1.5 rounded-full bg-emerald-500" />
             </div>
             <div className="text-[10px] text-muted-foreground">
               {isId ? "Emas Antam, USD/IDR & Saham Pilihan" : "Gold, USD & Featured Stocks"}

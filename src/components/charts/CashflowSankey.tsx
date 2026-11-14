@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import {
   sankey,
   sankeyLinkHorizontal,
@@ -107,12 +107,12 @@ export const CashflowSankey = memo(function CashflowSankey({ data }: Props) {
 
   return (
     <Card
-      className="group p-5 space-y-4 hover:border-hover-border transition-all duration-300"
+      className="group p-5 space-y-4 hover:border-hover-border transition-colors duration-200"
       aria-label="Cash Flow Sankey Diagram"
       role="region"
     >
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-medium text-foreground transition-colors duration-300 group-hover:text-accent">
+        <h2 className="text-base font-medium text-foreground transition-colors duration-200 group-hover:text-accent">
           {isId ? "Arus kas" : "Cash flow"}
         </h2>
       </div>
@@ -168,74 +168,70 @@ const SankeyChart = memo(function SankeyChart({
     targetName: string;
     value: number;
     percentText: string;
-    x: number;
-    y: number;
   } | null>(null);
+  const tooltipRef = useRef<HTMLDivElement | null>(null);
+  const svgRectRef = useRef<DOMRect | null>(null);
 
-  // Susun nodes & links dengan index numerik supaya d3-sankey happy.
-  // Layout:
-  //   inflow nodes (kiri) → "Arus Kas" (tengah) → outflow nodes (kanan)
-  //   ditambah "Surplus" node di kanan kalau positif.
-  //
-  // Color strategy: pakai shade biru dari BLUE_PALETTE secara siklik
-  // berdasarkan urutan biggest-first, sehingga node terbesar dapat warna
-  // paling kuat. Cash Flow node tengah & Surplus pakai brand blue.
+  const { graph, linkPath } = useMemo(() => {
+    const inflowColored = (data.inflow || []).map((n, i) => ({
+      ...n,
+      color: BLUE_PALETTE[i % BLUE_PALETTE.length],
+    }));
+    const outflowColored = (data.outflow || []).map((n, i) => ({
+      ...n,
+      color: BLUE_PALETTE[i % BLUE_PALETTE.length],
+    }));
 
-  const inflowColored = (data.inflow || []).map((n, i) => ({
-    ...n,
-    color: BLUE_PALETTE[i % BLUE_PALETTE.length],
-  }));
-  const outflowColored = (data.outflow || []).map((n, i) => ({
-    ...n,
-    color: BLUE_PALETTE[i % BLUE_PALETTE.length],
-  }));
+    const nodes: SankeyNode[] = [
+      { name: "Arus Kas", color: PRIMARY_BLUE, value: data.total },
+      ...inflowColored.map((n) => ({ name: n.name, color: n.color, value: n.value })),
+      ...outflowColored.map((n) => ({ name: n.name, color: n.color, value: n.value })),
+    ];
 
-  const nodes: SankeyNode[] = [
-    { name: "Arus Kas", color: PRIMARY_BLUE, value: data.total },
-    ...inflowColored.map((n) => ({ name: n.name, color: n.color, value: n.value })),
-    ...outflowColored.map((n) => ({ name: n.name, color: n.color, value: n.value })),
-  ];
+    if (data.surplus > 0) {
+      nodes.push({ name: "Surplus", color: SUCCESS_COLOR, value: data.surplus });
+    }
 
-  if (data.surplus > 0) {
-    nodes.push({ name: "Surplus", color: SUCCESS_COLOR, value: data.surplus });
-  }
+    const links: SankeyLink[] = [];
+    let idx = 1;
+    // Inflow → Cash Flow (source kiri)
+    for (const n of inflowColored) {
+      links.push({ source: idx, target: 0, value: n.value, color: n.color });
+      idx++;
+    }
+    // Cash Flow → Outflow (target kanan)
+    for (const n of outflowColored) {
+      links.push({ source: 0, target: idx, value: n.value, color: n.color });
+      idx++;
+    }
+    // Cash Flow → Surplus (kalau ada)
+    if (data.surplus > 0) {
+      links.push({
+        source: 0,
+        target: idx,
+        value: data.surplus,
+        color: SUCCESS_COLOR,
+      });
+    }
 
-  const links: SankeyLink[] = [];
-  let idx = 1;
-  // Inflow → Cash Flow (source kiri)
-  for (const n of inflowColored) {
-    links.push({ source: idx, target: 0, value: n.value, color: n.color });
-    idx++;
-  }
-  // Cash Flow → Outflow (target kanan)
-  for (const n of outflowColored) {
-    links.push({ source: 0, target: idx, value: n.value, color: n.color });
-    idx++;
-  }
-  // Cash Flow → Surplus (kalau ada)
-  if (data.surplus > 0) {
-    links.push({
-      source: 0,
-      target: idx,
-      value: data.surplus,
-      color: SUCCESS_COLOR,
+    const gen = sankey<SankeyNode, SankeyLink>()
+      .nodeWidth(14)
+      .nodePadding(20)
+      .extent([
+        [120, 8],
+        [Math.max(width, 600) - 120, height - 8],
+      ]);
+
+    const computedGraph = gen({
+      nodes: nodes.map((n) => ({ ...n })),
+      links: links.map((l) => ({ ...l })),
     });
-  }
 
-  const gen = sankey<SankeyNode, SankeyLink>()
-    .nodeWidth(14)
-    .nodePadding(20)
-    .extent([
-      [120, 8],
-      [Math.max(width, 600) - 120, height - 8],
-    ]);
-
-  const graph = gen({
-    nodes: nodes.map((n) => ({ ...n })),
-    links: links.map((l) => ({ ...l })),
-  });
-
-  const linkPath = sankeyLinkHorizontal<SankeyNode, SankeyLink>();
+    return {
+      graph: computedGraph,
+      linkPath: sankeyLinkHorizontal<SankeyNode, SankeyLink>(),
+    };
+  }, [data, width, height]);
 
   return (
     <div className="relative w-full overflow-visible">
@@ -282,7 +278,6 @@ const SankeyChart = memo(function SankeyChart({
             const isAnyHovered = hoveredLinkId !== null;
             const opacityVal = isHovered ? 0.95 : isAnyHovered ? 0.15 : 0.65;
             const strokeWidthVal = isHovered ? Math.max(2, (link.width ?? 1) + 2) : Math.max(1, link.width ?? 1);
-            const glowColor = (link.target as SankeyNode).color;
 
             return (
               <path
@@ -291,16 +286,12 @@ const SankeyChart = memo(function SankeyChart({
                 stroke={`url(#sankey-grad-${i})`}
                 strokeWidth={strokeWidthVal}
                 opacity={opacityVal}
-                className="cursor-pointer transition-all duration-300"
-                style={{
-                  filter: isHovered
-                    ? `drop-shadow(0 0 6px ${glowColor}cc)`
-                    : 'drop-shadow(0 0 1px rgba(0,0,0,0.15))',
-                }}
+                className="cursor-pointer transition-opacity duration-150"
                 onMouseEnter={(e) => {
                   setHoveredLinkId(i);
                   const svgEl = e.currentTarget.ownerSVGElement;
                   const rect = svgEl ? svgEl.getBoundingClientRect() : null;
+                  svgRectRef.current = rect;
                   const x = rect ? e.clientX - rect.left : e.clientX;
                   const y = rect ? e.clientY - rect.top : e.clientY;
                   setHoveredLink({
@@ -308,22 +299,24 @@ const SankeyChart = memo(function SankeyChart({
                     targetName: tgtName,
                     value: link.value,
                     percentText,
-                    x,
-                    y,
+                  });
+                  requestAnimationFrame(() => {
+                    if (tooltipRef.current) {
+                      tooltipRef.current.style.transform = `translate3d(${x + 15}px, ${y + 15}px, 0)`;
+                    }
                   });
                 }}
                 onMouseMove={(e) => {
-                  const svgEl = e.currentTarget.ownerSVGElement;
-                  const rect = svgEl ? svgEl.getBoundingClientRect() : null;
+                  if (!tooltipRef.current) return;
+                  const rect = svgRectRef.current;
                   const x = rect ? e.clientX - rect.left : e.clientX;
                   const y = rect ? e.clientY - rect.top : e.clientY;
-                  setHoveredLink((prev) =>
-                    prev ? { ...prev, x, y } : null
-                  );
+                  tooltipRef.current.style.transform = `translate3d(${x + 15}px, ${y + 15}px, 0)`;
                 }}
                 onMouseLeave={() => {
                   setHoveredLinkId(null);
                   setHoveredLink(null);
+                  svgRectRef.current = null;
                 }}
               />
             );
@@ -352,22 +345,13 @@ const SankeyChart = memo(function SankeyChart({
                   height={Math.max(2, h)}
                   fill={n.color}
                   rx={3}
-                  className="transition-all duration-300"
-                  style={{
-                    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
-                  }}
+                  className="transition-opacity duration-200 group-hover/node:opacity-90"
                 >
                   <title>
                     {n.name}: {formatIDR(n.value ?? 0)}
                   </title>
-                  <animate
-                    attributeName="opacity"
-                    values="1;0.85;1"
-                    dur="2s"
-                    repeatCount="indefinite"
-                  />
                 </rect>
-                {/* Hover glow effect */}
+                {/* Hover outline effect */}
                 <rect
                   x={x0 - 2}
                   y={y0 - 2}
@@ -375,17 +359,17 @@ const SankeyChart = memo(function SankeyChart({
                   height={Math.max(2, h) + 4}
                   fill="none"
                   stroke={n.color}
-                  strokeWidth="2"
+                  strokeWidth="1.5"
                   rx={4}
                   opacity="0"
-                  className="transition-opacity duration-300 group-hover/node:opacity-50"
+                  className="transition-opacity duration-200 group-hover/node:opacity-50"
                 />
                 <text
                   x={labelX}
                   y={(y0 + y1) / 2}
                   dy="-0.2em"
                   textAnchor={anchor}
-                  className="fill-foreground transition-all duration-300 group-hover/node:fill-accent group-hover/node:font-bold"
+                  className="fill-foreground transition-colors duration-200 group-hover/node:fill-accent"
                   style={{ fontSize: 11, fontWeight: 500 }}
                 >
                   {n.name}
@@ -395,7 +379,7 @@ const SankeyChart = memo(function SankeyChart({
                   y={(y0 + y1) / 2}
                   dy="1em"
                   textAnchor={anchor}
-                  className="fill-muted-foreground font-mono transition-all duration-300 group-hover/node:fill-foreground group-hover/node:font-bold"
+                  className="fill-muted-foreground font-mono transition-colors duration-200 group-hover/node:fill-foreground"
                   style={{ fontSize: 10 }}
                 >
                   {formatIDR(n.value ?? 0)}
@@ -406,14 +390,11 @@ const SankeyChart = memo(function SankeyChart({
         </g>
       </svg>
  
-      {/* Custom Floating Tooltip */}
+      {/* Custom Floating Tooltip (Hardware-accelerated via ref transform, zero React re-renders on mousemove) */}
       {hoveredLink && (
         <div
-          className="pointer-events-none absolute z-50 rounded-xl border border-border/60 bg-popover/95 backdrop-blur-xl p-3.5 shadow-2xl shadow-black/80 text-xs space-y-1.5 min-w-[200px]"
-          style={{
-            left: `${hoveredLink.x + 15}px`,
-            top: `${hoveredLink.y + 15}px`,
-          }}
+          ref={tooltipRef}
+          className="pointer-events-none absolute top-0 left-0 z-50 rounded-xl border border-border/60 bg-popover/95 p-3.5 shadow-xl text-xs space-y-1.5 min-w-[200px] will-change-transform"
         >
           <div className="flex items-center gap-1.5 text-muted-foreground/60 text-[9px] font-bold uppercase tracking-wider">
             <span>{hoveredLink.sourceName}</span>

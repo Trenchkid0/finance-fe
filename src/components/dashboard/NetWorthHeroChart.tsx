@@ -23,31 +23,29 @@ interface Props {
   chartType?: "line" | "bar";
 }
 
-// Custom pulsing active dot component for a futuristic laser-guided indicator
+// Custom active dot component for a crisp vector indicator without continuous SVG ping repaint
 const CustomActiveDot = (props: any) => {
   const { cx, cy, stroke } = props;
   if (!cx || !cy) return null;
   return (
     <g>
-      {/* 1. Pulsing outer shadow ring */}
+      {/* 1. Soft outer halo ring */}
       <circle
         cx={cx}
         cy={cy}
-        r={14}
+        r={12}
         fill={stroke}
-        fillOpacity={0.12}
-        className="animate-ping"
-        style={{ transformOrigin: `${cx}px ${cy}px`, animationDuration: "2s" }}
+        fillOpacity={0.14}
       />
       {/* 2. Concentric accent stroke ring */}
       <circle
         cx={cx}
         cy={cy}
-        r={8}
+        r={7.5}
         fill="none"
         stroke={stroke}
         strokeWidth={1.5}
-        strokeOpacity={0.6}
+        strokeOpacity={0.65}
       />
       {/* 3. Solid center white core */}
       <circle
@@ -62,8 +60,8 @@ const CustomActiveDot = (props: any) => {
   );
 };
 
-// Premium glassmorphic tooltip that dynamically adapts to Dark & Light theme
-const CustomTooltip = ({ active, payload, hoverPoint, setHoverPoint, isId }: any) => {
+// Premium tooltip that dynamically adapts to Dark & Light theme
+const CustomTooltip = ({ active, payload, hoverPoint, setHoverPoint }: any) => {
   if (!active || !payload?.length) return null;
   const p = payload[0].payload as NetWorthPoint;
   
@@ -72,7 +70,7 @@ const CustomTooltip = ({ active, payload, hoverPoint, setHoverPoint, isId }: any
   }
 
   return (
-    <div className="relative rounded-2xl border border-border/60 bg-card/95 dark:bg-[#0D1117]/85 backdrop-blur-md px-4 py-3 shadow-[0_12px_24px_-10px_rgba(0,0,0,0.12)] dark:shadow-[0_12px_24px_-10px_rgba(0,0,0,0.7)] transition-all duration-200">
+    <div className="relative rounded-2xl border border-border/60 bg-card/95 dark:bg-[#0D1117]/95 px-4 py-3 shadow-[0_12px_24px_-10px_rgba(0,0,0,0.12)] dark:shadow-[0_12px_24px_-10px_rgba(0,0,0,0.7)]">
       {/* Horizontal glowing gradient line top-border decoration */}
       <div className="absolute top-0 left-4 right-4 h-[1px] bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
       
@@ -80,7 +78,7 @@ const CustomTooltip = ({ active, payload, hoverPoint, setHoverPoint, isId }: any
         {formatDateShort(p.date)}
       </p>
       <div className="flex items-center gap-2 mt-1.5">
-        <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse shadow-[0_0_8px_var(--accent)]" />
+        <span className="w-1.5 h-1.5 rounded-full bg-accent" />
         <p className="font-mono tabular-nums font-black text-foreground text-sm">
           {formatIDR(p.value)}
         </p>
@@ -123,7 +121,7 @@ const CustomBarShape = (props: any) => {
     arr.map((p) => `${p.x},${p.y}`).join(" ");
 
   return (
-    <g className="transition-all duration-300">
+    <g>
       {/* 1. Ground shadow (subtle) */}
       <ellipse
         cx={cx + depth / 2}
@@ -142,7 +140,7 @@ const CustomBarShape = (props: any) => {
         strokeWidth={0.6}
         strokeOpacity={isHovered ? 0.6 : 0.2}
         fillOpacity={isHovered ? 1 : 0.85}
-        className="transition-all duration-300"
+        className="transition-opacity duration-150"
       />
 
       {/* 3. Right side face — darker, simulates shadow side */}
@@ -153,19 +151,18 @@ const CustomBarShape = (props: any) => {
         strokeWidth={0.6}
         strokeOpacity={isHovered ? 0.5 : 0.15}
         fillOpacity={isHovered ? 1 : 0.85}
-        className="transition-all duration-300"
+        className="transition-opacity duration-150"
       />
 
       {/* 4. Top cap face — brightest, simulates light hitting from above */}
       <polygon
         points={pts([tBL, tBR, tTR, tTL])}
-        fill={isHovered ? "var(--accent)" : "var(--accent)"}
+        fill="var(--accent)"
         fillOpacity={isHovered ? 0.9 : 0.5}
         stroke={isHovered ? "#ffffff" : "var(--accent)"}
         strokeWidth={isHovered ? 1.2 : 0.6}
         strokeOpacity={isHovered ? 0.8 : 0.3}
-        style={isHovered ? { filter: "url(#topGlow)" } : undefined}
-        className="transition-all duration-300"
+        className="transition-opacity duration-150"
       />
 
       {/* 5. Front face vertical highlight edge (left) */}
@@ -179,7 +176,7 @@ const CustomBarShape = (props: any) => {
         strokeOpacity={isHovered ? 0.3 : 0.08}
       />
 
-      {/* 6. Top cap glowing leading edge on hover */}
+      {/* 6. Top cap leading edge on hover */}
       {isHovered && (
         <line
           x1={tTL.x}
@@ -188,8 +185,7 @@ const CustomBarShape = (props: any) => {
           y2={tTR.y}
           stroke="#ffffff"
           strokeWidth={1.5}
-          strokeOpacity={0.5}
-          style={{ filter: "url(#topGlow)" }}
+          strokeOpacity={0.6}
         />
       )}
     </g>
@@ -238,15 +234,6 @@ export const NetWorthHeroChart = React.memo(function NetWorthHeroChart({
           accessibilityLayer
         >
           <defs>
-            {/* Soft glow for top cap on hover */}
-            <filter id="topGlow" x="-40%" y="-40%" width="180%" height="180%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
             {/* Front face gradient: bright accent top → fades down */}
             <linearGradient id="face3dFront" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.7} />
@@ -297,6 +284,7 @@ export const NetWorthHeroChart = React.memo(function NetWorthHeroChart({
 
           <Bar
             dataKey="value"
+            isAnimationActive={false}
             shape={<CustomBarShape hoveredIndex={hoveredIndex} />}
           />
         </BarChart>
@@ -313,15 +301,6 @@ export const NetWorthHeroChart = React.memo(function NetWorthHeroChart({
         accessibilityLayer
       >
         <defs>
-          {/* Cyberpunk neon blur glow filter */}
-          <filter id="neonBlur" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="5" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-
           {/* Sci-fi laser cursor gradient (fades down) */}
           <linearGradient id="laserCursor" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.8} />
@@ -381,18 +360,19 @@ export const NetWorthHeroChart = React.memo(function NetWorthHeroChart({
           dataKey="value"
           stroke="none"
           fill="url(#netWorthFill)"
+          isAnimationActive={false}
           connectNulls
         />
 
-        {/* 3. Glowing neon shadow path */}
+        {/* 3. Vector halo stroke path (zero feGaussianBlur cost) */}
         <Area
           type="monotone"
           dataKey="value"
           stroke={lineColor}
-          strokeWidth={5.5}
-          strokeOpacity={0.15}
+          strokeWidth={6}
+          strokeOpacity={0.14}
           fill="none"
-          filter="url(#neonBlur)"
+          isAnimationActive={false}
           connectNulls
         />
 
@@ -403,6 +383,7 @@ export const NetWorthHeroChart = React.memo(function NetWorthHeroChart({
           stroke={lineColor}
           strokeWidth={2}
           fill="none"
+          isAnimationActive={false}
           activeDot={<CustomActiveDot />}
           connectNulls
         />

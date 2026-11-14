@@ -94,7 +94,7 @@ export function NetWorthHero({ current, previous, period, series }: Props) {
   const periodLabel = periodOptions.find((o) => o.value === period)?.label ?? "";
 
   return (
-    <Card className="group relative overflow-hidden p-0 gap-0 border border-border/50 bg-card/60 dark:bg-elevated/10 backdrop-blur-sm transition-all duration-300 hover:border-accent/30 hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-accent/[0.01]" aria-label={isId ? "Grafik Total Kekayaan" : "Net Worth Chart"} role="region">
+    <Card className="group relative overflow-hidden p-0 gap-0 border border-border/50 bg-card/60 dark:bg-elevated/10 transition-colors duration-200 hover:border-accent/30" aria-label={isId ? "Grafik Total Kekayaan" : "Net Worth Chart"} role="region">
       {/* Precision corner marks */}
       <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-border/40 rounded-tl pointer-events-none" />
       <div className="absolute top-0 right-0 w-3 h-3 border-t border-r border-border/40 rounded-tr pointer-events-none" />

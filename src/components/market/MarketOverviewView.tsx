@@ -13,6 +13,7 @@ import {
   Briefcase,
   ChevronDown,
   ChevronUp,
+  X,
 } from "lucide-react";
 import { formatIDR } from "@/lib/utils/formatters";
 import { Card } from "@/components/ui/card";
@@ -90,6 +91,23 @@ export function MarketOverviewView({
   const visibleWorld = showAllWorld || searchQuery ? filteredWorld : filteredWorld.slice(0, 8);
   const visibleCurr = showAllCurr || searchQuery ? filteredCurrencies : filteredCurrencies.slice(0, 6);
 
+  const isSearchEmpty = useMemo(() => {
+    if (!searchQuery.trim()) return false;
+    const q = searchQuery.toLowerCase().trim();
+    const hasGoldMatch =
+      gold &&
+      (gold.antamPrice1g.toString().includes(q) ||
+        gold.pegadaianPrice1g.toString().includes(q) ||
+        "emas antam logam mulia pegadaian ubs".includes(q));
+    return (
+      !hasGoldMatch &&
+      filteredMF.length === 0 &&
+      filteredIndo.length === 0 &&
+      filteredWorld.length === 0 &&
+      filteredCurrencies.length === 0
+    );
+  }, [searchQuery, gold, filteredMF, filteredIndo, filteredWorld, filteredCurrencies]);
+
   // Format currency helpers
   const formatPrice = (price: number, curr?: string) => {
     if (curr === "USD") {
@@ -104,7 +122,7 @@ export function MarketOverviewView({
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl bg-gradient-to-r from-card via-card/90 to-secondary/30 border border-border/60 shadow-sm backdrop-blur-sm">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="flex size-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="flex size-2 rounded-full bg-emerald-500" />
             <span className="text-xs font-semibold uppercase tracking-wider text-emerald-500 font-mono">
               Live Market Rates
             </span>
@@ -406,14 +424,41 @@ export function MarketOverviewView({
           />
           {searchQuery && (
             <button
+              type="button"
               onClick={() => setSearchQuery("")}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
+              title="Hapus pencarian"
+              aria-label="Hapus pencarian"
             >
-              ×
+              <X className="size-3.5" />
             </button>
           )}
         </div>
       </div>
+
+      {/* ─── Search Empty State ─── */}
+      {isSearchEmpty && (
+        <div className="py-16 text-center space-y-3 bg-card/40 rounded-2xl border border-dashed border-border/80">
+          <div className="size-12 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto text-muted-foreground">
+            <Search className="size-6" />
+          </div>
+          <div className="space-y-1">
+            <h4 className="text-sm font-bold text-foreground">Aset Tidak Ditemukan</h4>
+            <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+              Tidak ada emiten saham, reksa dana, emas, atau valas yang cocok dengan kata kunci &quot;<span className="text-foreground font-semibold">{searchQuery}</span>&quot;.
+            </p>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setSearchQuery("")}
+            className="text-xs h-8 gap-1.5"
+          >
+            <X className="size-3.5" />
+            Reset Pencarian
+          </Button>
+        </div>
+      )}
 
       {/* ─── 1. Emas Indonesia Section ─── */}
       {(activeTab === "all" || activeTab === "gold") && (
@@ -1287,7 +1332,7 @@ export function MarketOverviewView({
                   </div>
 
                   <div className="pt-2 border-t border-border/40 flex items-center justify-between text-[10px] text-muted-foreground">
-                    <span>Rentang: {formatIDR(curr.lowDay)} - {formatIDR(curr.highDay)}</span>
+                    <span>{curr.lowDay > 0 ? `Rentang: ${formatIDR(curr.lowDay)} - ${formatIDR(curr.highDay)}` : "Live Real-Time"}</span>
                     <span className="text-accent font-semibold group-hover:underline">Detail →</span>
                   </div>
                 </Card>

@@ -171,7 +171,7 @@ export function SiteHeader() {
               >
                 <Bell size={16} />
                 {unreadCount > 0 && (
-                  <span className="absolute top-2 right-2 size-2 rounded-full bg-accent animate-pulse" />
+                  <span className="absolute top-2 right-2 size-2 rounded-full bg-accent" />
                 )}
               </Button>
             </DropdownMenuTrigger>

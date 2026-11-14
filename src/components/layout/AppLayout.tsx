@@ -15,6 +15,7 @@ import { useLanguage } from "@/lib/contexts/LanguageContext";
 import { loadPreferences, setPreferencesAuthenticated } from "@/lib/preferences";
 import { OnboardingCurrencyModal } from "@/components/onboarding/OnboardingCurrencyModal";
 import { GhostChatModal } from "@/components/chat/GhostChatModal";
+import { MoneySafeLoader } from "@/components/ui/MoneySafeLoader";
 import type { User, Account, Category } from "@/types";
 
 interface AppContextType {
@@ -105,13 +106,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   }, [refresh]);
 
   if (loading) {
-    return (
-      <div className="flex h-screen w-screen items-center justify-center bg-background text-foreground font-mono">
-        <div className="text-sm animate-pulse">
-          {t("connectingToApp")}
-        </div>
-      </div>
-    );
+    return <MoneySafeLoader fullScreen label={t("connectingToApp")} />;
   }
 
   const canCreate = accounts.length > 0;

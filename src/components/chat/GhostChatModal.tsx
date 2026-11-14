@@ -423,7 +423,7 @@ export const GhostChatModal: React.FC = () => {
           ======================================================== */}
       <div
         className={cn(
-          "fixed right-0 top-1/2 -translate-y-1/2 z-40 flex items-center transition-all duration-300",
+          "fixed right-0 top-1/2 -translate-y-1/2 z-40 flex items-center transition-[opacity,transform] duration-200",
           isOpen ? "opacity-0 pointer-events-none translate-x-12" : "opacity-100 translate-x-0"
         )}
       >
@@ -432,7 +432,7 @@ export const GhostChatModal: React.FC = () => {
           onClick={() => setIsOpen(true)}
           aria-label="Buka Racks Asisten Finansial"
           className={cn(
-            "group relative pl-2.5 pr-2 py-3.5 rounded-l-xl flex flex-col items-center justify-center gap-1.5 transition-all duration-200",
+            "group relative pl-2.5 pr-2 py-3.5 rounded-l-xl flex flex-col items-center justify-center gap-1.5 transition-[background-color,box-shadow,transform] duration-200",
             "bg-card hover:bg-elevated text-foreground border-l border-t border-b border-border",
             "shadow-md hover:shadow-lg",
             "active:scale-95 cursor-pointer select-none"
@@ -457,7 +457,7 @@ export const GhostChatModal: React.FC = () => {
       {isOpen && (
         <div
           onClick={() => setIsOpen(false)}
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs md:hidden animate-in fade-in duration-200"
+          className="fixed inset-0 z-40 bg-black/60 md:hidden animate-in fade-in duration-200"
           aria-hidden="true"
         />
       )}
@@ -469,9 +469,9 @@ export const GhostChatModal: React.FC = () => {
         aria-label="Racks Sidebar"
         className={cn(
           "fixed top-0 right-0 bottom-0 z-50 flex flex-col h-screen",
-          "bg-card backdrop-blur-2xl border-l border-border",
+          "bg-card/95 backdrop-blur-md border-l border-border",
           "shadow-2xl",
-          "transition-all duration-300 ease-in-out",
+          "transition-[transform,width] duration-200 ease-out will-change-transform",
           isExpanded
             ? "w-full sm:w-[540px] md:w-[600px]"
             : "w-full sm:w-[420px] md:w-[460px]",
@@ -548,7 +548,7 @@ export const GhostChatModal: React.FC = () => {
                           "p-3 rounded-2xl leading-relaxed text-xs",
                           msg.sender === "user"
                             ? "bg-accent text-accent-foreground rounded-br-xs shadow-sm font-medium"
-                            : "bg-elevated/90 border border-purple-500/20 text-foreground rounded-bl-xs shadow-[0_2px_12px_rgba(0,0,0,0.15)]"
+                            : "bg-card border border-border/60 text-foreground rounded-bl-xs shadow-xs"
                         )}
                       >
                         {/* Text Message with basic bold rendering */}
@@ -642,8 +642,8 @@ export const GhostChatModal: React.FC = () => {
 
                             {/* Pro-tip note from Kiro Ghost */}
                             {msg.dataCard.tip && (
-                              <div className="p-2 rounded-lg bg-purple-500/10 border border-purple-500/20 text-[10px] text-purple-300 leading-relaxed flex items-start gap-1.5">
-                                <Sparkles size={12} className="shrink-0 mt-0.5 text-purple-400" />
+                              <div className="p-2 rounded-lg bg-accent/10 border border-accent/20 text-[10px] text-accent-foreground leading-relaxed flex items-start gap-1.5">
+                                <Sparkles size={12} className="shrink-0 mt-0.5 text-accent" />
                                 <span>{msg.dataCard.tip}</span>
                               </div>
                             )}
@@ -675,7 +675,7 @@ export const GhostChatModal: React.FC = () => {
                             key={pIdx}
                             type="button"
                             onClick={() => handleSendMessage(promptText)}
-                            className="px-2.5 py-1 rounded-full text-[10px] font-medium bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 hover:text-purple-200 border border-purple-500/30 transition-all active:scale-95 text-left cursor-pointer"
+                            className="px-2.5 py-1 rounded-full text-[10px] font-medium bg-secondary hover:bg-elevated text-foreground/80 hover:text-foreground border border-border/70 transition-all active:scale-95 text-left cursor-pointer"
                           >
                             {promptText}
                           </button>
@@ -692,9 +692,9 @@ export const GhostChatModal: React.FC = () => {
                     <span className="italic flex items-center gap-1">
                       Racks sedang memindai catatan...
                       <span className="inline-flex gap-0.5">
-                        <span className="w-1 h-1 bg-purple-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                        <span className="w-1 h-1 bg-purple-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                        <span className="w-1 h-1 bg-purple-400 rounded-full animate-bounce" />
+                        <span className="w-1 h-1 bg-muted-foreground/70 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                        <span className="w-1 h-1 bg-muted-foreground/70 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                        <span className="w-1 h-1 bg-muted-foreground/70 rounded-full animate-bounce" />
                       </span>
                     </span>
                   </div>
@@ -992,7 +992,7 @@ export const GhostChatModal: React.FC = () => {
               </div>
 
               {/* Input Area */}
-              <div className="p-3 bg-elevated/80 border-t border-purple-500/20 shrink-0">
+              <div className="p-3 bg-card border-t border-border shrink-0">
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
@@ -1006,13 +1006,13 @@ export const GhostChatModal: React.FC = () => {
                     value={inputQuery}
                     onChange={(e) => setInputQuery(e.target.value)}
                     placeholder="Tanya pengeluaran, pemasukan, atau apa saja..."
-                    className="flex-1 bg-card border border-purple-500/30 focus:border-purple-400 focus:ring-1 focus:ring-purple-400/50 rounded-xl px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground/60 outline-none transition-all"
+                    className="flex-1 bg-muted/40 border border-border focus:border-foreground/40 focus:ring-1 focus:ring-foreground/20 rounded-xl px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground/60 outline-none transition-all"
                   />
                   <Button
                     type="submit"
                     size="sm"
                     disabled={!inputQuery.trim()}
-                    className="h-8 px-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white shadow-md shadow-purple-600/30 shrink-0 cursor-pointer disabled:opacity-40"
+                    className="h-8 px-3 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs shrink-0 cursor-pointer disabled:opacity-40 transition-all active:scale-95"
                   >
                     <Send size={13} />
                   </Button>

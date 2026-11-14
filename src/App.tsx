@@ -29,7 +29,7 @@ const Reports = lazy(() => import("@/pages/Reports"));
 import { LanguageProvider } from "@/lib/contexts/LanguageContext";
 import { loadSavedTheme } from "@/lib/utils/theme";
 import { loadPreferences, getCurrentPreferences } from "@/lib/preferences";
-import { CustomCursor } from "@/components/ui/CustomCursor";
+import { MoneySafeLoader } from "@/components/ui/MoneySafeLoader";
 
 /** Layout wrapper - renders AppLayout + child routes via <Outlet /> */
 function DashboardLayout() {
@@ -46,14 +46,7 @@ function DashboardLayout() {
 
 /** Lightweight loading fallback for lazy-loaded pages */
 function PageLoadingFallback() {
-  return (
-    <div className="flex h-[60vh] items-center justify-center">
-      <div className="flex flex-col items-center gap-3">
-        <div className="size-8 animate-spin rounded-full border-2 border-accent/30 border-t-accent" />
-        <span className="text-xs text-muted-foreground">Loading...</span>
-      </div>
-    </div>
-  );
+  return <MoneySafeLoader label="Loading..." />;
 }
 
 export default function App() {
@@ -146,7 +139,6 @@ export default function App() {
           {/* Catch-all fallback redirect */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-        <CustomCursor />
         <Toaster
           theme={toastSettings.theme === "custom" ? undefined : (toastSettings.theme as any)}
           position={toastSettings.position as any}

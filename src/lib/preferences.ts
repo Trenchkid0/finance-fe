@@ -195,9 +195,7 @@ function writeToLocalStorage(prefs: UserPreferences): void {
   } else if (prefs.accountOrder && prefs.accountOrder.length === 0) {
     localStorage.removeItem(LS_KEYS.accountOrder);
   }
-  if (prefs.cursorSettings) {
-    localStorage.setItem(LS_KEYS.cursorSettings, JSON.stringify(prefs.cursorSettings));
-  }
+  localStorage.removeItem(LS_KEYS.cursorSettings);
 }
 
 // ─── Apply to UI ──────────────────────────────────────────────────────────────
@@ -209,10 +207,10 @@ export function applyPreferences(prefs: UserPreferences): void {
   applyCardStyles(prefs.cardStyles);
   applyButtonStyles(prefs.buttonStyles);
   applyTypographyStyles(prefs.typographyStyles);
+  // Ensure any legacy custom cursor class is cleared
+  document.body.classList.remove("custom-cursor-active");
   // Notify about notification settings change (for Toaster in App.tsx)
   window.dispatchEvent(new Event("notification-settings-changed"));
-  // Notify about cursor settings change
-  window.dispatchEvent(new Event("cursor-settings-changed"));
   // Notify components that depend on preferences (e.g. Dashboard layout)
   window.dispatchEvent(new Event("preferences-changed"));
 }

@@ -147,16 +147,16 @@ function GirlyAccents() {
       className="pointer-events-none absolute inset-0 z-10 select-none overflow-hidden !m-0"
       style={{ margin: 0 }}
     >
-      {/* Soft dreamy pastel blurs in corners */}
-      <div className="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-gradient-to-br from-pink-400/15 via-rose-300/10 to-transparent blur-xl !m-0" style={{ margin: 0 }} />
-      <div className="absolute -left-6 -bottom-6 h-28 w-28 rounded-full bg-gradient-to-tr from-purple-400/10 via-pink-300/10 to-transparent blur-xl !m-0" style={{ margin: 0 }} />
+      {/* Soft dreamy pastel radial gradients in corners (zero GPU blur cost) */}
+      <div className="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-[radial-gradient(circle,rgba(244,114,182,0.16)_0%,transparent_70%)] !m-0" style={{ margin: 0 }} />
+      <div className="absolute -left-6 -bottom-6 h-28 w-28 rounded-full bg-[radial-gradient(circle,rgba(192,132,252,0.12)_0%,transparent_70%)] !m-0" style={{ margin: 0 }} />
       {/* Delicate floating star sparkle in top right */}
-      <div className="absolute right-3.5 top-3 text-pink-400/70 transition-all duration-300 group-hover:scale-110 group-hover:text-pink-400 !m-0" style={{ margin: 0 }}>
+      <div className="absolute right-3.5 top-3 text-pink-400/70 transition-transform duration-200 group-hover:scale-110 group-hover:text-pink-400 !m-0" style={{ margin: 0 }}>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
         </svg>
       </div>
-      <div className="absolute right-7 top-5 text-rose-300/40 transition-all duration-300 group-hover:text-rose-300/80 !m-0" style={{ margin: 0 }}>
+      <div className="absolute right-7 top-5 text-rose-300/40 transition-colors duration-200 group-hover:text-rose-300/80 !m-0" style={{ margin: 0 }}>
         <svg width="6" height="6" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
         </svg>
@@ -230,7 +230,7 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
           className={cn(
             "group relative overflow-hidden bg-background text-card-foreground",
             "border border-zinc-700/60 dark:border-zinc-700/80",
-            "transition-all duration-200 hover:border-zinc-500/80 hover:shadow-lg hover:shadow-black/25",
+            "transition-colors duration-200 hover:border-zinc-500/80",
             "flex flex-col gap-4",
             className,
             "!rounded-[6px] !bg-background",
@@ -259,7 +259,7 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
           className={cn(
             "group relative overflow-hidden bg-background text-card-foreground",
             "border border-pink-300/40 dark:border-pink-500/30",
-            "transition-all duration-300 hover:border-pink-400/70 hover:shadow-[0_8px_30px_rgba(244,114,182,0.18)] dark:hover:shadow-[0_8px_30px_rgba(236,72,153,0.22)]",
+            "transition-colors duration-200 hover:border-pink-400/70",
             "flex flex-col gap-4",
             className,
             "!rounded-[22px] !bg-background",
@@ -285,7 +285,7 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
         data-slot="card"
         data-card-type="default"
         className={cn(
-          "border border-border bg-background text-card-foreground transition-all duration-200 hover:border-hover-border flex flex-col gap-4",
+          "border border-border bg-background text-card-foreground transition-colors duration-200 hover:border-hover-border flex flex-col gap-4",
           className,
           "!bg-background",
         )}
