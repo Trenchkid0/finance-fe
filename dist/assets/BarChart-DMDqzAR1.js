@@ -1,1 +1,0 @@
-import{i as e,m as t,n,p as r,r as i}from"./AreaChart-BKGb48ZD.js";var a=n({chartName:`BarChart`,GraphicalChild:t,defaultTooltipEventType:`axis`,validateTooltipEventTypes:[`axis`,`item`],axisComponents:[{axisType:`xAxis`,AxisComp:e},{axisType:`yAxis`,AxisComp:i}],formatAxisMap:r});export{a as t};

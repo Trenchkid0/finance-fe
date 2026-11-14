@@ -14,7 +14,6 @@ import {
   Gauge,
   Layers,
   RefreshCw,
-  Server,
   XCircle,
 } from "lucide-react";
 
