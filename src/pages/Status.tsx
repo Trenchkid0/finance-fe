@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ElementType } from "react";
 import { Link } from "react-router-dom";
+import { RacksLogo } from "@/components/ui/RacksLogo";
 import {
   Activity,
   AlertTriangle,
@@ -463,9 +464,7 @@ export default function Status() {
       <header className="sticky top-0 z-40 border-b border-neutral-800 bg-neutral-950/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-800 bg-neutral-900">
-              <Server className="h-4 w-4 text-neutral-400" />
-            </div>
+            <RacksLogo size="sm" />
             <div>
               <p className="text-sm font-semibold leading-none">Racks Finance Status</p>
               <p className="mt-1 text-xs text-neutral-500">System monitor</p>

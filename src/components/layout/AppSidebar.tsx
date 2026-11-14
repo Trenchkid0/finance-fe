@@ -31,6 +31,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { NavUser } from "./NavUser";
+import { RacksLogo } from "@/components/ui/RacksLogo";
 import { cn } from "@/lib/utils/cn";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 
@@ -118,21 +119,8 @@ export function AppSidebar({ user, counts, ...props }: AppSidebarProps) {
       {/* ─── Brand Header ─── */}
       <SidebarHeader className="p-4 pb-5 flex flex-row items-center justify-start group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:py-4 transition-all duration-300">
         <Link to="/" className="flex items-center gap-3 group/brand">
-          <div className="relative">
-            {/* Main Logo Container with dynamic accent color */}
-            <span
-              className="relative flex size-9 shrink-0 items-center justify-center rounded-xl text-white font-black text-base border shadow-lg transition-all duration-300 group-hover/brand:scale-105"
-              style={{
-                background: `linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 80%, #000) 100%)`,
-                borderColor: 'color-mix(in srgb, var(--accent) 30%, transparent)',
-                boxShadow: '0 4px 12px color-mix(in srgb, var(--accent) 25%, transparent)'
-              }}
-              aria-hidden
-            >
-              R
-            </span>
-          </div>
-          
+          <RacksLogo size="md" />
+
           {/* Text section (hidden when collapsed) */}
           <div className="flex flex-col group-data-[collapsible=icon]:hidden transition-all duration-300">
             <span className="text-sm font-bold tracking-tight text-text-primary leading-tight flex items-center gap-1.5 group-hover/brand:text-accent transition-colors duration-200">

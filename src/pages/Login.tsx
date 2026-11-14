@@ -1,5 +1,6 @@
 import { LoginForm } from "@/components/auth/LoginForm";
 import { SelfHostedShowcase } from "@/components/auth/SelfHostedShowcase";
+import { RacksLogo } from "@/components/ui/RacksLogo";
 import { Shield, Zap } from "lucide-react";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
@@ -45,15 +46,7 @@ export default function Login() {
 
         <div className="relative mx-auto w-full max-w-[360px] space-y-10 animate-fade-in-up">
           {/* Brand */}
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <span className="flex size-10 items-center justify-center rounded-xl bg-accent text-white font-mono font-bold text-base shadow-sm ring-1 ring-white/15" aria-hidden>
-                R
-              </span>
-              <span className="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full bg-income ring-2 ring-canvas" />
-            </div>
-            <span className="text-lg font-bold tracking-tight text-foreground">Racks Finance</span>
-          </div>
+          <RacksLogo size="md" showWordmark />
 
           {/* Heading */}
           <div className="space-y-3">
