@@ -1,7 +1,8 @@
 import { useActionState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { AlertCircle, ArrowLeft, Mail, Loader2, ArrowRight, KeyRound, Lock, RefreshCw } from "lucide-react";
+import { AlertCircle, ArrowLeft, Mail, Loader2, ArrowRight } from "lucide-react";
 import { forgotPassword } from "@/app/actions/auth";
+import { SelfHostedShowcase } from "@/components/auth/SelfHostedShowcase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,7 +16,6 @@ import {
 
 export default function ForgotPassword() {
   const { t, language, setLanguage } = useLanguage();
-  const isId = language === "id";
   const navigate = useNavigate();
   const [state, formAction, pending] = useActionState(forgotPassword, undefined);
 
@@ -35,12 +35,12 @@ export default function ForgotPassword() {
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="h-8 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-text-primary hover:bg-hover-surface transition-all bg-elevated border border-border"
+                className="h-8 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-text-primary hover:bg-hover-surface transition-colors bg-elevated border border-border"
               >
                 <span>{language === "id" ? "Bahasa Indonesia" : "English (US)"}</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[150px] rounded-xl border border-border bg-popover backdrop-blur-xl shadow-lg shadow-black/10 dark:shadow-black/45">
+            <DropdownMenuContent align="end" className="min-w-[150px] rounded-xl border border-border bg-popover shadow-lg shadow-black/10 dark:shadow-black/45">
               <DropdownMenuItem
                 className="text-xs font-semibold cursor-pointer"
                 onSelect={() => setLanguage("id")}
@@ -57,11 +57,8 @@ export default function ForgotPassword() {
           </DropdownMenu>
         </div>
 
-        {/* Subtle ambient glow */}
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-          <div className="absolute -top-32 -left-32 w-[400px] h-[400px] bg-accent/[0.04] rounded-full blur-[100px]" />
-          <div className="absolute bottom-0 right-0 w-[300px] h-[300px] bg-indigo-500/[0.03] rounded-full blur-[80px]" />
-        </div>
+        {/* Ambient background grid texture */}
+        <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, var(--foreground) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
 
         <div className="relative mx-auto w-full max-w-[360px] space-y-10 animate-fade-in-up">
           {/* Brand */}
@@ -154,171 +151,8 @@ export default function ForgotPassword() {
         </div>
       </div>
 
-      {/* RIGHT COLUMN — Hallmark Crafted Editorial Showcase: Cryptographic Continuity & Access Recovery */}
-      {/* Hallmark · pre-emit critique: P5 H5 E5 S5 R5 V5 */}
-      <div className="hidden lg:flex relative flex-col justify-between overflow-hidden bg-[#0A0D14] border-l border-white/[0.08] p-12 xl:p-16 select-none">
-        {/* Subtle geometric grid background */}
-        <div
-          className="absolute inset-0 opacity-[0.035] pointer-events-none"
-          style={{
-            backgroundImage: 'linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px)',
-            backgroundSize: '40px 40px',
-          }}
-        />
-
-        {/* Ambient lighting accent */}
-        <div className="absolute -top-32 -right-32 w-96 h-96 bg-income/[0.06] rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-accent/[0.06] rounded-full blur-3xl pointer-events-none" />
-
-        {/* Header Metadata Strip */}
-        <div className="relative z-10 flex items-center justify-between border-b border-white/[0.08] pb-5">
-          <div className="flex items-center gap-2.5">
-            <span className="font-mono text-[10px] font-bold tracking-widest text-income uppercase px-2 py-0.5 rounded bg-income/10 border border-income/20">
-              03 / RECOVERY
-            </span>
-            <span className="font-mono text-[11px] text-muted-foreground/80 tracking-wide uppercase">
-              {isId ? "Protokol Pemulihan Akses" : "Access Recovery Protocol"}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="size-2 rounded-full bg-income shadow-[0_0_8px_var(--income)]" />
-            <span className="font-mono text-[11px] text-muted-foreground font-medium tracking-tight">
-              ZERO-KNOWLEDGE AUTH
-            </span>
-          </div>
-        </div>
-
-        {/* Center Content: Security Hierarchy */}
-        <div className="relative z-10 my-auto py-8 space-y-8 max-w-[580px]">
-          {/* Main Statement */}
-          <div className="space-y-3">
-            <h2 className="text-3xl xl:text-4xl font-extrabold tracking-tight text-white leading-[1.2]">
-              {isId ? (
-                <>Kunci akses selalu berada di <span className="text-income">tangan Anda sendiri.</span></>
-              ) : (
-                <>You hold the master keys. <span className="text-income">We provide the vault.</span></>
-              )}
-            </h2>
-            <p className="text-sm text-muted-foreground/90 leading-relaxed font-normal">
-              {isId
-                ? "Racks Finance menerapkan standar keamanan mandiri yang ketat. Permintaan pemulihan menghasilkan tiket kriptografi satu kali pakai yang dikirim langsung ke email terverifikasi tanpa perantara pihak ketiga."
-                : "Racks Finance operates on strict zero-trust self-custody principles. Recovery requests issue a single-use signed cryptographic ticket directly to your verified inbox without passing through external aggregators."}
-            </p>
-          </div>
-
-          {/* Security Verification Pillars */}
-          <div className="grid grid-cols-1 gap-3.5 pt-2">
-            {/* Pillar 1 */}
-            <div className="p-4 rounded-xl border border-white/[0.07] bg-white/[0.02] backdrop-blur-sm transition-all duration-200 hover:border-white/[0.14] hover:bg-white/[0.03]">
-              <div className="flex items-start gap-3.5">
-                <div className="size-9 rounded-lg bg-income/10 border border-income/20 text-income flex items-center justify-center shrink-0 mt-0.5">
-                  <KeyRound size={17} />
-                </div>
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-white tracking-wide">
-                      {isId ? "Tiket Verifikasi Berumur Singkat" : "Ephemeral Cryptographic Ticket"}
-                    </span>
-                    <span className="font-mono text-[9.5px] text-income/80 bg-income/10 px-1.5 py-0.2 rounded font-semibold">
-                      15 Min Expiry
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground/80 leading-normal">
-                    {isId
-                      ? "Tautan pemulihan memiliki masa berlaku terbatas dan otomatis hangus seketika setelah digunakan satu kali."
-                      : "The reset URL carries an expiry signature and is permanently invalidated the moment it is consumed."}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Pillar 2 */}
-            <div className="p-4 rounded-xl border border-white/[0.07] bg-white/[0.02] backdrop-blur-sm transition-all duration-200 hover:border-white/[0.14] hover:bg-white/[0.03]">
-              <div className="flex items-start gap-3.5">
-                <div className="size-9 rounded-lg bg-accent/10 border border-accent/20 text-accent flex items-center justify-center shrink-0 mt-0.5">
-                  <RefreshCw size={17} />
-                </div>
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-white tracking-wide">
-                      {isId ? "Terminasi Sesi Multi-Perangkat" : "Instant Session Revocation"}
-                    </span>
-                    <span className="font-mono text-[9.5px] text-accent/80 bg-accent/10 px-1.5 py-0.2 rounded font-semibold">
-                      Full Invalidation
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground/80 leading-normal">
-                    {isId
-                      ? "Begitu kata sandi diperbarui, seluruh sesi login dan token cookie di perangkat lain langsung dinonaktifkan."
-                      : "Upon password rotation, all existing active JWT tokens and browser sessions across other devices are immediately revoked."}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Pillar 3 */}
-            <div className="p-4 rounded-xl border border-white/[0.07] bg-white/[0.02] backdrop-blur-sm transition-all duration-200 hover:border-white/[0.14] hover:bg-white/[0.03]">
-              <div className="flex items-start gap-3.5">
-                <div className="size-9 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center shrink-0 mt-0.5">
-                  <Lock size={17} />
-                </div>
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-white tracking-wide">
-                      {isId ? "Data Finansial Tetap Terisolasi" : "Untouched Encrypted Records"}
-                    </span>
-                    <span className="font-mono text-[9.5px] text-purple-400/80 bg-purple-500/10 px-1.5 py-0.2 rounded font-semibold">
-                      Zero Exposure
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground/80 leading-normal">
-                    {isId
-                      ? "Buku besar, saldo transaksi, dan catatan rekening Anda tersimpan di database lokal yang tidak terpengaruh oleh pergantian kredensial."
-                      : "Your underlying transaction ledger, balances, and receipts stay strictly sealed within your personal local database."}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Cryptographic Assurance Specs */}
-          <div className="grid grid-cols-3 gap-2.5 pt-1 border-t border-white/[0.08]">
-            <div className="p-2.5 rounded-lg border border-white/[0.06] bg-white/[0.02]">
-              <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground block">
-                HASHING
-              </span>
-              <span className="font-mono text-xs font-bold text-white block mt-0.5">
-                Bcrypt 12-Rounds
-              </span>
-            </div>
-
-            <div className="p-2.5 rounded-lg border border-white/[0.06] bg-white/[0.02]">
-              <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground block">
-                COOKIES
-              </span>
-              <span className="font-mono text-xs font-bold text-white block mt-0.5">
-                httpOnly SameSite
-              </span>
-            </div>
-
-            <div className="p-2.5 rounded-lg border border-white/[0.06] bg-white/[0.02]">
-              <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground block">
-                TELEMETRY
-              </span>
-              <span className="font-mono text-xs font-bold text-white block mt-0.5">
-                0% Remote Logs
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer Colophon */}
-        <div className="relative z-10 flex items-center justify-between border-t border-white/[0.08] pt-5 font-mono text-[10.5px] text-muted-foreground/60">
-          <span>RACKS FINANCE · RECOVERY ARCHITECTURE</span>
-          <span className="tracking-widest uppercase">CRYPTOGRAPHIC ASSURANCE</span>
-        </div>
-      </div>
+      {/* RIGHT COLUMN — SaaS + Self-Hosted Showcase */}
+      <SelfHostedShowcase variant="recovery" language={language} />
     </div>
   );
 }
