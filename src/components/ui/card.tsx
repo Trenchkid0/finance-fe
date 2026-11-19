@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useState, useEffect, useContext } from "react";
 import { cn } from "@/lib/utils/cn";
-import type { CardType } from "@/lib/utils/theme";
+import { normalizeCardType, type CardType } from "@/lib/utils/theme";
 
 /* ─── Helpers ────────────────────────────────────────────────── */
 
@@ -11,9 +11,7 @@ function readCardType(): CardType {
     const raw = localStorage.getItem("racks-card-styles");
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (parsed.cardType === "blueprint") return "blueprint";
-      if (parsed.cardType === "manly") return "manly";
-      if (parsed.cardType === "girly") return "girly";
+      return normalizeCardType(parsed.cardType);
     }
   } catch { /* ignore */ }
   return "default";
@@ -116,51 +114,213 @@ export function BlueprintCorners({
   );
 }
 
-/* ─── Manly Tactical Accents ───────────────────────────────── */
+/* ─── Sovereign Horology Accents ───────────────────────────── */
 
-function ManlyAccents() {
+export function SovereignAccents({ compact = false }: { compact?: boolean }) {
   return (
     <div
       aria-hidden="true"
       className="pointer-events-none absolute inset-0 z-10 select-none overflow-hidden !m-0"
       style={{ margin: 0 }}
     >
-      {/* Corner micro-rivets */}
-      <div className="absolute left-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-zinc-500/40 ring-1 ring-zinc-700/50 !m-0" style={{ margin: 0 }} />
-      <div className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-zinc-500/40 ring-1 ring-zinc-700/50 !m-0" style={{ margin: 0 }} />
-      <div className="absolute bottom-1.5 left-1.5 h-1.5 w-1.5 rounded-full bg-zinc-500/40 ring-1 ring-zinc-700/50 !m-0" style={{ margin: 0 }} />
-      <div className="absolute bottom-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-zinc-500/40 ring-1 ring-zinc-700/50 !m-0" style={{ margin: 0 }} />
-      {/* Top titanium/amber tactical accent stripe */}
-      <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-zinc-600/40 via-amber-500/50 to-zinc-600/40 opacity-70 transition-opacity duration-200 group-hover:opacity-100 !m-0" style={{ margin: 0 }} />
-      {/* Stealth corner hash on top-right */}
-      <div className="absolute right-0 top-0 h-8 w-8 bg-gradient-to-bl from-zinc-600/10 to-transparent !m-0" style={{ margin: 0 }} />
+      {/* Theme-adaptive brushed metallic satin sheen */}
+      <div
+        className="absolute inset-0 !m-0"
+        style={{
+          margin: 0,
+          backgroundImage:
+            "linear-gradient(135deg, var(--sov-sheen-1) 0%, transparent 44%, var(--sov-sheen-2) 100%)",
+        }}
+      />
+      {/* Top specular hairline */}
+      <div
+        className="absolute inset-x-4 top-0 h-px opacity-80 transition-opacity duration-300 group-hover:opacity-100 !m-0"
+        style={{
+          margin: 0,
+          backgroundImage: "linear-gradient(90deg, transparent, var(--sov-ink), transparent)",
+        }}
+      />
+      {/* 12-o'clock micro diamond index pip */}
+      <div
+        className={cn(
+          "absolute left-1/2 -translate-x-1/2 rotate-45 transition-transform duration-300 group-hover:scale-125 !m-0",
+          compact ? "top-[2px] h-1 w-1" : "top-[3px] h-1.5 w-1.5",
+        )}
+        style={{
+          margin: 0,
+          backgroundColor: "var(--sov-ink)",
+          boxShadow: "0 0 6px var(--sov-shadow)",
+        }}
+      />
+      {/* Recessed inner watch-bezel frame */}
+      <div
+        className={cn(
+          "sov-bezel absolute border transition-colors duration-300 !m-0",
+          compact ? "inset-[3px] rounded-[5px]" : "inset-[5px] rounded-[6px]",
+        )}
+        style={{ margin: 0 }}
+      />
+      {/* Left chamfered corner hairline ticks */}
+      <div
+        className={cn(
+          "absolute border-l border-t transition-colors duration-300 !m-0",
+          compact ? "left-[3px] top-[3px] h-1.5 w-1.5 rounded-tl-[2px]" : "left-[5px] top-[5px] h-2.5 w-2.5 rounded-tl-[3px]",
+        )}
+        style={{ margin: 0, borderColor: "var(--sov-tick)" }}
+      />
+      <div
+        className={cn(
+          "absolute border-b border-l transition-colors duration-300 !m-0",
+          compact ? "bottom-[3px] left-[3px] h-1.5 w-1.5 rounded-bl-[2px]" : "bottom-[5px] left-[5px] h-2.5 w-2.5 rounded-bl-[3px]",
+        )}
+        style={{ margin: 0, borderColor: "var(--sov-tick)" }}
+      />
+      {/* Swiss guilloché chronograph corner arc */}
+      <svg
+        className={cn(
+          "sov-dial absolute bottom-0 right-0 transition-colors duration-300 !m-0",
+          compact ? "h-12 w-12" : "h-20 w-20",
+        )}
+        style={{ margin: 0 }}
+        viewBox="0 0 80 80"
+        fill="none"
+      >
+        <path d="M 16 80 A 64 64 0 0 1 80 16" stroke="currentColor" strokeWidth="0.9" />
+        <path d="M 32 80 A 48 48 0 0 1 80 32" stroke="currentColor" strokeWidth="0.7" strokeDasharray="2 3" />
+        <path d="M 48 80 A 32 32 0 0 1 80 48" stroke="currentColor" strokeWidth="0.7" />
+        <line x1="20.1" y1="63.9" x2="27.8" y2="66.0" stroke="currentColor" strokeWidth="1" />
+        <line x1="26.3" y1="49.0" x2="33.2" y2="53.0" stroke="currentColor" strokeWidth="1" />
+        <line x1="36.2" y1="36.2" x2="41.8" y2="41.8" stroke="currentColor" strokeWidth="1.2" />
+        <line x1="49.0" y1="26.3" x2="53.0" y2="33.2" stroke="currentColor" strokeWidth="1" />
+        <line x1="63.9" y1="20.1" x2="66.0" y2="27.8" stroke="currentColor" strokeWidth="1" />
+      </svg>
     </div>
   );
 }
 
-/* ─── Girly Pastel Accents ─────────────────────────────────── */
+/* ─── Girly Sakura & Pearl Couture Accents ─────────────────── */
 
-function GirlyAccents() {
+export function GirlyAccents({ compact = false }: { compact?: boolean }) {
   return (
     <div
       aria-hidden="true"
       className="pointer-events-none absolute inset-0 z-10 select-none overflow-hidden !m-0"
       style={{ margin: 0 }}
     >
-      {/* Soft dreamy pastel radial gradients in corners (zero GPU blur cost) */}
-      <div className="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-[radial-gradient(circle,rgba(244,114,182,0.16)_0%,transparent_70%)] !m-0" style={{ margin: 0 }} />
-      <div className="absolute -left-6 -bottom-6 h-28 w-28 rounded-full bg-[radial-gradient(circle,rgba(192,132,252,0.12)_0%,transparent_70%)] !m-0" style={{ margin: 0 }} />
-      {/* Delicate floating star sparkle in top right */}
-      <div className="absolute right-3.5 top-3 text-pink-400/70 transition-transform duration-200 group-hover:scale-110 group-hover:text-pink-400 !m-0" style={{ margin: 0 }}>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+      {/* Theme-adaptive silky rose & lilac satin wash */}
+      <div
+        className="absolute inset-0 !m-0"
+        style={{
+          margin: 0,
+          backgroundImage:
+            "linear-gradient(135deg, var(--girly-wash-1) 0%, transparent 48%, var(--girly-wash-2) 100%)",
+        }}
+      />
+      {/* Soft pastel rose & lilac corner glows (zero GPU blur cost) */}
+      <div
+        className="absolute -right-6 -top-6 h-28 w-28 rounded-full !m-0"
+        style={{
+          margin: 0,
+          backgroundImage: "radial-gradient(circle, var(--girly-glow-1) 0%, transparent 70%)",
+        }}
+      />
+      <div
+        className="absolute -left-6 -bottom-6 h-28 w-28 rounded-full !m-0"
+        style={{
+          margin: 0,
+          backgroundImage: "radial-gradient(circle, var(--girly-glow-2) 0%, transparent 70%)",
+        }}
+      />
+      {/* Silky top shimmer */}
+      <div
+        className="absolute inset-x-8 top-0 h-[1.5px] opacity-80 transition-opacity duration-300 group-hover:opacity-100 !m-0"
+        style={{
+          margin: 0,
+          backgroundImage: "linear-gradient(90deg, transparent, var(--girly-shimmer), transparent)",
+        }}
+      />
+      {/* Delicate inner pearl hairline frame */}
+      <div
+        className={cn(
+          "girly-frame absolute border transition-colors duration-300 !m-0",
+          compact ? "inset-[3px] rounded-[14px]" : "inset-[5px] rounded-[21px]",
+        )}
+        style={{ margin: 0 }}
+      />
+      {/* Tiny luminous pearl micro-dots */}
+      {!compact && (
+        <>
+          <div
+            className="absolute left-3 top-3 h-1.5 w-1.5 rounded-full !m-0"
+            style={{
+              margin: 0,
+              backgroundColor: "var(--girly-pearl)",
+              boxShadow: "0 0 0 2px var(--girly-frame)",
+            }}
+          />
+          <div
+            className="absolute bottom-3 left-3 h-1 w-1 rounded-full !m-0"
+            style={{
+              margin: 0,
+              backgroundColor: "var(--girly-pearl)",
+              boxShadow: "0 0 0 1px var(--girly-frame)",
+            }}
+          />
+        </>
+      )}
+      {/* Dainty starlet sparkles in top right */}
+      <div
+        className={cn(
+          "absolute transition-transform duration-300 group-hover:scale-110 !m-0",
+          compact ? "right-2.5 top-2" : "right-3.5 top-3",
+        )}
+        style={{ margin: 0, color: "var(--girly-ink)", opacity: 0.72 }}
+      >
+        <svg width={compact ? 10 : 12} height={compact ? 10 : 12} viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
         </svg>
       </div>
-      <div className="absolute right-7 top-5 text-rose-300/40 transition-colors duration-200 group-hover:text-rose-300/80 !m-0" style={{ margin: 0 }}>
+      <div
+        className={cn(
+          "absolute transition-opacity duration-300 group-hover:opacity-90 !m-0",
+          compact ? "right-5 top-3.5" : "right-7 top-5",
+        )}
+        style={{ margin: 0, color: "var(--girly-ink)", opacity: 0.45 }}
+      >
         <svg width="6" height="6" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
         </svg>
       </div>
+      {/* Bespoke 5-petal Sakura Blossom + floating petal in bottom-right */}
+      <svg
+        className={cn(
+          "girly-petal absolute bottom-0.5 right-1 transition-all duration-300 group-hover:scale-105 !m-0",
+          compact ? "h-10 w-10" : "h-16 w-16",
+        )}
+        style={{ margin: 0 }}
+        viewBox="0 0 64 64"
+        fill="none"
+      >
+        <g transform="rotate(0 38 38)">
+          <path d="M 38 38 C 32 30 31 20 35.5 16.5 L 38 19 L 40.5 16.5 C 45 20 44 30 38 38 Z" fill="currentColor" stroke="currentColor" strokeWidth="0.6" />
+        </g>
+        <g transform="rotate(72 38 38)">
+          <path d="M 38 38 C 32 30 31 20 35.5 16.5 L 38 19 L 40.5 16.5 C 45 20 44 30 38 38 Z" fill="currentColor" stroke="currentColor" strokeWidth="0.6" />
+        </g>
+        <g transform="rotate(144 38 38)">
+          <path d="M 38 38 C 32 30 31 20 35.5 16.5 L 38 19 L 40.5 16.5 C 45 20 44 30 38 38 Z" fill="currentColor" stroke="currentColor" strokeWidth="0.6" />
+        </g>
+        <g transform="rotate(216 38 38)">
+          <path d="M 38 38 C 32 30 31 20 35.5 16.5 L 38 19 L 40.5 16.5 C 45 20 44 30 38 38 Z" fill="currentColor" stroke="currentColor" strokeWidth="0.6" />
+        </g>
+        <g transform="rotate(288 38 38)">
+          <path d="M 38 38 C 32 30 31 20 35.5 16.5 L 38 19 L 40.5 16.5 C 45 20 44 30 38 38 Z" fill="currentColor" stroke="currentColor" strokeWidth="0.6" />
+        </g>
+        {/* Blossom stamen center */}
+        <circle cx="38" cy="38" r="2.2" fill="var(--girly-ink)" opacity="0.55" />
+        {/* Floating loose petal */}
+        <path d="M 14 48 C 10 44 12 37 17 36 C 19 41 18 46 14 48 Z" fill="currentColor" opacity="0.65" />
+      </svg>
     </div>
   );
 }
@@ -171,8 +331,8 @@ function GirlyAccents() {
  * Supports card types via Settings → Card Styles:
  * - **default**: Rounded corners, glassmorphism, themed via CSS vars.
  * - **blueprint**: Sharp corners, corner bracket marks, accent hover glow.
- * - **manly**: Solid 6px corners, tactical rivets, titanium/amber stripe, rugged aesthetic.
- * - **girly**: Soft 22px pillowy curves, dreamy pastel glow, delicate star sparkles.
+ * - **sovereign**: Swiss horology double-bezel frame, guilloché corner arc, champagne gold gleam.
+ * - **girly**: Soft 26px pillowy curves, pearl inner frame, sakura petal flourish, rose-pastel glow.
  *
  * Layout matches shadcn dashboard-01: `CardHeader` is a 3-column grid
  * where `CardDescription` (label) and `CardTitle` (big number) stack
@@ -221,31 +381,28 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
       );
     }
 
-    if (cardType === "manly") {
+    if (cardType === "sovereign") {
       return (
         <div
           ref={ref}
           data-slot="card"
-          data-card-type="manly"
+          data-card-type="sovereign"
           className={cn(
-            "group relative overflow-hidden bg-background text-card-foreground",
-            "border border-zinc-700/60 dark:border-zinc-700/80",
-            "transition-colors duration-200 hover:border-zinc-500/80",
+            "card-sovereign group relative overflow-hidden bg-background text-card-foreground border",
             "flex flex-col gap-4",
             className,
-            "!rounded-[6px] !bg-background",
+            "!rounded-[10px] !bg-background",
           )}
           style={{
-            borderRadius: "6px",
+            borderRadius: "10px",
             borderWidth: "1px",
-            borderColor: "var(--border)",
             backgroundColor: "var(--background)",
             ...style,
           }}
           {...props}
         >
           {children}
-          <ManlyAccents />
+          <SovereignAccents />
         </div>
       );
     }
@@ -257,17 +414,14 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
           data-slot="card"
           data-card-type="girly"
           className={cn(
-            "group relative overflow-hidden bg-background text-card-foreground",
-            "border border-pink-300/40 dark:border-pink-500/30",
-            "transition-colors duration-200 hover:border-pink-400/70",
+            "card-girly group relative overflow-hidden bg-background text-card-foreground border",
             "flex flex-col gap-4",
             className,
-            "!rounded-[22px] !bg-background",
+            "!rounded-[26px] !bg-background",
           )}
           style={{
-            borderRadius: "22px",
+            borderRadius: "26px",
             borderWidth: "1.5px",
-            borderColor: "var(--border)",
             backgroundColor: "var(--background)",
             ...style,
           }}

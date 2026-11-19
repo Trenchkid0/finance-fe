@@ -899,7 +899,14 @@ export function applyTheme(themeId: string, customVars?: Partial<ThemeVariables>
   window.dispatchEvent(new Event("theme-changed"));
 }
 
-export type CardType = "default" | "blueprint" | "manly" | "girly";
+export type CardType = "default" | "blueprint" | "sovereign" | "girly";
+
+export function normalizeCardType(raw?: string): CardType {
+  if (raw === "blueprint") return "blueprint";
+  if (raw === "sovereign" || raw === "manly") return "sovereign";
+  if (raw === "girly") return "girly";
+  return "default";
+}
 
 export interface CardStyles {
   radius: string;      // "0px" | "8px" | "16px" | "24px"
@@ -907,7 +914,7 @@ export interface CardStyles {
   blur: string;        // "0px" | "12px" | "24px"
   opacity: string;     // "1" | "0.75" | "0.5"
   dropdownRadius: string; // "0px" | "8px" | "12px" | "16px" | "24px" | "9999px"
-  cardType: CardType;  // "default" | "blueprint" | "manly" | "girly"
+  cardType: CardType;  // "default" | "blueprint" | "sovereign" | "girly"
 }
 
 export interface ButtonStyles {
@@ -919,23 +926,24 @@ export interface ButtonStyles {
 export function applyCardStyles(styles: CardStyles) {
   if (typeof window === "undefined") return;
   const root = document.documentElement;
-  const cardType = styles.cardType || "default";
-  root.style.setProperty("--card-radius", styles.radius);
-  root.style.setProperty("--card-border-width", styles.borderWidth);
-  root.style.setProperty("--card-backdrop-blur", styles.blur);
-  root.style.setProperty("--card-opacity", styles.opacity);
+  const cardType = normalizeCardType(styles.cardType);
+  const normalizedStyles: CardStyles = { ...styles, cardType };
+  root.style.setProperty("--card-radius", normalizedStyles.radius);
+  root.style.setProperty("--card-border-width", normalizedStyles.borderWidth);
+  root.style.setProperty("--card-backdrop-blur", normalizedStyles.blur);
+  root.style.setProperty("--card-opacity", normalizedStyles.opacity);
   root.style.setProperty("--card-type", cardType);
-  // Set data attribute for global CSS blueprint overrides
+  // Set data attribute for global CSS overrides
   root.setAttribute("data-card-type", cardType);
   
-  const dr = styles.dropdownRadius || "9999px";
+  const dr = normalizedStyles.dropdownRadius || "9999px";
   root.style.setProperty("--dropdown-radius", dr);
   root.style.setProperty("--custom-dropdown-radius", dr);
   const dmr = dr === "9999px" ? "16px" : dr;
   root.style.setProperty("--dropdown-menu-radius", dmr);
   root.style.setProperty("--custom-dropdown-menu-radius", dmr);
   
-  localStorage.setItem("racks-card-styles", JSON.stringify(styles));
+  localStorage.setItem("racks-card-styles", JSON.stringify(normalizedStyles));
 }
 
 export function applyButtonStyles(styles: ButtonStyles) {

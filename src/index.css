@@ -37,6 +37,40 @@
   --dropdown-menu-radius: 12px;
   --custom-dropdown-radius: 9999px;
   --custom-dropdown-menu-radius: 12px;
+
+  /* Theme-adaptive Sovereign card tokens (harmonizes across all dark/light/color themes) */
+  --sov-metal: color-mix(in srgb, var(--accent) 55%, var(--warning) 45%);
+  --sov-ink: color-mix(in srgb, var(--sov-metal) 68%, var(--foreground) 32%);
+  --sov-border: color-mix(in srgb, var(--border) 58%, var(--sov-metal) 42%);
+  --sov-border-hover: color-mix(in srgb, var(--border) 28%, var(--sov-metal) 72%);
+  --sov-bezel: color-mix(in srgb, var(--sov-metal) 22%, transparent);
+  --sov-bezel-hover: color-mix(in srgb, var(--sov-metal) 44%, transparent);
+  --sov-tick: color-mix(in srgb, var(--sov-ink) 55%, transparent);
+  --sov-dial: color-mix(in srgb, var(--sov-ink) 22%, transparent);
+  --sov-dial-hover: color-mix(in srgb, var(--sov-ink) 45%, transparent);
+  --sov-sheen-1: color-mix(in srgb, var(--sov-metal) 7%, transparent);
+  --sov-sheen-2: color-mix(in srgb, var(--foreground) 2.5%, transparent);
+  --sov-badge-bg: color-mix(in srgb, var(--sov-metal) 12%, transparent);
+  --sov-shadow: color-mix(in srgb, var(--sov-metal) 18%, transparent);
+
+  /* Theme-adaptive Girly card tokens (harmonizes feminine rose/sakura palette with any theme) */
+  --girly-rose: color-mix(in srgb, #EC4899 58%, var(--accent) 42%);
+  --girly-lilac: color-mix(in srgb, #C084FC 52%, var(--progress) 48%);
+  --girly-ink: color-mix(in srgb, var(--girly-rose) 66%, var(--foreground) 34%);
+  --girly-border: color-mix(in srgb, var(--border) 46%, var(--girly-rose) 54%);
+  --girly-border-hover: color-mix(in srgb, var(--border) 20%, var(--girly-rose) 80%);
+  --girly-frame: color-mix(in srgb, var(--girly-rose) 22%, transparent);
+  --girly-frame-hover: color-mix(in srgb, var(--girly-rose) 38%, transparent);
+  --girly-pearl: color-mix(in srgb, var(--girly-rose) 35%, var(--foreground) 35%);
+  --girly-petal: color-mix(in srgb, var(--girly-rose) 26%, transparent);
+  --girly-petal-hover: color-mix(in srgb, var(--girly-rose) 48%, transparent);
+  --girly-wash-1: color-mix(in srgb, var(--girly-rose) 8.5%, transparent);
+  --girly-wash-2: color-mix(in srgb, var(--girly-lilac) 7.5%, transparent);
+  --girly-glow-1: color-mix(in srgb, var(--girly-rose) 18%, transparent);
+  --girly-glow-2: color-mix(in srgb, var(--girly-lilac) 14%, transparent);
+  --girly-shimmer: color-mix(in srgb, var(--girly-rose) 65%, var(--foreground) 25%);
+  --girly-badge-bg: color-mix(in srgb, var(--girly-rose) 13%, transparent);
+  --girly-shadow: color-mix(in srgb, var(--girly-rose) 20%, transparent);
 }
 
 /* Force standard dropdown radius values inside form flows, dialog boxes, and inputs */
@@ -317,32 +351,84 @@ html {
   --custom-dropdown-menu-radius: 0px !important;
 }
 
-/* ── Manly Mode: Global CSS Overrides ──────────────────────────
-   Tactical, solid 6px corners, dense backdrop
+/* ── Sovereign Mode: Global CSS Overrides ──────────────────────
+   Swiss horology double-bezel, crisp 10px corners, champagne metallic depth
 ────────────────────────────────────────────────────────────── */
-[data-card-type="manly"] {
-  --card-radius: 6px !important;
-  --card-backdrop-blur: 16px !important;
-  --card-opacity: 0.95 !important;
+[data-card-type="sovereign"] {
+  --card-radius: 10px !important;
+  --card-backdrop-blur: 14px !important;
+  --card-opacity: 0.96 !important;
   --card-border-width: 1px !important;
-  --dropdown-radius: 6px !important;
-  --dropdown-menu-radius: 6px !important;
-  --custom-dropdown-radius: 6px !important;
-  --custom-dropdown-menu-radius: 6px !important;
+  --dropdown-radius: 8px !important;
+  --dropdown-menu-radius: 10px !important;
+  --custom-dropdown-radius: 8px !important;
+  --custom-dropdown-menu-radius: 10px !important;
+}
+
+.card-sovereign {
+  border-color: var(--sov-border) !important;
+  transition: border-color 300ms ease, box-shadow 300ms ease;
+}
+
+.card-sovereign:hover {
+  border-color: var(--sov-border-hover) !important;
+  box-shadow: 0 10px 28px -10px var(--sov-shadow);
+}
+
+.card-sovereign .sov-bezel {
+  border-color: var(--sov-bezel);
+}
+
+.card-sovereign:hover .sov-bezel {
+  border-color: var(--sov-bezel-hover);
+}
+
+.card-sovereign .sov-dial {
+  color: var(--sov-dial);
+}
+
+.card-sovereign:hover .sov-dial {
+  color: var(--sov-dial-hover);
 }
 
 /* ── Girly Mode: Global CSS Overrides ──────────────────────────
-   Soft 22px pillowy curves, dreamy blur, rose/pastel aesthetic
+   Ultra-feminine 26px pillowy curves, dreamy satin blur, rose-petal aesthetic
 ────────────────────────────────────────────────────────────── */
 [data-card-type="girly"] {
-  --card-radius: 22px !important;
+  --card-radius: 26px !important;
   --card-backdrop-blur: 20px !important;
-  --card-opacity: 0.85 !important;
+  --card-opacity: 0.88 !important;
   --card-border-width: 1.5px !important;
-  --dropdown-radius: 22px !important;
-  --dropdown-menu-radius: 16px !important;
-  --custom-dropdown-radius: 22px !important;
-  --custom-dropdown-menu-radius: 16px !important;
+  --dropdown-radius: 9999px !important;
+  --dropdown-menu-radius: 20px !important;
+  --custom-dropdown-radius: 9999px !important;
+  --custom-dropdown-menu-radius: 20px !important;
+}
+
+.card-girly {
+  border-color: var(--girly-border) !important;
+  transition: border-color 300ms ease, box-shadow 300ms ease;
+}
+
+.card-girly:hover {
+  border-color: var(--girly-border-hover) !important;
+  box-shadow: 0 10px 30px -8px var(--girly-shadow);
+}
+
+.card-girly .girly-frame {
+  border-color: var(--girly-frame);
+}
+
+.card-girly:hover .girly-frame {
+  border-color: var(--girly-frame-hover);
+}
+
+.card-girly .girly-petal {
+  color: var(--girly-petal);
+}
+
+.card-girly:hover .girly-petal {
+  color: var(--girly-petal-hover);
 }
 
 /* Transaction Row Deletion Animations */
